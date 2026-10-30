@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main, master]
-    paths: ['capacitor.config.json','package.json','assets/**','.github/**','www/**']
+    paths: ['keystore/**','capacitor.config.json','package.json','assets/**','.github/**','www/**']
 permissions:
   contents: write
 jobs:
@@ -21,6 +21,8 @@ jobs:
       - run: npx cap sync android
       - name: Lock portrait
         run: sed -i 's/<activity /<activity android:screenOrientation="portrait" /' android/app/src/main/AndroidManifest.xml
+      - name: Use fixed signing key (so updates install over the old app)
+        run: mkdir -p ~/.android && cp keystore/debug.keystore ~/.android/debug.keystore
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
         with:
