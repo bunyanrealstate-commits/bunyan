@@ -1178,5 +1178,11 @@ var o0=logOut;logOut=function(){put('');return o0.apply(this,arguments)};
 try{var u=localStorage.getItem(KK);if(u&&!AUTH){var f=US.find(function(x){return x.u===u});if(f){A=f;S=ld(f.k);AUTH=true;render()}}}catch(e){}
 })();
 </script>
+<script>
+(function(){var r0=render;render=function(){var n=document.getElementById('nav'),sl=n?n.scrollLeft:0;r0.apply(this,arguments);
+n=document.getElementById('nav');if(!n||n.scrollWidth<=n.clientWidth+2)return;n.scrollLeft=sl;
+var b=n.querySelector('button.on');if(!b)return;var nr=n.getBoundingClientRect(),br=b.getBoundingClientRect();
+var d=(br.left+br.width/2)-(nr.left+nr.width/2);if(Math.abs(d)>4)n.scrollBy({left:d,behavior:'smooth'})}})();
+</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
