@@ -1170,5 +1170,13 @@ function start(){if(started||!AUTH||!cfg())return;started=true;pull();setInterva
  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')pull()});addEventListener('online',function(){pull()})}
 var r0=render;render=function(){r0();try{start();document.querySelectorAll('.ump').forEach(function(m){if(m.closest('#lgm'))return;if(!m.querySelector('.syb')){var b=document.createElement('button');b.className='syb';b.textContent='☁️ مزامنة GitHub';b.setAttribute('onclick','syOpen()');var d=m.querySelector('.dg');d?m.insertBefore(b,d):m.appendChild(b)}})}catch(e){}};
 })()</script>
+<script>
+(function(){if(window.claude)return;var KK='bny_keep';
+function put(u){try{u?localStorage.setItem(KK,u):localStorage.removeItem(KK)}catch(e){}}
+var d0=doLogin;doLogin=async function(){await d0.apply(this,arguments);if(AUTH&&A)put(A.u)};
+var o0=logOut;logOut=function(){put('');return o0.apply(this,arguments)};
+try{var u=localStorage.getItem(KK);if(u&&!AUTH){var f=US.find(function(x){return x.u===u});if(f){A=f;S=ld(f.k);AUTH=true;render()}}}catch(e){}
+})();
+</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
