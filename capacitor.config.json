@@ -1,0 +1,12 @@
+{
+ "appId": "com.bunyan.furnished",
+ "appName": "Bunyan Furnished",
+ "webDir": "www",
+ "backgroundColor": "#e8e9ed",
+ "server": {
+  "androidScheme": "https"
+ },
+ "android": {
+  "allowMixedContent": false
+ }
+}
