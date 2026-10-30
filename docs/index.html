@@ -872,9 +872,17 @@ const VC={
   if(p.kind==='rent'){const k=p.m.u.leases.indexOf(p.m.L);togR(p.m.u.id,k,p.i);return 'اتسجل إيجار '+p.m.L.tenant+' مستلم'}
   return ''},
  sr:null,
+ nat(){try{return window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()&&Capacitor.Plugins&&Capacitor.Plugins.SpeechRecognition||null}catch(e){return null}},
+ async listenN(N){const b=document.getElementById('vcm'),i=document.getElementById('vci');
+  if(this.nrec){try{await N.stop()}catch(e){}return}
+  try{const pm=await N.requestPermissions();if(pm.speechRecognition!=='granted'){this.show('<div class="vce">⚠️ لازم تسمح للتطبيق باستخدام المايك: إعدادات الموبايل ← التطبيقات ← Bunyan ← الأذونات ← الميكروفون.</div>');return}}catch(e){}
+  let txt='';const fin=async()=>{if(!this.nrec)return;this.nrec=false;b&&b.classList.remove('rec');try{await N.removeAllListeners()}catch(e){}if(txt.trim()){if(i)i.value=txt;this.go()}else this.show('<div class="vce">⚠️ ماسمعتش حاجة. جرّب تاني أو اكتب الأمر.</div>')};
+  try{await N.addListener('partialResults',d=>{txt=((d&&d.matches)||[])[0]||txt;if(i)i.value=txt});await N.addListener('listeningState',d=>{if(d&&d.status==='stopped')fin()});
+   this.nrec=true;b&&b.classList.add('rec');this.show('<div class="vco">🎙️ بسمعك... اتكلم دلوقتي</div>');
+   await N.start({language:'ar-EG',maxResults:1,partialResults:true,popup:false})}catch(e){this.nrec=false;b&&b.classList.remove('rec');this.show('<div class="vce">⚠️ المايك مش متاح ('+esc((e&&e.message)||'')+'). اكتب الأمر أو استخدم مايك الكيبورد.</div>')}},
  open(){let o=document.getElementById('vcp');if(o){o.remove()}
   o=document.createElement('div');o.id='vcp';o.className='ov';
-  const SRc=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const SRc=VC.nat()||window.SpeechRecognition||window.webkitSpeechRecognition;
   o.innerHTML=`<div class="vcb"><div class="vch"><b>🎤 قول الأمر</b><button class="vcx" onclick="VC.close()">✕</button></div>
   <div class="vcin"><input id="vci" placeholder="اتكلم أو اكتب الأمر هنا..." onkeydown="if(event.key==='Enter')VC.go()">${SRc?'<button id="vcm" class="vcmic" onclick="VC.listen()">🎤</button>':''}</div>
   <div id="vcr" class="vcr"></div>
@@ -889,7 +897,7 @@ const VC={
   if(['nav','cash','late'].includes(p.kind)){const m=this.run(p);this.show('<div class="vco">'+esc(m)+'</div>');if(p.kind==='nav')setTimeout(()=>this.close(),400);return}
   this.show('<div class="vcq">'+esc(p.txt)+'</div><div class="vcb2"><button class="p" onclick="VC.ok()">✅ نفّذ</button><button onclick="VC.show(\'\')">إلغاء</button></div>')},
  ok(){const p=this.cur;if(!p)return;const m=this.run(p);this.show('<div class="vco">✅ '+esc(m)+'</div>');const i=document.getElementById('vci');if(i)i.value='';this.cur=null},
- listen(){const SRc=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SRc)return;const b=document.getElementById('vcm'),i=document.getElementById('vci');
+ listen(){const N=this.nat();if(N)return this.listenN(N);const SRc=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SRc)return;const b=document.getElementById('vcm'),i=document.getElementById('vci');
   if(this.sr){try{this.sr.stop()}catch(e){}return}
   const r=new SRc();r.lang='ar-EG';r.interimResults=true;r.continuous=false;this.sr=r;let fin='';
   r.onstart=()=>{b&&b.classList.add('rec');this.show('<div class="vco">🎙️ بسمعك... اتكلم دلوقتي</div>')};

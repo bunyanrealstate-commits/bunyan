@@ -19,6 +19,8 @@ jobs:
       - run: npx cap add android
       - run: npx capacitor-assets generate --android --iconBackgroundColor '#ffffff' --iconBackgroundColorDark '#ffffff'
       - run: npx cap sync android
+      - name: Microphone permission
+        run: sed -i 's#<application#<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <application#' android/app/src/main/AndroidManifest.xml
       - name: Lock portrait
         run: sed -i 's/<activity /<activity android:screenOrientation="portrait" /' android/app/src/main/AndroidManifest.xml
       - name: Use fixed signing key (so updates install over the old app)
