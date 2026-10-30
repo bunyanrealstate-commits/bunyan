@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main, master]
+    paths: ['capacitor.config.json','package.json','assets/**','.github/**','www/**']
 permissions:
   contents: write
 jobs:

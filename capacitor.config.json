@@ -4,7 +4,9 @@
  "webDir": "www",
  "backgroundColor": "#e8e9ed",
  "server": {
-  "androidScheme": "https"
+  "url": "https://bunyanrealstate-commits.github.io/bunyan/",
+  "androidScheme": "https",
+  "cleartext": false
  },
  "android": {
   "allowMixedContent": false
