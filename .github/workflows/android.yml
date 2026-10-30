@@ -22,7 +22,13 @@ jobs:
       - name: Lock portrait
         run: sed -i 's/<activity /<activity android:screenOrientation="portrait" /' android/app/src/main/AndroidManifest.xml
       - name: Use fixed signing key (so updates install over the old app)
-        run: mkdir -p ~/.android && cp keystore/debug.keystore ~/.android/debug.keystore
+        run: |
+          cat >> android/app/build.gradle <<'GEOF'
+          android {
+            signingConfigs { fixed { storeFile file("${rootDir}/../keystore/debug.keystore"); storePassword "android"; keyAlias "androiddebugkey"; keyPassword "android" } }
+            buildTypes { debug { signingConfig signingConfigs.fixed } }
+          }
+          GEOF
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
         with:
