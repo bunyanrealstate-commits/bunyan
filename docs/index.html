@@ -1168,7 +1168,7 @@ window.sySave=function(){var r=gi('sy_r').value.trim().replace(/^https?:\/\/gith
 window.syOff=function(){try{localStorage.removeItem(CK)}catch(e){}syClose();toast('قطع الاتصال')};
 function start(){if(started||!AUTH||!cfg())return;started=true;pull();setInterval(function(){if(document.visibilityState!=='hidden')pull()},60000);
  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')pull()});addEventListener('online',function(){pull()})}
-var r0=render;render=function(){r0();try{start();document.querySelectorAll('.ump').forEach(function(m){if(!m.querySelector('.syb')){var b=document.createElement('button');b.className='syb';b.textContent='☁️ مزامنة GitHub';b.setAttribute('onclick','syOpen()');var d=m.querySelector('.dg');d?m.insertBefore(b,d):m.appendChild(b)}})}catch(e){}};
+var r0=render;render=function(){r0();try{start();document.querySelectorAll('.ump').forEach(function(m){if(m.closest('#lgm'))return;if(!m.querySelector('.syb')){var b=document.createElement('button');b.className='syb';b.textContent='☁️ مزامنة GitHub';b.setAttribute('onclick','syOpen()');var d=m.querySelector('.dg');d?m.insertBefore(b,d):m.appendChild(b)}})}catch(e){}};
 })()</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
