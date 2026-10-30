@@ -1184,5 +1184,11 @@ n=document.getElementById('nav');if(!n||n.scrollWidth<=n.clientWidth+2)return;n.
 var b=n.querySelector('button.on');if(!b)return;var nr=n.getBoundingClientRect(),br=b.getBoundingClientRect();
 var d=(br.left+br.width/2)-(nr.left+nr.width/2);if(Math.abs(d)>4)n.scrollBy({left:d,behavior:'smooth'})}})();
 </script>
+<script>
+(function(){if(window.claude)return;var h=document.querySelector('.hd'),c=document.getElementById('clk');if(!h||!c||typeof syOpen!=='function')return;
+var st=document.createElement('style');st.textContent='#syq{border:1.5px solid var(--fr);border-radius:10px;background:var(--card);color:var(--tx);padding:5px 10px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;margin-inline-start:6px}#syq.on{border-color:#2a9d5c}@media (max-width:700px){#syq{padding:4px 8px;font-size:12px}}';document.head.appendChild(st);
+var b=document.createElement('button');b.id='syq';b.textContent='☁️ مزامنة';b.onclick=function(e){e.stopPropagation();syOpen()};h.insertBefore(b,c);
+var r0=render;render=function(){r0.apply(this,arguments);try{b.style.display=AUTH?'':'none';var on=false;try{on=!!localStorage.getItem('bny_sync')}catch(e){}b.classList.toggle('on',on)}catch(e){}};render()})();
+</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
