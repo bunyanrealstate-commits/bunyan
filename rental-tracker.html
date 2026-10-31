@@ -1993,5 +1993,16 @@ mLease=function(id,k){if(k==null)return window.mLeaseN(id);var u=U(id),L=u&&u.le
 window._lnb={build:build,firstDate:firstDate,sugM:sugM,endOf:endOf};
 })();
 </script>
+<script>
+(function(){var x0=0,y0=0,t0=0,ok=false;
+function sx(e){for(var n=e;n&&n!==document.body;n=n.parentNode){if(n.nodeType!==1)continue;var o=getComputedStyle(n).overflowX;if((o==='auto'||o==='scroll')&&n.scrollWidth>n.clientWidth+2)return true}return false}
+function blocked(t){return !t||!!(t.closest&&t.closest('#nav,input,select,textarea,.dlg,.ov,.ump,#vcp,#lgm,button.x'))||sx(t)}
+addEventListener('touchstart',function(e){ok=false;if(e.touches.length!==1||!AUTH||blocked(e.target)||(document.getElementById('modal')||{}).innerHTML)return;var t=e.touches[0];x0=t.clientX;y0=t.clientY;t0=Date.now();ok=true},{passive:true});
+addEventListener('touchend',function(e){if(!ok)return;ok=false;var t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;if(Date.now()-t0>800||Math.abs(dx)<80||Math.abs(dx)<Math.abs(dy)*2)return;
+ try{if(String(window.getSelection())) return}catch(x){}
+ var bs=[].slice.call(document.querySelectorAll('#nav button')).filter(function(b){return b.offsetParent!==null}),i=bs.findIndex(function(b){return b.classList.contains('on')});if(i<0||bs.length<2)return;
+ var rtl=document.documentElement.dir==='rtl',next=rtl?dx>0:dx<0,j=i+(next?1:-1);if(j<0||j>=bs.length)return;bs[j].click()},{passive:true});
+})();
+</script>
 </body>
 </html>
