@@ -359,8 +359,8 @@ function project(ev){
     const k=mkey(e.d);m[k]=m[k]||{d:e.d,i:0,o:0};e.a>0?m[k].i+=e.a:m[k].o-=e.a;m[k].end=b});
   return{min,minD,rows:Object.values(m).sort((a,b)=>a.d-b.d)};
 }
-function render(){if(!AUTH){drawLogin();return}if(S&&S.tab==='ac')S.tab='home';gi('login').innerHTML='';gi('who').innerHTML=esc(A.u)+' <button onclick="mPass()">🔑 كلمة المرور</button> <button onclick="logOut()">خروج</button>'+(US[0]===A?' <button onclick="adminUsers()">👥 المستخدمين</button>':'');
-  const T=[['home','الرئيسية'],['units','الاستديوهات'],['grp','المجموعات'],['acc','الحسابات'],['fc','التوقعات المالية'],['n','🔔 التنبيهات'+(nb()?' 🔴'+nb():'')],['q','بحث'],['ct','عقد العميل'],['sim','استديو جديد'],['log','سجل النشاط'+(CL==='yes'&&unread()?' 🔴'+unread():'')],['bk','💾 النسخ الاحتياطي']];
+function render(){if(!AUTH){drawLogin();return}if(S&&(S.tab==='ac'||S.tab==='q'||S.tab==='sim'))S.tab='home';gi('login').innerHTML='';gi('who').innerHTML=esc(A.u)+' <button onclick="mPass()">🔑 كلمة المرور</button> <button onclick="logOut()">خروج</button>'+(US[0]===A?' <button onclick="adminUsers()">👥 المستخدمين</button>':'');
+  const T=[['home','الرئيسية'],['units','الاستديوهات'],['grp','المجموعات'],['acc','الحسابات'],['fc','التوقعات المالية'],['n','🔔 التنبيهات'+(nb()?' 🔴'+nb():'')],['ct','عقد العميل'],['log','سجل النشاط'+(CL==='yes'&&unread()?' 🔴'+unread():'')],['bk','💾 النسخ الاحتياطي']];
   document.getElementById('nav').innerHTML=navHtml(T);
   document.getElementById('app').innerHTML=(({home,units,bk:bkTab,sim,log:logTab,grp:grpTab,acc:accTab2,fc:fcTab,ac:acTab,q:queryTab,n:notifTab,ct:(window.ctTab||(()=>''))})[S.tab]||home)();
 }
@@ -891,7 +891,7 @@ const VC={
  score(txt,name){const a=this.nm(name).split(' ').filter(x=>x.length>=3);let s=0;a.forEach(x=>{if(txt.includes(x))s+=x.length});return s},
  bestUnit(t){let b=null,bs=0;this.units().forEach(u=>{const s=this.score(t,u.name)+this.score(t,u.company||'')*0.5;if(s>bs){bs=s;b=u}});return b},
  bestLease(t){let b=null,bs=0;this.units().forEach(u=>(u.leases||[]).forEach((L,k)=>{const s=this.score(t,L.tenant);if(s>bs){bs=s;b={u,L,k}}}));return b},
- TABS:[['home','الرئيسيه|البيت'],['units','الوحدات|وحدات'],['grp','المجموعات|مجموعات'],['acc','الحسابات|حسابات'],['fc','توقعات|الفلوس'],['ct','عقد العميل|عقد|عقود'],['n','التنبيهات|تنبيهات|الجرس'],['q','بحث'],['sim','استديو'],['log','سجل'],['bk','نسخ|احتياطي|باك اب']],
+ TABS:[['home','الرئيسيه|البيت'],['units','الوحدات|وحدات'],['grp','المجموعات|مجموعات'],['acc','الحسابات|حسابات'],['fc','توقعات|الفلوس'],['ct','عقد العميل|عقد|عقود'],['n','التنبيهات|تنبيهات|الجرس'],['log','سجل'],['bk','نسخ|احتياطي|باك اب']],
  parse(raw){
   const t=this.nm(raw);if(!t)return null;
   const has=r=>r.test(t);
