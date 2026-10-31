@@ -738,8 +738,8 @@ function accr(){const t=today();let rentE=0,pen=0,coC=0,fuC=0,isC=0,exC=0;
  SE().forEach(x=>{const un=x.u&&U(x.u),f=un?sh(un):shg(x.g);for(let i=0;i<(x.n||1);i++){if(addM(pd(x.d),i)<=t)exC+=x.a*f}});
  const earned=rentE+pen,cost=coC+fuC+isC+exC;return{earned,cost,profit:earned-cost,rentE,pen,coC,fuC,isC,exC}}
 function rcvP(){const t=today();let rev=0,cost=0,mo=0;
- SU().forEach(u=>{const f=sh(u),cm=u.cm||1,mc=((u.total||isumOf(u))+(+u.furn||0)-(+u.salv||0))/cm;
-  u.leases.forEach(L=>{(L.rcv||[]).forEach(i=>{if(i>=L.months)return;const d0=payD(L,i),d1=i<L.months-1?payD(L,i+1):lend(L),m=Math.max(0,(d1-d0)/(864e5*30.4375)),amt=((L.rav&&L.rav[i]!=null)?L.rav[i]:la(L,i))+ppA(L,i);rev+=amt*f;cost+=mc*m*f;mo+=m})})});
+ SU().forEach(u=>{const f=sh(u),cm=u.cm||1,mc=((u.total||isumOf(u))+(+u.furn||0))/cm;if(addM(pd(u.start),cm)<=t)cost-=(+u.salv||0)*f;
+  u.leases.forEach(L=>{(L.rcv||[]).forEach(i=>{if(i>=L.months)return;const m=lf(L,i),amt=((L.rav&&L.rav[i]!=null)?L.rav[i]:la(L,i))+ppA(L,i);rev+=amt*f;cost+=mc*m*f;mo+=m})})});
  SE().forEach(x=>{const un=x.u&&U(x.u),f=un?sh(un):shg(x.g);for(let i=0;i<(x.n||1);i++){if(addM(pd(x.d),i)<=t)cost+=x.a*f}});
  return{rev,cost,profit:rev-cost,mo}}
 function confirmM(msg,fn,ok){M={title:'تأكيد',msg,ok:ok||'تأكيد',fields:[],fn};drawM()}
@@ -3096,6 +3096,42 @@ html body .hd>span>#bell,html body .hd>span>#hmb{flex:none!important;width:32px!
 <script id="hdfixjs">
 (function(){var mq=matchMedia('(max-width:640px)');function fx(){try{var h=document.querySelector('.hd'),w=document.getElementById('ws'),sp=document.querySelector('.hd>span');if(!h||!w)return;if(sp&&w.parentNode!==sp)sp.insertBefore(w,sp.firstChild);var r=document.getElementById('hrm');if(r)r.remove()}catch(e){}}
 var r0=render;render=function(){if(S&&S.tab==='rm')S.tab='home';var o=r0.apply(this,arguments);fx();return o};fx();setTimeout(fx,300);(mq.addEventListener?mq.addEventListener('change',fx):mq.addListener(fx))})();
+</script>
+<style id="eqcss">#app .stat.eqk{cursor:pointer}#app .stat.eqk::after{content:'🧮';position:absolute;top:8px;left:10px;font-size:13px;opacity:.55}#app .stat.eqk{position:relative}
+#eqx .dlg{max-height:86vh;overflow:auto}.eqr{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--bd,#0002);font-size:14px}.eqr span{min-width:0}.eqr small{display:block;color:var(--mu,#666);font-size:11.5px}.eqr b{white-space:nowrap;direction:ltr}.eqt{display:flex;justify-content:space-between;padding:10px 0 2px;font-weight:800;font-size:16px;border-top:2px solid var(--ac,#1473e6);margin-top:6px}.eqh{font-weight:700;color:var(--ac,#1473e6);margin:10px 0 2px;font-size:13.5px}</style>
+<script id="eqjs">
+(function(){
+function sg(a){return (a<0?'− ':'+ ')+$(Math.abs(a))}
+function row(l,a,sub){return "<div class='eqr'><span>"+l+(sub?"<small>"+sub+"</small>":"")+"</span><b class='"+(a<0?'neg':'pos')+"'>"+sg(a)+"</b></div>"}
+function show(t,h){var d=document.getElementById('eqx');if(d)d.remove();d=document.createElement('div');d.id='eqx';d.className='ov';d.onclick=function(e){if(e.target===d)d.remove()};d.innerHTML="<div class='dlg'><button class='xcl' onclick=\"document.getElementById('eqx').remove()\">✕</button><h2>🧮 "+t+"</h2>"+h+"</div>";document.body.appendChild(d)}
+function fdt(ms){try{return new Date(ms).toLocaleDateString(LOC(),{day:'numeric',month:'short',year:'numeric'})}catch(e){return ''}}
+window.eqCash=function(){var t=today(),L0=[],add=function(d,l,a,sub){if(Math.abs(a)>=0.5)L0.push({d:d||0,l:l,a:a,sub:sub})};
+ SU().forEach(function(u){u.inst.forEach(function(i,k){if(i.p&&(i.at||0)>0)add(i.at,'دفعة '+(u.company||'الشركة')+' رقم '+(k+1),-i.a,u.name)});if(u.fp&&(u.fat||0)>0)add(u.fat,'أثاث',-(u.furn||0),u.name);
+  u.leases.forEach(function(L){var tn=L.tenant||'مستأجر';(L.rcv||[]).forEach(function(i){var at=(L.rat||{})[i]||0;if(at>0)add(at,'إيجار '+tn+' (دفعة '+(i+1)+')',(L.rav||{})[i]!=null?L.rav[i]:la(L,i),u.name)});
+   if(L.penp&&(L.pat||0)>0)add(L.pat,'شرط جزائي '+tn,L.pen||0,u.name);if(L.adv&&(L.advat||0)>0)add(L.advat,'رسوم عقد '+tn,L.adv,u.name);
+   (L.pp||[]).forEach(function(x){if((x.at||0)>0)add(x.at,'دفعة مقدمة من '+tn+' (من دفعة '+(x.i+1)+')',+x.a||0,u.name)});
+   if(L.icost){var ic=0;for(var i=0;i<L.months;i++){if(payD(L,i)<=t)ic+=L.icost*lf(L,i)}add(+t,'إنترنت '+tn,-ic,u.name)}
+   if(L.rme&&L.router&&pd(L.start)<=t)add(+pd(L.start),'راوتر '+tn,-L.router,u.name)})});
+ SE().forEach(function(x){var n=0;for(var i=0;i<(x.n||1);i++){if(addM(pd(x.d),i)<=t)n++}if(n)add(+pd(x.d),'مصروف: '+(x.w||''),-x.a*n,n>1?n+' مرات':'')});
+ if(WS==='all'||WS==='-')(S.dep||[]).forEach(function(x){if(x.mode==='chq')return;var s=x.k==='t'?1:-1,a=+x.a||0;if((x.at||0)>0)add(x.at,(s>0?'تأمين من ':'تأمين للشركة ')+(x.w||''),s*a);if(x.r&&(x.rat||0)>0)add(x.rat,'رد تأمين '+(x.w||''),-s*a)});
+ (S.adj||[]).forEach(function(a){if(a.at>0&&(WS==='all'||(a.g||'')===(WS==='-'?'':WS)))add(a.at,'تسوية '+(a.w||''),a.a)});
+ L0.sort(function(a,b){return a.d-b.d});var base=cashBase(),h='';
+ if(Math.abs(base)>=0.5)h+=row('الرصيد الافتتاحي',base);
+ L0.forEach(function(x){h+=row(x.l,x.a,[x.sub,x.d>1e12?fdt(x.d):''].filter(Boolean).join(' • '))});
+ if(!h)h="<p class='mu'>مفيش حركات نقدية لسه.</p>";
+ h+="<div class='eqt'><span>= الرصيد النقدي</span><b>"+$(cashNow())+"</b></div>";show('الرصيد النقدي',h)};
+window.eqProfit=function(){var t=today(),h='',rev=0,cost=0;
+ SU().forEach(function(u){var f=sh(u),cm=u.cm||1,tot=(u.total||isumOf(u)),fu=+u.furn||0,sv=(addM(pd(u.start),cm)<=t)?(+u.salv||0):0,mc=(tot+fu)/cm,R=0,mo=0,lines='';
+  u.leases.forEach(function(L){(L.rcv||[]).forEach(function(i){if(i>=L.months)return;var m=lf(L,i),amt=((L.rav&&L.rav[i]!=null)?L.rav[i]:la(L,i))+ppA(L,i);R+=amt;mo+=m;lines+=row('إيجار '+(L.tenant||'مستأجر')+' (دفعة '+(i+1)+')',amt*f,(Math.round(m*100)/100)+' شهر')})});
+  if(!R)return;h+="<div class='eqh'>🏠 "+esc(u.name)+"</div>"+lines;
+  h+="<div class='eqr'><span>تكلفة الشهر<small>("+$(tot)+" شركة + "+$(fu)+" فرش) ÷ "+cm+"</small></span><b>"+$(mc)+"</b></div>";
+  h+=row('تكلفة المدة المقبوضة',-mc*mo*f,$(mc)+' × '+(Math.round(mo*100)/100)+' شهر');if(sv){h+=row('استرداد الأثاث (عقد الشركة انتهى)',sv*f);cost-=sv*f}rev+=R*f;cost+=mc*mo*f});
+ var ex=0;SE().forEach(function(x){var un=x.u&&U(x.u),f=un?sh(un):shg(x.g);for(var i=0;i<(x.n||1);i++){if(addM(pd(x.d),i)<=t){ex+=x.a*f}}});
+ if(ex)h+=row('مصروفات',-ex);if(!h)h="<p class='mu'>مفيش إيجار مقبوض لسه.</p>";
+ h+="<div class='eqr'><span><b>الإيراد</b></span><b class='pos'>"+$(rev)+"</b></div><div class='eqr'><span><b>التكلفة</b></span><b class='neg'>− "+$(cost+ex)+"</b></div>";
+ h+="<div class='eqt'><span>= "+(S.pmode==='me'?'ربحي':'ربح المجموعة')+" حتى اليوم</span><b>"+$(rcvP().profit)+"</b></div>";show('الربح حتى اليوم',h)};
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.tab!=='home')return o;document.querySelectorAll('#app .stat').forEach(function(st){var l=(st.querySelector('span')||{}).textContent||'';if(st.classList.contains('eqk'))return;if(/الرصيد النقدي/.test(l)){st.classList.add('eqk');st.onclick=eqCash}else if(/حتى اليوم/.test(l)){st.classList.add('eqk');st.onclick=eqProfit}})}catch(e){}return o};
+})();
 </script>
 </body>
 </html>
