@@ -10,3 +10,16 @@ out=src.replace('<title>Bunyan Furnished</title>',head+'<title>Bunyan Furnished<
 k=out.rindex('</body>');out=out[:k]+sw+out[k:]
 d=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','docs','index.html')
 open(d,'w',encoding='utf-8').write(out);print('ok',len(out))
+# customer build: same app without the owner module (license issuing)
+a=out.find('<script>\n(function(){\nvar OW={')
+assert a>0,'owner block not found'
+b=out.index('</script>',a)+len('</script>')
+cust=out[:a]+out[b:]
+assert 'var OW=' not in cust and 'ownbtn' not in cust
+import shutil
+cd=os.path.join(os.path.dirname(d),'c');os.makedirs(cd,exist_ok=True)
+open(os.path.join(cd,'index.html'),'w',encoding='utf-8').write(cust)
+for f in ('manifest.webmanifest','sw.js','icon-192.png','icon-512.png','icon-maskable-512.png'):
+    shutil.copy(os.path.join(os.path.dirname(d),f),os.path.join(cd,f))
+pass
+print('customer',len(cust))
