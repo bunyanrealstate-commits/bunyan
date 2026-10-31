@@ -2614,6 +2614,7 @@ function sg(a){return (a<0?'− ':'+ ')+$(Math.abs(a))}
 function row(l,a,sub){return "<div class='eqr'><span>"+l+(sub?"<small>"+sub+"</small>":"")+"</span><b class='"+(a<0?'neg':'pos')+"'>"+sg(a)+"</b></div>"}
 function show(t,h){var d=document.getElementById('eqx');if(d)d.remove();d=document.createElement('div');d.id='eqx';d.className='ov';d.onclick=function(e){if(e.target===d)d.remove()};d.innerHTML="<div class='dlg'><button class='xcl' onclick=\"document.getElementById('eqx').remove()\">✕</button><h2>🧮 "+t+"</h2>"+h+"</div>";document.body.appendChild(d)}
 function fdt(ms){try{return new Date(ms).toLocaleDateString(LOC(),{day:'numeric',month:'short',year:'numeric'})}catch(e){return ''}}
+window.eqRow=row;window.eqShow=show;
 window.eqCash=function(){var t=today(),L0=[],add=function(d,l,a,sub){if(Math.abs(a)>=0.5)L0.push({d:d||0,l:l,a:a,sub:sub})};
  SU().forEach(function(u){u.inst.forEach(function(i,k){if(i.p&&(i.at||0)>0)add(i.at,'دفعة '+(u.company||'الشركة')+' رقم '+(k+1),-i.a,u.name)});if(u.fp&&(u.fat||0)>0)add(u.fat,'أثاث',-(u.furn||0),u.name);
   u.leases.forEach(function(L){var tn=L.tenant||'مستأجر';(L.rcv||[]).forEach(function(i){var at=(L.rat||{})[i]||0;if(at>0)add(at,'إيجار '+tn+' (دفعة '+(i+1)+')',(L.rav||{})[i]!=null?L.rav[i]:la(L,i),u.name)});
@@ -2682,6 +2683,27 @@ function fx(){try{var hd=document.querySelector('.hd'),pn=document.getElementByI
 var r0=render;render=function(){var o=r0.apply(this,arguments);fx();return o};var w0=wsBar;wsBar=function(){var o=w0.apply(this,arguments);fx();return o};
 (mq.addEventListener?mq.addEventListener('change',fx):mq.addListener(fx));setTimeout(fx,0);setTimeout(fx,400);
 var mo=new MutationObserver(function(){if(!document.querySelector('.hd.mopen'))close()});var hd=document.querySelector('.hd');if(hd)mo.observe(hd,{attributes:true,attributeFilter:['class']});
+})();
+</script>
+<script id="eqacc">
+(function(){
+var R=function(){return eqRow.apply(null,arguments)},N=function(l,v,sub){v=String(v);if(/[\u0600-\u06FF]/.test(v))v="<span dir='rtl' style='unicode-bidi:isolate'>"+v+"</span>";return "<div class='eqr'><span>"+l+(sub?"<small>"+sub+"</small>":"")+"</span><b>"+v+"</b></div>"},T=function(l,v){return "<div class='eqt'><span>= "+l+"</span><b>"+v+"</b></div>"},H=function(t){return "<div class='eqh'>🏠 "+esc(t)+"</div>"},r2=function(x){return Math.round(x*100)/100},pc=function(x){return (Math.round(x*10)/10)+'%'};
+function live(){var t=today();return SU().filter(function(u){return addM(pd(u.start),u.cm)>t})}
+window.eqProj=function(){var h='',tp=0;live().forEach(function(u){var P=projU(u);if(!P)return;var f=sh(u),k=P.months?P.inc/f/P.months:0;
+ h+=H(u.name)+N('تكلفة الشهر',$(P.mc),'('+$(u.total||isumOf(u))+' شركة + '+$(+u.furn||0)+' فرش) ÷ '+(u.cm||12))+N('متوسط الإيجار الشهري',$(k),'إيراد العقود '+$(P.inc/f)+' ÷ '+r2(P.months)+' شهر')+R('ربح الشهر × الشهور',(k-P.mc)*P.months*f,'('+$(k)+' − '+$(P.mc)+') × '+r2(P.months)+' شهر');
+ if(P.F)h+=N('أيام مجانية من الشركة',P.F+' يوم');if(P.gap)h+=N('أيام فاضية',P.gap+' يوم');if(Math.abs(P.adj)>0.5)h+=R(P.adj>0?'خصم الأيام الفاضية الزيادة':'مكسب الأيام المجانية',-P.adj*f,'سعر اليوم '+$(P.mc/30));if(P.sv)h+=R('استرداد الأثاث',P.sv*f);tp+=P.p});
+ var W=annW();if(W.gx)h+=R('مصروفات عامة',-W.gx);if(!h)h="<p class='mu'>مفيش عقود مستأجرين.</p>";h+=T('الربح المتوقع على مدة العقود',$(W.p));eqShow('الربح المتوقع على مدة العقود',h)};
+window.eqOccNow=function(){var t=today(),h='',a=0,o=0;SU().forEach(function(u){var b=pd(u.start),e=addM(b,u.cm),b0=u.leases.reduce(function(m,L){var x=pd(L.start);return x<m?x:m},b);if(!(b0<=t&&t<e))return;a++;var L=u.leases.filter(function(L){return pd(L.start)<=t&&t<(L.exit?pd(L.exit):lend(L))})[0];if(L)o++;h+=N(esc(u.name),L?'🟢 '+esc(L.tenant||'مؤجر'):'⚪ شاغر')});
+ h+=N('مؤجّر اليوم',o+' من '+a)+T('الإشغال الحالي',a?pc(o/a*100):'—');eqShow('الإشغال الحالي',h)};
+window.eqOccW=function(){var h='',m=0,oc=0;live().forEach(function(u){var w=winU(u);if(!w)return;m+=w.mW;oc+=w.oc;h+=N(esc(u.name),r2(w.oc)+' من '+r2(w.mW)+' شهر',mTxt(w.s,w.e))});h+=N('الإجمالي',r2(oc)+' ÷ '+r2(m)+' شهر')+T('الإشغال على مدة العقود',m?pc(oc/m*100):'—');eqShow('الإشغال على مدة العقود',h)};
+function sums(){var inc=0,cw=0;SU().forEach(function(u){var a=ua(u),P=projU(u);inc+=a.inc;cw+=P?P.cost:a.cost});return{inc:inc,cw:cw}}
+window.eqMargin=function(){var x=sums(),p=x.inc-x.cw;eqShow('هامش الربح',R('إيراد العقود',x.inc)+R('التكلفة على مدة العقود',-x.cw)+N('الربح',$(p))+N('المعادلة',$(p)+' ÷ '+$(x.inc)+' × 100')+T('هامش الربح',x.inc?pc(p/x.inc*100):'—'))};
+window.eqRoi=function(){var x=sums(),a=annP();eqShow('العائد على التكلفة',N('الربح المتوقع على مدة العقود',$(a))+N('التكلفة على مدة العقود',$(x.cw))+N('المعادلة',$(a)+' ÷ '+$(x.cw)+' × 100')+T('العائد على التكلفة',x.cw?pc(a/x.cw*100):'—'))};
+window.eqBE=function(){var U=SU(),rents=[],cost=0,pot=0,cm=0,h='';U.forEach(function(u){cost+=ua(u).cost;u.leases.forEach(function(L){rents.push((L.rent||0)+(L.inet||0))})});var avg=rents.length?rents.reduce(function(a,b){return a+b},0)/rents.length:0;U.forEach(function(u){pot+=(u.cm||0)*avg*sh(u);cm+=u.cm||0});
+ h+=N('متوسط الإيجار الشهري',$(avg))+N('شهور عقود الشركات',cm+' شهر')+N('أقصى إيراد ممكن',$(pot),$(avg)+' × '+cm)+N('كل التكاليف',$(cost),'شركة + فرش − أثاث مسترد')+N('المعادلة',$(cost)+' ÷ '+$(pot)+' × 100')+T('نقطة التعادل',pot?pc(cost/pot*100):'—');eqShow('نقطة التعادل (إشغال)',h)};
+window.eqColl=function(){var t=today(),h='',due=0,got=0;SU().forEach(function(u){var f=sh(u);u.leases.forEach(function(L){for(var i=0;i<L.months;i++){if(payD(L,i)<=t){var a=la(L,i)*f,ok=L.rcv.includes(i);due+=a;if(ok)got+=a;h+=N((L.tenant||'مستأجر')+' • دفعة '+(i+1),(ok?'✅ ':'⏳ ')+$(a),esc(u.name))}}})});h+=N('المحصّل ÷ المستحق',$(got)+' ÷ '+$(due))+T('نسبة التحصيل',due?pc(got/due*100):'—');eqShow('نسبة التحصيل',h)};
+var MAP=[[/حتى اليوم/,'eqProfit'],[/الربح المتوقع/,'eqProj'],[/الإشغال الحالي/,'eqOccNow'],[/الإشغال على/,'eqOccW'],[/هامش الربح/,'eqMargin'],[/العائد على التكلفة/,'eqRoi'],[/نقطة التعادل/,'eqBE'],[/نسبة التحصيل/,'eqColl']];
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.tab!=='acc')return o;document.querySelectorAll('#app .stat').forEach(function(st){if(st.classList.contains('eqk'))return;var l=(st.querySelector('span')||{}).textContent||'';for(var i=0;i<MAP.length;i++){if(MAP[i][0].test(l)&&window[MAP[i][1]]){st.classList.add('eqk');st.onclick=window[MAP[i][1]];break}}})}catch(e){}return o};
 })();
 </script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
