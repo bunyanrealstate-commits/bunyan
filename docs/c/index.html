@@ -1802,9 +1802,10 @@ var a2=accTab2;accTab2=function(){var h=a2(),c='';try{c=chqCard()}catch(e){}if(!
 function ss(k,v){try{v==null?sessionStorage.removeItem(k):sessionStorage.setItem(k,v)}catch(e){}}
 function sg(k){try{return sessionStorage.getItem(k)}catch(e){return null}}
 /* يبقى المستخدم داخلاً طوال جلسة التطبيق (يتحمل السحب للتحديث، ويُمسح عند إغلاق التطبيق) */
-var r0=render;render=function(){r0.apply(this,arguments);try{if(AUTH&&A&&A.u&&A.k!=='cloud'){ss(SK,A.u);ss(UK,(typeof UV!=='undefined'&&UV&&UV.open)||'')}}catch(e){}};
-var lo=logOut;logOut=function(){ss(SK,null);ss(UK,null);return lo.apply(this,arguments)};
+var r0=render;render=function(){r0.apply(this,arguments);try{if(AUTH&&A&&A.u&&A.k!=='cloud'){ss(SK,A.u);ss(UK,(typeof UV!=='undefined'&&UV&&UV.open)||'')}if(AUTH){try{localStorage.setItem('bny_uv2',(typeof UV!=='undefined'&&UV&&UV.open)||'')}catch(e){}}}catch(e){}};
+var lo=logOut;logOut=function(){ss(SK,null);ss(UK,null);try{localStorage.removeItem('bny_uv2')}catch(e){}return lo.apply(this,arguments)};
 try{var u=sg(SK);if(u&&!AUTH){var f=US.find(function(x){return x.u===u});if(f){A=f;S=ld(f.k);AUTH=true;var o=sg(UK);if(o&&typeof UV!=='undefined'&&U(o))UV.open=o;render()}}}catch(e){}
+try{var o2=sg(UK)||localStorage.getItem('bny_uv2');if(AUTH&&o2&&typeof UV!=='undefined'&&!UV.open&&U(o2)){UV.open=o2;render()}}catch(e){}
 })();
 </script>
 <style id="lncss">
