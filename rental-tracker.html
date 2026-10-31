@@ -1101,7 +1101,7 @@ function toPdf(cv,name){var PW=595,PH=842,M=24,cw=PW-2*M,k=cw/cv.width,sh=Math.f
 window.exportPdf=function(node,label){node=node||gi('app');toast('جاري إنشاء PDF…');
  return snap(node).then(function(cv){var b=toPdf(cv,label);saveFile(b,(label&&label.indexOf('contract-')===0?'Tenancy-Contract-'+label.slice(9):'bunyan-'+(label||S.tab||'page'))+'-'+td()+'.pdf');toast('تم إنشاء PDF')}).catch(function(e){toast('تعذر إنشاء PDF')})};
 window.exportCard=function(b){var c=b.closest('.card');try{c.querySelectorAll('.trm button').forEach(function(x){x.click()})}catch(e){}exportPdf(c,(S.tab||'page')+'-card')};
-var r1=render;render=function(){r1();try{document.querySelectorAll('#app .card:not(#rob)').forEach(function(c){if(!c.querySelector(':scope>.pdfr')){var d=document.createElement('div');d.className='pdfr';var b=document.createElement('button');b.className='pdfb';b.title='PDF';b.textContent='📄 PDF';b.setAttribute('onclick','exportCard(this)');d.appendChild(b);c.appendChild(d)}})}catch(e){}};
+var r1=render;render=function(){r1();try{document.querySelectorAll('#app .pdfr').forEach(function(x){x.remove()});return;document.querySelectorAll('#app .card:not(#rob)').forEach(function(c){if(!c.querySelector(':scope>.pdfr')){var d=document.createElement('div');d.className='pdfr';var b=document.createElement('button');b.className='pdfb';b.title='PDF';b.textContent='📄 PDF';b.setAttribute('onclick','exportCard(this)');d.appendChild(b);c.appendChild(d)}})}catch(e){}};
 
 })()</script>
 <style>#pdfh{order:2;font-weight:700}.pdfr{display:flex;justify-content:flex-start;margin:6px 0 -4px!important}#app .pdfb{font-size:11px!important;padding:2px 9px!important;border-radius:7px!important;opacity:.8}#app .pdfb:hover{opacity:1}</style>
