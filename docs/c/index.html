@@ -2558,6 +2558,7 @@ accTab2=function(){var h=a3();try{var t=document.createElement('div');t.innerHTM
   if(hit(DEL,x)){c.remove();return}
   if(hit(NOTE,x))[].slice.call(c.querySelectorAll(':scope>p.mu')).forEach(function(p){if(!p.querySelector('button,input,select,b'))p.remove()});
   if(hit(FOLD,x)){var d=document.createElement('details');d.className='card acd';var hh=c.querySelector(':scope>h2');var sm=document.createElement('summary');sm.innerHTML=hh.innerHTML;hh.remove();d.appendChild(sm);while(c.firstChild)d.appendChild(c.firstChild);c.replaceWith(d)}});
+ [].slice.call(t.querySelectorAll('.stat')).forEach(function(x){var sp=x.querySelector('span');if(sp&&/^(ربح المجموعة|ربحي) حتى اليوم/.test(sp.textContent.trim()))x.remove()});
  // move "my financial position" right after overdue
  var cards=[].slice.call(t.children),pos=cards.find(function(c){return /^وضعي المالي اليوم/.test(ttl(c))}),od=cards.find(function(c){return /^المتأخرات/.test(ttl(c))});
  if(pos&&od&&od.nextSibling!==pos)od.after(pos);
