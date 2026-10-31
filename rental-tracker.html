@@ -438,7 +438,7 @@ const ef=x=>x.u&&U(x.u)?sh(U(x.u)):1;
 const mp=(u,L)=>((L.rent||0)+(L.inet||0)-(L.icost||0)-(L.rme?(L.router||0)/(lm(L)||1):0)-ua(u).full/(u.cm||1))*sh(u);
 const mprof=()=>{const t=today();return SU().reduce((s,u)=>s+u.leases.filter(L=>pd(L.start)<=t&&lend(L)>t).reduce((x,L)=>x+mp(u,L),0),0)};
 function ua(u){const f=sh(u),ue=(S.exp||[]).filter(x=>x.u===u.id).reduce((s,x)=>s+x.a*(x.n||1),0),full=(u.total||isumOf(u))+(+u.furn||0)+ue;
- const occN=u.leases.reduce((s,L)=>s+lm(L),0),inc=u.leases.reduce((s,L)=>s+Array.from({length:L.months},(_,i)=>la(L,i)).reduce((a,b)=>a+b,0)+Object.keys(L.rav||{}).reduce((q,i)=>q+(L.rav[i]-la(L,+i)),0)+(L.pen||0)+(L.adv||0),0)*f,
+ const occN=u.leases.reduce((s,L)=>s+lm(L),0),inc=u.leases.reduce((s,L)=>s+Array.from({length:L.months},(_,i)=>la(L,i)).reduce((a,b)=>a+b,0)+Object.keys(L.rav||{}).reduce((q,i)=>q+(L.rav[i]-la(L,+i)),0)+(L.penp?L.pen||0:0)+(L.adv||0),0)*f,
  ic=u.leases.reduce((s,L)=>s+(L.icost||0)*lm(L)+(L.rme?L.router||0:0),0)*f,cost=full*f+ic,vac=Math.max(0,u.cm-occN),tg=(S.tp??25)/100,tr=u.cm?(full-(u.salv||0))*(1+tg)/u.cm:0;
  return{cost,inc,occ:occN,vac,tr,tg,pre:occ(u).freeVal,full:full-(u.salv||0),profit:inc-cost,need:vac?Math.max(0,((cost-(u.salv||0))*(1+tg)-inc)/f/vac):0}}
 function ledger(){const t=today(),r=[];
@@ -677,8 +677,8 @@ function recalcInst(u,oT,oC,oS){const n=u.inst.length;if(!n)return;
   if(un.length){const each=Math.floor(rem/un.length);un.forEach(i=>i.a=each);un[un.length-1].a+=rem-each*un.length}else if(rem>0)u.inst.push({d:td(),a:rem,p:false,at:0})}}
 function accr(){const t=today();let rentE=0,pen=0,coC=0,fuC=0,isC=0,exC=0;
  SU().forEach(u=>{const f=sh(u),cm=u.cm||1,b=pd(u.start),e=addM(b,u.cm),el=cm*Math.max(0,Math.min(1,(t-b)/((e-b)||1)));
-  u.leases.forEach(L=>{let m=0;for(let i=0;i<L.months;i++){const d0=payD(L,i);if(d0<=t){const d1=i<L.months-1?payD(L,i+1):lend(L),fr=Math.max(0,Math.min(1,(t-d0)/(Math.max(1,d1-d0)))),lfi=lf(L,i)*fr;rentE+=((L.rav&&L.rav[i]!=null)?L.rav[i]:la(L,i))*fr*f;isC+=(L.icost||0)*lfi*f;m+=lfi}}
-   isC+=m*(L.rme?(L.router||0)/(lm(L)||1):0)*f;if(L.pen&&L.exit&&pd(L.exit)<=t)pen+=L.pen*f;if(L.adv&&pd(L.start)<=t)rentE+=L.adv*f});
+  u.leases.forEach(L=>{let m=0;for(let i=0;i<L.months;i++){const d0=payD(L,i);if(d0<=t){const d1=i<L.months-1?payD(L,i+1):lend(L),fr=Math.max(0,Math.min(1,(t-d0)/(Math.max(1,d1-d0)))),lfi=lf(L,i)*fr;rentE+=(((L.rav&&L.rav[i]!=null)?L.rav[i]:la(L,i))+(L.advp===i?(L.advA||0):0))*fr*f;isC+=(L.icost||0)*lfi*f;m+=lfi}}
+   isC+=m*(L.rme?(L.router||0)/(lm(L)||1):0)*f;if(L.pen&&L.penp&&L.exit&&pd(L.exit)<=t)pen+=L.pen*f;if(pd(L.start)<=t){if(L.advA===undefined&&L.stubA===undefined)rentE+=(L.adv||0)*f;else rentE+=(L.stubA||0)*f}});
   coC+=(u.total||isumOf(u))/cm*el*f;fuC+=((+u.furn||0)-(u.salv||0))/cm*el*f});
  SE().forEach(x=>{const un=x.u&&U(x.u),f=un?sh(un):shg(x.g);for(let i=0;i<(x.n||1);i++){if(addM(pd(x.d),i)<=t)exC+=x.a*f}});
  const earned=rentE+pen,cost=coC+fuC+isC+exC;return{earned,cost,profit:earned-cost,rentE,pen,coC,fuC,isC,exC}}
