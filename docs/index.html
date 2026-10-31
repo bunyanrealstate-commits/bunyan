@@ -677,9 +677,9 @@ const dfmt=d=>new Date(d+'T00:00').toLocaleDateString(LOC(),{weekday:'long',day:
  badge=n=>`<span class='bd ${n<0?'b0':n<=7?'b1':n<=30?'b2':'b3'}'>${n<0?'متأخرة '+(-n)+' يوم':n===0?'اليوم':n===1?'غداً':'بعد '+n+' يوم'}</span>`;
 function payCards(){const o=items().filter(x=>['inst','exp','debt'].includes(x.ty)&&x.amt).map(x=>({...x,n:dd(x.d)})).sort((a,b)=>a.d.localeCompare(b.d)),
  rn=items().filter(x=>x.ty==='rent'&&dd(x.d)<=60).map(x=>({...x,n:dd(x.d)})).sort((a,b)=>a.d.localeCompare(b.d)),
- tr=(x,c)=>`<tr class='r${x.n<0?0:x.n<=7?1:x.n<=30?2:3}'><td><span class='dt'>${dfmt(x.d)}</span></td><td>${badge(x.n)}</td><td><b class='${c}'>${$(x.amt)}</b></td><td>${esc(x.label)}</td>${x.ty==='rent'?'<td>'+waBtn(x)+'</td>':''}</tr>`,
+ tr=(x,c)=>`<tr class='r${x.n<0?0:x.n<=7?1:x.n<=30?2:3}'><td><span class='dt'>${dfmt(x.d)}</span></td><td>${badge(x.n)}</td><td><b class='${c}'>${$(x.amt)}</b></td><td>${esc(x.label)}</td></tr>`,
  H=['التاريخ','بعد كم يوماً','المبلغ','البيان'];
- return `<div class='card'><h2>💸 كل الدفعات المستحقة عليّ (${o.length}) — الإجمالي ${$(o.reduce((s,x)=>s+x.amt,0))}</h2>${tbl(H,o.map(x=>tr(x,'neg')).join('')||`<tr><td colspan='4' class='mu'>لا توجد دفعات.</td></tr>`)}</div><div class='card'><h2>💰 إيجارات مستحقة لي (المتأخر + خلال 60 يوم) — ${rn.length}</h2>${tbl(H.concat(['']),rn.map(x=>tr(x,'pos')).join('')||`<tr><td colspan='4' class='mu'>لا توجد إيجارات في هذه الفترة.</td></tr>`)}</div>`}
+ return `<div class='card'><h2>💸 كل الدفعات المستحقة عليّ (${o.length}) — الإجمالي ${$(o.reduce((s,x)=>s+x.amt,0))}</h2>${tbl(H,o.map(x=>tr(x,'neg')).join('')||`<tr><td colspan='4' class='mu'>لا توجد دفعات.</td></tr>`)}</div><div class='card'><h2>💰 إيجارات مستحقة لي (المتأخر + خلال 60 يوم) — ${rn.length}</h2>${tbl(H,rn.map(x=>tr(x,'pos')).join('')||`<tr><td colspan='4' class='mu'>لا توجد إيجارات في هذه الفترة.</td></tr>`)}</div>`}
 const LIC_PUB={"kty":"EC","crv":"P-256","x":"UhQxWv08NhuQjRdHehUheCsHsTndAAA2T-MfN9r5rT0","y":"C8nbwe0KubOfyYamtOdneV8dse_WzXBHP3ker3SN0Qs"};
 // رابط خادم التفعيل عبر الإنترنت (Cloudflare Worker). اتركه فارغاً إذا كنت تفعّل بالأكواد اليدوية فقط. مثال: 'https://bunyan-activation.YOURNAME.workers.dev'
 const ACT_URL='';
@@ -1043,7 +1043,7 @@ function toPdf(cv,name){var PW=595,PH=842,M=24,cw=PW-2*M,k=cw/cv.width,sh=Math.f
 window.exportPdf=function(node,label){node=node||gi('app');toast('جاري إنشاء PDF…');
  return snap(node).then(function(cv){var b=toPdf(cv,label);saveFile(b,'bunyan-'+(label||S.tab||'page')+'-'+td()+'.pdf');toast('تم إنشاء PDF')}).catch(function(e){toast('تعذر إنشاء PDF')})};
 window.exportCard=function(b){var c=b.closest('.card');exportPdf(c,(S.tab||'page')+'-card')};
-var r1=render;render=function(){r1();try{document.querySelectorAll('#app .card:not(#rob)').forEach(function(c){if(!c.querySelector(':scope>.pdfr')){var d=document.createElement('div');d.className='pdfr';var b=document.createElement('button');b.className='pdfb';b.title='PDF';b.textContent='📄 PDF';b.setAttribute('onclick','exportCard(this)');d.appendChild(b);var w=document.createElement('button');w.className='pdfb wab';w.title='مشاركة على واتساب';w.textContent='💬 واتساب';w.setAttribute('onclick','waShareCard(this)');d.appendChild(w);c.appendChild(d)}})}catch(e){}};
+var r1=render;render=function(){r1();try{document.querySelectorAll('#app .card:not(#rob)').forEach(function(c){if(!c.querySelector(':scope>.pdfr')){var d=document.createElement('div');d.className='pdfr';var b=document.createElement('button');b.className='pdfb';b.title='PDF';b.textContent='📄 PDF';b.setAttribute('onclick','exportCard(this)');d.appendChild(b);c.appendChild(d)}})}catch(e){}};
 
 })()</script>
 <style>#pdfh{order:2;font-weight:700}.pdfr{display:flex;justify-content:flex-start;margin:6px 0 -4px!important}#app .pdfb{font-size:11px!important;padding:2px 9px!important;border-radius:7px!important;opacity:.8}#app .pdfb:hover{opacity:1}</style>
@@ -1079,9 +1079,6 @@ function find(x){var r=null;SU().forEach(function(u){u.leases.forEach(function(L
 window.waBtn=function(x){var f=find(x);if(!f)return '';var L=f.L,amt=$(la(L,f.i)),late=x.n<0,nm=L.tenant||'',ar=LANG==='ar'||LANG==='ur'&&false;
  var t=LANG==='ar'?'السلام عليكم '+nm+'،\nتذكير بإيجار '+f.u.name+' (شهر '+(f.i+1)+') بمبلغ '+amt+(late?' — متأخر '+(-x.n)+' يوم':'')+'.\nتاريخ الاستحقاق: '+x.d+'.\nشكراً لك.':'Hello '+nm+',\nReminder: rent for '+f.u.name+' (month '+(f.i+1)+') of '+amt+(late?' — '+(-x.n)+' day(s) overdue':'')+'.\nDue date: '+x.d+'.\nThank you.';
  return '<a class="wab" href="'+wa(L.phone,t).replace(/"/g,'&quot;')+'" target="_blank" rel="noopener" title="إرسال تذكير على واتساب" onclick="event.stopPropagation()">💬 واتساب</a>'};
-window.waShareCard=function(b){var c=b.closest('.card'),cl=c.cloneNode(true);[].forEach.call(cl.querySelectorAll('.pdfr,button,script'),function(e){e.remove()});
- var t=(cl.innerText||cl.textContent||'').replace(/\n{3,}/g,'\n\n').trim();if(t.length>3000)t=t.slice(0,3000)+'…';
- var an=document.createElement('a');an.href=wa('',('Bunyan Furnished\n\n')+t);an.target='_blank';an.rel='noopener';document.body.appendChild(an);an.click();an.remove()};
 })()</script>
 <style>a.wab{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border:1.5px solid #1f9d55;border-radius:8px;color:#14783f!important;background:rgba(31,157,85,.10);font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap}
 a.wab:hover{background:rgba(31,157,85,.2)}
