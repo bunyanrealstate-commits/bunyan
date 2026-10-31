@@ -1396,5 +1396,37 @@ dec()})();
  [].forEach.call(tb.querySelectorAll('tr'),function(tr,i){if(tr===hr)return;[].forEach.call(tr.children,function(td,k){td.setAttribute('data-label',lb[k]||'')})});tb.classList.add('stk')})}catch(e){}}
 var r0=render;render=function(){r0.apply(this,arguments);run()};addEventListener('resize',run);render()})();
 </script>
+
+<script>
+(function(){
+var OW={s:"AVnxOcBwxowLG2y9U0MR+A==",i:"FX+mNfZYpo8LqHgV",c:"Nxi67DPc3cJ3NueeI3ykCgrHLSwfvC4R0QK/FycA8ye9DIgVccrLDr/37MgN/CUtqDOi2w6iUSmYCDoPFj03+BxK+vkpfO2+e5j8PbhzBX14RJtUrgGWWVT8g7A6njZRX8XuklWB7QSrq8Go5YTfIQChGrIe2zdIulnJKcyxWuwElRx48p6+Vmru2piO1IvicvBYplHpPWs5+fkM/Ai1N/52aBBc9b4SyI0rq/jUFtdhOjmoV4HqzBkarUamD32eSfWsENPkjhAAvmDLShyG5VEyyid49Ol+w5s9u0Mh"},K=null,taps=0,tt=0;
+var B=function(x){return Uint8Array.from(atob(x),function(c){return c.charCodeAt(0)})};
+function hook(){var h=[].slice.call(document.querySelectorAll('h2')).find(function(e){return e.textContent.indexOf('🔑 الترخيص')===0});
+ if(h&&!h._ow){h._ow=1;h.addEventListener('click',function(){var n=Date.now();taps=(n-tt<1500)?taps+1:1;tt=n;if(taps>=7){taps=0;ownOpen()}})}}
+var r0=render;render=function(){r0.apply(this,arguments);try{hook()}catch(e){}};
+function ov(h){var d=document.getElementById('own');if(!d){d=document.createElement('div');d.id='own';d.className='ov';document.body.appendChild(d)}d.innerHTML='<div class="dlg" style="max-height:92vh;overflow:auto">'+h+'</div>';return d}
+function ownClose(){var d=document.getElementById('own');if(d)d.remove();K=null}
+function ownOpen(){ov('<h2>🔐 إصدار التراخيص (المالك)</h2><label>كلمة سر المالك</label><input id="ow_p" type="password" autocomplete="off" dir="ltr"><p id="ow_e" class="neg"></p><div class="bt"><button onclick="ownClose()">إلغاء</button><button class="p" onclick="ownUnlock()">فتح</button></div>')}
+async function ownUnlock(){var e=document.getElementById('ow_e');try{var km=await crypto.subtle.importKey('raw',new TextEncoder().encode(document.getElementById('ow_p').value.trim().toUpperCase()),'PBKDF2',false,['deriveKey']);
+ var k=await crypto.subtle.deriveKey({name:'PBKDF2',salt:B(OW.s),iterations:300000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['decrypt']);
+ var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:B(OW.i)},k,B(OW.c));K=await crypto.subtle.importKey('jwk',JSON.parse(new TextDecoder().decode(pt)),{name:'ECDSA',namedCurve:'P-256'},false,['sign']);ownUI()}
+ catch(x){e.textContent='كلمة السر غير صحيحة'}}
+function hist(){try{return JSON.parse(localStorage.getItem('bny_issued')||'[]')}catch(e){return[]}}
+function ownUI(){var h=hist().slice(0,8).map(function(r){return '<div class="mu" dir="ltr" style="font-size:12px">'+esc(r.at)+' • '+esc(r.n||'-')+' • '+esc(r.dev)+'</div>'}).join('');
+ ov('<h2>🔐 إصدار كود تفعيل لعميل</h2><label>كود جهاز العميل (أو الرسالة كاملة)</label><input id="ow_d" dir="ltr" placeholder="BNY-XXXX-XXXX-XXXX-XXXX" oninput="ownFx()"><div class="bt"><button onclick="ownPaste()">📥 لصق من الحافظة وإصدار</button></div><label>المدة</label><select id="ow_t" onchange="document.getElementById(\'ow_x\').style.display=this.value==\'D\'?\'block\':\'none\'"><option value="L">مدى الحياة</option><option value="D">لحد تاريخ (اشتراك)</option></select><input id="ow_x" type="date" style="display:none"><label>اسم العميل (ملاحظة)</label><input id="ow_n"><div class="bt"><button class="p" onclick="ownGen()">إصدار الكود</button></div><div id="ow_o" dir="ltr" style="word-break:break-all;font-family:monospace;margin:8px 0"></div><div class="bt"><button onclick="ownCopy()">📋 نسخ</button><button onclick="ownWa()">📲 إرسال واتساب</button></div>'+(h?'<label>آخر ما أصدرته</label>'+h:'')+'<div class="bt"><button onclick="ownClose()">إغلاق</button></div>')}
+function ownFx(){var i=document.getElementById('ow_d'),m=i.value.toUpperCase().match(/BNY(-[0-9A-F]{4}){4}/);if(m&&m[0]!==i.value)i.value=m[0]}
+async function ownGen(){var o=document.getElementById('ow_o'),dev=document.getElementById('ow_d').value.trim().toUpperCase();
+ if(!/^BNY(-[0-9A-F]{4}){4}$/.test(dev)){o.textContent='كود الجهاز غير صحيح';return}
+ var exp=document.getElementById('ow_t').value=='L'?'LIFETIME':document.getElementById('ow_x').value;if(!exp){o.textContent='اختر التاريخ';return}
+ var sg=await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},K,new TextEncoder().encode('BNYAN1|'+dev+'|'+exp));
+ var code=exp+'.'+b64u(sg);o.textContent=code;
+ try{var h=hist();h.unshift({n:document.getElementById('ow_n').value,dev:dev,exp:exp,at:td()});localStorage.setItem('bny_issued',JSON.stringify(h.slice(0,200)))}catch(e){}
+ try{await navigator.clipboard.writeText(code);toast('تم الإصدار ونسخ الكود')}catch(e){}return code}
+async function ownPaste(){try{document.getElementById('ow_d').value=await navigator.clipboard.readText()}catch(e){document.getElementById('ow_o').textContent='الصق الرسالة في الخانة';return}ownFx();ownGen()}
+function ownCopy(){var c=document.getElementById('ow_o').textContent;if(c&&c.indexOf('.')>0)cpy(c,event.target)}
+function ownWa(){var c=document.getElementById('ow_o').textContent;if(c&&c.indexOf('.')>0)window.open('https://wa.me/?text='+encodeURIComponent(c),'_blank')}
+window.ownClose=ownClose;window.ownUnlock=ownUnlock;window.ownFx=ownFx;window.ownGen=ownGen;window.ownPaste=ownPaste;window.ownCopy=ownCopy;window.ownWa=ownWa;
+})();
+</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
