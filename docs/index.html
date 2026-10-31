@@ -2991,6 +2991,12 @@ html body #nav{position:sticky!important;top:var(--hdh,46px)!important;z-index:2
  html body #vbtn,html body #bell,html body .hd button[onclick^="toggleMode"]{width:32px!important;height:32px!important}
  html body .umb{height:32px!important;padding:0 6px 0 4px!important}
  html body #nav{background:var(--card)!important}
+ html body .hd>h1,html body .hd .brand{flex:none!important}
+ html body .hd>span{flex:1 1 auto!important;overflow-x:auto!important;overflow-y:visible;scrollbar-width:none;justify-content:flex-start!important;padding:2px 0}
+ html body .hd>span::-webkit-scrollbar{display:none}
+ html body .hd>span>*{flex:none!important;min-width:auto!important}
+ html body .hd #ws{width:auto!important;max-width:140px!important;min-width:90px!important}
+ html body .hd .ump{position:fixed!important;top:calc(var(--hdh,44px) + 4px)!important;inset-inline-end:8px!important;inset-inline-start:auto!important;max-height:70vh;overflow-y:auto}
 }
 </style>
 <script>
