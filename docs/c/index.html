@@ -335,7 +335,7 @@ if(!S||!S.units){
   if(o&&o.units)o.units.forEach(u=>S.units.push({id:u.id,name:u.name,company:u.company,partner:'',share:100,start:u.start,cm:12,furn:u.furn||0,fp:u.fp,inst:u.inst||[],leases:u.rent?[{id:uid(),tenant:'',start:u.start,months:u.months||12,rent:u.rent,rcv:u.rcv||[]}]:[]}));
 }
 const save=()=>{if(CL==='yes'){cloudSave();return}if(!A)return;if(A.role==='viewer'){S=ld(A.k);toast('صلاحيتك مشاهدة فقط — لم يتم حفظ التعديل');return}locLog();try{localStorage.setItem(A.k,JSON.stringify(S))}catch(e){try{toast('⚠️ مساحة التخزين ممتلئة — نزّل نسخة احتياطية الآن')}catch(x){}}try{window.syncDirty&&syncDirty()}catch(e){}};
-let _um=null,_ua=null,_ul=-1;const shg=id=>{const g=(S.groups||[]).find(x=>x.id===id);return g&&g.share>0?g.share/100:1},U=id=>{const a=S.units;if(_ua!==a||_ul!==a.length){_ua=a;_ul=a.length;_um=new Map();a.forEach(u=>_um.set(u.id,u))}const u=_um.get(id);return u&&u.id===id?u:a.find(x=>x.id===id)},sh=u=>shg(u.g);
+let _um=null,_ua=null,_ul=-1;const shg=id=>{const g=(S.groups||[]).find(x=>x.id===id);return g&&g.share>0?((!g.custom&&(g.n||1)>1)?1/g.n:g.share/100):1},U=id=>{const a=S.units;if(_ua!==a||_ul!==a.length){_ua=a;_ul=a.length;_um=new Map();a.forEach(u=>_um.set(u.id,u))}const u=_um.get(id);return u&&u.id===id?u:a.find(x=>x.id===id)},sh=u=>shg(u.g);
 const partners=()=>[];
 
 const schA=(L,i)=>{const x=L.sch[i];return x?(+x.a||0):0},schF=(L,i)=>{const b=(L.rent||0)+(L.inet||0);return b>0?schA(L,i)/b:1},schD=(L,i)=>{const x=L.sch[Math.max(0,Math.min(i,L.sch.length-1))];return x?pd(x.d):pd(L.start)},schE=L=>{if(L.months<L.sch.length)return pd(L.sch[L.months].d);if(L.end)return pd(L.end);const x=L.sch[L.sch.length-1],d=x?pd(x.d):pd(L.start);d.setDate(d.getDate()+30);return d};
@@ -345,13 +345,13 @@ const ppA=(L,i)=>(L.pp||[]).reduce((s,x)=>s+(x.i===i?(+x.a||0):0),0),ppT=L=>(L.p
 const paidOf=u=>u.inst.filter(i=>i.p).reduce((s,i)=>s+i.a,0),isumOf=u=>u.inst.reduce((s,i)=>s+(+i.a||0),0);
 function events(){
   const t=today(),ev=[],cl=d=>new Date(Math.max(pd(d),t));
-  SU().forEach(u=>{const f=sh(u);
+  SU().forEach(u=>{const f=1;
     u.inst.forEach(i=>{if(!i.p&&i.a&&i.d)ev.push({d:cl(i.d),a:-i.a*f,l:u.name+' – دفعة '+(u.company||'الشركة')})});
     if(!u.fp&&u.furn)ev.push({d:t,a:-u.furn*f,l:u.name+' – أثاث'});if(u.salv){const d=addM(pd(u.start),u.cm);if(d>=t)ev.push({d,a:u.salv*f,l:u.name+' – استرداد الأثاث'})}
     u.leases.forEach(L=>{for(let i=0;i<L.months;i++){if(!L.rcv.includes(i))ev.push({d:cl(iso(payD(L,i))),a:la(L,i)*f,l:u.name+' – إيجار '+(L.tenant||'مستأجر')});if(L.icost&&payD(L,i)>t)ev.push({d:cl(iso(payD(L,i))),a:-L.icost*lf(L,i)*f,l:u.name+' – إنترنت'})}if(L.rme&&L.router&&pd(L.start)>t)ev.push({d:cl(L.start),a:-L.router*f,l:u.name+' – راوتر'});if(L.pen&&!L.penp&&L.exit)ev.push({d:cl(L.exit),a:L.pen*f,l:u.name+' – شرط جزائي'})})});
   S.debts.forEach(x=>ev.push({d:cl(x.d),a:-x.a,l:x.w}));
   S.recv.forEach(x=>ev.push({d:cl(x.d),a:x.a,l:x.w}));
-  SE().forEach(x=>{for(let i=0;i<(x.n||1);i++){const d=addM(pd(x.d),i);if(d>t)ev.push({d,a:-x.a*ef(x),l:x.w})}});
+  SE().forEach(x=>{for(let i=0;i<(x.n||1);i++){const d=addM(pd(x.d),i);if(d>t)ev.push({d,a:-x.a,l:x.w})}});
   return ev.sort((a,b)=>a.d-b.d);
 }
 function project(ev){
@@ -502,12 +502,12 @@ function dlBackup(){logEv('تنزيل نسخة احتياطية');const b=new Bl
 function ldBackup(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.units)throw 0;confirmM('سيتم استبدال كل البيانات الحالية بهذه النسخة. هل تريد المتابعة؟',()=>{S=x;PREVL=null;logEv('استعادة نسخة احتياطية')})}catch(e){toast('الملف غير صالح')}};r.readAsText(f)}
 const bkAge=()=>{try{const d=localStorage.getItem('bunyan_bk');return d?Math.floor((today()-pd(d))/864e5):null}catch(e){return null}};
 setTimeout(()=>{if(AUTH&&S.units.length&&(bkAge()==null||bkAge()>=7))toast('⚠️ أنشئ نسخة احتياطية من تبويب النسخ الاحتياطي')},6000);
-const mvO=ot=>{const od=iso(new Date(ot)),t=today();let c=0;
- SU().forEach(u=>{const f=1;u.inst.forEach(i=>{if(i.p&&(i.at||0)>ot)c-=i.a*f});if(u.fp&&(u.fat||0)>ot)c-=(u.furn||0)*f;
+const mvO=(ot,mine)=>{const od=iso(new Date(ot)),t=today();let c=0;
+ SU().forEach(u=>{const f=mine?sh(u):1;u.inst.forEach(i=>{if(i.p&&(i.at||0)>ot)c-=i.a*f});if(u.fp&&(u.fat||0)>ot)c-=(u.furn||0)*f;
   u.leases.forEach(L=>{L.rcv.forEach(i=>{if(((L.rat||{})[i]||0)>ot)c+=((L.rav||{})[i]??la(L,i))*f});if(L.penp&&(L.pat||0)>ot)c+=(L.pen||0)*f;if(L.adv&&(L.advat||0)>ot)c+=L.adv*f;(L.pp||[]).forEach(x=>{if((x.at||0)>ot)c+=(+x.a||0)*f});
    if(L.icost)for(let i=0;i<L.months;i++){const d=payD(L,i);if(d<=t&&iso(d)>od)c-=L.icost*lf(L,i)*f}
    if(L.rme&&L.router&&pd(L.start)<=t&&L.start>od)c-=L.router*f})});
- SE().forEach(x=>{const f=1;for(let i=0;i<(x.n||1);i++){const d=addM(pd(x.d),i);if(d<=t&&iso(d)>od)c-=x.a*f}});
+ SE().forEach(x=>{const un=x.u&&U(x.u),f=mine?(un?sh(un):shg(x.g)):1;for(let i=0;i<(x.n||1);i++){const d=addM(pd(x.d),i);if(d<=t&&iso(d)>od)c-=x.a*f}});
  if(WS==='all'||WS==='-')(S.dep||[]).forEach(x=>{if(x.mode==='chq')return;const s=x.k==='t'?1:-1,a=+x.a||0;if((x.at||0)>ot)c+=s*a;if(x.r&&(x.rat||0)>ot)c-=s*a});
  (S.adj||[]).forEach(a=>{if(a.at>ot&&(WS==='all'||(a.g||'')===(WS==='-'?'':WS)))c+=a.a});return c};
 const cashBase=()=>{const gc=S.gc||{};return WS==='all'?(S.cash||0)+Object.values(gc).reduce((s,x)=>s+x,0):(WS==='-'?(S.cash||0):(gc[WS]||0))};
@@ -526,10 +526,11 @@ function fpos(){const t=today(),r={cash:cashNow(),rcv:0,accU:0,preCo:0,preI:0,fu
    L.rcv.forEach(i=>{R+=rv(i)});R+=(L.adv||0)+ppT(L);if(L.penp&&L.pen){R+=L.pen;if(L.exit&&pd(L.exit)<=t)E+=L.pen}
    const y=R+B-E;r.rcv+=B*f;if(y>=0)r.unr+=y*f;else r.accU-=y*f;r.preI+=(Ip-Ia)*f})});
  if(WS==='all'||WS==='-')(S.dep||[]).forEach(x=>{if(x.r||x.mode==='chq')return;if(x.k==='t')r.depH+=+x.a||0;else r.depP+=+x.a||0});
- r.A=r.cash+r.rcv+r.accU+r.preCo+r.preI+r.fur+r.depP;r.L=r.due+r.accCo+r.unr+r.furPay+r.depH;r.eq=r.A-r.L;return r}
+ r.ptn=0;r.gpm=0;try{r.ptn=mvO(0)-mvO(0,1);(S.groups||[]).forEach(g=>{if(WS==='all'||WS===g.id)r.gpm+=window.gpMine?gpMine(g):0})}catch(e){}
+ r.A=r.cash+r.rcv+r.accU+r.preCo+r.preI+r.fur+r.depP+r.gpm;r.L=r.due+r.accCo+r.unr+r.furPay+r.depH+r.ptn;r.eq=r.A-r.L;return r}
 function fpTbl(){const F=fpos(),row=(l,v,c)=>`<tr><td>${l}</td><td class='${c==null?'':cls(c)}'>${$(v)}</td></tr>`,rw=(l,v)=>Math.abs(v)>=0.5?row(l,v):'';
- return tbl(['البند','المبلغ'],row('الرصيد النقدي',F.cash)+rw('مستحقاتي لدى المستأجرين (إيجارات حل موعدها ولم تُحصَّل)',F.rcv)+rw('إيجار عن أيام مضت لم يحل موعد دفعه',F.accU)+rw('إيجار شركة مدفوع مقدماً (لأيام لم تأتِ بعد)',F.preCo)+rw('إنترنت وراوتر مدفوع مقدماً',F.preI)+rw('القيمة الحالية للأثاث (بعد النقص بمرور الوقت)',F.fur)+rw('تأمينات دفعتها للشركات',F.depP)+row('<b>إجمالي ما أملكه</b>',F.A)
-  +rw('يجب أن أدفعه الآن (دفعات شركة تجاوزت موعدها)',-F.due)+rw('إيجار شركة مستحق عن أيام مضت (لم يحل موعد دفعه)',-F.accCo)+rw('إيجارات مقبوضة أو مستحقة عن أيام لم تأتِ بعد (التزام حتى تنقضي)',-F.unr)+rw('أثاث لم يُدفع ثمنه بعد',-F.furPay)+rw('تأمينات المستأجرين عندي (تُرد لهم)',-F.depH)+row('<b>صافي رصيدي</b>',F.eq,F.eq))
+ return tbl(['البند','المبلغ'],row('الرصيد النقدي',F.cash)+rw('مستحقاتي لدى المستأجرين (إيجارات حل موعدها ولم تُحصَّل)',F.rcv)+rw('إيجار عن أيام مضت لم يحل موعد دفعه',F.accU)+rw('إيجار شركة مدفوع مقدماً (لأيام لم تأتِ بعد)',F.preCo)+rw('إنترنت وراوتر مدفوع مقدماً',F.preI)+rw('القيمة الحالية للأثاث (بعد النقص بمرور الوقت)',F.fur)+rw('تأمينات دفعتها للشركات',F.depP)+rw('حصتي من فلوس الشراكة المتبقية',F.gpm)+row('<b>إجمالي ما أملكه</b>',F.A)
+  +rw('يجب أن أدفعه الآن (دفعات شركة تجاوزت موعدها)',-F.due)+rw('إيجار شركة مستحق عن أيام مضت (لم يحل موعد دفعه)',-F.accCo)+rw('إيجارات مقبوضة أو مستحقة عن أيام لم تأتِ بعد (التزام حتى تنقضي)',-F.unr)+rw('أثاث لم يُدفع ثمنه بعد',-F.furPay)+rw('تأمينات المستأجرين عندي (تُرد لهم)',-F.depH)+rw('حصة الشركاء من النقدي اللي معايا',-F.ptn)+row('<b>صافي رصيدي</b>',F.eq,F.eq))
   +`<p class='mu'>دفعات شركة مستحقة عليّ (لم يحل موعدها بعد): ${$(F.fut)}</p><p class='mu'>صافي رصيدي يتغير بنفس مقدار ربحي المحاسبي، مضافاً إليه أي أموال أضيفها أو أسحبها.</p>`}
 function stm(){const t=today(),lg=ledger(),sm=c=>lg.filter(x=>x.c===c).reduce((s,x)=>s+x.a,0),rn=sm('rn'),pn=sm('pn'),co=-sm('co'),fu=-sm('fu'),is=-sm('is'),ex=-sm('ex'),R=rn+pn,E=co+fu+is+ex,AC=accr(),adv=SU().reduce((s,u)=>s+u.leases.reduce((x,L)=>x+L.rcv.filter(i=>payD(L,i)>t).reduce((y,i)=>y+((L.rav||{})[i]??la(L,i)),0),0)*sh(u),0),
  rcvbl=SU().reduce((s,u)=>s+u.leases.reduce((x,L)=>{let m=0;for(let i=0;i<L.months;i++)if(!L.rcv.includes(i)&&payD(L,i)<=t)m+=la(L,i);return x+m*sh(u)},0),0)+S.recv.reduce((s,x)=>s+x.a,0),
@@ -590,11 +591,11 @@ function units(){const t=today();
 <div class='li' style='border:0'><button onclick='UV.pg=Math.max(0,UV.pg-1);render()'>→ السابق</button><span class='mu'>صفحة ${UV.pg+1} من ${pages} (${rows.length} استديو)</span><button onclick='UV.pg=Math.min(${pages-1},UV.pg+1);render()'>التالي ←</button></div><p class='mu'>اضغط على أي استديو لفتح تفاصيلها وتعديلها.</p></div>`}
 const dd=d=>Math.round((pd(d)-today())/864e5),whenTxt=n=>n===0?'اليوم':n===1?'غداً':n===2?'بعد يومين':n===7?'بعد أسبوع':n===14?'بعد أسبوعين':n===21?'بعد 3 أسابيع':n===30?'بعد شهر':'بعد '+n+' يوم';
 function items(){const t=today(),r=[],P=(ty,id,d,label,amt,offs)=>r.push({ty,id,d,label,amt,offs});
- SU().forEach(u=>{u.inst.forEach((i,k)=>{if(!i.p)P('inst',u.id+'i'+k,i.d,'دفعة '+(u.company||'الشركة')+' - '+u.name,i.a*sh(u),[30,21,14,7,2,0])});
-  u.leases.forEach((L,k)=>{for(let i=0;i<L.months;i++)if(!L.rcv.includes(i))P('rent',u.id+'l'+k+'_'+i,iso(payD(L,i)),'إيجار '+(L.tenant||'مستأجر')+' - '+u.name,la(L,i)*sh(u),[1,0]);P('end',u.id+'e'+k,iso(lend(L)),'انتهاء عقد '+(L.tenant||'المستأجر')+' - '+u.name,0,[0])});
+ SU().forEach(u=>{u.inst.forEach((i,k)=>{if(!i.p)P('inst',u.id+'i'+k,i.d,'دفعة '+(u.company||'الشركة')+' - '+u.name,i.a,[30,21,14,7,2,0])});
+  u.leases.forEach((L,k)=>{for(let i=0;i<L.months;i++)if(!L.rcv.includes(i))P('rent',u.id+'l'+k+'_'+i,iso(payD(L,i)),'إيجار '+(L.tenant||'مستأجر')+' - '+u.name,la(L,i),[1,0]);P('end',u.id+'e'+k,iso(lend(L)),'انتهاء عقد '+(L.tenant||'المستأجر')+' - '+u.name,0,[0])});
   P('cend',u.id+'c',iso(addM(pd(u.start),u.cm)),'انتهاء عقد الشركة - '+u.name,0,[0])});
  S.debts.forEach((x,k)=>P('debt','d'+k,x.d,'دفعة مستحقة عليّ: '+x.w,x.a,[0]));S.recv.forEach((x,k)=>P('recv','r'+k,x.d,'مستحقات لي: '+x.w,x.a,[0]));
- SE().forEach((x,k)=>{for(let i=0;i<(x.n||1);i++){const d=iso(addM(pd(x.d),i));if(pd(d)>=t)P('exp','x'+k+'_'+i,d,'مصروف: '+x.w,x.a*(x.u&&U(x.u)?sh(U(x.u)):shg(x.g)),[0])}});return r}
+ SE().forEach((x,k)=>{for(let i=0;i<(x.n||1);i++){const d=iso(addM(pd(x.d),i));if(pd(d)>=t)P('exp','x'+k+'_'+i,d,'مصروف: '+x.w,x.a,[0])}});return r}
 function alertsNow(){return items().filter(x=>x.offs.includes(dd(x.d))).map(x=>({...x,n:dd(x.d),when:whenTxt(dd(x.d)),key:x.ty+'|'+x.id+'|'+x.d+'|'+dd(x.d)})).sort((a,b)=>a.n-b.n)}
 let LASTP=0,TOASTED=0;const nb=()=>{try{return alertsNow().length}catch(e){return 0}};
 function pushNow(){if(!window.Notification||Notification.permission!=='granted')return;let seen={};try{seen=JSON.parse(localStorage.getItem('bunyan_nt'))||{}}catch(e){}const k0=td();alertsNow().forEach(a=>{const k=k0+'#'+a.key;if(!seen[k]){try{new Notification('Bunyan Furnished',{body:a.when+': '+a.label+(a.amt?' • '+$(a.amt):'')})}catch(e){}seen[k]=1}});Object.keys(seen).forEach(k=>{if(!k.startsWith(k0))delete seen[k]});try{localStorage.setItem('bunyan_nt',JSON.stringify(seen))}catch(e){}}
@@ -2345,10 +2346,11 @@ window.gpAdd=function(id,sign){var g=G(id);openM((sign>0?'➕ دعم مالي ل
 window.gpDel=function(id,i){confirmM('حذف هذه الحركة؟',function(){pots(id).splice(i,1)})};
 window.gpNames=function(id){var g=G(id);openM('👥 أسماء الشركاء — '+g.name,[{k:'pn',l:'اكتب الأسماء مفصولة بفاصلة، أولهم أنت (مثلاً: أسامة، عمرو)',v:g.pn||names(g).join('، ')}],function(o){g.pn=o.pn;var c=String(o.pn||'').split(/[,،\n]+/).map(function(x){return x.trim()}).filter(Boolean).length;if(c>=2){g.n=c;if(!g.custom)g.share=Math.round(10000/c)/100}})};
 function hand(g){var inc=0,out=0;S.units.filter(function(u){return u.g===g.id}).forEach(function(u){(u.leases||[]).forEach(function(L){(L.rcv||[]).forEach(function(i){inc+=(L.rav&&L.rav[i]!=null)?+L.rav[i]:la(L,i)})});(u.inst||[]).forEach(function(i){if(i.p&&i.at>0)out+=+i.a||0});if(u.fp&&u.fat>0)out+=+u.furn||0});return{inc:inc,out:out,net:inc-out}}
-function card(g){var h0=hand(g),t=tot(g.id),nm=names(g),sh=shares(g),h="<div class='card'><h2>🤝 فلوس الشراكة — "+esc(g.name)+"</h2><p class='mu'>"+((g.n||1)<2?'⚠ عدد الشركاء في هذه المجموعة 1 — التقسيم محسوب 50/50 على شريك واحد. لتغييره: المجموعات ← ✎. ':'')+"رصيد منفصل عن رصيدك النقدي الخاص: دعم مالي خارجي مشترك بين الشركاء، لا يدخل في حساباتك.</p><div class='stat'><span>إجمالي فلوس الشراكة</span><b>"+$(t)+"</b></div><div class='stat' style='margin-top:8px'><span>💵 النقدي معي (إيجارات قبضتها من العملاء"+(h0.out?' − مدفوع منها':'')+")</span><b>"+$(h0.net)+"</b></div><p class='mu' style='margin:4px 0 0'>ده كل اللي قبضته، وفيه حصة الشركاء. حصتك منه: "+$(h0.net*shares(g)[0]/100)+"</p><div class='grid' style='margin-top:8px'>"+nm.map(function(n,i){return "<div class='stat'><span>"+esc(n)+" ("+Math.round(sh[i]*100)/100+"%)</span><b>"+$(t*sh[i]/100)+"</b></div>"}).join('')+"</div><div style='margin:10px 0'><button class='p' onclick=\"gpAdd('"+g.id+"',1)\">➕ دعم مالي</button> <button onclick=\"gpAdd('"+g.id+"',-1)\">➖ سحب / صرف</button> <button onclick=\"gpNames('"+g.id+"')\">👥 الأسماء</button></div>";
+function card(g){var h0=hand(g),t=tot(g.id),_c=(function(){var w=WS;try{WS=g.id;h0.net=cashNow();h0.mine=cashBase()+mvO(0,1)}catch(e){}WS=w})(),nm=names(g),sh=shares(g),h="<div class='card'><h2>🤝 فلوس الشراكة — "+esc(g.name)+"</h2><p class='mu'>"+((g.n||1)<2?'⚠ عدد الشركاء في هذه المجموعة 1 — التقسيم محسوب 50/50 على شريك واحد. لتغييره: المجموعات ← ✎. ':'')+"فلوس الشراكة: دعم مالي خارجي مشترك بين الشركاء، منفصل عن الرصيد النقدي. بيُدفع منه أول دفعة للشركة وتكلفة الفرش.</p><div class='stat'><span>إجمالي فلوس الشراكة</span><b>"+$(t)+"</b></div><div class='stat' style='margin-top:8px'><span>💵 النقدي معي في هذه المجموعة (نفس الرصيد النقدي)</span><b>"+$(h0.net)+"</b></div><p class='mu' style='margin:4px 0 0'>ده كل اللي قبضته، وفيه حصة الشركاء. حصتك منه: "+$(h0.mine!=null?h0.mine:h0.net*shares(g)[0]/100)+" • حصة الشركاء: "+$(h0.mine!=null?h0.net-h0.mine:0)+"</p><div class='grid' style='margin-top:8px'>"+nm.map(function(n,i){return "<div class='stat'><span>"+esc(n)+" ("+Math.round(sh[i]*100)/100+"%)</span><b>"+$(t*sh[i]/100)+"</b></div>"}).join('')+"</div><div style='margin:10px 0'><button class='p' onclick=\"gpAdd('"+g.id+"',1)\">➕ دعم مالي</button> <button onclick=\"gpAdd('"+g.id+"',-1)\">➖ سحب / صرف</button> <button onclick=\"gpNames('"+g.id+"')\">👥 الأسماء</button></div>";
  pots(g.id).slice().map(function(x,i){return[x,i]}).reverse().forEach(function(p){var x=p[0];h+="<div class='li'><span>"+esc(x.w||(x.a>0?'دعم مالي':'سحب/صرف'))+" <span class='mu'>"+esc(x.d)+"</span></span><b class='"+(x.a>0?'pos':'neg')+"'>"+(x.a>0?'+':'')+$(x.a)+"</b><button class='x' onclick='gpDel(\""+g.id+"\","+p[1]+")'>🗑</button></div>"});
  return h+"</div>"}
 function cards(){return(S.groups||[]).map(card).join('')}
+window.gpMine=function(g){return tot(g.id)*shares(g)[0]/100};
 var g0=grpTab;grpTab=function(){var o=g0.apply(this,arguments);try{var c=cards();return o+(c||"<div class='card'><p class='mu'>🤝 فلوس الشراكة تظهر للمجموعات اللي فيها أكتر من شريك (عدد الشركاء 2 أو أكتر).</p></div>")}catch(e){return o}};
 var h0=home;home=function(){var o=h0.apply(this,arguments);try{var g=G(WS);if(g)return card(g)+o;if(WS==='all'&&(S.groups||[]).length)return cards()+o}catch(e){}return o};
 })();
@@ -2364,7 +2366,7 @@ var s0=setF;setF=function(u,a,b,oa){var r=s0.apply(this,arguments);try{if(a==='g
 <script>
 (function(){
 function inc(){var t=today(),ym=iso(t).slice(0,7),r={all:0,mon:0,due:0,mine:0};
-SU().forEach(function(u){var f=sh(u);(u.leases||[]).forEach(function(L){for(var i=0;i<L.months;i++){var a=(L.rcv||[]).indexOf(i)>=0?(L.rav&&L.rav[i]!=null?+L.rav[i]:la(L,i)):0;if(a){r.all+=a;r.mine+=a*f;var at=(L.rat||{})[i];if(at&&iso(new Date(at)).slice(0,7)===ym)r.mon+=a}else r.due+=la(L,i)}})});return r}
+SU().forEach(function(u){var f=sh(u);(u.leases||[]).forEach(function(L){for(var i=0;i<L.months;i++){var a=(L.rcv||[]).indexOf(i)>=0?(L.rav&&L.rav[i]!=null?+L.rav[i]:la(L,i)):0;if(a){r.all+=a;r.mine+=a*f;var at=(L.rat||{})[i];if(at&&iso(new Date(at)).slice(0,7)===ym)r.mon+=a}else r.due+=la(L,i)}(L.pp||[]).forEach(function(x){var a=+x.a||0;r.all+=a;r.mine+=a*f;if(x.at&&iso(new Date(x.at)).slice(0,7)===ym)r.mon+=a})})});return r}
 var h1=home;home=function(){var o=h1.apply(this,arguments);try{var r=inc(),c=function(l,v,sub){return "<div class='stat'><span>"+l+"</span><b class='pos'>"+$(v)+"</b>"+(sub?"<span>"+sub+"</span>":"")+"</div>"};
 return "<div class='card'><h2>📈 إجمالي الدخل — "+esc(wname())+"</h2><div class='grid'>"+c('كل ما قبضته من الإيجارات',r.all,'حصتي منه: '+$(r.mine))+c('قبضته هذا الشهر',r.mon)+c('لسه مستحق من العقود الحالية',r.due)+c('إجمالي العقود (قبضت + مستحق)',r.all+r.due)+"</div></div>"+o}catch(e){return o}};
 })();
