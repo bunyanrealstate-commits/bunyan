@@ -1531,5 +1531,9 @@ window.mRcp=function(j){var x=rcpList()[j];if(!x)return;S.rc=S.rc||{};if(!S.rc[x
 var a1=accTab2;accTab2=function(){var h=a1();var k=h.indexOf("<div class='card'><h2>الحركة النقدية");return k>0?h.slice(0,k)+opCard()+rcpCard()+h.slice(k):h+opCard()+rcpCard()};
 })();
 </script>
+
+<script>
+(function(){var d1=drawLic;drawLic=function(m){d1.apply(this,arguments);try{if(TRIAL>0){var d=gi('login').querySelector('.dlg');if(d&&!d.querySelector('.xcl')){var b=document.createElement('button');b.className='xcl';b.type='button';b.setAttribute('aria-label','رجوع');b.textContent='✕';b.onclick=function(){LIC=true;gi('login').innerHTML='';render()};d.insertBefore(b,d.firstChild)}}}catch(e){}}})();
+</script>
 </body>
 </html>
