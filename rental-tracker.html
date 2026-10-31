@@ -1911,6 +1911,11 @@ function hint(){var e=g('ln_hint');if(!e)return;var R=LN.rows,f=LN.f;
 function mkRows(){var f=LN.f;if(!f.start||!(+f.rent>0)||!(+f.cmo>0))return[];
  return build(f).map(function(r,i){return {d:r.d,a:r.a,no:'',oi:-1,lock:false,first:i===0}})}
 function rebuild(){LN.rows=mkRows();renum(true);drawRows()}
+function rebuildKeep(){var R=LN.rows,lk=R.map(function(r,i){return r.lock?i:-1}).filter(function(i){return i>=0});
+ if(lk.length>1||(lk.length===1&&lk[0]!==0)){sum();hint();toast(L2('فيه دفعات مستلمة بعد الأولى — عدّل مبالغ الجدول يدوياً أو اضغط إعادة بناء','Received payments exist — edit the rows manually'));return}
+ var nr=mkRows();if(!nr.length){sum();hint();return}
+ if(lk.length===1&&R[0]){nr[0].oi=R[0].oi;nr[0].lock=true;nr[0].d=R[0].d;nr[0].no=R[0].no;LN.f0chg=(+nr[0].a!==+R[0].a)||LN.f0chg}
+ LN.rows=nr;renum(false);drawRows()}
 function sug2(){var f=LN.f;if(!f.start)return 0;var s=pd(f.start),p=(+f.day>=1&&+f.day<=31)?Math.round(+f.day):s.getDate();return sugM(s,p)}
 function depUI(){var d=g('ln_dx');if(!d)return;d.style.display=LN.f.dk?'':'none';var n=g('ln_dnw');if(n)n.style.display=LN.f.dk==='chq'?'':'none'}
 function draw(){var f=LN.f,edit=LN.k!=null,h='<div class="dlg ln"><h2>📄 '+(edit?'تعديل عقد المستأجر':'عقد مستأجر جديد')+'</h2>';
@@ -1939,7 +1944,7 @@ window.lnF=function(k,v){var f=LN.f;
   f[k]=(k==='start')?v:(v===''?'':+v);
   if(k==='m0')LN.m0Auto=false;
   if(LN.m0Auto&&(k==='start'||k==='day')){var m=sug2();if(m){f.m0=m;var e=g('ln_m');if(e)e.value=m}}
-  if(!LN.man&&LN.canBuild)rebuild();else{sum();hint()}
+  if(!LN.man&&LN.canBuild)rebuild();else rebuildKeep();
  }else if(k==='dk'){f.dk=v;depUI()}
  else if(k==='pm0'){f.pm0=v;renum(true);drawRows()}
  else if(k==='cno'){f.cno=v;renum(true);drawRows()}
@@ -1959,7 +1964,8 @@ window.mLeaseN=function(id,k){var u=U(id);if(!u)return;var L=k==null?null:u.leas
   if(!LN.canBuild)LN.locked=true;f.m0=(L.sch[0]&&rent>0)?Math.round(L.sch[0].a/rent*100)/100:1}
  else{f.m0=sug2()||1}
  draw()};
-window.lnSave=function(){var f=LN.f,u=U(LN.uid),edit=LN.k!=null;if(!u){lnClose();return}
+window.lnSave=function(){var _r=lnSave0.apply(this,arguments);return _r};
+function lnSave0(){var f=LN.f,u=U(LN.uid),edit=LN.k!=null,_f0=(edit&&LN.f0chg&&LN.rows[0]&&LN.rows[0].lock)?{oi:LN.rows[0].oi,a:+LN.rows[0].a}:null;if(!u){lnClose();return}
  if(!f.start){toast(L2('اكتب تاريخ بداية العقد','Enter the contract start date'));return}
  if(!(+f.rent>0)){toast(L2('اكتب الإيجار الشهري','Enter the monthly rent'));return}
  if(!(+f.cmo>0)){toast(L2('اكتب مدة العقد بالشهور','Enter the contract length in months'));return}
@@ -1990,6 +1996,7 @@ window.lnSave=function(){var f=LN.f,u=U(LN.uid),edit=LN.k!=null;if(!u){lnClose()
  if(!mode){if(d&&!d.r)S.dep.splice(S.dep.indexOf(d),1)}
  else if(d&&!d.r){var wa=d.mode||'cash';d.mode=mode;d.a=amt;d.no=String(f.dno||'').trim();d.w=L.tenant||d.w;if(mode==='chq'){d.at=0;d.rat=0}else if(wa==='chq')d.at=Date.now()}
  else if(!d)S.dep.push({k:'t',w:L.tenant||'مستأجر',a:amt,d:L.start,r:'',mode:mode,no:String(f.dno||'').trim(),lid:L.id,uid:u.id,at:mode==='cash'?Date.now():0,rat:0});
+ if(_f0){var _ni=-1;rows.forEach(function(r,ni){if(r.oi===_f0.oi)_ni=ni});if(_ni>=0&&(L.rcv||[]).indexOf(_ni)>=0){L.rav=L.rav||{};L.rav[_ni]=_f0.a}}LN.f0chg=false;
  lnClose();save();render();toast(edit?L2('تم تعديل العقد','Contract updated'):L2('تم حفظ العقد وجدول الدفعات','Contract and payment schedule saved'))};
 var ml0=mLease;
 mLease=function(id,k){if(k==null)return window.mLeaseN(id);var u=U(id),L=u&&u.leases[k];if(L&&L.sch)return guardLk(leDates(L),function(){window.mLeaseN(id,k)});return ml0(id,k)};
