@@ -3038,5 +3038,25 @@ new MutationObserver(function(){setTimeout(sync,0)}).observe(sp,{childList:true}
 (mq.addEventListener?mq.addEventListener('change',sync):mq.addListener(sync));sync();
 })();
 </script>
+<script id="accslim">
+(function(){if(typeof accTab2!=='function')return;var a3=accTab2;
+var DEL=[/التأمينات \(ودائع\)/,/الشيكات التي معي/,/^حالة الاستديوهات/,/الأيام الشاغرة/,/كل الدفعات المستحقة عليّ/,/^دفتر الحسابات/,/^حساب كل استديو/],
+ FOLD=[/^الحركة النقدية/,/^الربح المحاسبي/],NOTE=[/^الحركة النقدية/,/^الربح المحاسبي/,/^وضعي المالي اليوم/,/كهرباء ومياه وصيانة/];
+function ttl(c){var h=c.querySelector(':scope>h2');return h?h.textContent.replace(/^[^؀-ۿ]+/,'').trim():''}
+function hit(a,t){return a.some(function(r){return r.test(t)})}
+accTab2=function(){var h=a3();try{var t=document.createElement('div');t.innerHTML=h;
+ [].slice.call(t.querySelectorAll('.card')).forEach(function(c){var x=ttl(c);if(!x)return;
+  if(hit(DEL,x)){c.remove();return}
+  if(hit(NOTE,x))[].slice.call(c.querySelectorAll(':scope>p.mu')).forEach(function(p){if(!p.querySelector('button,input,select,b'))p.remove()});
+  if(hit(FOLD,x)){var d=document.createElement('details');d.className='card acd';var hh=c.querySelector(':scope>h2');var sm=document.createElement('summary');sm.innerHTML=hh.innerHTML;hh.remove();d.appendChild(sm);while(c.firstChild)d.appendChild(c.firstChild);c.replaceWith(d)}});
+ // move "my financial position" right after overdue
+ var cards=[].slice.call(t.children),pos=cards.find(function(c){return /^وضعي المالي اليوم/.test(ttl(c))}),od=cards.find(function(c){return /^المتأخرات/.test(ttl(c))});
+ if(pos&&od&&od.nextSibling!==pos)od.after(pos);
+ var ex=cards.find(function(c){return /^مصروفات إضافية/.test(ttl(c))}),op=cards.find(function(c){return /كهرباء ومياه وصيانة/.test(ttl(c))}),xp=cards.find(function(c){return /تصدير للمحاسب/.test(ttl(c))});
+ if(ex&&op)ex.after(op);if(xp)t.appendChild(xp);
+ return t.innerHTML}catch(e){return h}};
+var st=document.createElement('style');st.textContent='details.acd>summary{cursor:pointer;font-weight:700;font-size:15px;color:var(--ac);list-style:none;display:flex;align-items:center;gap:8px}details.acd>summary::-webkit-details-marker{display:none}details.acd>summary::before{content:"▸";transition:transform .2s}details.acd[open]>summary::before{transform:rotate(90deg)}html[dir=rtl] details.acd>summary::before{content:"◂"}html[dir=rtl] details.acd[open]>summary::before{transform:rotate(-90deg)}details.acd[open]>summary{margin-bottom:10px}';document.head.appendChild(st);
+})();
+</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
