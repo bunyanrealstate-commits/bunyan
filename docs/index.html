@@ -1354,5 +1354,30 @@ dec()})();
 #ntb .ntb .tx .ntl{display:block}
 #ntb .ntw{flex:1 1 100%;margin-inline-start:0!important}
 </style>
+<style id="stkcss">
+@media (max-width:700px){
+.sc table.stk,.sc table.stk tbody{display:block;width:100%;min-width:0!important}
+.stk tr{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin:0 0 10px;padding:10px 12px;border:1.5px solid var(--bd);border-radius:14px;background:var(--card)}
+.stk tr:first-child:has(th){display:none}
+.stk th{display:none}
+.stk tr.r0{background:rgba(217,61,66,.09)!important}.stk tr.r1{background:rgba(234,88,12,.10)!important}.stk tr.r2{background:rgba(202,138,4,.09)!important}
+.stk td{background:transparent!important;font-size:14px!important;display:flex!important;flex-direction:column;justify-content:flex-start;align-items:flex-start;gap:1px;min-width:0;border:0!important;padding:3px 0!important;text-align:start!important;width:auto!important;white-space:normal!important;overflow-wrap:anywhere}
+.stk td::before{content:attr(data-label);flex:none;font-size:11px;font-weight:700;color:var(--mu)}
+.stk td[data-label=""]::before,.stk td:not([data-label])::before{display:none}
+.stk td[data-label="البيان"],.stk td[data-label="الاستديو"],.stk td[data-label="الشهر"],.stk td[data-label="البند"]{order:-1;font-weight:800;font-size:15px;border-bottom:1px dashed var(--bd)!important;padding-bottom:6px!important;margin-bottom:2px}
+.stk td[data-label="البيان"]::before,.stk td[data-label="الاستديو"]::before,.stk td[data-label="الشهر"]::before,.stk td[data-label="البند"]::before{display:none}
+.stk td[colspan]{display:block!important}
+.stk td[data-label="البيان"],.stk td[data-label="الاستديو"],.stk td[data-label="الشهر"],.stk td[data-label="البند"],.stk td[data-label=""],.stk td:not([data-label]){grid-column:1/-1}
+.stk td{border:0!important}
+.stk .dt{font-size:14px!important}.stk td[data-label="التاريخ"]{grid-column:1/-1}
+.sc:has(table.stk){overflow:visible!important;border:0!important;background:transparent!important;box-shadow:none!important}
+}
+</style>
+<script>
+(function(){function run(){try{var narrow=innerWidth<=700;document.querySelectorAll('#app .sc table').forEach(function(tb){var c=tb.parentElement;tb.classList.remove('stk');if(!narrow)return;var hr=tb.querySelector('tr'),ths=hr?hr.querySelectorAll('th'):[];if(ths.length<4)return;
+ var lb=[].map.call(ths,function(t){return t.textContent.trim()});
+ [].forEach.call(tb.querySelectorAll('tr'),function(tr,i){if(tr===hr)return;[].forEach.call(tr.children,function(td,k){td.setAttribute('data-label',lb[k]||'')})});tb.classList.add('stk')})}catch(e){}}
+var r0=render;render=function(){r0.apply(this,arguments);run()};addEventListener('resize',run);render()})();
+</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
