@@ -2825,5 +2825,23 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);try{bind()}catch(
 try{bind()}catch(e){}
 })();
 </script>
+<script>
+(function(){
+function G(id){return(S.groups||[]).find(function(g){return g.id===id})}
+function pots(id){S.gp=S.gp||{};return S.gp[id]=S.gp[id]||[]}
+function tot(id){return pots(id).reduce(function(s,x){return s+(+x.a||0)},0)}
+function names(g){var a=String(g.pn||'').split(/[,،\n]+/).map(function(x){return x.trim()}).filter(Boolean),n=Math.max(2,g.n||2),o=[];for(var i=0;i<n;i++)o.push(a[i]||(i==0?'أنا':'شريك '+i));return o}
+function shares(g){var n=Math.max(2,g.n||2),me=g.custom?(g.share||50):100/n,rest=(100-me)/(n-1),r=[me];for(var i=1;i<n;i++)r.push(rest);return r}
+window.gpAdd=function(id,sign){var g=G(id);openM((sign>0?'➕ دعم مالي للشراكة — ':'➖ سحب/صرف من فلوس الشراكة — ')+g.name,[{k:'a',l:'المبلغ',t:'n',v:''},{k:'w',l:'البيان (مثلاً: دعم من فلان)',v:''},{k:'d',l:'التاريخ',t:'d',v:td()}],function(o){var a=Math.abs(+o.a||0);if(!a)return;pots(id).push({id:uid(),d:o.d||td(),a:sign*a,w:(o.w||'').trim()})})};
+window.gpDel=function(id,i){confirmM('حذف هذه الحركة؟',function(){pots(id).splice(i,1)})};
+window.gpNames=function(id){var g=G(id);openM('👥 أسماء الشركاء — '+g.name,[{k:'pn',l:'اكتب الأسماء مفصولة بفاصلة، أولهم أنت (مثلاً: أسامة، عمرو)',v:g.pn||names(g).join('، ')}],function(o){g.pn=o.pn})};
+function card(g){var t=tot(g.id),nm=names(g),sh=shares(g),h="<div class='card'><h2>🤝 فلوس الشراكة — "+esc(g.name)+"</h2><p class='mu'>رصيد منفصل عن رصيدك النقدي الخاص: دعم مالي خارجي مشترك بين الشركاء، لا يدخل في حساباتك.</p><div class='stat'><span>إجمالي فلوس الشراكة</span><b>"+$(t)+"</b></div><div class='grid' style='margin-top:8px'>"+nm.map(function(n,i){return "<div class='stat'><span>"+esc(n)+" ("+Math.round(sh[i]*100)/100+"%)</span><b>"+$(t*sh[i]/100)+"</b></div>"}).join('')+"</div><div style='margin:10px 0'><button class='p' onclick=\"gpAdd('"+g.id+"',1)\">➕ دعم مالي</button> <button onclick=\"gpAdd('"+g.id+"',-1)\">➖ سحب / صرف</button> <button onclick=\"gpNames('"+g.id+"')\">👥 الأسماء</button></div>";
+ pots(g.id).slice().map(function(x,i){return[x,i]}).reverse().forEach(function(p){var x=p[0];h+="<div class='li'><span>"+esc(x.w||(x.a>0?'دعم مالي':'سحب/صرف'))+" <span class='mu'>"+esc(x.d)+"</span></span><b class='"+(x.a>0?'pos':'neg')+"'>"+(x.a>0?'+':'')+$(x.a)+"</b><button class='x' onclick='gpDel(\""+g.id+"\","+p[1]+")'>🗑</button></div>"});
+ return h+"</div>"}
+function cards(){return(S.groups||[]).filter(function(g){return(g.n||1)>1}).map(card).join('')}
+var g0=grpTab;grpTab=function(){var o=g0.apply(this,arguments);try{var c=cards();return o+(c||"<div class='card'><p class='mu'>🤝 فلوس الشراكة تظهر للمجموعات اللي فيها أكتر من شريك (عدد الشركاء 2 أو أكتر).</p></div>")}catch(e){return o}};
+var h0=home;home=function(){var o=h0.apply(this,arguments);try{var g=G(WS);if(g&&(g.n||1)>1)return card(g)+o}catch(e){}return o};
+})();
+</script>
 </body>
 </html>
