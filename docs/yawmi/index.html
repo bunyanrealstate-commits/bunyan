@@ -283,6 +283,10 @@ if(SR){const b=$("dictBtn");b.hidden=false;b.onclick=()=>{const inp=$("addText")
   const base=inp.value?inp.value+" ":"";b.classList.add("on");
   r.onresult=e=>{inp.value=base+[...e.results].map(x=>x[0].transcript).join("")};
   r.onend=r.onerror=()=>b.classList.remove("on");try{r.start()}catch(e){b.classList.remove("on")}}}
+else{const NSR=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SpeechRecognition;
+  if(NSR){const b=$("dictBtn");b.hidden=false;b.onclick=async()=>{const inp=$("addText");b.classList.add("on");
+    try{await NSR.requestPermissions();const r=await NSR.start({language:"ar-EG",maxResults:1,popup:true});
+      const t=r&&r.matches&&r.matches[0];if(t)inp.value=(inp.value?inp.value+" ":"")+t}catch(e){}b.classList.remove("on")}}}
 
 // voice notes (IndexedDB)
 let idb=null;const urls={};

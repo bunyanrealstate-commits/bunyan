@@ -1,0 +1,318 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2f6b4f"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><style>html,body{height:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style></head><body><title>يومي وأهدافي</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: app shell — fixed header with progress, one tab visible at a time, bottom tab bar, floating add button */
+:root{
+  --bg:#f4f5f1; --surface:#ffffff; --ink:#1d2621; --muted:#76807a; --line:#e3e6df;
+  --accent:#2f6b4f; --accent-soft:#e4efe8; --gold:#c8902e; --gold-soft:#f8eedb; --danger:#b4473a;
+  --font:"IBM Plex Sans Arabic",system-ui,"Segoe UI",Tahoma,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121815; --surface:#1b231f; --ink:#e8ede9; --muted:#97a29b; --line:#2a352f;
+  --accent:#6fbf94; --accent-soft:#22362a; --gold:#e0ad55; --gold-soft:#3a3020; --danger:#e07a6c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121815; --surface:#1b231f; --ink:#e8ede9; --muted:#97a29b; --line:#2a352f;
+  --accent:#6fbf94; --accent-soft:#22362a; --gold:#e0ad55; --gold-soft:#3a3020; --danger:#e07a6c; color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.55}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+
+.app{max-width:560px;margin:0 auto;min-height:100%;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 140px}
+
+/* header */
+.top{display:flex;align-items:center;gap:12px}
+.top-txt{flex:1;min-width:0}
+.hello{font-size:22px;font-weight:700;margin:0;line-height:1.3}
+.date{font-size:13px;color:var(--muted)}
+.navbtn{width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:grid;place-content:center;color:var(--muted)}
+.navbtn svg{width:18px;height:18px}
+.todaybtn{font-size:13px;font-weight:600;color:var(--accent);padding:6px 10px;border-radius:99px;background:var(--accent-soft)}
+
+.progress{margin-top:16px;background:var(--surface);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.progress-row{display:flex;justify-content:space-between;align-items:baseline;font-size:14px}
+.progress-row b{font-size:20px;font-variant-numeric:tabular-nums}
+.track{height:8px;border-radius:99px;background:var(--accent-soft);overflow:hidden}
+.track i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .35s}
+.streak{font-size:13px;color:var(--muted)}
+
+/* sections */
+.view{display:flex;flex-direction:column;gap:22px;margin-top:22px}
+.sec{display:flex;flex-direction:column;gap:8px}
+.sec-h{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.02em;padding-inline:4px}
+.card{background:var(--surface);border-radius:16px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .t{flex:1;min-width:0;overflow-wrap:anywhere}
+.row.done .t{color:var(--muted);text-decoration:line-through}
+.time{font-size:12px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;width:58px;flex:none}
+.row.done .time{color:var(--muted)}
+.chk{appearance:none;margin:0;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);flex:none;cursor:pointer;display:grid;place-content:center;transition:background .15s,border-color .15s}
+.prio .chk{border-color:var(--gold)}
+.chk:checked{background:var(--accent);border-color:var(--accent)}
+.chk:checked::after{content:"";width:6px;height:11px;border:solid var(--surface);border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.x{color:var(--muted);font-size:20px;line-height:1;width:28px;height:28px;border-radius:50%;flex:none;opacity:.55}
+.x:hover{opacity:1;color:var(--danger)}
+.ex{font-size:11px;color:var(--gold);background:var(--gold-soft);border-radius:99px;padding:1px 7px;margin-inline-start:4px;white-space:nowrap}
+.empty{padding:18px 14px;color:var(--muted);font-size:14px;text-align:center}
+.prio-badge{font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-soft);border-radius:99px;padding:2px 8px}
+
+/* goals */
+.goal{padding:14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.goal:last-child{border-bottom:0}
+.goal-top{display:flex;align-items:center;gap:8px}
+.goal-top .t{flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere}
+.goal-ctl{display:flex;align-items:center;gap:10px}
+.goal-ctl .track{flex:1}
+.step{width:32px;height:32px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:18px;font-weight:700;flex:none}
+.num{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:58px;text-align:center}
+
+/* notes */
+.rec{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:18px;border-radius:16px;background:var(--surface);color:var(--accent);font-weight:600;font-size:16px}
+.rec .dot{width:44px;height:44px;border-radius:50%;background:var(--accent);color:var(--surface);display:grid;place-content:center}
+.rec .dot svg{width:22px;height:22px}
+.rec.on .dot{background:var(--danger);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{transform:scale(1.08)}}
+.voice{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.voice:last-child{border-bottom:0}
+.voice-top{display:flex;align-items:center;font-size:13px;color:var(--muted)}
+.voice-top span{flex:1}
+.voice audio{width:100%;height:36px}
+textarea{width:100%;min-height:140px;border:0;border-radius:16px;background:var(--surface);padding:14px;resize:vertical;line-height:1.7}
+
+/* bottom bar */
+.tabs{position:fixed;bottom:0;left:0;right:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.tabs-in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 10px;font-size:12px;color:var(--muted);font-weight:500}
+.tab svg{width:22px;height:22px}
+.tab[aria-selected="true"]{color:var(--accent);font-weight:700}
+.fab{position:fixed;z-index:6;bottom:calc(76px + env(safe-area-inset-bottom,0px));left:calc(max(16px,50% - 264px) + env(safe-area-inset-left,0px));
+  width:56px;height:56px;border-radius:50%;background:var(--accent);color:var(--surface);box-shadow:0 6px 18px rgba(20,50,35,.28);display:grid;place-content:center}
+.fab svg{width:26px;height:26px}
+
+/* add sheet */
+.scrim{position:fixed;inset:0;z-index:9;background:rgba(10,20,15,.4)}
+.sheet{position:fixed;z-index:10;left:0;right:0;bottom:0;background:var(--surface);border-radius:20px 20px 0 0;
+  padding:18px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet-in{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.sheet h2{margin:0;font-size:18px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--bg);border-radius:12px;padding:4px;gap:4px}
+.seg button{padding:8px 4px;border-radius:9px;font-size:14px;color:var(--muted);font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.field{display:flex;gap:8px;align-items:center;background:var(--bg);border-radius:12px;padding:4px 4px 4px 12px}
+.field input{flex:1;min-width:0;border:0;background:none;padding:10px 4px 10px 0;outline:none}
+.field input[type=time],.field input[type=number]{flex:0 0 auto}
+.dict{width:40px;height:40px;border-radius:10px;color:var(--accent);display:grid;place-content:center;flex:none}
+.dict svg{width:20px;height:20px}
+.dict.on{background:var(--danger);color:var(--surface)}
+.label{font-size:13px;color:var(--muted);margin-bottom:-8px}
+.save{background:var(--accent);color:var(--surface);border-radius:12px;padding:13px;font-weight:700;font-size:16px}
+.note{font-size:12px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="app" dir="rtl" lang="ar">
+  <header class="top">
+    <button class="navbtn" id="prev" aria-label="اليوم السابق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+    <div class="top-txt">
+      <h1 class="hello" id="hello">صباح الخير</h1>
+      <div class="date" id="dateLabel"></div>
+    </div>
+    <button class="todaybtn" id="todayBtn" hidden>اليوم</button>
+    <button class="navbtn" id="next" aria-label="اليوم التالي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+  </header>
+
+  <div class="progress">
+    <div class="progress-row"><span>إنجاز اليوم</span><b id="pct">0%</b></div>
+    <div class="track"><i id="bar" style="width:0"></i></div>
+    <div class="streak" id="streak"></div>
+  </div>
+
+  <main class="view" id="v-today">
+    <section class="sec prio">
+      <div class="sec-h"><span>أهم ٣ حاجات</span><span class="prio-badge" id="prioCount">0 / 3</span></div>
+      <div class="card" id="focusList"></div>
+    </section>
+    <section class="sec">
+      <div class="sec-h"><span>جدول اليوم</span></div>
+      <div class="card" id="taskList"></div>
+    </section>
+  </main>
+
+  <main class="view" id="v-goals" hidden>
+    <section class="sec">
+      <div class="sec-h"><span>أهدافي الكبيرة</span></div>
+      <div class="card" id="goalList"></div>
+    </section>
+  </main>
+
+  <main class="view" id="v-notes" hidden>
+    <section class="sec">
+      <div class="sec-h"><span>ملاحظات صوتية</span></div>
+      <input type="file" id="voiceIn" accept="audio/*" capture hidden>
+      <button class="rec" id="micBtn" type="button">
+        <span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span>
+        <span id="micLabel">سجّل ملاحظة صوتية</span>
+      </button>
+      <div class="card" id="voiceList"></div>
+    </section>
+    <section class="sec">
+      <div class="sec-h"><span>ملاحظات مكتوبة</span></div>
+      <textarea id="notes" placeholder="إيه اللي اتعلمته النهارده؟ إيه اللي هتعمله أحسن بكرة؟"></textarea>
+    </section>
+  </main>
+</div>
+
+<button class="fab" id="fab" aria-label="إضافة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+
+<nav class="tabs" dir="rtl"><div class="tabs-in" role="tablist">
+  <button class="tab" role="tab" data-v="today" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>اليوم</button>
+  <button class="tab" role="tab" data-v="goals" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8" fill="currentColor"/></svg>الأهداف</button>
+  <button class="tab" role="tab" data-v="notes" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 4h9l4 4v12H6z"/><path d="M9 12h7M9 16h5"/></svg>ملاحظات</button>
+</div></nav>
+
+<div class="scrim" id="scrim" hidden></div>
+<form class="sheet" id="sheet" hidden dir="rtl">
+  <div class="sheet-in">
+    <h2>إضافة جديدة</h2>
+    <div class="seg" id="seg">
+      <button type="button" data-type="task" aria-pressed="true">مهمة</button>
+      <button type="button" data-type="focus" aria-pressed="false">أولوية</button>
+      <button type="button" data-type="goal" aria-pressed="false">هدف</button>
+    </div>
+    <div class="field">
+      <input type="text" id="addText" placeholder="اكتب المهمة" maxlength="120" autocomplete="off">
+      <button type="button" class="dict" id="dictBtn" aria-label="اكتب بصوتك" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+    </div>
+    <div class="label" id="extraLabel">الوقت (اختياري)</div>
+    <div class="field" id="timeField"><input type="time" id="addTime" aria-label="الوقت"></div>
+    <div class="field" id="targetField" hidden><input type="number" id="addTarget" min="1" value="10" aria-label="الرقم المستهدف"><span class="note" style="padding-inline:8px">مرة / خطوة</span></div>
+    <div class="note" id="fullNote" hidden>عندك ٣ أولويات خلاص. خلّص واحدة أو امسحها الأول.</div>
+    <button class="save" id="saveBtn">أضف</button>
+  </div>
+</form>
+
+<script>
+const KEY="yawmi-v1";let S;
+function key(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function load(){try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+  if(!S){S={days:{},goals:[{id:1,t:"أوفّر جزء من دخل كل شهر",cur:3,target:12,ex:true},{id:2,t:"أقرأ كتب",cur:2,target:10,ex:true}]};
+    S.days[key(new Date())]={focus:[{id:11,t:"أراجع حسابات الغرف",done:true,ex:true},{id:12,t:"أتابع مع مستأجر جديد",done:false,ex:true}],
+      tasks:[{id:13,time:"08:00",t:"رياضة نص ساعة",done:true,ex:true},{id:14,time:"10:00",t:"اجتماع مع الشريك",done:false,ex:true},{id:15,time:"21:00",t:"تخطيط بكرة",done:false,ex:true}],notes:"",voice:[]}}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+let cur=new Date(),view="today",addType="task";
+const $=id=>document.getElementById(id);
+function day(){const k=key(cur);return S.days[k]||(S.days[k]={focus:[],tasks:[],notes:"",voice:[]})}
+const uid=()=>Date.now()+Math.random();
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const exTag=i=>i.ex?'<span class="ex">مثال</span>':"";
+function fmt12(t){if(!t)return"أي وقت";let[h,m]=t.split(":").map(Number);const p=h<12?"ص":"م";h=h%12||12;return h+":"+String(m).padStart(2,"0")+" "+p}
+function isToday(){return key(cur)===key(new Date())}
+
+function row(it,kind){return `<div class="row ${it.done?"done":""}">
+  <input type="checkbox" class="chk" ${it.done?"checked":""} data-k="${kind}" data-id="${it.id}" aria-label="تم">
+  ${kind==="tasks"?`<span class="time">${fmt12(it.time)}</span>`:""}
+  <span class="t">${esc(it.t)}${exTag(it)}</span>
+  <button class="x" data-k="${kind}" data-id="${it.id}" aria-label="حذف">×</button></div>`}
+
+function complete(k){const x=S.days[k];if(!x)return false;const a=[...x.focus,...x.tasks];return a.length>0&&a.every(i=>i.done)}
+function streak(){let n=0;const d=new Date();if(!complete(key(d)))d.setDate(d.getDate()-1);while(complete(key(d))){n++;d.setDate(d.getDate()-1)}return n}
+
+function render(){
+  const D=day();
+  const h=new Date().getHours();
+  $("hello").textContent=!isToday()?(cur<new Date()?"يوم فات":"يوم جاي"):h<12?"صباح الخير":h<18?"مساء الخير":"مساء النور";
+  $("dateLabel").textContent=cur.toLocaleDateString("ar-EG",{weekday:"long",day:"numeric",month:"long"});
+  $("todayBtn").hidden=isToday();
+  $("focusList").innerHTML=D.focus.length?D.focus.map(i=>row(i,"focus")).join(""):'<div class="empty">إيه أهم حاجة لو خلصتها يبقى يومك ناجح؟</div>';
+  $("prioCount").textContent=D.focus.length+" / 3";
+  const tasks=[...D.tasks].sort((a,b)=>(a.time||"99").localeCompare(b.time||"99"));
+  $("taskList").innerHTML=tasks.length?tasks.map(i=>row(i,"tasks")).join(""):'<div class="empty">مفيش مهام. دوس + عشان تضيف.</div>';
+  const all=[...D.focus,...D.tasks],done=all.filter(i=>i.done).length,pct=all.length?Math.round(done/all.length*100):0;
+  $("pct").textContent=pct+"%";$("bar").style.width=pct+"%";
+  const st=streak();
+  $("streak").textContent=all.length?(done+" من "+all.length+" خلصت")+(pct===100?" · يوم كامل، عاش!":"")+(st>1?" · "+st+" أيام كاملة ورا بعض":""):"لسه مفيش مهام لليوم ده";
+  $("goalList").innerHTML=S.goals.length?S.goals.map(g=>{const p=Math.min(100,Math.round(g.cur/g.target*100));
+    return `<div class="goal"><div class="goal-top"><span class="t">${esc(g.t)}${exTag(g)}</span><button class="x" data-k="goals" data-id="${g.id}" aria-label="حذف">×</button></div>
+    <div class="goal-ctl"><button class="step" data-g="${g.id}" data-d="1" aria-label="زوّد">+</button><div class="track"><i style="width:${p}%"></i></div>
+    <span class="num">${g.cur} / ${g.target}</span><button class="step" data-g="${g.id}" data-d="-1" aria-label="قلّل">−</button></div></div>`}).join(""):'<div class="empty">مفيش أهداف. دوس + واختار «هدف».</div>';
+  renderVoice(D);
+  const n=$("notes");if(document.activeElement!==n)n.value=D.notes||"";
+}
+
+// tabs
+function show(v){view=v;["today","goals","notes"].forEach(x=>$("v-"+x).hidden=x!==v);
+  document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.v===v));
+  $("fab").hidden=v==="notes";window.scrollTo(0,0)}
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>show(t.dataset.v));
+
+// list actions
+document.addEventListener("change",e=>{const c=e.target.closest(".chk");if(!c)return;day()[c.dataset.k].find(i=>i.id==c.dataset.id).done=c.checked;save();render()});
+document.addEventListener("click",e=>{
+  const x=e.target.closest(".x[data-k]");
+  if(x){const k=x.dataset.k;if(k==="goals")S.goals=S.goals.filter(g=>g.id!=x.dataset.id);else{const D=day();D[k]=D[k].filter(i=>i.id!=x.dataset.id)}save();render();return}
+  const g=e.target.closest("[data-g]");
+  if(g){const G=S.goals.find(q=>q.id==g.dataset.g);G.cur=Math.max(0,Math.min(G.target,G.cur+Number(g.dataset.d)));save();render()}});
+$("notes").addEventListener("input",e=>{day().notes=e.target.value;save()});
+const shift=n=>{cur=new Date(cur);cur.setDate(cur.getDate()+n);render()};
+$("prev").onclick=()=>shift(-1);$("next").onclick=()=>shift(1);$("todayBtn").onclick=()=>{cur=new Date();render()};
+
+// add sheet
+function setType(t){addType=t;document.querySelectorAll("#seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.type===t));
+  $("addText").placeholder=t==="task"?"اكتب المهمة":t==="focus"?"أهم حاجة لازم تخلص":"الهدف (مثلاً: أقرأ ١٢ كتاب)";
+  $("timeField").hidden=t!=="task";$("targetField").hidden=t!=="goal";
+  $("extraLabel").hidden=t==="focus";$("extraLabel").textContent=t==="task"?"الوقت (اختياري)":"الرقم المستهدف";
+  const full=t==="focus"&&day().focus.length>=3;$("fullNote").hidden=!full;$("saveBtn").disabled=full;$("saveBtn").style.opacity=full?.5:1}
+document.querySelectorAll("#seg button").forEach(b=>b.onclick=()=>setType(b.dataset.type));
+function openSheet(){setType(view==="goals"?"goal":"task");$("sheet").hidden=$("scrim").hidden=false;setTimeout(()=>$("addText").focus(),50)}
+function closeSheet(){$("sheet").hidden=$("scrim").hidden=true;$("addText").value="";$("addTime").value=""}
+$("fab").onclick=openSheet;$("scrim").onclick=closeSheet;
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("sheet").hidden)closeSheet()});
+$("sheet").addEventListener("submit",e=>{e.preventDefault();const v=$("addText").value.trim();if(!v){$("addText").focus();return}
+  if(addType==="task")day().tasks.push({id:uid(),t:v,time:$("addTime").value,done:false});
+  else if(addType==="focus"){if(day().focus.length>=3)return;day().focus.push({id:uid(),t:v,done:false})}
+  else S.goals.push({id:uid(),t:v,cur:0,target:Math.max(1,parseInt($("addTarget").value)||1)});
+  save();closeSheet();if(addType==="goal")show("goals");else show("today");render()});
+
+// dictation
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(SR){const b=$("dictBtn");b.hidden=false;b.onclick=()=>{const inp=$("addText");const r=new SR();r.lang="ar-EG";r.interimResults=true;
+  const base=inp.value?inp.value+" ":"";b.classList.add("on");
+  r.onresult=e=>{inp.value=base+[...e.results].map(x=>x[0].transcript).join("")};
+  r.onend=r.onerror=()=>b.classList.remove("on");try{r.start()}catch(e){b.classList.remove("on")}}}
+else{const NSR=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SpeechRecognition;
+  if(NSR){const b=$("dictBtn");b.hidden=false;b.onclick=async()=>{const inp=$("addText");b.classList.add("on");
+    try{await NSR.requestPermissions();const r=await NSR.start({language:"ar-EG",maxResults:1,popup:true});
+      const t=r&&r.matches&&r.matches[0];if(t)inp.value=(inp.value?inp.value+" ":"")+t}catch(e){}b.classList.remove("on")}}}
+
+// voice notes (IndexedDB)
+let idb=null;const urls={};
+function openDB(){return new Promise(r=>{try{const q=indexedDB.open("yawmi-voice",1);q.onupgradeneeded=()=>q.result.createObjectStore("v");q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})}
+function idbDo(mode,fn){return new Promise(r=>{if(!idb)return r(null);try{const q=fn(idb.transaction("v",mode).objectStore("v"));q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})}
+async function renderVoice(D){D.voice=D.voice||[];const box=$("voiceList");
+  if(!D.voice.length){box.innerHTML='<div class="empty">مفيش تسجيلات لليوم ده.</div>';return}
+  box.innerHTML=D.voice.map(v=>`<div class="voice"><div class="voice-top"><span>تسجيل الساعة ${v.at}</span><button class="x" data-voice="${v.id}" aria-label="حذف التسجيل">×</button></div><audio controls preload="metadata" id="a${v.id}"></audio></div>`).join("");
+  for(const v of D.voice){if(!urls[v.id]){const b=await idbDo("readonly",st=>st.get(v.id));if(b)urls[v.id]=URL.createObjectURL(b)}const a=$("a"+v.id);if(a&&urls[v.id])a.src=urls[v.id]}}
+async function saveBlob(f){const id="v"+Date.now();await idbDo("readwrite",st=>st.put(f,id));const D=day();D.voice=D.voice||[];
+  D.voice.push({id,at:new Date().toLocaleTimeString("ar-EG",{hour:"numeric",minute:"2-digit"})});save();render()}
+$("voiceIn").addEventListener("change",async()=>{const f=$("voiceIn").files[0];if(f)await saveBlob(f);$("voiceIn").value=""});
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-voice]");if(!b)return;const id=b.dataset.voice;
+  await idbDo("readwrite",st=>st.delete(id));if(urls[id]){URL.revokeObjectURL(urls[id]);delete urls[id]}
+  const D=day();D.voice=D.voice.filter(v=>v.id!==id);save();render()});
+let rec=null,chunks=[];
+$("micBtn").onclick=async()=>{const btn=$("micBtn");if(rec){rec.stop();return}
+  if(!(navigator.mediaDevices&&window.MediaRecorder)){$("voiceIn").click();return}
+  try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});rec=new MediaRecorder(stream);chunks=[];
+    rec.ondataavailable=e=>chunks.push(e.data);
+    rec.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());const b=new Blob(chunks,{type:rec.mimeType||"audio/webm"});rec=null;
+      btn.classList.remove("on");$("micLabel").textContent="سجّل ملاحظة صوتية";await saveBlob(b)};
+    rec.start();btn.classList.add("on");$("micLabel").textContent="جاري التسجيل… دوس للإيقاف"}
+  catch(e){$("voiceIn").click()}};
+
+if("serviceWorker" in navigator&&location.protocol==="https:"&&location.hostname.endsWith("github.io"))navigator.serviceWorker.register("./sw.js").catch(()=>{});
+load();openDB().then(d=>{idb=d;render()});render();
+</script>
+</body></html>

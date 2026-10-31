@@ -1,0 +1,11 @@
+{
+ "appId": "com.bunyan.yawmi",
+ "appName": "يومي",
+ "webDir": "www",
+ "backgroundColor": "#f4f5f1",
+ "server": {
+  "url": "https://bunyanrealstate-commits.github.io/bunyan/yawmi/",
+  "androidScheme": "https",
+  "cleartext": false
+ }
+}
