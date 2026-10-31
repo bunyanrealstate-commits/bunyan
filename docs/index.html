@@ -1402,7 +1402,7 @@ var r0=render;render=function(){r0.apply(this,arguments);run()};addEventListener
 var OW={s:"AVnxOcBwxowLG2y9U0MR+A==",i:"FX+mNfZYpo8LqHgV",c:"Nxi67DPc3cJ3NueeI3ykCgrHLSwfvC4R0QK/FycA8ye9DIgVccrLDr/37MgN/CUtqDOi2w6iUSmYCDoPFj03+BxK+vkpfO2+e5j8PbhzBX14RJtUrgGWWVT8g7A6njZRX8XuklWB7QSrq8Go5YTfIQChGrIe2zdIulnJKcyxWuwElRx48p6+Vmru2piO1IvicvBYplHpPWs5+fkM/Ai1N/52aBBc9b4SyI0rq/jUFtdhOjmoV4HqzBkarUamD32eSfWsENPkjhAAvmDLShyG5VEyyid49Ol+w5s9u0Mh"},K=null,taps=0,tt=0;
 var B=function(x){return Uint8Array.from(atob(x),function(c){return c.charCodeAt(0)})};
 function hook(){var h=[].slice.call(document.querySelectorAll('h2')).find(function(e){return e.textContent.indexOf('🔑 الترخيص')===0});
- if(h&&!h._ow){h._ow=1;h.addEventListener('click',function(){var n=Date.now();taps=(n-tt<1500)?taps+1:1;tt=n;if(taps>=7){taps=0;ownOpen()}})}}
+ if(h&&!h._ow){h._ow=1;var c=h.closest('.card')||h.parentNode;var b=document.createElement('button');b.type='button';b.id='ownbtn';b.textContent='🔐 إصدار أكواد التفعيل (المالك)';b.style.marginTop='8px';b.onclick=function(){ownOpen()};c.appendChild(b)}}
 var r0=render;render=function(){r0.apply(this,arguments);try{hook()}catch(e){}};
 function ov(h){var d=document.getElementById('own');if(!d){d=document.createElement('div');d.id='own';d.className='ov';document.body.appendChild(d)}d.innerHTML='<div class="dlg" style="max-height:92vh;overflow:auto">'+h+'</div>';return d}
 function ownClose(){var d=document.getElementById('own');if(d)d.remove();K=null}
