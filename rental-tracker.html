@@ -891,7 +891,7 @@ const VC={
  score(txt,name){const a=this.nm(name).split(' ').filter(x=>x.length>=3);let s=0;a.forEach(x=>{if(txt.includes(x))s+=x.length});return s},
  bestUnit(t){let b=null,bs=0;this.units().forEach(u=>{const s=this.score(t,u.name)+this.score(t,u.company||'')*0.5;if(s>bs){bs=s;b=u}});return b},
  bestLease(t){let b=null,bs=0;this.units().forEach(u=>(u.leases||[]).forEach((L,k)=>{const s=this.score(t,L.tenant);if(s>bs){bs=s;b={u,L,k}}}));return b},
- TABS:[['home','الرئيسيه|البيت'],['units','الوحدات|وحدات'],['grp','المجموعات|مجموعات'],['acc','الحسابات|حسابات'],['fc','توقعات|الفلوس'],['ac','حساباتي'],['n','التنبيهات|تنبيهات|الجرس'],['q','بحث'],['sim','استديو'],['log','سجل'],['bk','نسخ|احتياطي|باك اب']],
+ TABS:[['home','الرئيسيه|البيت'],['units','الوحدات|وحدات'],['grp','المجموعات|مجموعات'],['acc','الحسابات|حسابات'],['fc','توقعات|الفلوس'],['ct','عقد العميل|عقد|عقود'],['n','التنبيهات|تنبيهات|الجرس'],['q','بحث'],['sim','استديو'],['log','سجل'],['bk','نسخ|احتياطي|باك اب']],
  parse(raw){
   const t=this.nm(raw);if(!t)return null;
   const has=r=>r.test(t);
@@ -925,7 +925,7 @@ const VC={
   if(p.kind==='cash')return 'النقدي معاك دلوقتي: '+$(cashNow())+' جنيه';
   if(p.kind==='late'){let od=0;try{od=items().filter(x=>dd(x.d)<0&&['rent','inst','debt'].includes(x.ty)).length}catch(e){}return od?'عندك '+od+' متأخر':'مفيش حاجة متأخرة 👌'}
   if(p.kind==='exp'){const f=()=>{S.exp=S.exp||[];S.exp.push({id:uid(),u:p.u?p.u.id:'',g:(p.u||WS==='all'||WS==='-')?'':WS,w:p.w,a:p.a,d:p.d,n:1});save();render()};guardLk([p.d],f);return 'اتسجل مصروف '+$(p.a)}
-  if(p.kind==='inst'){togI(p.u.id,p.k);return 'اتسجل القسط مدفوع'}
+  if(p.kind==='inst'){const i=p.u.inst[p.k];i.p=true;i.at=0;save();render();return 'اتسجل القسط مدفوع (من غير خصم من النقدي)'}
   if(p.kind==='rent'){const k=p.m.u.leases.indexOf(p.m.L);togR(p.m.u.id,k,p.i);return 'اتسجل إيجار '+p.m.L.tenant+' مستلم'}
   return ''},
  sr:null,
@@ -945,14 +945,14 @@ const VC={
   <div id="vcr" class="vcr"></div>
   <div class="vcb2"><button class="p" onclick="VC.go()">فهّم الأمر</button></div>
   <div class="vcex">أمثلة: «سجل مصروف 500 صيانة» • «استلمت إيجار جيما» • «دفعت قسط الحمادي» • «افتح التنبيهات» • «النقدي كام»${SRc?'':'<br>🎙️ المايك مش شغال في المتصفح ده — استخدم زرار المايك اللي في كيبورد الموبايل جوه الخانة.'}</div></div>`;
-  document.body.appendChild(o);setTimeout(()=>{const i=document.getElementById('vci');i&&i.focus()},50)},
+  document.body.appendChild(o);setTimeout(()=>{const i=document.getElementById('vci');if(SRc){try{VC.listen()}catch(e){}}else i&&i.focus()},250)},
  close(){const o=document.getElementById('vcp');o&&o.remove();try{this.sr&&this.sr.abort()}catch(e){}this.sr=null},
  show(h){const r=document.getElementById('vcr');if(r)r.innerHTML=h},
- go(){const i=document.getElementById('vci');if(!i||!i.value.trim())return;const p=this.parse(i.value);this.cur=p;
+ go(){const i=document.getElementById('vci');if(!i||!i.value.trim())return;if(this.cur&&this.cur.kind&&!['err','nav','cash','late'].includes(this.cur.kind)&&/^(نفذ|نفّذ|تمام|ايوه|أيوه|اه|آه|موافق|اوك|ok|yes)\s*$/i.test(this.nm(i.value))){this.ok();return}if(this.cur&&/^(الغي|إلغاء|الغاء|لا|لأ|cancel|no)\s*$/i.test(this.nm(i.value))){this.cur=null;i.value='';this.show('<div class="vco">اتلغى</div>');return}const p=this.parse(i.value);this.cur=p;
   if(!p){return}
   if(p.kind==='err'){this.show('<div class="vce">⚠️ '+esc(p.txt)+'</div>');return}
   if(['nav','cash','late'].includes(p.kind)){const m=this.run(p);this.show('<div class="vco">'+esc(m)+'</div>');if(p.kind==='nav')setTimeout(()=>this.close(),400);return}
-  this.show('<div class="vcq">'+esc(p.txt)+'</div><div class="vcb2"><button class="p" onclick="VC.ok()">✅ نفّذ</button><button onclick="VC.show(\'\')">إلغاء</button></div>')},
+  this.show('<div class="vcq">'+esc(p.txt)+'</div><div class="mu" style="font-size:12px;margin:4px 0">قول «نفّذ» أو «إلغاء»، أو اضغط الزرار</div><div class="vcb2"><button class="p" onclick="VC.ok()">✅ نفّذ</button><button onclick="VC.show(\'\')">إلغاء</button></div>')},
  ok(){const p=this.cur;if(!p)return;const m=this.run(p);this.show('<div class="vco">✅ '+esc(m)+'</div>');const i=document.getElementById('vci');if(i)i.value='';this.cur=null},
  listen(){const N=this.nat();if(N)return this.listenN(N);const SRc=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SRc)return;const b=document.getElementById('vcm'),i=document.getElementById('vci');
   if(this.sr){try{this.sr.stop()}catch(e){}return}
