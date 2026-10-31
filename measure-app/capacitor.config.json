@@ -1,0 +1,10 @@
+{
+ "appId": "com.bunyan.roommeasure",
+ "appName": "مقياس الغرف",
+ "webDir": "www",
+ "backgroundColor": "#eef0ee",
+ "server": {
+  "androidScheme": "https",
+  "cleartext": false
+ }
+}
