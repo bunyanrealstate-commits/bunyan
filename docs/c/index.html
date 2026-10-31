@@ -444,7 +444,11 @@ function ua(u){const f=sh(u),ue=(S.exp||[]).filter(x=>x.u===u.id).reduce((s,x)=>
  ic=u.leases.reduce((s,L)=>s+(L.icost||0)*lm(L)+(L.rme?L.router||0:0),0)*f,cost=(full-(u.salv||0))*f+ic,vac=Math.max(0,u.cm-occN),tg=(S.tp??25)/100,tr=u.cm?(full-(u.salv||0))*(1+tg)/u.cm:0;
  return{cost,inc,occ:occN,vac,tr,tg,pre:occ(u).freeVal,full:full-(u.salv||0),profit:inc-cost,need:vac?Math.max(0,(cost*(1+tg)-inc)/f/vac):0}}
 function gexY(){const t=today(),e=addM(t,12);let s=0;SE().forEach(x=>{if(x.u)return;const f=shg(x.g);for(let i=0;i<(x.n||1);i++){const d=addM(pd(x.d),i);if(d>=t&&d<e)s+=(+x.a||0)*f}});return s}
-function annP(){const t=today();return SU().reduce((s,u)=>addM(pd(u.start),u.cm)>t?s+ua(u).profit/(u.cm||1)*12:s,0)-gexY()}
+function winU(u){const MS=2629800000,s=pd(u.start),ce=addM(s,u.cm||12);let le=null;(u.leases||[]).forEach(L=>{let e=lend(L);if(L.exit&&pd(L.exit)<e)e=pd(L.exit);if(!le||e>le)le=e});if(!le||le<=s)return null;const e=le<ce?le:ce,mW=(e-s)/MS;let oc=0;(u.leases||[]).forEach(L=>{let a=pd(L.start),b=lend(L);if(L.exit&&pd(L.exit)<b)b=pd(L.exit);if(a<s)a=s;if(b>e)b=e;if(b>a)oc+=(b-a)/MS});return{s,e,mW,oc:Math.min(oc,mW),occ:mW?Math.min(1,oc/mW):0}}
+function annW(){const t=today();let p=0,mW=0,oc=0,e0=null,s0=null;SU().forEach(u=>{if(addM(pd(u.start),u.cm)<=t)return;const w=winU(u);if(!w)return;const a=ua(u);p+=a.inc-a.cost*w.mW/(u.cm||1);mW+=w.mW;oc+=w.oc;if(!e0||w.e>e0)e0=w.e;if(!s0||w.s<s0)s0=w.s});
+ let gx=0;if(e0){const tt=today();SE().forEach(x=>{if(x.u)return;const f=shg(x.g);for(let i=0;i<(x.n||1);i++){const d=addM(pd(x.d),i);if(d>=tt&&d<e0)gx+=(+x.a||0)*f}})}
+ return{p:p-gx,gx,occ:mW?oc/mW:0,mW,s:s0,e:e0}}
+function annP(){return annW().p}
 function ledger(){const t=today(),r=[];
  SU().forEach(u=>{const f=sh(u);
   u.inst.forEach(i=>{if(i.p)r.push({d:i.d,u:u.name,c:'co',w:'دفعة '+(u.company||'الشركة'),a:-i.a*f,p:u.partner,f})});
@@ -834,8 +838,8 @@ setTimeout(autoBk,5000);setInterval(autoBk,6*3600*1000);
 const _pcSplit="</div><div class='card'><h2>💰";
 const payAll=()=>{const h=payCards();return h.slice(0,h.indexOf(_pcSplit)+6)};
 const payRent=()=>{const h=payCards();return h.slice(h.indexOf(_pcSplit)+6)};
-function sumCards(){const ac=accr(),ann=annP(),gx=gexY(),C=(l,v,c)=>`<div class='stat'><span>${l}</span><b class='${cls(c)}'>${v}</b></div>`;
- return `<div class='grid'>${C('ربحي حتى اليوم',$(ac.profit),ac.profit)}${C('الربح السنوي المتوقع',$(ann),ann)}</div>${gx?`<p class='mu'>بعد خصم مصروفات عامة متوقعة خلال 12 شهر: ${$(gx)}</p>`:''}`}
+function sumCards(){const ac=accr(),W=annW(),ann=W.p,gx=W.gx,C=(l,v,c,sub)=>`<div class='stat'><span>${l}</span><b class='${cls(c)}'>${v}</b>${sub?`<span>${sub}</span>`:''}</div>`,fd=d=>d?d.toLocaleDateString(LOC(),{day:'numeric',month:'short',year:'numeric'}):'';
+ return `<div class='grid'>${C('ربحي حتى اليوم',$(ac.profit),ac.profit)}${C('الربح المتوقع على مدة العقود',$(ann),ann,W.e?'من استلام الشركة '+fd(W.s)+' حتى آخر عقد '+fd(W.e)+' ('+(Math.round(W.mW*10)/10)+' شهر)':'لا توجد عقود مستأجرين')}${C('نسبة الإشغال على العقود',W.mW?Math.round(W.occ*100)+'%':'—',null,W.mW?'شهور مؤجرة '+(Math.round(W.occ*W.mW*10)/10)+' من '+(Math.round(W.mW*10)/10):'')}</div>${gx?`<p class='mu'>بعد خصم مصروفات عامة متوقعة حتى آخر عقد: ${$(gx)}</p>`:''}`}
 
 try{const st=document.createElement('style');st.textContent='@media print{#nav,#ntb,#who,#ws,button,select,.noprint{display:none!important}body{background:#fff!important;color:#000!important}.card{box-shadow:none!important;border:1px solid #999!important;break-inside:avoid}}';document.head.appendChild(st)}catch(e){}
 
@@ -1486,24 +1490,24 @@ function pct(a,b){return b>0?f0(a/b*100)+'%':'—'}
 function months12(){var lg=ledger(),n=new Date(),r=[];for(var i=11;i>=0;i--){var d=new Date(n.getFullYear(),n.getMonth()-i,1);r.push({k:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),i:0,o:0})}
  lg.forEach(function(x){var k=x.d.slice(0,7),m=r.find(function(q){return q.k===k});if(m){x.a>0?m.i+=x.a:m.o-=x.a}});return r}
 function agingData(){var t=today(),rows=[];SU().forEach(function(u){var f=sh(u);u.leases.forEach(function(L){for(var i=0;i<L.months;i++){if(L.rcv.includes(i))continue;var d=payD(L,i);if(d<t){var a=la(L,i)*f;if(a>0)rows.push({t:L.tenant||'مستأجر',u:u.name,d:iso(d),days:Math.round((t-d)/864e5),a:a,ph:L.phone})}}})});return rows.sort(function(a,b){return b.days-a.days})}
-function kpi(){var t=today(),U=SU(),ac=accr(),cost=0,inc=0,act=0,occd=0,occN=0,cm=0,pot=0,rents=[],fur=0,per=[];
+function kpi(){var t=today(),U=SU(),ac=accr(),costW=0,W=annW(),cost=0,inc=0,act=0,occd=0,occN=0,cm=0,pot=0,rents=[],fur=0,per=[];
  U.forEach(function(u){var a=ua(u),f=sh(u);cost+=a.cost;inc+=a.inc;occN+=a.occ;cm+=u.cm||0;fur+=(+u.furn||0)*f;
   var b=pd(u.start),e=addM(b,u.cm);if(b<=t&&t<e){act++;if(u.leases.some(function(L){return pd(L.start)<=t&&t<(L.exit?pd(L.exit):lend(L))}))occd++}
   u.leases.forEach(function(L){rents.push((L.rent||0)+(L.inet||0))});
-  per.push({n:u.name,p:a.profit,i:a.inc,c:a.cost,o:(u.cm?a.occ/u.cm:0)})});
+  var w=winU(u),cw=w?a.cost*w.mW/(u.cm||1):a.cost;costW+=cw;per.push({n:u.name,p:a.inc-cw,i:a.inc,c:cw,o:(w?w.occ:0)})});
  var avg=rents.length?rents.reduce(function(a,b){return a+b},0)/rents.length:0;
  U.forEach(function(u){pot+=(u.cm||0)*avg*sh(u)});
  var due=0,got=0;U.forEach(function(u){var f=sh(u);u.leases.forEach(function(L){for(var i=0;i<L.months;i++){if(payD(L,i)<=t){var a=la(L,i)*f;due+=a;if(L.rcv.includes(i))got+=a}}})});
  var ann=annP();
- return{cost:cost,inc:inc,act:act,occd:occd,occAll:cm?occN/cm*100:0,avg:avg,be:pot?cost/pot*100:0,due:due,got:got,ann:ann,fur:fur,per:per.sort(function(a,b){return b.p-a.p}),margin:inc?(inc-cost)/inc*100:0,ac:ac,roi:cost?ann/cost*100:0}}
+ return{cost:cost,inc:inc,act:act,occd:occd,occAll:W.mW?W.occ*100:0,avg:avg,be:pot?cost/pot*100:0,due:due,got:got,ann:ann,fur:fur,per:per.sort(function(a,b){return b.p-a.p}),margin:inc?(inc-costW)/inc*100:0,ac:ac,roi:costW?ann/costW*100:0}}
 function chart(){var m=months12(),mx=Math.max.apply(null,m.map(function(x){return Math.max(x.i,x.o)}).concat([1]));
  return '<div class="bar">'+m.map(function(x){return '<div title="'+x.k+'"><span style="display:flex;align-items:flex-end;gap:1px;height:100px;width:100%"><i style="background:#16a34a;height:'+Math.max(1,x.i/mx*100)+'px"></i><i style="background:#dc2626;height:'+Math.max(1,x.o/mx*100)+'px"></i></span><small>'+x.k.slice(5)+'</small></div>'}).join('')+'</div><div class="lg2"><span><b style="background:#16a34a"></b>دخل</span><span><b style="background:#dc2626"></b>مصروف</span><span class="mu">آخر 12 شهر (نقدي)</span></div>'}
 window.anCard=function(){var k=kpi(),C=function(l,v,s,c){return '<div class="stat"><span>'+l+'</span><b class="'+(c==null?'':cls(c))+'">'+v+'</b>'+(s?'<small>'+s+'</small>':'')+'</div>'};
  var h='<div class="card"><h2>📊 التحليل المالي</h2><div class="kp">'+
  C('الإشغال الحالي',pct(k.occd,k.act),k.occd+' من '+k.act+' استديو مؤجَّر اليوم')+
- C('الإشغال على مدة العقود',f0(k.occAll)+'%','نسبة الشهور المؤجّرة من إجمالي شهور عقود الشركات')+
- C('هامش الربح',f0(k.margin)+'%','الربح ÷ الإيراد (تقديري على كل المدة)',k.margin)+
- C('العائد السنوي على التكلفة',f0(k.roi)+'%','الربح السنوي المتوقع ÷ إجمالي التكلفة',k.roi)+
+ C('الإشغال على مدة العقود',f0(k.occAll)+'%','الشهور المؤجّرة من استلام الشركة حتى آخر عقد')+
+ C('هامش الربح',f0(k.margin)+'%','الربح ÷ الإيراد على مدة العقود',k.margin)+
+ C('العائد على التكلفة',f0(k.roi)+'%','الربح المتوقع ÷ التكلفة على مدة العقود',k.roi)+
  C('نقطة التعادل (إشغال)',k.be?f0(k.be)+'%':'—','أقل إشغال لتغطية كل التكاليف بمتوسط إيجار '+$(Math.round(k.avg)))+
  C('نسبة التحصيل',pct(k.got,k.due),'المحصّل '+$(Math.round(k.got))+' من المستحق '+$(Math.round(k.due)),k.got-k.due+0.01)+
  '</div>'+chart()+'</div>';
