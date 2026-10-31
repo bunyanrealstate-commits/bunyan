@@ -2708,7 +2708,8 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.t
 </script>
 <script id="grpexport">
 (function(){if(window.HBUILD)return;
-function cfg(){try{return JSON.parse(localStorage.getItem('bny_sync'))||null}catch(e){return null}}
+function cfg(){try{var m=JSON.parse(localStorage.getItem('bny_sync'))||null,h=JSON.parse(localStorage.getItem('bny_hk')||'null');if(h&&h.repo)return{repo:h.repo,token:h.token||(m&&m.token)};return m}catch(e){return null}}
+window.hkCfg=cfg;
 function enc(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
 function tg(){return (S&&S.groups||[]).filter(function(g){return /عبد\s*الحكيم|حكيم/.test(g.name||'')&&!/عمرو/.test(g.name||'')})[0]}
 function pack(g){var U=(S.units||[]).filter(function(u){return u.g===g.id}),ids={};U.forEach(function(u){ids[u.id]=1});
@@ -2727,7 +2728,7 @@ window.hakimExport=exp;setTimeout(exp,4000);setInterval(function(){if(!document.
 </script>
 <script id="hreqown">
 (function(){if(window.HBUILD)return;
-function cfg(){try{return JSON.parse(localStorage.getItem('bny_sync'))||null}catch(e){return null}}
+function cfg(){return window.hkCfg?hkCfg():null}
 function dec(b){return JSON.parse(decodeURIComponent(escape(atob(String(b).replace(/\s/g,'')))))}
 function enc(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
 var REQ=[],SHA='',busy=false;
@@ -2752,6 +2753,14 @@ function card(){if(!REQ.length)return '';var fd=function(t){try{return new Date(
  return "<div class='card' style='border-color:#2a9d5c'><h2>📨 طلبات تعديل من بنيان حكيم ("+REQ.length+")</h2>"+REQ.map(function(x){var df=diff(x);return "<div class='li' style='flex-wrap:wrap;gap:6px'><span style='flex:1 1 200px'><b>"+esc(x.desc||'تعديل')+"</b><br><span class='mu'>"+fd(x.at)+(df?' • '+df:'')+"</span></span><span style='display:flex;gap:6px'><button class='p' onclick=\"hreqOk('"+x.id+"')\">✅ موافقة</button><button class='x' onclick=\"hreqNo('"+x.id+"')\">✕ رفض</button></span></div>"}).join('')+"</div>"}
 var h0=home;home=function(){var o=h0.apply(this,arguments);try{return card()+o}catch(e){return o}};
 setInterval(poll,30000);addEventListener('visibilitychange',function(){if(!document.hidden)poll()});setTimeout(poll,2500);window.hreqPoll=poll;
+})();
+</script>
+<script id="hklink">
+(function(){if(window.HBUILD)return;
+window.hkLink=function(){var h={};try{h=JSON.parse(localStorage.getItem('bny_hk'))||{}}catch(e){}
+ openM('🔗 ربط بنيان حكيم بمستودع منفصل',[{k:'repo',l:'المستودع الخاص ببنيان حكيم (مثال: bunyanrealstate-commits/bunyan-hakim) — سيبه فاضي عشان يستخدم مستودعك الأساسي',v:h.repo||''},{k:'token',l:'مفتاح (token) فيه صلاحية على المستودع ده (سيبه فاضي لو مفتاحك الأساسي عليه صلاحية)',v:h.token||''}],function(o){var r=String(o.repo||'').trim().replace(/^https?:\/\/github\.com\//,'').replace(/\/$/,''),t=String(o.token||'').trim();try{if(r)localStorage.setItem('bny_hk',JSON.stringify({repo:r,token:t}));else localStorage.removeItem('bny_hk')}catch(e){}setTimeout(function(){try{hakimExport();hreqPoll();toast(r?'✅ بنيان حكيم مربوط بـ '+r:'بنيان حكيم بيستخدم المستودع الأساسي')}catch(e){}},300)})};
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.tab!=='grp')return o;var g=(S.groups||[]).filter(function(g){return /عبد\s*الحكيم|حكيم/.test(g.name||'')&&!/عمرو/.test(g.name||'')})[0];if(!g)return o;var b=document.querySelector("#app button[onclick=\"setW('"+g.id+"')\"]"),li=b&&b.closest('.li');if(!li||document.getElementById('hklb'))return o;var h={};try{h=JSON.parse(localStorage.getItem('bny_hk'))||{}}catch(e){}
+ li.insertAdjacentHTML('afterend',"<div id='hklb' style='margin:4px 0 8px'><button onclick='hkLink()'>🔗 ربط بنيان حكيم"+(h.repo?' • '+esc(h.repo):'')+"</button></div>")}catch(e){}return o};
 })();
 </script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
