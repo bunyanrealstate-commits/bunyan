@@ -1243,7 +1243,7 @@ render()})();
 function P(){try{return window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()&&Capacitor.Plugins&&Capacitor.Plugins.BiometricAuthNative||null}catch(e){return null}}
 function on(){try{return localStorage.getItem('bny_bio')==='1'}catch(e){return false}}
 function setOn(v){try{v?localStorage.setItem('bny_bio','1'):localStorage.removeItem('bny_bio')}catch(e){}}
-async function ask(reason){var N=P();if(!N)return false;try{await N.authenticate({reason:reason||'افتح Bunyan Furnished',cancelTitle:'إلغاء',allowDeviceCredential:true,androidTitle:'Bunyan Furnished',androidSubtitle:reason||'تأكيد الهوية',androidConfirmationRequired:false});return true}catch(e){return false}}
+async function ask(reason){var N=P();if(!N)return false;try{await N.authenticate({reason:reason||'افتح Bunyan Furnished',cancelTitle:'إلغاء',allowDeviceCredential:true,androidTitle:'Bunyan Furnished',androidSubtitle:reason||'تأكيد الهوية',androidConfirmationRequired:false});return true}catch(e){window.__bioErr=(e&&(e.code||e.message))||String(e);return false}}
 var st=document.createElement('style');st.textContent='#bio{position:fixed;inset:0;z-index:99999;background:var(--bg,#fff);color:var(--tx,#111);display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px}#bio.on{display:flex}#bio .bi{font-size:64px}#bio h2{margin:0}#bio button{font-size:16px;padding:12px 28px;border-radius:12px}';document.head.appendChild(st);
 var o=document.createElement('div');o.id='bio';o.innerHTML='<div class="bi">🔒</div><h2>Bunyan Furnished</h2><p class="mu">التطبيق مقفول — أكّد هويتك لفتحه</p><button class="p" id="bioBtn">🖐️ فتح بالبصمة</button>';document.body.appendChild(o);
 var busy=false;async function unlock(){if(busy)return;busy=true;var ok=await ask('افتح Bunyan Furnished');busy=false;if(ok)o.classList.remove('on')}
@@ -1252,10 +1252,10 @@ function lock(){if(on()&&P()){o.classList.add('on');setTimeout(unlock,250)}}
 var hid=0;document.addEventListener('visibilitychange',function(){if(document.hidden)hid=Date.now();else if(hid&&Date.now()-hid>15000)lock()});
 if(on()&&P()){o.classList.add('on');setTimeout(unlock,400)}
 window.bnyBio={on:on,ask:ask,P:P,set:setOn};
-window.mBio=async function(){var N=P();if(!N){toast('بصمة الموبايل متاحة في تطبيق الأندرويد فقط');return}
+window.mBio=async function(){var N=P();if(!N){var nat=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());toast(nat?'مكوّن البصمة غير موجود في هذه النسخة — ثبّت آخر APK ('+Object.keys((window.Capacitor&&Capacitor.Plugins)||{}).length+' plugins)':'بصمة الموبايل متاحة في تطبيق الأندرويد فقط');return}
  if(on()){if(await ask('تأكيد إيقاف قفل البصمة')){setOn(false);toast('تم إيقاف قفل البصمة');render()}return}
  try{var c=await N.checkBiometry();if(c&&c.isAvailable===false&&!c.deviceIsSecure){toast('فعّل بصمة أو قفل شاشة على الموبايل الأول من الإعدادات');return}}catch(e){}
- if(await ask('تأكيد تفعيل قفل البصمة')){setOn(true);toast('تم تفعيل قفل البصمة');render()}else toast('لم يتم التفعيل')};
+ if(await ask('تأكيد تفعيل قفل البصمة')){setOn(true);toast('تم تفعيل قفل البصمة');render()}else toast('لم يتم التفعيل'+(window.__bioErr?' ('+window.__bioErr+')':''))};
 var r0=render;render=function(){r0.apply(this,arguments);try{if(!AUTH)return;document.querySelectorAll('.ump').forEach(function(m){if(m.closest('#lgm'))return;var b=m.querySelector('.bib');if(!b){b=document.createElement('button');b.className='bib';b.setAttribute('onclick','mBio()');var d=m.querySelector('.dg');d?m.insertBefore(b,d):m.appendChild(b)}b.textContent=on()?'🔒 قفل البصمة: مفعّل':'🔓 قفل البصمة: متوقف'})}catch(e){}};
 render()})();
 </script>
