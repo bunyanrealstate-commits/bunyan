@@ -2626,7 +2626,8 @@ try{if(typeof AUTH!=="undefined"&&AUTH&&typeof S!=="undefined"&&S)window.render(
 /* مساحة الغرف: تبويب مستقل. يحفظ في مفتاح rm_rooms على الجهاز فقط ولا يلمس بيانات البرنامج (S) */
 (function(){
 if(window.__rmTab)return;window.__rmTab=1;
-var K='rm_rooms',AR='http://bunyanrealstate-commits.github.io/bunyan/measure/ar.html';
+var K='rm_rooms',AR0='https://bunyanrealstate-commits.github.io/bunyan/measure/ar.html',NAT=false;try{NAT=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform())}catch(e){}
+var AR=NAT?'intent://bunyanrealstate-commits.github.io/bunyan/measure/ar.html#Intent;scheme=https;package=com.android.chrome;end':AR0;
 var css='.rm{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px;padding-block:8px 120px}'
 +'.rm .rc{background:var(--card,#fff);border:1px solid var(--bd,#d5d7dd);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}'
 +'.rm h2{margin:0;font-size:18px}.rm .mu{color:var(--mu,#5b5f6a);font-size:13px;margin:0}'
@@ -2646,7 +2647,14 @@ var css='.rm{max-width:560px;margin:0 auto;display:flex;flex-direction:column;ga
 +'.rm .it{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--bd,#d5d7dd);border-radius:11px}'
 +'.rm .it .n{flex:1;min-width:0}.rm .it small{color:var(--mu,#5b5f6a);font-variant-numeric:tabular-nums}'
 +'.rm .it b{font-variant-numeric:tabular-nums}.rm .x{background:none;border:0;color:var(--mu,#5b5f6a);font-size:20px;cursor:pointer;padding:2px 8px}'
-+'.rm .tot{display:flex;justify-content:space-between;font-weight:700;border-top:1px solid var(--bd,#d5d7dd);padding-top:8px}';
++'.rm .tot{display:flex;justify-content:space-between;font-weight:700;border-top:1px solid var(--bd,#d5d7dd);padding-top:8px}'
++'#rmps{position:fixed;inset:0;z-index:70;background:var(--bg,#eef0f5);display:flex;justify-content:center}#rmps .pb{width:100%;max-width:560px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box;padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(12px + env(safe-area-inset-bottom,0px))}'
++'#rmps .ph{display:flex;justify-content:space-between;align-items:center;font-size:17px}#rmps .ps{display:flex;gap:6px}#rmps .s{flex:1;text-align:center;font-size:12.5px;padding:7px;border-radius:9px;border:1px solid var(--bd,#d5d7dd);color:var(--mu,#5b5f6a)}#rmps .s.on{font-weight:700;border-color:currentColor}#rmps .s.r.on{color:#1f7ae0}#rmps .s.t.on{color:#e0452b}'
++'#rmps .pr{display:grid;grid-template-columns:1.4fr 1fr;gap:8px}#rmps select,#rmps input[type=number]{font:inherit;width:100%;box-sizing:border-box;padding:11px;border-radius:10px;border:1px solid var(--bd,#d5d7dd);background:var(--card,#fff);color:var(--tx,#111)}'
++'#rmps .pg{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:var(--card,#fff);border:1px solid var(--bd,#d5d7dd);border-radius:12px;overflow:hidden}#rmps canvas{max-width:100%;max-height:100%;display:block}'
++'#rmps #rmp_pick{display:flex;flex-direction:column;gap:10px;align-items:center;padding:20px;text-align:center}#rmps #rmp_pick p{margin:0;color:var(--mu,#5b5f6a)}#rmps label.bp,#rmps label.bg{display:inline-block;cursor:pointer;min-width:190px;text-align:center}'
++'#rmps .bp{font:inherit;font-weight:700;border:0;border-radius:11px;padding:12px;background:var(--ac,#1473e6);color:#fff;cursor:pointer}#rmps .bg{font:inherit;border:1px solid var(--bd,#d5d7dd);border-radius:11px;padding:12px;background:transparent;color:var(--tx,#111);cursor:pointer}#rmps .mu{color:var(--mu,#5b5f6a);font-size:13px}#rmps .po{font-size:26px;font-weight:700;color:#e0452b;text-align:center;margin:0;font-variant-numeric:tabular-nums}#rmps .row{display:flex;gap:10px}#rmps .row button{flex:1}#rmps .bp:disabled{opacity:.45}'
+;
 var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
 function get(){try{return JSON.parse(localStorage.getItem(K)||'[]')}catch(e){return[]}}
 function put(v){try{localStorage.setItem(K,JSON.stringify(v))}catch(e){}}
@@ -2662,8 +2670,9 @@ function inp(id,ph,step){return '<input type="number" inputmode="decimal" step="
 window.rmTab=function(){
  var R=get(),tot=0,list=R.length?R.map(function(r,i){tot+=r.A;return '<div class="it"><div class="n"><b>'+es(r.name)+'</b><br><small>'+f2(r.L)+' × '+f2(r.W)+' م</small></div><b>'+f2(r.A)+' م²</b><button class="x" type="button" aria-label="حذف" onclick="RM.del('+i+')">'+(conf===i?'حذف؟':'×')+'</button></div>'}).join('')+(R.length>1?'<div class="tot"><span>الإجمالي</span><span>'+f2(tot)+' م²</span></div>':''):'<p class="mu">لا توجد غرف محفوظة. احسب المساحة واضغط «حفظ».</p>';
  return '<div class="rm">'
- +'<a class="arb" href="'+AR+'" target="_blank" rel="noopener">📷 قياس الأرضية بالكاميرا</a>'
- +'<p class="mu" style="margin-top:-6px">يفتح الكاميرا في Chrome: تمشي على زوايا الغرفة وتضغط عند كل زاوية فتظهر المساحة. يحتاج إنترنت وجوال يدعم الواقع المعزز.</p>'
+ +'<div class="rc"><h2>📷 قياس بالصورة</h2><p class="mu">يشتغل على أي جوال وبدون إنترنت. صوّر الجدار أو الأرض وفيه شيء مقاسه معروف (باب، ورقة A4، بلاطة)، وحدد طرفيه ثم طرفي المسافة المطلوبة.</p><div class="row"><button class="bp" type="button" onclick="RM.pm(\'mL\')">قياس الطول</button><button class="bp" type="button" onclick="RM.pm(\'mW\')">قياس العرض</button></div></div>'
+ +'<a class="arb" href="'+AR+'" target="_blank" rel="noopener" style="font-size:15px;padding:13px">📐 قياس بالواقع المعزز (AR) — اختياري</a>'
+ +'<p class="mu" style="margin-top:-6px">يفتح في Chrome على أندرويد، ويحتاج إنترنت وجوال يدعم ARCore. لو الشاشة بقت سودا أو ما اشتغلش، استخدم «قياس بالصورة» فوق.</p>'
  +'<div class="rc"><h2>حساب يدوي</h2>'
  +'<div class="tabs"><button type="button" class="'+(V.mode==='tiles'?'on':'')+'" onclick="RM.m(\'tiles\')">بعدّ البلاط</button><button type="button" class="'+(V.mode==='meters'?'on':'')+'" onclick="RM.m(\'meters\')">بالمتر</button></div>'
  +(V.mode==='tiles'
@@ -2678,7 +2687,38 @@ window.rmTab=function(){
  +'<div class="rc"><div class="row" style="align-items:center;justify-content:space-between"><h2>الغرف المحفوظة</h2><button class="bg" type="button" style="flex:none;padding:8px 14px" onclick="RM.copy(this)">نسخ</button></div>'+list+'</div>'
  +'</div>';
 };
+
+var PM={dim:'mL',img:null,pts:[],drag:-1,cv:null};
+function pmEl(i){return document.getElementById(i)}
+function pmRes(){var ref=parseFloat(pmEl('rmp_len').value),p=PM.pts;if(p.length<4||!(ref>0))return 0;var d=function(a,b){return Math.hypot(a.x-b.x,a.y-b.y)},pr=d(p[0],p[1]);if(pr<2)return 0;return d(p[2],p[3])*ref/pr}
+function pmDraw(){var cv=PM.cv,p=PM.pts,r=pmRes();pmEl('rmp_out').textContent=r?f2(r)+' م':'';pmEl('rmp_use').disabled=!r;
+ pmEl('rmp_s1').className='s'+(p.length<2?' on r':'');pmEl('rmp_s2').className='s'+(p.length>=2?' on t':'');
+ pmEl('rmp_h').textContent=!PM.img?'':p.length===0?'اضغط على أول طرف للشيء المعروف (الأزرق)':p.length===1?'اضغط على الطرف الثاني للشيء المعروف':p.length===2?'الآن اضغط على أول طرف للمسافة المطلوبة (الأحمر)':p.length===3?'اضغط على الطرف الثاني للمسافة المطلوبة':'تقدر تسحب أي نقطة لتظبطها';
+ if(!PM.img)return;var x=cv.getContext('2d');x.drawImage(PM.img,0,0,cv.width,cv.height);var lw=Math.max(3,cv.width/250),rad=Math.max(9,cv.width/90);
+ [[0,1,'#1f7ae0'],[2,3,'#e0452b']].forEach(function(g){var a=p[g[0]],b=p[g[1]];if(a&&b){x.strokeStyle=g[2];x.lineWidth=lw;x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke()}
+  [a,b].forEach(function(q){if(!q)return;x.fillStyle=g[2];x.strokeStyle='#fff';x.lineWidth=lw/1.5;x.beginPath();x.arc(q.x,q.y,rad,0,7);x.fill();x.stroke()})})}
+function pmPos(e){var b=PM.cv.getBoundingClientRect();return{x:(e.clientX-b.left)*PM.cv.width/b.width,y:(e.clientY-b.top)*PM.cv.height/b.height}}
+function pmLoad(f){if(!f)return;var done=function(im,w,h){var s=Math.min(1,1600/Math.max(w,h));PM.cv.width=Math.round(w*s);PM.cv.height=Math.round(h*s);PM.img=im;PM.pts=[];PM.cv.style.display='block';pmEl('rmp_pick').style.display='none';pmDraw()};
+ var viaImg=function(){var u=URL.createObjectURL(f),im=new Image();im.onload=function(){done(im,im.naturalWidth,im.naturalHeight);setTimeout(function(){URL.revokeObjectURL(u)},3000)};im.onerror=function(){pmEl('rmp_h').textContent='تعذر فتح الصورة. جرّب صورة تانية.'};im.src=u};
+ if(window.createImageBitmap){createImageBitmap(f,{imageOrientation:'from-image'}).then(function(b){done(b,b.width,b.height)},viaImg)}else viaImg()}
+function pmOpen(dim){PM.dim=dim;PM.img=null;PM.pts=[];var o=document.getElementById('rmps');if(o)o.remove();o=document.createElement('div');o.id='rmps';
+ o.innerHTML='<div class="pb"><div class="ph"><b>قياس '+(dim==='mL'?'الطول':'العرض')+' بالصورة</b><button type="button" class="bg" id="rmp_x">إغلاق</button></div>'
+ +'<div class="ps"><div class="s r on" id="rmp_s1">١. الشيء المعروف</div><div class="s" id="rmp_s2">٢. المسافة المطلوبة</div></div>'
+ +'<div class="pr"><select id="rmp_sel"><option value="2.00">باب – ارتفاع 2.00 م</option><option value="0.90">باب – عرض 0.90 م</option><option value="0.297">ورقة A4 – طول 29.7 سم</option><option value="0.21">ورقة A4 – عرض 21 سم</option><option value="0.60">بلاطة 60 سم</option><option value="0.80">بلاطة 80 سم</option><option value="custom">مقاس آخر…</option></select><input type="number" id="rmp_len" inputmode="decimal" step="0.01" value="2.00" aria-label="طول الشيء المعروف بالمتر"></div>'
+ +'<div class="pg" id="rmp_stage"><div id="rmp_pick"><p>صوّر الجدار أو الأرض، أو اختر صورة من المعرض</p><label class="bp" for="rmp_f1">📷 التقاط صورة</label><label class="bg" for="rmp_f2">🖼 من المعرض</label><input type="file" id="rmp_f1" accept="image/*" capture="environment" hidden><input type="file" id="rmp_f2" accept="image/*" hidden></div><canvas id="rmp_cv" style="display:none"></canvas></div>'
+ +'<p class="mu" id="rmp_h" style="min-height:2.6em;margin:0"></p><p class="po" id="rmp_out"></p><div class="row"><button type="button" class="bg" id="rmp_u">تراجع</button><button type="button" class="bp" id="rmp_use" disabled>استخدم القياس</button></div></div>';
+ document.body.appendChild(o);PM.cv=pmEl('rmp_cv');
+ pmEl('rmp_x').onclick=function(){o.remove()};pmEl('rmp_u').onclick=function(){PM.pts.pop();pmDraw()};
+ pmEl('rmp_sel').onchange=function(e){if(e.target.value!=='custom')pmEl('rmp_len').value=e.target.value;else{pmEl('rmp_len').value='';pmEl('rmp_len').focus()}pmDraw()};pmEl('rmp_len').oninput=pmDraw;
+ ['rmp_f1','rmp_f2'].forEach(function(i){pmEl(i).onchange=function(e){pmLoad(e.target.files[0]);e.target.value=''}});
+ var cv=PM.cv;cv.style.touchAction='none';
+ cv.addEventListener('pointerdown',function(e){if(!PM.img)return;var p=pmPos(e),R=28*cv.width/cv.getBoundingClientRect().width;PM.drag=PM.pts.findIndex(function(q){return Math.hypot(q.x-p.x,q.y-p.y)<R});if(PM.drag<0&&PM.pts.length<4){PM.pts.push(p);PM.drag=PM.pts.length-1}try{cv.setPointerCapture(e.pointerId)}catch(x){}pmDraw()});
+ cv.addEventListener('pointermove',function(e){if(PM.drag<0)return;PM.pts[PM.drag]=pmPos(e);pmDraw()});
+ cv.addEventListener('pointerup',function(){PM.drag=-1});cv.addEventListener('pointercancel',function(){PM.drag=-1});
+ pmEl('rmp_use').onclick=function(){var r=pmRes();if(!r)return;V.mode='meters';V[PM.dim]=f2(r);o.remove();render()};pmDraw()}
+
 window.RM={
+ pm:pmOpen,
  v:function(k,x){V[k]=x;hero()},
  m:function(x){V.mode=x;render()},
  save:function(){var c=cur();if(!c.L||!c.W){var a=document.getElementById('rmA');if(a)a.textContent='أدخل الطول والعرض';return}
