@@ -1512,7 +1512,7 @@ function months12(){var lg=ledger(),n=new Date(),r=[];for(var i=11;i>=0;i--){var
 function agingData(){var t=today(),rows=[];SU().forEach(function(u){var f=sh(u);u.leases.forEach(function(L){for(var i=0;i<L.months;i++){if(L.rcv.includes(i))continue;var d=payD(L,i);if(d<t){var a=la(L,i)*f;if(a>0)rows.push({t:L.tenant||'مستأجر',u:u.name,d:iso(d),days:Math.round((t-d)/864e5),a:a,ph:L.phone})}}})});return rows.sort(function(a,b){return b.days-a.days})}
 function kpi(){var t=today(),U=SU(),ac=accr(),costW=0,W=annW(),cost=0,inc=0,act=0,occd=0,occN=0,cm=0,pot=0,rents=[],fur=0,per=[];
  U.forEach(function(u){var a=ua(u),f=sh(u);cost+=a.cost;inc+=a.inc;occN+=a.occ;cm+=u.cm||0;fur+=(+u.furn||0)*f;
-  var b=pd(u.start),e=addM(b,u.cm);if(b<=t&&t<e){act++;if(u.leases.some(function(L){return pd(L.start)<=t&&t<(L.exit?pd(L.exit):lend(L))}))occd++}
+  var b=pd(u.start),e=addM(b,u.cm),b0=u.leases.reduce(function(m,L){var x=pd(L.start);return x<m?x:m},b);if(b0<=t&&t<e){act++;if(u.leases.some(function(L){return pd(L.start)<=t&&t<(L.exit?pd(L.exit):lend(L))}))occd++}
   u.leases.forEach(function(L){rents.push((L.rent||0)+(L.inet||0))});
   var w=winU(u),P=projU(u),cw=P?P.cost:a.cost;costW+=cw;per.push({n:u.name,p:a.inc-cw,i:a.inc,c:cw,o:(w?w.occ:0)})});
  var avg=rents.length?rents.reduce(function(a,b){return a+b},0)/rents.length:0;
