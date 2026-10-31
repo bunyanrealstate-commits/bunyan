@@ -1428,5 +1428,83 @@ function ownWa(){var c=document.getElementById('ow_o').textContent;if(c&&c.index
 window.ownClose=ownClose;window.ownUnlock=ownUnlock;window.ownFx=ownFx;window.ownGen=ownGen;window.ownPaste=ownPaste;window.ownCopy=ownCopy;window.ownWa=ownWa;
 })();
 </script>
+
+<style id="bkcss">.xcl{position:absolute;top:8px;inset-inline-start:8px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(127,127,127,.18);color:inherit;font-size:20px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}.xcl:hover{background:rgba(127,127,127,.32)}.dlg{position:relative}.dlg>h2:first-of-type{padding-inline-start:40px}.bkb{display:inline-flex;align-items:center;gap:6px;margin:0 0 10px;padding:7px 14px;border-radius:10px;border:1.5px solid var(--bd,#cbd5e1);background:transparent;color:inherit;font:inherit;font-weight:700;cursor:pointer}</style>
+<script>
+(function(){
+var skip=0,pushed={m:0,o:0};
+function topLayer(){if(document.getElementById('own'))return'o';var m=document.getElementById('modal');if(m&&m.querySelector('.dlg'))return'm';var l=document.getElementById('login');if(l&&l.querySelector('.dlg'))return'l';return''}
+function closeTop(){var o=document.getElementById('own');if(o){window.ownClose&&ownClose();return true}
+ var m=document.getElementById('modal');if(m&&m.querySelector('.dlg')){try{closeM()}catch(e){}return true}return false}
+window.goBack=function(){if(closeTop())return;if(typeof UV!=='undefined'&&UV.open){UV.open=null;render();return}if(S&&S.tab&&S.tab!=='home'){S.tab='home';render();window.scrollTo(0,0)}};
+function addX(root){var d=root.querySelector('.dlg');if(d&&!d.querySelector('.xcl')){var b=document.createElement('button');b.className='xcl';b.type='button';b.setAttribute('aria-label','إغلاق');b.textContent='✕';b.onclick=function(ev){ev.stopPropagation();closeTop()};d.insertBefore(b,d.firstChild)}}
+var lay='';
+function sync(){var l=topLayer();
+ ['modal','own'].forEach(function(id){var e=document.getElementById(id);if(e)addX(e)});
+ if(l===lay)return;
+ if(l&&!lay){try{history.pushState({layer:1},'')}catch(e){}}
+ else if(!l&&lay&&history.state&&history.state.layer){skip=1;history.back()}
+ lay=l}
+new MutationObserver(sync).observe(document.body,{childList:true,subtree:true});
+addEventListener('popstate',function(){if(skip){skip=0;return}
+ if(topLayer()){lay='';closeTop();lay=topLayer();return}
+ if(typeof UV!=='undefined'&&UV.open){UV.open=null;render();return}
+ if(S&&S.tab&&S.tab!=='home'){S.tab='home';render();window.scrollTo(0,0)}});
+var r0=render;render=function(){r0.apply(this,arguments);try{var a=document.getElementById('app');
+ if(S&&S.tab&&S.tab!=='home'&&a&&!a.querySelector('.bkb')){a.insertAdjacentHTML('afterbegin','<button class="bkb" onclick="goBack()">→ رجوع للرئيسية</button>');if(!(history.state&&history.state.tab))history.pushState({tab:1},'')}}catch(e){}};
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeTop()});
+})();
+</script>
+
+<style id="ancss">.bar{display:flex;align-items:flex-end;gap:3px;height:120px;margin-top:6px}.bar>div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:1px;min-width:0}.bar i{display:block;width:100%;border-radius:3px 3px 0 0;min-height:1px}.bar small{font-size:9px;color:var(--mu,#6b7280);white-space:nowrap}.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.kp .stat small{display:block;font-size:11px;opacity:.75;font-weight:500}.lg2{display:flex;gap:12px;font-size:12px;margin-top:4px}.lg2 b{display:inline-block;width:10px;height:10px;border-radius:2px;margin-inline-end:4px}</style>
+<script>
+(function(){
+function dep(){S.dep=S.dep||[];return S.dep}
+var f0=function(n){return Math.round(n*10)/10};
+function pct(a,b){return b>0?f0(a/b*100)+'%':'—'}
+function months12(){var lg=ledger(),n=new Date(),r=[];for(var i=11;i>=0;i--){var d=new Date(n.getFullYear(),n.getMonth()-i,1);r.push({k:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),i:0,o:0})}
+ lg.forEach(function(x){var k=x.d.slice(0,7),m=r.find(function(q){return q.k===k});if(m){x.a>0?m.i+=x.a:m.o-=x.a}});return r}
+function agingData(){var t=today(),rows=[];SU().forEach(function(u){var f=sh(u);u.leases.forEach(function(L){for(var i=0;i<L.months;i++){if(L.rcv.includes(i))continue;var d=payD(L,i);if(d<t){var a=la(L,i)*f;if(a>0)rows.push({t:L.tenant||'مستأجر',u:u.name,d:iso(d),days:Math.round((t-d)/864e5),a:a,ph:L.phone})}}})});return rows.sort(function(a,b){return b.days-a.days})}
+function kpi(){var t=today(),U=SU(),ac=accr(),cost=0,inc=0,act=0,occd=0,occN=0,cm=0,pot=0,rents=[],fur=0,per=[];
+ U.forEach(function(u){var a=ua(u),f=sh(u);cost+=a.cost;inc+=a.inc;occN+=a.occ;cm+=u.cm||0;fur+=(+u.furn||0)*f;
+  var b=pd(u.start),e=addM(b,u.cm);if(b<=t&&t<e){act++;if(u.leases.some(function(L){return pd(L.start)<=t&&t<(L.exit?pd(L.exit):lend(L))}))occd++}
+  u.leases.forEach(function(L){rents.push((L.rent||0)+(L.inet||0))});
+  per.push({n:u.name,p:a.profit,i:a.inc,c:a.cost,o:(u.cm?a.occ/u.cm:0)})});
+ var avg=rents.length?rents.reduce(function(a,b){return a+b},0)/rents.length:0;
+ U.forEach(function(u){pot+=(u.cm||0)*avg*sh(u)});
+ var due=0,got=0;U.forEach(function(u){var f=sh(u);u.leases.forEach(function(L){for(var i=0;i<L.months;i++){if(payD(L,i)<=t){var a=la(L,i)*f;due+=a;if(L.rcv.includes(i))got+=a}}})});
+ var ann=U.reduce(function(s,u){var a=ua(u);return s+(a.profit+(u.salv||0))/(u.cm||1)*12},0);
+ return{cost:cost,inc:inc,act:act,occd:occd,occAll:cm?occN/cm*100:0,avg:avg,be:pot?cost/pot*100:0,due:due,got:got,ann:ann,fur:fur,per:per.sort(function(a,b){return b.p-a.p}),margin:inc?(inc-cost)/inc*100:0,ac:ac,roi:cost?ann/cost*100:0}}
+function chart(){var m=months12(),mx=Math.max.apply(null,m.map(function(x){return Math.max(x.i,x.o)}).concat([1]));
+ return '<div class="bar">'+m.map(function(x){return '<div title="'+x.k+'"><span style="display:flex;align-items:flex-end;gap:1px;height:100px;width:100%"><i style="background:#16a34a;height:'+Math.max(1,x.i/mx*100)+'px"></i><i style="background:#dc2626;height:'+Math.max(1,x.o/mx*100)+'px"></i></span><small>'+x.k.slice(5)+'</small></div>'}).join('')+'</div><div class="lg2"><span><b style="background:#16a34a"></b>دخل</span><span><b style="background:#dc2626"></b>مصروف</span><span class="mu">آخر 12 شهر (نقدي)</span></div>'}
+window.anCard=function(){var k=kpi(),C=function(l,v,s,c){return '<div class="stat"><span>'+l+'</span><b class="'+(c==null?'':cls(c))+'">'+v+'</b>'+(s?'<small>'+s+'</small>':'')+'</div>'};
+ var h='<div class="card"><h2>📊 التحليل المالي</h2><div class="kp">'+
+ C('الإشغال الحالي',pct(k.occd,k.act),k.occd+' من '+k.act+' استديو مؤجَّر اليوم')+
+ C('الإشغال على مدة العقود',f0(k.occAll)+'%','نسبة الشهور المؤجّرة من إجمالي شهور عقود الشركات')+
+ C('هامش الربح',f0(k.margin)+'%','الربح ÷ الإيراد (تقديري على كل المدة)',k.margin)+
+ C('العائد السنوي على التكلفة',f0(k.roi)+'%','الربح السنوي المتوقع ÷ إجمالي التكلفة',k.roi)+
+ C('نقطة التعادل (إشغال)',k.be?f0(k.be)+'%':'—','أقل إشغال لتغطية كل التكاليف بمتوسط إيجار '+$(Math.round(k.avg)))+
+ C('نسبة التحصيل',pct(k.got,k.due),'المحصّل '+$(Math.round(k.got))+' من المستحق '+$(Math.round(k.due)),k.got-k.due+0.01)+
+ '</div>'+chart()+'</div>';
+ if(k.per.length>1)h+='<div class="card"><h2>🏆 ترتيب الاستديوهات بالربح</h2>'+tbl(['الاستديو','الإيراد','التكلفة','الربح','الإشغال'],k.per.map(function(x){return '<tr><td>'+esc(x.n)+'</td><td>'+$(Math.round(x.i))+'</td><td>'+$(Math.round(x.c))+'</td><td class="'+cls(x.p)+'">'+$(Math.round(x.p))+'</td><td>'+f0(x.o*100)+'%</td></tr>'}).join(''))+'</div>';
+ return h}
+window.agCard=function(){var r=agingData();if(!r.length)return '<div class="card"><h2>⏰ المتأخرات</h2><p class="pos">لا توجد إيجارات متأخرة 👌</p></div>';
+ var b=[[1,30,'1–30 يوم'],[31,60,'31–60'],[61,90,'61–90'],[91,1e5,'أكثر من 90']],tot=r.reduce(function(s,x){return s+x.a},0);
+ var h='<div class="card"><h2>⏰ المتأخرات (أعمار الديون)</h2><div class="kp">'+b.map(function(q){var s=r.filter(function(x){return x.days>=q[0]&&x.days<=q[1]}).reduce(function(s,x){return s+x.a},0);return '<div class="stat"><span>'+q[2]+'</span><b class="'+(s?'neg':'')+'">'+$(Math.round(s))+'</b></div>'}).join('')+'<div class="stat"><span>الإجمالي</span><b class="neg">'+$(Math.round(tot))+'</b></div></div>'+
+ tbl(['المستأجر','الاستديو','الاستحقاق','التأخير','المبلغ'],r.slice(0,40).map(function(x){return '<tr><td>'+esc(x.t)+(x.ph&&window.wa?' <a class="wab" target="_blank" href="'+wa(x.ph,'السلام عليكم، نذكّركم بسداد إيجار '+x.d+' بقيمة '+Math.round(x.a))+'">💬</a>':'')+'</td><td>'+esc(x.u)+'</td><td>'+x.d+'</td><td class="neg">'+x.days+' يوم</td><td>'+$(Math.round(x.a))+'</td></tr>'}).join(''))+'<button onclick="expCsv(\'aging\')" style="margin-top:8px">⬇️ تصدير CSV</button></div>';return h}
+window.depCard=function(){var D=dep(),held=0,paid=0;D.forEach(function(x){if(x.r)return;x.k==='t'?held+=x.a:paid+=x.a});
+ var h='<div class="card"><h2>🔐 التأمينات (ودائع)</h2><p class="mu">التأمين ليس إيراداً ولا مصروفاً: هو أمانة مستردّة، لذلك لا يدخل في الربح. أضفه هنا ليظهر في السيولة الفعلية.</p><div class="kp"><div class="stat"><span>تأمينات مستأجرين عندي (التزام)</span><b>'+$(held)+'</b></div><div class="stat"><span>تأمينات دفعتها للشركات (لي)</span><b>'+$(paid)+'</b></div><div class="stat"><span>صافي السيولة الفعلية</span><b class="'+cls(cashNow()-held+paid)+'">'+$(Math.round(cashNow()-held+paid))+'</b><small>الرصيد ناقص أمانات المستأجرين</small></div></div>';
+ h+=D.map(function(x,i){return '<div class="li"><span>'+(x.k==='t'?'من '+esc(x.w||'مستأجر'):'للشركة '+esc(x.w||''))+' <span class="mu">'+esc(x.d)+(x.r?' • تم الرد '+esc(x.r):'')+'</span></span><b>'+$(x.a)+'</b><button onclick="mDep('+i+')">✎</button><button class="x" onclick="delDep('+i+')">✕</button></div>'}).join('');
+ return h+'<button class="p" onclick="mDep()" style="margin-top:8px">+ تأمين</button></div>'}
+window.mDep=function(i){var D=dep(),x=i==null?{}:D[i];openM('تأمين',[{k:'k',l:'النوع',t:'s',o:[['t','أخذته من مستأجر (التزام عليّ)'],['c','دفعته لشركة (مستحق لي)']],v:x.k||'t'},{k:'w',l:'اسم المستأجر / الشركة',v:x.w||''},{k:'a',l:'المبلغ',t:'n',v:x.a||0},{k:'d',l:'التاريخ',t:'d',v:x.d||td()},{k:'r',l:'تاريخ الرد (اتركه فارغاً إذا لم يُرد بعد)',t:'d',v:x.r||''}],function(o){o.a=+o.a||0;if(i==null)D.push(o);else D[i]=o;logEv&&logEv('تأمين: '+o.w)})}
+window.delDep=function(i){confirmM('حذف هذا التأمين؟',function(){dep().splice(i,1)})}
+window.expCsv=function(w){var rows,hd;if(w==='aging'){hd=['المستأجر','الاستديو','الاستحقاق','أيام التأخير','المبلغ'];rows=agingData().map(function(x){return[x.t,x.u,x.d,x.days,Math.round(x.a)]})}
+ else{hd=['التاريخ','الاستديو','البيان','النوع','المبلغ'];var T={co:'دفعة شركة',fu:'أثاث',rn:'إيجار',is:'إنترنت/راوتر',ex:'مصروف',pn:'شرط جزائي'};rows=ledger().map(function(x){return[x.d,x.u,x.w,T[x.c]||x.c,Math.round(x.a)]})}
+ var q=function(v){v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+ var csv='﻿'+[hd].concat(rows).map(function(r){return r.map(q).join(',')}).join('\r\n');saveFile(new Blob([csv],{type:'text/csv;charset=utf-8'}),'bunyan-'+(w==='aging'?'aging':'ledger')+'-'+td()+'.csv')}
+var a0=accTab2;accTab2=function(){return sumCards()+anCard()+agCard()+depCard()+stm()+vacTbl()+accTab()+'<div class="card"><h2>📤 تصدير للمحاسب</h2><button onclick="expCsv()">⬇️ دفتر الحسابات CSV (يفتح في Excel)</button></div>'+payAll()};
+var i0=items;items=function(){return i0().map(function(x){return x.ty==='end'?Object.assign({},x,{offs:[30,14,7,0]}):x})};
+})();
+</script>
 </body>
 </html>
