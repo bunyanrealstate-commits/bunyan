@@ -1,0 +1,268 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2f6b4f"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style></head><body><title>يومي وأهدافي</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+/* Layout: one narrow column, today's focus first, then schedule, then long goals */
+:root{
+  --bg:#f3f4ef; --surface:#ffffff; --ink:#1f2a24; --muted:#6b756d; --line:#dde1d8;
+  --accent:#2f6b4f; --accent-soft:#e3eee7; --gold:#c8902e; --danger:#b4473a;
+  --display:"Reem Kufi","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --body:"IBM Plex Sans Arabic",system-ui,"Segoe UI",Tahoma,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141a16; --surface:#1d2520; --ink:#e7ece6; --muted:#9aa59c; --line:#2d3830;
+  --accent:#6fbf94; --accent-soft:#233a2d; --gold:#e0ad55; --danger:#e07a6c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141a16; --surface:#1d2520; --ink:#e7ece6; --muted:#9aa59c; --line:#2d3830;
+  --accent:#6fbf94; --accent-soft:#233a2d; --gold:#e0ad55; --danger:#e07a6c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1,h2{font-family:var(--display);margin:0;text-wrap:balance}
+h1{font-size:30px;line-height:1.2}
+h2{font-size:19px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.muted{color:var(--muted)}
+header{display:flex;flex-direction:column;gap:4px}
+.date{font-size:14px;color:var(--muted)}
+.daynav{display:flex;gap:8px;align-items:center;margin-top:6px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:6px 12px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--surface);border-color:var(--accent);font-weight:600}
+.ring-row{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+.ring{width:84px;height:84px;flex:none}
+.ring-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.big{font-family:var(--display);font-size:24px}
+section{display:flex;flex-direction:column;gap:10px}
+.list{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.item{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.item .t{flex:1;min-width:0;overflow-wrap:anywhere}
+.item.done .t{text-decoration:line-through;color:var(--muted)}
+.time{font-variant-numeric:tabular-nums;font-size:13px;color:var(--accent);font-weight:600;min-width:46px}
+.chk{appearance:none;width:22px;height:22px;border:2px solid var(--accent);border-radius:7px;flex:none;cursor:pointer;display:grid;place-content:center;margin:0}
+.chk:checked{background:var(--accent)}
+.chk:checked::after{content:"";width:6px;height:11px;border:solid var(--surface);border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.del{border:0;background:none;color:var(--muted);padding:2px 6px;font-size:18px;line-height:1}
+.del:hover{color:var(--danger)}
+.focus .item{border-inline-start:4px solid var(--gold)}
+.add{display:flex;gap:8px;flex-wrap:wrap}
+.add input,.add select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:0}
+.add input[type=text]{flex:1 1 180px}
+.add input[type=time]{flex:0 0 auto}
+.empty{color:var(--muted);font-size:14px;padding:4px 2px}
+.goal{display:flex;flex-direction:column;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.goal-top{display:flex;align-items:center;gap:8px}
+.goal-top .t{flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere}
+.bar{height:8px;background:var(--accent-soft);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
+.goal-ctl{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.goal-ctl button{padding:2px 10px}
+.pill{font-size:12px;background:var(--accent-soft);color:var(--accent);border-radius:99px;padding:2px 10px;font-family:var(--body);font-weight:600}
+textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-height:80px;resize:vertical;width:100%}
+.ex{font-size:12px;color:var(--gold)}
+.mic{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;border-radius:14px;border:2px dashed var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:16px}
+.mic svg{width:22px;height:22px}
+.voice{display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.voice-top{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.voice-top span{flex:1}
+.voice audio{width:100%;height:38px}
+.dict{padding:6px 10px;color:var(--accent);display:grid;place-content:center}
+.dict svg{width:20px;height:20px}
+.dict.on,.mic.on{background:var(--danger);color:var(--surface);border-color:var(--danger)}
+.hint{font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+
+<div class="wrap" dir="rtl" lang="ar">
+  <header>
+    <h1>يومي وأهدافي</h1>
+    <div class="date" id="dateLabel"></div>
+    <div class="daynav">
+      <button id="prev" aria-label="اليوم السابق">→ أمس</button>
+      <button id="today">اليوم</button>
+      <button id="next" aria-label="اليوم التالي">بكرة ←</button>
+    </div>
+  </header>
+
+  <div class="ring-row">
+    <svg class="ring" viewBox="0 0 84 84" aria-hidden="true">
+      <circle cx="42" cy="42" r="34" fill="none" stroke="var(--accent-soft)" stroke-width="9"/>
+      <circle id="ringArc" cx="42" cy="42" r="34" fill="none" stroke="var(--accent)" stroke-width="9" stroke-linecap="round"
+        stroke-dasharray="213.6" stroke-dashoffset="213.6" transform="rotate(-90 42 42)"/>
+      <text id="ringPct" x="42" y="48" text-anchor="middle" font-size="17" font-weight="600" fill="var(--ink)" font-family="IBM Plex Sans Arabic, sans-serif">0%</text>
+    </svg>
+    <div class="ring-txt">
+      <span class="big" id="doneCount">0 من 0</span>
+      <span class="muted" id="streak">ابدأ يومك</span>
+    </div>
+  </div>
+
+  <section class="focus">
+    <h2>أهم ٣ حاجات النهارده <span class="pill">الأولوية</span></h2>
+    <ul class="list" id="focusList"></ul>
+    <form class="add" id="focusForm">
+      <input type="text" id="focusIn" placeholder="أهم حاجة لازم تخلص النهارده" maxlength="120">
+      <button type="button" class="dict" data-for="focusIn" aria-label="اكتب بصوتك" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <button class="primary">أضف</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>جدول اليوم</h2>
+    <ul class="list" id="taskList"></ul>
+    <form class="add" id="taskForm">
+      <input type="time" id="taskTime" aria-label="الوقت">
+      <input type="text" id="taskIn" placeholder="مهمة جديدة" maxlength="120">
+      <button type="button" class="dict" data-for="taskIn" aria-label="اكتب بصوتك" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <button class="primary">أضف</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>أهدافي الكبيرة</h2>
+    <div class="list" id="goalList"></div>
+    <form class="add" id="goalForm">
+      <input type="text" id="goalIn" placeholder="هدف (مثلاً: أقرأ ١٢ كتاب)" maxlength="120">
+      <input type="number" id="goalTarget" min="1" value="10" style="width:80px" aria-label="الرقم المستهدف">
+      <button class="primary">أضف</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>ملاحظات صوتية</h2>
+    <input type="file" id="voiceIn" accept="audio/*" capture hidden>
+    <button class="mic" id="micBtn" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      <span id="micLabel">سجّل ملاحظة صوتية</span>
+    </button>
+    <div class="list" id="voiceList"></div>
+    <p class="hint" id="micHint">عشان تكتب مهمة بصوتك، دوس على زرار المايك اللي جنب خانة الكتابة.</p>
+  </section>
+
+  <section>
+    <h2>ملاحظات اليوم</h2>
+    <textarea id="notes" placeholder="إيه اللي اتعلمته؟ إيه اللي هتعمله أحسن بكرة؟"></textarea>
+  </section>
+</div>
+
+<script>
+const KEY="yawmi-v1";
+let S;
+function load(){try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+  if(!S){S={days:{},goals:[
+    {id:1,t:"أوفّر جزء من دخل كل شهر",cur:3,target:12,ex:true},
+    {id:2,t:"أقرأ كتب",cur:2,target:10,ex:true}]};
+    const k=key(new Date());
+    S.days[k]={focus:[{id:1,t:"أراجع حسابات الغرف",done:true,ex:true},{id:2,t:"أتابع مع مستأجر جديد",done:false,ex:true}],
+      tasks:[{id:3,time:"08:00",t:"رياضة نص ساعة",done:true,ex:true},{id:4,time:"10:00",t:"اجتماع مع الشريك",done:false,ex:true},{id:5,time:"21:00",t:"تخطيط بكرة",done:false,ex:true}],notes:""};}
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function key(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+let cur=new Date();
+function day(){const k=key(cur);return S.days[k]||(S.days[k]={focus:[],tasks:[],notes:""})}
+const uid=()=>Date.now()+Math.random();
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function itemHTML(it,kind){
+  return `<li class="item ${it.done?"done":""}">
+    <input type="checkbox" class="chk" ${it.done?"checked":""} data-k="${kind}" data-id="${it.id}" aria-label="تم">
+    ${kind==="tasks"?`<span class="time">${it.time||"—"}</span>`:""}
+    <span class="t">${esc(it.t)}${it.ex?' <span class="ex">مثال</span>':""}</span>
+    <button class="del" data-k="${kind}" data-id="${it.id}" aria-label="حذف">×</button></li>`;
+}
+function fmt12(t){if(!t)return"";let[h,m]=t.split(":").map(Number);const p=h<12?"ص":"م";h=h%12||12;return h+":"+String(m).padStart(2,"0")+" "+p}
+
+function streak(){let n=0;const d=new Date();d.setHours(12);
+  if(!complete(key(d)))d.setDate(d.getDate()-1);
+  while(complete(key(d))){n++;d.setDate(d.getDate()-1)}return n}
+function complete(k){const x=S.days[k];if(!x)return false;const all=[...x.focus,...x.tasks];return all.length>0&&all.every(i=>i.done)}
+
+function render(){
+  const D=day();
+  document.getElementById("dateLabel").textContent=cur.toLocaleDateString("ar-EG",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  const fl=document.getElementById("focusList");
+  fl.innerHTML=D.focus.length?D.focus.map(i=>itemHTML(i,"focus")).join(""):'<li class="empty">اكتب أهم ٣ حاجات لو خلصتهم يبقى يومك ناجح.</li>';
+  document.getElementById("focusForm").hidden=D.focus.length>=3;
+  const tl=document.getElementById("taskList");
+  const tasks=[...D.tasks].sort((a,b)=>(a.time||"99").localeCompare(b.time||"99"));
+  tl.innerHTML=tasks.length?tasks.map(i=>itemHTML({...i,time:fmt12(i.time)},"tasks")).join(""):'<li class="empty">مفيش مهام لسه. حط وقت ومهمة.</li>';
+  const all=[...D.focus,...D.tasks],done=all.filter(i=>i.done).length,pct=all.length?Math.round(done/all.length*100):0;
+  document.getElementById("ringArc").setAttribute("stroke-dashoffset",213.6*(1-pct/100));
+  document.getElementById("ringPct").textContent=pct+"%";
+  document.getElementById("doneCount").textContent=done+" من "+all.length+" مهمة";
+  const st=streak();
+  document.getElementById("streak").textContent=pct===100&&all.length?"يوم كامل، عاش! "+(st>1?"· "+st+" أيام ورا بعض":""):st?st+" أيام كاملة ورا بعض":"خلّص كل مهامك عشان تبدأ سلسلة";
+  document.getElementById("goalList").innerHTML=S.goals.length?S.goals.map(g=>{const p=Math.min(100,Math.round(g.cur/g.target*100));
+    return `<div class="goal"><div class="goal-top"><span class="t">${esc(g.t)}${g.ex?' <span class="ex">مثال</span>':""}</span>
+      <button class="del" data-k="goals" data-id="${g.id}" aria-label="حذف">×</button></div>
+      <div class="bar"><i style="width:${p}%"></i></div>
+      <div class="goal-ctl"><button data-g="${g.id}" data-d="-1" aria-label="ناقص">−</button>
+      <span>${g.cur} / ${g.target} · ${p}%</span><button data-g="${g.id}" data-d="1" aria-label="زائد">+</button></div></div>`}).join(""):'<p class="empty">ضيف هدف كبير وتابع تقدّمك فيه.</p>';
+  renderVoice(D);
+  const n=document.getElementById("notes");if(document.activeElement!==n)n.value=D.notes||"";
+}
+
+document.addEventListener("change",e=>{const c=e.target.closest(".chk");if(!c)return;
+  const it=day()[c.dataset.k].find(i=>i.id==c.dataset.id);it.done=c.checked;save();render()});
+document.addEventListener("click",e=>{
+  const d=e.target.closest(".del[data-k]");
+  if(d){const k=d.dataset.k;if(k==="goals")S.goals=S.goals.filter(g=>g.id!=d.dataset.id);else{const D=day();D[k]=D[k].filter(i=>i.id!=d.dataset.id)}save();render();return}
+  const g=e.target.closest("[data-g]");
+  if(g){const G=S.goals.find(x=>x.id==g.dataset.g);G.cur=Math.max(0,Math.min(G.target,G.cur+Number(g.dataset.d)));save();render()}
+});
+function onSubmit(id,fn){document.getElementById(id).addEventListener("submit",e=>{e.preventDefault();fn();save();render()})}
+onSubmit("focusForm",()=>{const v=focusIn.value.trim();if(!v)return;day().focus.push({id:uid(),t:v,done:false});focusIn.value=""});
+onSubmit("taskForm",()=>{const v=taskIn.value.trim();if(!v)return;day().tasks.push({id:uid(),t:v,time:taskTime.value,done:false});taskIn.value=""});
+onSubmit("goalForm",()=>{const v=goalIn.value.trim(),t=Math.max(1,parseInt(goalTarget.value)||1);if(!v)return;S.goals.push({id:uid(),t:v,cur:0,target:t});goalIn.value=""});
+document.getElementById("notes").addEventListener("input",e=>{day().notes=e.target.value;save()});
+const shift=n=>{cur=new Date(cur);cur.setDate(cur.getDate()+n);render()};
+prev.onclick=()=>shift(-1);next.onclick=()=>shift(1);today.onclick=()=>{cur=new Date();render()};
+// ---- voice notes (IndexedDB) ----
+let idb=null;const urls={};
+function openDB(){return new Promise(r=>{try{const q=indexedDB.open("yawmi-voice",1);
+  q.onupgradeneeded=()=>q.result.createObjectStore("v");q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})}
+function idbDo(mode,fn){return new Promise(r=>{if(!idb)return r(null);try{const tx=idb.transaction("v",mode),st=tx.objectStore("v");const q=fn(st);q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})}
+async function renderVoice(D){
+  const box=document.getElementById("voiceList");D.voice=D.voice||[];
+  if(!D.voice.length){box.innerHTML='<p class="empty">مفيش تسجيلات لليوم ده.</p>';return}
+  box.innerHTML=D.voice.map(v=>`<div class="voice"><div class="voice-top"><span>تسجيل الساعة ${v.at}</span>
+    <button class="del" data-voice="${v.id}" aria-label="حذف التسجيل">×</button></div><audio controls preload="metadata" id="a${v.id}"></audio></div>`).join("");
+  for(const v of D.voice){if(!urls[v.id]){const b=await idbDo("readonly",st=>st.get(v.id));if(b)urls[v.id]=URL.createObjectURL(b)}
+    const a=document.getElementById("a"+v.id);if(a&&urls[v.id])a.src=urls[v.id]}
+}
+
+voiceIn.addEventListener("change",async()=>{const f=voiceIn.files[0];if(!f)return;
+  const id="v"+Date.now();await idbDo("readwrite",st=>st.put(f,id));
+  const now=new Date();day().voice=day().voice||[];
+  day().voice.push({id,at:now.toLocaleTimeString("ar-EG",{hour:"numeric",minute:"2-digit"})});
+  voiceIn.value="";save();render()});
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-voice]");if(!b)return;
+  const id=b.dataset.voice;await idbDo("readwrite",st=>st.delete(id));
+  if(urls[id]){URL.revokeObjectURL(urls[id]);delete urls[id]}
+  const D=day();D.voice=D.voice.filter(v=>v.id!==id);save();render()});
+
+// ---- dictation (speech to text) ----
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(SR){document.querySelectorAll(".dict").forEach(b=>{b.hidden=false;b.onclick=()=>{
+  const inp=document.getElementById(b.dataset.for);const r=new SR();r.lang="ar-EG";r.interimResults=true;
+  const base=inp.value?inp.value+" ":"";b.classList.add("on");
+  r.onresult=e=>{inp.value=base+[...e.results].map(x=>x[0].transcript).join("")};
+  r.onend=r.onerror=()=>b.classList.remove("on");try{r.start()}catch(e){b.classList.remove("on")}}})}
+else{micHint.textContent="عشان تكتب مهمة بصوتك: دوس على خانة الكتابة واضغط زرار المايك في كيبورد الموبايل."}
+// ---- in-page recording ----
+let rec=null,chunks=[];
+async function saveBlob(f){const id="v"+Date.now();await idbDo("readwrite",st=>st.put(f,id));
+  const D=day();D.voice=D.voice||[];D.voice.push({id,at:new Date().toLocaleTimeString("ar-EG",{hour:"numeric",minute:"2-digit"})});save();render()}
+micBtn.onclick=async()=>{
+  if(rec){rec.stop();return}
+  if(!(navigator.mediaDevices&&window.MediaRecorder)){voiceIn.click();return}
+  try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    rec=new MediaRecorder(stream);chunks=[];rec.ondataavailable=e=>chunks.push(e.data);
+    rec.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());const b=new Blob(chunks,{type:rec.mimeType||"audio/webm"});
+      rec=null;micBtn.classList.remove("on");micLabel.textContent="سجّل ملاحظة صوتية";await saveBlob(b)};
+    rec.start();micBtn.classList.add("on");micLabel.textContent="جاري التسجيل… دوس للإيقاف"}
+  catch(e){voiceIn.click()}};
+if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
+load();openDB().then(d=>{idb=d;render()});render();
+</script>
+</body></html>
