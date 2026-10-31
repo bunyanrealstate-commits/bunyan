@@ -3343,7 +3343,7 @@ function hide(){if(el)el.classList.remove('on')}
 setTimeout(show,4000);setInterval(show,1800000);
 })();
 </script>
-<style>#natx{z-index:400!important}</style>
+<style>#natx{z-index:400!important}body:has(#natx) #hmp,body:has(#natx) #setsub,body:has(#natx) #wsub{display:none!important}</style>
 <script id="onemenu">
 (function(){
 function lgClose(){var l=document.getElementById('lgm');if(l)l.classList.remove('open')}
@@ -3351,7 +3351,7 @@ function natClose(){var n=document.getElementById('natx');if(n)n.remove()}
 function wsClose(){var w=document.getElementById('wsub'),b=document.getElementById('wsmi');if(w)w.classList.remove('on');if(b)b.classList.remove('op')}
 function setClose(){var w=document.getElementById('setsub'),b=document.getElementById('setmi');if(w)w.classList.remove('on');if(b)b.classList.remove('op')}
 document.addEventListener('click',function(e){var t=e.target;
- if(t.closest('#natmi,#natb')){lgClose()}
+ if(t.closest('#natmi,#natb')){lgClose();setClose();wsClose();var hd=document.querySelector('.hd');if(hd)hd.classList.remove('mopen');setTimeout(function(){var x=document.getElementById('natx');if(x&&x.parentNode!==document.body)document.body.appendChild(x)},0)}
  else if(t.closest('#lgm .umb')){natClose()}
  else if(t.closest('#wsmi')){setClose();lgClose()}
  else if(t.closest('#setmi')){wsClose()}
