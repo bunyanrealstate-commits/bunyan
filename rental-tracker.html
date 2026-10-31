@@ -3343,5 +3343,20 @@ function hide(){if(el)el.classList.remove('on')}
 setTimeout(show,4000);setInterval(show,1800000);
 })();
 </script>
+<script id="onemenu">
+(function(){
+function lgClose(){var l=document.getElementById('lgm');if(l)l.classList.remove('open')}
+function natClose(){var n=document.getElementById('natx');if(n)n.remove()}
+function wsClose(){var w=document.getElementById('wsub'),b=document.getElementById('wsmi');if(w)w.classList.remove('on');if(b)b.classList.remove('op')}
+function setClose(){var w=document.getElementById('setsub'),b=document.getElementById('setmi');if(w)w.classList.remove('on');if(b)b.classList.remove('op')}
+document.addEventListener('click',function(e){var t=e.target;
+ if(t.closest('#natmi,#natb')){lgClose()}
+ else if(t.closest('#lgm .umb')){natClose()}
+ else if(t.closest('#wsmi')){setClose();lgClose()}
+ else if(t.closest('#setmi')){wsClose()}
+},true);
+var n0=window.natOpen;if(n0)window.natOpen=function(){lgClose();return n0.apply(this,arguments)};
+})();
+</script>
 </body>
 </html>
