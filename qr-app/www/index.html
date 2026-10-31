@@ -70,6 +70,8 @@ li.item{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:12px 0;
 label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
 .primary{background:var(--accent);color:var(--accent-ink);padding:14px;font-weight:600;flex:2}
 .secondary{background:var(--chip);color:var(--ink);padding:14px;flex:1}
+.addbtn{background:var(--accent);color:var(--accent-ink)!important;padding:8px 12px!important;font-weight:600;font-size:14px!important}
+.sheet label{min-width:0}.sheet input{width:100%;box-sizing:border-box}
 .toast{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));inset-inline:0;margin:0 auto;width:fit-content;max-width:90%;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:99px;font-size:14px;z-index:30}
 html{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}
 </style></head><body>
@@ -102,7 +104,7 @@ html{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body
   </section>
 
   <section class="receipt" aria-label="الفاتورة">
-    <div class="rhead"><b>الفاتورة</b><button class="link" id="clearBtn" type="button">مسح الكل</button></div>
+    <div class="rhead"><b>الفاتورة</b><div class="row" style="flex:0 0 auto;gap:10px;align-items:center"><button class="link addbtn" id="addManualBtn" type="button">+ بند يدوي</button><button class="link" id="clearBtn" type="button">مسح الكل</button></div></div>
     <ul id="list"></ul>
   </section>
 </div>
@@ -123,6 +125,20 @@ html{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body
     <div class="row">
       <button class="primary" type="submit">حفظ وإضافة للفاتورة</button>
       <button class="secondary" type="button" id="cancelSheet">إلغاء</button>
+    </div>
+  </form>
+</div>
+<div class="sheet" id="mSheet" hidden>
+  <form id="mForm">
+    <h2>إضافة بند يدوي</h2>
+    <label>اسم البند<input id="mName" required autocomplete="off"></label>
+    <div class="row">
+      <label style="flex:1">السعر (درهم)<input id="mPrice" required inputmode="decimal" autocomplete="off"></label>
+      <label style="flex:1">الكمية<input id="mQty" required inputmode="decimal" value="1" autocomplete="off"></label>
+    </div>
+    <div class="row">
+      <button class="primary" type="submit">إضافة للفاتورة</button>
+      <button class="secondary" type="button" id="mCancel">إلغاء</button>
     </div>
   </form>
 </div>
@@ -258,7 +274,7 @@ async function startLive(){
   $("vf").hidden=false;$("scanBtn").lastChild.textContent="إيقاف الكاميرا";setStatus("وجّه الكاميرا على الكود…");
   const tick=()=>{
     if(!stream)return;
-    if(v.readyState>=2&&$("sheet").hidden){
+    if(v.readyState>=2&&$("sheet").hidden&&$("mSheet").hidden){
       const k=Math.min(1,640/v.videoWidth);const r=decodeCanvas(v,Math.round(v.videoWidth*k),Math.round(v.videoHeight*k));
       const now=Date.now();
       if(r&&r.data&&(r.data!==last||now-lastAt>2000)){last=r.data;lastAt=now;handleCode(r.data)}
@@ -269,6 +285,21 @@ async function startLive(){
 function stopLive(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}cancelAnimationFrame(raf);$("vf").hidden=true;$("scanBtn").lastChild.textContent="افتح الكاميرا وامسح";setStatus("")}
 $("scanBtn").onclick=()=>stream?stopLive():startLive();
 
+// ---------- manual item ----------
+const num=s=>{s=String(s).trim();if(!s)return NaN;return Number(s.replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[,٫،]/g,"."))};
+$("addManualBtn").onclick=()=>{$("mName").value="";$("mPrice").value="";$("mQty").value="1";$("mSheet").hidden=false;setTimeout(()=>$("mName").focus(),50)};
+$("mCancel").onclick=()=>{$("mSheet").hidden=true};
+$("mForm").onsubmit=e=>{
+  e.preventDefault();
+  const name=$("mName").value.trim(),price=num($("mPrice").value),qty=num($("mQty").value);
+  if(!name){$("mName").focus();return}
+  if(!isFinite(price)||price<0){$("mPrice").focus();return}
+  if(!isFinite(qty)||qty<=0){$("mQty").focus();return}
+  $("mSheet").hidden=true;
+  if(isExample){cart=[];isExample=false}
+  cart.push({code:"m"+Date.now(),name,price,qty});
+  save();toast("أُضيف: "+name+" × "+qty);
+};
 let tt;function toast(t){const el=$("toast");el.textContent=t;el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>el.hidden=true,1800)}
 render();
 </script>
