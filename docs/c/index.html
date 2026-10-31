@@ -2722,7 +2722,7 @@ async function exp(){var c=cfg(),g=tg();if(!c||!c.token||!c.repo||!g||busy||navi
   var b={message:'hakim '+new Date().toISOString(),content:enc(o)};if(sha)b.sha=sha;
   var w=await fetch(u,{method:'PUT',headers:H,body:JSON.stringify(b)});if(w.ok)last=key}catch(e){}finally{busy=false}}
 var f0=window.fetch;window.fetch=function(u,o){var p=f0.apply(this,arguments);try{if(o&&o.method==='PUT'&&/\/contents\/book\.json/.test(String(u))){p.then(function(r){if(r.ok){clearTimeout(tm);tm=setTimeout(exp,1500)}}).catch(function(){})}}catch(e){}return p};
-window.hakimExport=exp;
+window.hakimExport=exp;setTimeout(exp,4000);setInterval(function(){if(!document.hidden)exp()},45000);addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(exp,1500)});
 })();
 </script>
 <script id="hreqown">
