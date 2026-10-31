@@ -740,7 +740,7 @@ function home(){const ac=accr(),adv=SU().reduce((s,u)=>s+u.leases.reduce((x,L)=>
  nx=(()=>{const a=items().filter(x=>['inst','exp','debt'].includes(x.ty)&&x.amt).sort((a,b)=>a.d.localeCompare(b.d))[0];return a?{...a,n:dd(a.d)}:null})(),
  vf=SU().reduce((s,u)=>{const o=occ(u);s.v+=o.freeVal;s.d+=o.free;return s},{v:0,d:0}),
  C=(l,v,c,sub)=>`<div class='stat'><span>${l}</span><b class='${c==null?'':cls(c)}'>${v}</b>${sub?`<span>${sub}</span>`:''}</div>`;
- return `<div class='grid'>${C('الرصيد النقدي',$(cashNow()))}</div>`+(window.upBox?upBox():payRent())}
+ return `<div class='grid'>${C('💵 الرصيد النقدي',$(cashNow()),1)}</div>`+(window.upBox?upBox():payRent())}
 const dfmt=d=>new Date(d+'T00:00').toLocaleDateString(LOC(),{weekday:'long',day:'numeric',month:'long',year:'numeric'}),
  badge=n=>`<span class='bd ${n<0?'b0':n<=7?'b1':n<=30?'b2':'b3'}'>${n<0?'متأخرة '+(-n)+' يوم':n===0?'اليوم':n===1?'غداً':'بعد '+n+' يوم'}</span>`;
 var PCN=30;function payCards(){const o=items().filter(x=>['inst','exp','debt'].includes(x.ty)&&x.amt).map(x=>({...x,n:dd(x.d)})).sort((a,b)=>a.d.localeCompare(b.d)),
@@ -2393,7 +2393,7 @@ var s0=setF;setF=function(u,a,b,oa){var r=s0.apply(this,arguments);try{if(a==='g
 function inc(){var t=today(),ym=iso(t).slice(0,7),r={all:0,mon:0,due:0,mine:0};
 SU().forEach(function(u){var f=shR(u.g);(u.leases||[]).forEach(function(L){for(var i=0;i<L.months;i++){var a=(L.rcv||[]).indexOf(i)>=0?(L.rav&&L.rav[i]!=null?+L.rav[i]:la(L,i)):0;if(a){r.all+=a;r.mine+=a*f;var at=(L.rat||{})[i];if(at&&iso(new Date(at)).slice(0,7)===ym)r.mon+=a}else r.due+=la(L,i)}(L.pp||[]).forEach(function(x){var a=+x.a||0;r.all+=a;r.mine+=a*f;if(x.at&&iso(new Date(x.at)).slice(0,7)===ym)r.mon+=a})})});return r}
 var h1=home;home=function(){var o=h1.apply(this,arguments);try{var r=inc(),c=function(l,v,sub){return "<div class='stat'><span>"+l+"</span><b class='pos'>"+$(v)+"</b>"+(sub?"<span>"+sub+"</span>":"")+"</div>"};
-return "<div class='card'><h2>📈 إجمالي الدخل — "+esc(wname())+"</h2><div class='grid'>"+c('كل ما قبضته من الإيجارات',r.all)+"</div></div>"+o}catch(e){return o}};
+return o}catch(e){return o}};
 })();
 </script>
 <script>
@@ -2467,5 +2467,20 @@ units=function(){if(UV.open&&U(UV.open))return u0.apply(this,arguments);var R=ro
  +"<div class='mu' id='ulcnt' style='font-size:12px;margin:0 2px 4px'>"+R.r.length+" استديو</div><div class='card ull' id='ulist'>"+list(R.r)+"</div>"};
 })();
 </script>
+<style id="clrcss">
+#app .card h2{color:var(--ac)}
+#app .stat>span:first-child,#app .stat>small,#app .stat>span:last-child:not(:first-child){color:#5b7189}
+#app .stat b:not(.pos):not(.neg){color:#1e4d7b}
+#app .stat b.pos,#app .pos{color:#15924a}
+#app .stat b.neg,#app .neg{color:#d23a3a}
+#app .ulm b{color:#1e4d7b}#app .ulv b{color:#15924a}
+#app .li b{color:#1e4d7b}#app .li b.pos{color:#15924a}#app .li b.neg{color:#d23a3a}
+#app th{color:#1e4d7b}
+#app .upr .ul{color:#1e4d7b}
+#app .mu{color:#6b7f93}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #app .stat b:not(.pos):not(.neg),:root:not([data-theme="light"]) #app .ulm b,:root:not([data-theme="light"]) #app .li b,:root:not([data-theme="light"]) #app th,:root:not([data-theme="light"]) #app .upr .ul{color:#9cc9ff}:root:not([data-theme="light"]) #app .stat>span:first-child,:root:not([data-theme="light"]) #app .mu{color:#a3b4c6}:root:not([data-theme="light"]) #app .pos,:root:not([data-theme="light"]) #app .ulv b{color:#4ade80}}
+:root[data-theme="dark"] #app .stat b:not(.pos):not(.neg),:root[data-theme="dark"] #app .ulm b,:root[data-theme="dark"] #app .li b,:root[data-theme="dark"] #app th,:root[data-theme="dark"] #app .upr .ul{color:#9cc9ff}:root[data-theme="dark"] #app .stat>span:first-child,:root[data-theme="dark"] #app .mu{color:#a3b4c6}:root[data-theme="dark"] #app .pos,:root[data-theme="dark"] #app .ulv b{color:#4ade80}
+body.dark #app .stat b:not(.pos):not(.neg),body.dark #app .ulm b,body.dark #app .li b,body.dark #app th{color:#9cc9ff}body.dark #app .mu,body.dark #app .stat>span:first-child{color:#a3b4c6}body.dark #app .pos{color:#4ade80}
+</style>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
