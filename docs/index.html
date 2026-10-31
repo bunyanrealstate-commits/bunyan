@@ -445,7 +445,8 @@ function ua(u){const f=sh(u),ue=(S.exp||[]).filter(x=>x.u===u.id).reduce((s,x)=>
  return{cost,inc,occ:occN,vac,tr,tg,pre:occ(u).freeVal,full:full-(u.salv||0),profit:inc-cost,need:vac?Math.max(0,(cost*(1+tg)-inc)/f/vac):0}}
 function gexY(){const t=today(),e=addM(t,12);let s=0;SE().forEach(x=>{if(x.u)return;const f=shg(x.g);for(let i=0;i<(x.n||1);i++){const d=addM(pd(x.d),i);if(d>=t&&d<e)s+=(+x.a||0)*f}});return s}
 function winU(u){const MS=2629800000,s=pd(u.start),ce=addM(s,u.cm||12);let le=null;(u.leases||[]).forEach(L=>{let e=lend(L);if(L.exit&&pd(L.exit)<e)e=pd(L.exit);if(!le||e>le)le=e});if(!le||le<=s)return null;const e=le<ce?le:ce,mW=(e-s)/MS;let oc=0;(u.leases||[]).forEach(L=>{let a=pd(L.start),b=lend(L);if(L.exit&&pd(L.exit)<b)b=pd(L.exit);if(a<s)a=s;if(b>e)b=e;if(b>a)oc+=(b-a)/MS});return{s,e,mW,oc:Math.min(oc,mW),occ:mW?Math.min(1,oc/mW):0}}
-function annW(){const t=today();let p=0,mW=0,oc=0,e0=null,s0=null;SU().forEach(u=>{if(addM(pd(u.start),u.cm)<=t)return;const w=winU(u);if(!w)return;const a=ua(u);p+=a.inc-a.cost*w.mW/(u.cm||1);mW+=w.mW;oc+=w.oc;if(!e0||w.e>e0)e0=w.e;if(!s0||w.s<s0)s0=w.s});
+function cWin(u,a,w){const f=sh(u),sv=(+u.salv||0)*f,ce=addM(pd(u.start),u.cm||12);return (a.cost+sv)*w.mW/(u.cm||1)-(w.e>=ce?sv:0)}
+function annW(){const t=today();let p=0,mW=0,oc=0,e0=null,s0=null;SU().forEach(u=>{if(addM(pd(u.start),u.cm)<=t)return;const w=winU(u);if(!w)return;const a=ua(u);p+=a.inc-cWin(u,a,w);mW+=w.mW;oc+=w.oc;if(!e0||w.e>e0)e0=w.e;if(!s0||w.s<s0)s0=w.s});
  let gx=0;if(e0){const tt=today();SE().forEach(x=>{if(x.u)return;const f=shg(x.g);for(let i=0;i<(x.n||1);i++){const d=addM(pd(x.d),i);if(d>=tt&&d<e0)gx+=(+x.a||0)*f}})}
  return{p:p-gx,gx,occ:mW?oc/mW:0,mW,s:s0,e:e0}}
 function annP(){return annW().p}
@@ -722,7 +723,7 @@ function accr(){const t=today();let rentE=0,pen=0,coC=0,fuC=0,isC=0,exC=0;
  SU().forEach(u=>{const f=sh(u),cm=u.cm||1,b=pd(u.start),e=addM(b,u.cm),el=cm*Math.max(0,Math.min(1,(t-b)/((e-b)||1)));
   u.leases.forEach(L=>{let m=0;for(let i=0;i<L.months;i++){const d0=payD(L,i);if(d0<=t){const d1=i<L.months-1?payD(L,i+1):lend(L),fr=Math.max(0,Math.min(1,(t-d0)/(Math.max(1,d1-d0)))),lfi=lf(L,i)*fr;rentE+=(((L.rav&&L.rav[i]!=null)?L.rav[i]:la(L,i))+(L.advp===i?(L.advA||0):0)+ppA(L,i))*fr*f;isC+=(L.icost||0)*lfi*f;m+=lfi}}
    isC+=m*(L.rme?(L.router||0)/(lm(L)||1):0)*f;if(L.pen&&L.penp&&L.exit&&pd(L.exit)<=t)pen+=L.pen*f;if(pd(L.start)<=t){if(L.advA===undefined&&L.stubA===undefined)rentE+=(L.adv||0)*f;else rentE+=(L.stubA||0)*f}});
-  coC+=(u.total||isumOf(u))/cm*el*f;fuC+=((+u.furn||0)-(u.salv||0))/cm*el*f});
+  coC+=(u.total||isumOf(u))/cm*el*f;fuC+=((+u.furn||0)/cm*el-(el>=cm?(+u.salv||0):0))*f});
  SE().forEach(x=>{const un=x.u&&U(x.u),f=un?sh(un):shg(x.g);for(let i=0;i<(x.n||1);i++){if(addM(pd(x.d),i)<=t)exC+=x.a*f}});
  const earned=rentE+pen,cost=coC+fuC+isC+exC;return{earned,cost,profit:earned-cost,rentE,pen,coC,fuC,isC,exC}}
 function confirmM(msg,fn,ok){M={title:'تأكيد',msg,ok:ok||'تأكيد',fields:[],fn};drawM()}
@@ -1531,7 +1532,7 @@ function kpi(){var t=today(),U=SU(),ac=accr(),costW=0,W=annW(),cost=0,inc=0,act=
  U.forEach(function(u){var a=ua(u),f=sh(u);cost+=a.cost;inc+=a.inc;occN+=a.occ;cm+=u.cm||0;fur+=(+u.furn||0)*f;
   var b=pd(u.start),e=addM(b,u.cm);if(b<=t&&t<e){act++;if(u.leases.some(function(L){return pd(L.start)<=t&&t<(L.exit?pd(L.exit):lend(L))}))occd++}
   u.leases.forEach(function(L){rents.push((L.rent||0)+(L.inet||0))});
-  var w=winU(u),cw=w?a.cost*w.mW/(u.cm||1):a.cost;costW+=cw;per.push({n:u.name,p:a.inc-cw,i:a.inc,c:cw,o:(w?w.occ:0)})});
+  var w=winU(u),cw=w?cWin(u,a,w):a.cost;costW+=cw;per.push({n:u.name,p:a.inc-cw,i:a.inc,c:cw,o:(w?w.occ:0)})});
  var avg=rents.length?rents.reduce(function(a,b){return a+b},0)/rents.length:0;
  U.forEach(function(u){pot+=(u.cm||0)*avg*sh(u)});
  var due=0,got=0;U.forEach(function(u){var f=sh(u);u.leases.forEach(function(L){for(var i=0;i<L.months;i++){if(payD(L,i)<=t){var a=la(L,i)*f;due+=a;if(L.rcv.includes(i))got+=a}}})});
