@@ -1198,9 +1198,15 @@ function preSync(){try{var x=JSON.parse(localStorage.getItem('bny_pre_sync'));re
 function conflict(rem,sha){var a=info(S),b=info(rem),nw=a.t>b.t?'me':(b.t>a.t?'cloud':'');window._syRem={rem:rem,sha:sha};
  var row=function(l,x,y){return '<tr><td>'+l+'</td><td>'+x+'</td><td>'+y+'</td></tr>'},lt=function(i){return tf(i.t)+(i.d?'<br><small class="mu">'+esc(i.d)+'</small>':'')};
  box('<h2>⚠️ تعارض في البيانات</h2><p class="mu">توجد تعديلات على هذا الجهاز لم تُرفع بعد، وتم تعديل السحابة من جهاز آخر. اختيار نسخة يمسح تعديلات النسخة الأخرى.</p><div class="sc"><table><tr><th></th><th>هذا الجهاز</th><th>السحابة</th></tr>'+row('آخر تعديل',lt(a),lt(b))+row('استديوهات',a.u,b.u)+row('عقود مستأجرين',a.L,b.L)+row('إيجارات مستلمة',a.R,b.R)+row('مصروفات',a.e,b.e)+'</table></div>'+(nw?'<p><b>👈 الأحدث: '+(nw==='me'?'هذا الجهاز':'السحابة')+'</b></p>':'')+'<div class="bt"><button onclick="dlBackup()">⬇️ نسخة احتياطية من هذا الجهاز أولاً</button></div><div class="bt"><button class="'+(nw!=='cloud'?'p':'')+'" onclick="syKeepMine()">استخدم نسخة هذا الجهاز</button><button class="'+(nw==='cloud'?'p':'')+'" onclick="syKeepCloud()">استخدم نسخة السحابة</button></div>')}
+function autoRes(rem,sha){var a=info(S),b=info(rem),c=cfg(),same=false;
+ try{same=JSON.stringify(strip(S))===JSON.stringify(rem)}catch(e){}
+ if(same){c.sha=sha;c.dirty=false;setCfg(c);stat('\u2713 '+nowS());return}
+ var cloud;if(a.t!==b.t)cloud=b.t>a.t;else{var na=a.L+a.R+a.e+a.u,nb=b.L+b.R+b.e+b.u;cloud=nb>=na}
+ if(cloud){try{localStorage.setItem('bny_pre_sync',JSON.stringify({t:Date.now(),s:strip(S)}))}catch(e){}adopt(rem,sha);toast('\u062a\u0645 \u0627\u0633\u062a\u062e\u062f\u0627\u0645 \u0646\u0633\u062e\u0629 \u0627\u0644\u0633\u062d\u0627\u0628\u0629 \u0644\u0623\u0646\u0647\u0627 \u0627\u0644\u0623\u062d\u062f\u062b')}
+ else{try{localStorage.setItem('bny_pre_sync',JSON.stringify({t:Date.now(),s:rem}))}catch(e){}c.sha=sha;setCfg(c);setTimeout(push,50);toast('\u062a\u0645 \u0631\u0641\u0639 \u0628\u064a\u0627\u0646\u0627\u062a \u0647\u0630\u0627 \u0627\u0644\u062c\u0647\u0627\u0632 \u0644\u0623\u0646\u0647\u0627 \u0627\u0644\u0623\u062d\u062f\u062b')}}
 window.syKeepCloud=function(){syClose();var r=window._syRem;if(!r)return;try{localStorage.setItem('bny_pre_sync',JSON.stringify({t:Date.now(),s:strip(S)}))}catch(e){}adopt(r.rem,r.sha)};
 window.syKeepMine=function(){syClose();var r=window._syRem,c=cfg();if(!r||!c)return;c.sha=r.sha;setCfg(c);push()};
-window.syRestore=function(){var x=preSync();if(!x)return;syClose();confirmM('استرجاع نسخة هذا الجهاز من '+tf(x.t)+'؟ ستحل محل البيانات الحالية وتُرفع للسحابة.',function(){var tab=S.tab;S=Object.assign(blank(),x.s);S.tab=tab;try{localStorage.removeItem('bny_pre_sync')}catch(e){}})};
+window.syRestore=function(){var x=preSync();if(!x)return;syClose();confirmM('استرجاع النسخة المستبدلة من '+tf(x.t)+'؟ ستحل محل البيانات الحالية وتُرفع للسحابة.',function(){var tab=S.tab;S=Object.assign(blank(),x.s);S.tab=tab;try{localStorage.removeItem('bny_pre_sync')}catch(e){}})};
 async function push(){var c=cfg();if(!c||!c.token||!AUTH)return;if(busy){tm=setTimeout(push,2000);return}busy=true;
  try{var body={message:'sync '+new Date().toISOString(),content:enc(strip(S))};if(c.sha)body.sha=c.sha;
   var r=await api(c,'PUT',body);
@@ -1216,7 +1222,7 @@ async function pull(user){var c=cfg();if(!c||!c.token||!AUTH||busy)return;busy=t
   if(j.sha===c.sha){if(c.dirty){busy=false;return push()}stat('✓ '+nowS());return}
   var rem;if(!j.content&&j.size>0){var rr=await api(c,'GET',null,'application/vnd.github.raw');if(!rr.ok){stat('✗ '+rr.status);return}rem=JSON.parse(await rr.text())}else rem=dec(j.content);
   var hasLocal=(S.units||[]).length||(S.exp||[]).length||(S.tx||[]).length;
-  if(!c.dirty&&(c.sha||!hasLocal))adopt(rem,j.sha);else conflict(rem,j.sha)
+  if(!c.dirty&&(c.sha||!hasLocal))adopt(rem,j.sha);else autoRes(rem,j.sha)
  }catch(e){stat('✗ '+(e&&e.message||''));if(user)toast('فشلت المزامنة')}finally{busy=false}}
 window.syncDirty=function(){var c=cfg();if(!c||!c.token)return;c.dirty=true;setCfg(c);clearTimeout(tm);tm=setTimeout(push,3000)};
 window.syNow=function(){pull(true)};
@@ -1226,7 +1232,7 @@ window.syOpen=function(){var c=cfg()||{};
  '<label>مفتاح GitHub (Token)</label><input id="sy_t" type="password" dir="ltr" autocomplete="off" value="'+esc(c.token||'')+'">'+
  '<label>اسم الملف</label><input id="sy_p" dir="ltr" value="'+esc(c.path||'book.json')+'">'+
  '<p class="mu">'+(c.token?'متصل':'غير متصل')+' — آخر مزامنة: <span id="sy_st">'+esc(c.last||'—')+'</span></p>'+
- '<div class="bt"><button class="p" onclick="sySave()">حفظ والاتصال</button>'+(c.token?'<button onclick="syNow()">مزامنة الآن</button><button class="dg" onclick="syOff()">قطع الاتصال</button>':'')+(preSync()?'<button onclick="syRestore()">↩ استرجاع نسخة الجهاز قبل آخر تعارض</button>':'')+'<button onclick="syClose()">إغلاق</button></div>')};
+ '<div class="bt"><button class="p" onclick="sySave()">حفظ والاتصال</button>'+(c.token?'<button onclick="syNow()">مزامنة الآن</button><button class="dg" onclick="syOff()">قطع الاتصال</button>':'')+(preSync()?'<button onclick="syRestore()">↩ استرجاع النسخة المستبدلة في آخر دمج</button>':'')+'<button onclick="syClose()">إغلاق</button></div>')};
 window.sySave=function(){var r=gi('sy_r').value.trim().replace(/^https?:\/\/github\.com\//,'').replace(/\.git$/,''),t=gi('sy_t').value.trim(),p=gi('sy_p').value.trim()||'book.json';
  if(!/^[^\/\s]+\/[^\/\s]+$/.test(r)||!t)return toast('اكتب المفتاح والمستودع');
  var old=cfg()||{},same=old.repo===r&&old.path===p;setCfg({repo:r,token:t,path:p,sha:same?(old.sha||''):'',dirty:same?!!old.dirty:false,last:''});syClose();started=true;pull(true)};
