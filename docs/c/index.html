@@ -738,7 +738,7 @@ function home(){const ac=accr(),adv=SU().reduce((s,u)=>s+u.leases.reduce((x,L)=>
  nx=(()=>{const a=items().filter(x=>['inst','exp','debt'].includes(x.ty)&&x.amt).sort((a,b)=>a.d.localeCompare(b.d))[0];return a?{...a,n:dd(a.d)}:null})(),
  vf=SU().reduce((s,u)=>{const o=occ(u);s.v+=o.freeVal;s.d+=o.free;return s},{v:0,d:0}),
  C=(l,v,c,sub)=>`<div class='stat'><span>${l}</span><b class='${c==null?'':cls(c)}'>${v}</b>${sub?`<span>${sub}</span>`:''}</div>`;
- return `<p class='mu' style='grid-column:1/-1'>📂 الحساب الحالي: <b>${esc(wname())}</b></p><div class='grid'>${C('الرصيد النقدي',$(cashNow()))}${nx?C('الدفعة القادمة المستحقة عليّ',nx.n<0?'متأخرة '+(-nx.n)+' يوم':nx.n===0?'اليوم':'بعد '+nx.n+' يوم',nx.n<0?-1:null,new Date(nx.d+'T00:00').toLocaleDateString(LOC(),{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'<br>'+$(nx.amt)+' • '+esc(nx.label)):C('الدفعة القادمة المستحقة عليّ','لا يوجد')}</div>`+payRent()}
+ return `<div class='grid'>${C('الرصيد النقدي',$(cashNow()))}${nx?C('الدفعة القادمة المستحقة عليّ',nx.n<0?'متأخرة '+(-nx.n)+' يوم':nx.n===0?'اليوم':'بعد '+nx.n+' يوم',nx.n<0?-1:null,new Date(nx.d+'T00:00').toLocaleDateString(LOC(),{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'<br>'+$(nx.amt)+' • '+esc(nx.label)):C('الدفعة القادمة المستحقة عليّ','لا يوجد')}</div>`+payRent()}
 const dfmt=d=>new Date(d+'T00:00').toLocaleDateString(LOC(),{weekday:'long',day:'numeric',month:'long',year:'numeric'}),
  badge=n=>`<span class='bd ${n<0?'b0':n<=7?'b1':n<=30?'b2':'b3'}'>${n<0?'متأخرة '+(-n)+' يوم':n===0?'اليوم':n===1?'غداً':'بعد '+n+' يوم'}</span>`;
 var PCN=30;function payCards(){const o=items().filter(x=>['inst','exp','debt'].includes(x.ty)&&x.amt).map(x=>({...x,n:dd(x.d)})).sort((a,b)=>a.d.localeCompare(b.d)),
