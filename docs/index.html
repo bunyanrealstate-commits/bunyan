@@ -1540,5 +1540,16 @@ var a1=accTab2;accTab2=function(){var h=a1();var k=h.indexOf("<div class='card'>
 <script>
 (function(){var d1=drawLic;drawLic=function(m){d1.apply(this,arguments);try{if(TRIAL>0){var d=gi('login').querySelector('.dlg');if(d&&!d.querySelector('.xcl')){var b=document.createElement('button');b.className='xcl';b.type='button';b.setAttribute('aria-label','رجوع');b.textContent='✕';b.onclick=function(){LIC=true;gi('login').innerHTML='';render()};d.insertBefore(b,d.firstChild)}}}catch(e){}}})();
 </script>
-<style>.hdlogo{height:42px;width:auto;max-width:60vw;display:block}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hdlogo .hgf{fill:#fff}:root:not([data-theme="light"]) .hdlogo .hgt{fill:#cfe3ee}}:root[data-theme="dark"] .hdlogo .hgf{fill:#fff}:root[data-theme="dark"] .hdlogo .hgt{fill:#cfe3ee}</style><script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
+<style>.hdlogo{height:42px;width:auto;max-width:60vw;display:block}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hdlogo .hgf{fill:#fff}:root:not([data-theme="light"]) .hdlogo .hgt{fill:#cfe3ee}}:root[data-theme="dark"] .hdlogo .hgf{fill:#fff}:root[data-theme="dark"] .hdlogo .hgt{fill:#cfe3ee}</style>
+<script>
+(function(){var done=0,TB=['home','units','acc','grp','fc','q','ac','sim','log','bk','n'];
+function gt(){try{return sessionStorage.getItem('bny_tab')||localStorage.getItem('bny_tab')}catch(e){return null}}
+var r0=render;render=function(){try{if(!done&&AUTH&&S){done=1;var s=gt();if(s&&TB.indexOf(s)>=0&&(!S.tab||S.tab==='home'))S.tab=s;
+  var y=0;try{y=+sessionStorage.getItem('bny_y')||0}catch(e){}if(y>0)setTimeout(function(){window.scrollTo(0,y)},350)}}catch(e){}
+ r0.apply(this,arguments);try{if(AUTH&&S&&S.tab){sessionStorage.setItem('bny_tab',S.tab);localStorage.setItem('bny_tab',S.tab)}}catch(e){}};
+try{if(AUTH&&S)render()}catch(e){}
+var st;addEventListener('scroll',function(){clearTimeout(st);st=setTimeout(function(){try{sessionStorage.setItem('bny_y',String(window.scrollY))}catch(e){}},200)},{passive:true});
+})();
+</script>
+<script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
