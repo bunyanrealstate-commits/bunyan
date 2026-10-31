@@ -1677,5 +1677,25 @@ var r0=render;render=function(){var hide=on&&AUTH&&S&&S.tab==='ac';if(hide){var 
 setInterval(function(){try{mk()}catch(e){}},1500);paint();try{if(AUTH)render()}catch(e){}
 })();
 </script>
+
+<style id="alxcss">
+.alxc{border:1.5px solid #e5484d;background:rgba(229,72,77,.07)}
+.alxc h2{margin:0 0 6px}.alxr{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--bd,#e2e8f0);flex-wrap:wrap}
+.alxr>span:first-child{min-width:0;flex:1 1 150px}
+</style>
+<script>
+(function(){
+function rows(){var r=[];try{items().forEach(function(x){if(x.ty!=='rent')return;var n=dd(x.d);if(n<=7)r.push(Object.assign({},x,{n:n}))})}catch(e){}return r.sort(function(a,b){return a.n-b.n})}
+function sum(r){return r.reduce(function(s,x){return s+(+x.amt||0)},0)}
+function card(){var r=rows();if(!r.length)return '';var od=r.filter(function(x){return x.n<0}),sn=r.filter(function(x){return x.n>=0});
+ return "<div class='card alxc' onclick='alxOpen()' style='cursor:pointer'><h2>🔔 تنبيه شامل لكل العملاء</h2><div>"+(od.length?"🔴 <b>"+od.length+"</b> متأخر ("+$(sum(od))+") ":"")+(sn.length?"🟠 <b>"+sn.length+"</b> مستحق خلال 7 أيام ("+$(sum(sn))+")":"")+"</div><div class='mu' style='margin-top:4px'>اضغط لعرض الكل وإرسال تذكير لكل عميل</div></div>"}
+window.alxOpen=function(){var r=rows();var d=document.getElementById('alx');if(d)d.remove();d=document.createElement('div');d.id='alx';d.className='ov';
+ d.innerHTML='<div class="dlg" style="max-height:88vh;overflow:auto"><button class="xcl" onclick="document.getElementById(\'alx\').remove()">✕</button><h2>🔔 كل العملاء — متأخر وقريب</h2><div class="mu">الإجمالي: <b>'+$(sum(r))+'</b> • '+r.length+' عميل</div>'+(r.length?r.map(function(x){var w='';try{w=waBtn(x)}catch(e){}return '<div class="alxr"><span><b>'+esc(x.label)+'</b><br><span class="mu">'+dfmt(x.d)+'</span></span><span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+w+badge(x.n)+'<b class="neg">'+$(x.amt)+'</b></span></div>'}).join(''):'<p class="mu">لا يوجد عملاء متأخرين أو قريبي الاستحقاق ✅</p>')+'</div>';
+ document.body.appendChild(d)};
+var n0=notifTab;notifTab=function(){var h=n0.apply(this,arguments);try{return card()+h}catch(e){return h}};
+var h0=render;render=function(){h0.apply(this,arguments);try{if(!AUTH||S.tab!=='home')return;var a=document.getElementById('app');if(a&&!a.querySelector('.alxc')){var c=card();if(c){var w=document.createElement('div');w.innerHTML=c;a.insertBefore(w.firstChild,a.firstChild)}}}catch(e){}};
+try{if(AUTH)render()}catch(e){}
+})();
+</script>
 </body>
 </html>
