@@ -2851,7 +2851,7 @@ var el=null,tm=null,i=0;try{i=+(localStorage.getItem('bny_hd_i')||0)||0}catch(e)
 function show(){if(typeof AUTH!=='undefined'&&!AUTH)return;if(document.hidden)return;if(!el){el=document.createElement('div');el.id='hdth';el.innerHTML="<button aria-label='إغلاق'>✕</button><div class='ht'>قال رسول الله ﷺ</div><div class='hx'></div><div class='hs'></div>";el.querySelector('button').onclick=hide;document.body.appendChild(el)}
  var h=H[i%H.length];i++;try{localStorage.setItem('bny_hd_i',String(i))}catch(e){}el.querySelector('.hx').textContent='«'+h[0]+'»';el.querySelector('.hs').textContent=h[1];el.classList.add('on');clearTimeout(tm);tm=setTimeout(hide,12000)}
 function hide(){if(el)el.classList.remove('on')}
-setTimeout(show,4000);setInterval(show,1800000);
+setTimeout(function(){var l=0;try{l=+(localStorage.getItem('bny_hd_t')||0)}catch(e){}if(Date.now()-l<3600000)return;try{localStorage.setItem('bny_hd_t',String(Date.now()))}catch(e){}show()},4000);
 })();
 </script>
 <style>.ov{z-index:450!important}#natx{z-index:460!important}body:has(#natx) #hmp,body:has(#natx) #setsub,body:has(#natx) #wsub{display:none!important}body:has(.ov) #hmp,body:has(.ov) #setsub,body:has(.ov) #wsub{display:none!important}</style>
@@ -2875,11 +2875,11 @@ var n0=window.natOpen;if(n0)window.natOpen=function(){lgClose();var r=n0.apply(t
 </script>
 <style id="livebg">
 :root{--bg:#eaf6f3;--card:#ffffff;--bd:#cfe3de;--card2:#f6fbfa}
-html body{background:linear-gradient(160deg,#e3f4ee 0%,#eaf3fb 45%,#fdf3e7 100%) fixed!important}
+html body{background:linear-gradient(160deg,#c8f1e1 0%,#d3e8ff 48%,#ffe2c4 100%) fixed!important}
 html body main,html body #app{background:transparent!important}
-html body #app .card{background:var(--card)!important;border:1px solid #d3e7e1!important;box-shadow:0 6px 18px rgba(16,94,80,.08)!important;border-radius:16px!important}
-html body #app .card>h2{color:#0f6b5c!important}
-html body #app .stat{background:linear-gradient(180deg,#ffffff,#f3faf8)!important;border:1px solid #cfe6df!important;box-shadow:0 4px 12px rgba(16,94,80,.07)!important;border-radius:14px!important}
+html body #app .card{background:var(--card)!important;border:1px solid #bfe5d8!important;border-top:4px solid #14b8a6!important;box-shadow:0 8px 22px rgba(13,138,116,.13)!important;border-radius:16px!important}
+html body #app .card>h2{color:#0d8a74!important}
+html body #app .stat{background:linear-gradient(160deg,#ffffff 0%,#e3f8f0 100%)!important;border:1px solid #b7e4d4!important;box-shadow:0 6px 16px rgba(13,138,116,.12)!important;border-radius:14px!important}html body #app .card .stat{background:linear-gradient(160deg,#ffffff 0%,#eaf4ff 100%)!important;border-color:#c5dcf5!important}
 html body #app .stat>span:first-child{color:#4d6b66!important}
 html body #nav{background:rgba(255,255,255,.85)!important;backdrop-filter:blur(6px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a1d;--card:#16252a;--bd:#24393f}
