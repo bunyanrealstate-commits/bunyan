@@ -28,3 +28,13 @@ for f in ('manifest.webmanifest','sw.js','icon-192.png','icon-512.png','icon-mas
     shutil.copy(os.path.join(os.path.dirname(d),f),os.path.join(cd,f))
 pass
 print('customer',len(cust))
+
+# Abdelhakim build: customer build preset to the group "مع عبد الحكيم" (2 partners, 50/50)
+seed='<script id="seed-hakim">(function(){function go(){try{if(!AUTH||!S)return;if(S._seedH)return;if((S.groups||[]).length||(S.units||[]).length){S._seedH=1;return}S.groups=[{id:"ghakim",name:"مع عبد الحكيم",n:2,share:50,custom:true,pn:"أسامة، عبد الحكيم"}];S._seedH=1;try{localStorage.setItem("bny_ws","ghakim")}catch(e){}WS="ghakim";save();render()}catch(e){}}var r0=render;render=function(){var o=r0.apply(this,arguments);setTimeout(go,0);return o};setTimeout(go,500)})();</script>'
+k=cust.rindex('</body>');hk=cust[:k]+seed+cust[k:]
+hk=hk.replace('<title>Bunyan Furnished</title>','<title>Bunyan Furnished — عبد الحكيم</title>',1)
+hd=os.path.join(os.path.dirname(d),'h');os.makedirs(hd,exist_ok=True)
+open(os.path.join(hd,'index.html'),'w',encoding='utf-8').write(hk)
+for f in ('manifest.webmanifest','sw.js','icon-192.png','icon-512.png','icon-maskable-512.png'):
+    shutil.copy(os.path.join(os.path.dirname(d),f),os.path.join(hd,f))
+print('hakim',len(hk))
