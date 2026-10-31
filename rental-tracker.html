@@ -732,7 +732,7 @@ const dfmt=d=>new Date(d+'T00:00').toLocaleDateString(LOC(),{weekday:'long',day:
  badge=n=>`<span class='bd ${n<0?'b0':n<=7?'b1':n<=30?'b2':'b3'}'>${n<0?'متأخرة '+(-n)+' يوم':n===0?'اليوم':n===1?'غداً':'بعد '+n+' يوم'}</span>`;
 var PCN=30;function payCards(){const o=items().filter(x=>['inst','exp','debt'].includes(x.ty)&&x.amt).map(x=>({...x,n:dd(x.d)})).sort((a,b)=>a.d.localeCompare(b.d)),
  rn=items().filter(x=>x.ty==='rent'&&dd(x.d)<=60).map(x=>({...x,n:dd(x.d)})).sort((a,b)=>a.d.localeCompare(b.d)),
- tr=(x,c)=>`<tr class='r${x.n<0?0:x.n<=7?1:x.n<=30?2:3}'><td><span class='dt'>${dfmt(x.d)}</span></td><td>${badge(x.n)}</td><td><b class='${c}'>${$(x.amt)}</b></td><td>${esc(x.label)}</td></tr>`,
+ tr=(x,c)=>`<tr class='r${x.n<0?0:x.n<=7?1:x.n<=30?2:3}'><td><span class='dt'>${dfmt(x.d)}</span></td><td>${badge(x.n)}</td><td><b class='${c}'>${$(x.amt)}</b></td><td>${esc(x.label)}${x.ty==='rent'&&window.paidBtn?paidBtn(x):''}</td></tr>`,
  H=['التاريخ','بعد كم يوماً','المبلغ','البيان'];
  return `<div class='card'><h2>💸 كل الدفعات المستحقة عليّ (${o.length}) — الإجمالي ${$(o.reduce((s,x)=>s+x.amt,0))}</h2>${tbl(H,o.slice(0,PCN).map(x=>tr(x,'neg')).join('')||`<tr><td colspan='4' class='mu'>لا توجد دفعات.</td></tr>`)}${o.length>PCN?`<button onclick='PCN+=50;render()'>عرض المزيد (${o.length-PCN})</button>`:''}</div><div class='card'><h2>💰 إيجارات مستحقة لي (المتأخر + خلال 60 يوم) — ${rn.length}</h2>${tbl(H,rn.slice(0,PCN).map(x=>tr(x,'pos')).join('')||`<tr><td colspan='4' class='mu'>لا توجد إيجارات في هذه الفترة.</td></tr>`)}${rn.length>PCN?`<button onclick='PCN+=50;render()'>عرض المزيد (${rn.length-PCN})</button>`:''}</div>`}
 const LIC_PUB={"kty":"EC","crv":"P-256","x":"UhQxWv08NhuQjRdHehUheCsHsTndAAA2T-MfN9r5rT0","y":"C8nbwe0KubOfyYamtOdneV8dse_WzXBHP3ker3SN0Qs"};
@@ -2888,6 +2888,16 @@ window.fixGot=function(L,g){var full=Math.min(L.months,Math.floor(g+1e-9)),frac=
  if(frac>0.001&&full<L.months){var due=la(L,full),pa=Math.round(frac*((L.rent||0)+(L.inet||0))*100)/100;if(pa>due)pa=due;L.pp.push({i:full,a:pa,at:now});L.ov=L.ov||{};L.ov[full]=Math.round((due-pa)*100)/100}};
 var m0=mLease;mLease=function(id,k){var r=m0.apply(this,arguments);try{setTimeout(function(){if(!M||!M.fields)return;var gi_=M.fields.findIndex(function(f){return f.k==='got'}),ri=M.fields.findIndex(function(f){return f.k==='rent'});if(gi_<0)return;var g=document.getElementById('f'+gi_),rr=document.getElementById('f'+ri);if(!g||document.getElementById('gmh'))return;var h=document.createElement('div');h.id='gmh';h.style.cssText='margin:6px 0 10px;padding:7px 10px;border-radius:10px;background:rgba(22,163,74,.12);font-weight:700;font-size:13.5px';g.insertAdjacentElement('afterend',h);
  function up(){var n=+g.value||0,rent=+(rr&&rr.value)||0;h.textContent=n?('= '+$(Math.round(n*rent))+' (الإيجار الشهري '+$(rent)+' × '+n+' شهر)'):'لم يُستلم شيء بعد'}g.addEventListener('input',up);if(rr)rr.addEventListener('input',up);up()},200)}catch(e){}return r};
+})();
+</script>
+<style id="pdbcss">.pdb{background:#16a34a!important;color:#fff!important;border:0!important;border-radius:999px!important;padding:4px 12px!important;font-size:12.5px!important;font-weight:700;white-space:nowrap;min-height:0!important}</style>
+<script>
+(function(){
+function pr(id){var m=/^(.*)l(\d+)_(\d+)$/.exec(id||'');return m?{u:m[1],k:+m[2],i:+m[3]}:null}
+window.paidBtn=function(x){var p=pr(x&&x.id);if(!p||x.ty!=='rent')return '';return '<button class="pdb" onclick="event.stopPropagation();rentPaid(\''+p.u+'\','+p.k+','+p.i+')">✅ دفع</button>'};
+window.rentPaid=function(uid,k,i){var u=U(uid),L=u&&u.leases[k];if(!L)return;if((L.rcv||[]).indexOf(i)>=0){toast('الشهر ده متسجل مستلم بالفعل');return}var a=la(L,i);
+ confirmM('تأكيد استلام '+$(a)+' من '+(L.tenant||'المستأجر')+' — '+u.name+' (دفعة '+(i+1)+')؟',function(){L.rcv=L.rcv||[];L.rat=L.rat||{};L.rav=L.rav||{};L.rcv.push(i);L.rcv.sort(function(a,b){return a-b});L.rat[i]=Date.now();L.rav[i]=a;setTimeout(function(){toast('✅ اتسجل: استلمت '+$(a)+' من '+(L.tenant||'المستأجر'));try{if(document.getElementById('alx'))alxOpen()}catch(e){}},60)})};
+var w0=waBtn;window.waBtn=waBtn=function(x){var h='';try{h=w0.apply(this,arguments)}catch(e){}try{return h+paidBtn(x)}catch(e){return h}};
 })();
 </script>
 </body>
