@@ -2435,5 +2435,37 @@ window.upBox=function(){var L=[];try{L=items().filter(function(x){return ['inst'
  return "<details class='card upd'"+(window._upO?' open':'')+" ontoggle='window._upO=this.open'><summary><b>📅 الدفعات القادمة ("+L.length+")</b><span class='mu'>هتستلم <b class='pos'>"+$(ti)+"</b> • هتدفع <b class='neg'>"+$(to)+"</b></span></summary><div class='upb'>"+L.map(function(x){var i=IN.indexOf(x.ty)>=0;return "<div class='upr'><span class='ud'>"+fd(x.d)+"</span><span class='ul'>"+(i?'⬇️ ':'⬆️ ')+esc(x.label)+"</span><b class='ua "+(i?'pos':'neg')+"'>"+$(x.amt)+"</b><span class='ux'>"+badge(x.n)+(x.ty==='rent'&&window.paidBtn?paidBtn(x):'')+"</span></div>"}).join('')+"</div></details>"};
 })();
 </script>
+<style id="ulcss">
+.ulh{display:flex;gap:8px;align-items:center;margin-bottom:10px}.ulh input{flex:1;min-width:0;margin:0!important}.ulh button{white-space:nowrap;padding:8px 12px}
+.ulc{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px;scrollbar-width:none}.ulc::-webkit-scrollbar{display:none}
+.ulc button{flex:none;border-radius:999px!important;padding:6px 12px!important;font-size:13px!important;white-space:nowrap}.ulc button.on{background:var(--ac,#1473e6)!important;color:#fff!important;border-color:transparent!important}
+.uls{display:flex;gap:8px;margin-bottom:10px}.uls select{flex:1;min-width:0;margin:0!important;font-size:13px}
+.ull{padding:4px 0!important}.ulr{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--bd,#0001);cursor:pointer}.ulr:last-child{border-bottom:0}.ulr:active{background:rgba(0,0,0,.04)}
+.uld{width:10px;height:10px;border-radius:50%;flex:none}.uld.rent{background:#16a34a}.uld.vac{background:#9ca3af}.uld.late{background:#dc2626}
+.ulm{flex:1;min-width:0}.ulm b{display:block;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ulm span{display:block;font-size:12px;color:var(--mu,#666);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ulv{text-align:left;flex:none}.ulv b{display:block;font-size:14px}.ulv span{display:block;font-size:11.5px;color:var(--mu,#666)}
+.ulmore{display:block;width:100%;margin-top:8px}
+</style>
+<script>
+(function(){
+var u0=units;
+function rowsF(){var t=today(),all=SU().map(function(u){return unitRow(u,t)}),q=(UV.q||'').trim().toLowerCase();
+ var r=all.filter(function(r){return(!q||(r.u.name+' '+(r.u.company||'')+' '+r.u.leases.map(function(L){return L.tenant||''}).join(' ')).toLowerCase().indexOf(q)>=0)&&(!UV.c||r.u.company===UV.c)&&(!UV.f||(UV.f==='soon'?r.soon:r.st===UV.f))});
+ var so={name:function(a,b){return a.u.name.localeCompare(b.u.name,'ar',{numeric:true})},end:function(a,b){return a.e-b.e},profit:function(a,b){return a.pf-b.pf},rent:function(a,b){return(b.L?b.L.rent:0)-(a.L?a.L.rent:0)}};
+ r.sort(so[UV.s]||so.name);return{all:all,r:r}}
+function fdt(d){try{return d.toLocaleDateString(LOC(),{day:'numeric',month:'short',year:'2-digit'})}catch(e){return iso(d)}}
+function list(r){var n=UV.n||30;return r.slice(0,n).map(function(x){var L=x.L,ten=L?(L.tenant||'مستأجر'):'شاغر',sub=[ten,x.u.company].filter(Boolean).join(' • ');
+ var st=x.st==='late'?'متأخر '+x.od+' شهر':x.soon?'⏳ '+fdt(x.e):'حتى '+fdt(x.e);
+ return "<div class='ulr' onclick='UV.open=\""+x.u.id+"\";render();scrollTo(0,0)'><span class='uld "+x.st+"'></span><div class='ulm'><b>"+esc(x.u.name)+"</b><span>"+esc(sub)+"</span></div><div class='ulv'><b>"+(L?$(L.rent):'—')+"</b><span>"+st+"</span></div></div>"}).join('')+(r.length>n?"<button class='ulmore' onclick='UV.n=(UV.n||30)+50;ulRef()'>عرض المزيد ("+(r.length-n)+")</button>":'')||"<p class='mu' style='padding:12px'>مفيش نتائج</p>"}
+window.ulRef=function(){var e=document.getElementById('ulist');if(!e)return;var R=rowsF();e.innerHTML=list(R.r);var c=document.getElementById('ulcnt');if(c)c.textContent=R.r.length+' استديو'};
+var qt;window.ulQ=function(v){UV.q=v;UV.n=30;clearTimeout(qt);qt=setTimeout(ulRef,150)};
+units=function(){if(UV.open&&U(UV.open))return u0.apply(this,arguments);var R=rowsF(),all=R.all,cnt=function(f){return all.filter(f).length},cos=[];SU().forEach(function(u){if(u.company&&cos.indexOf(u.company)<0)cos.push(u.company)});
+ var chip=function(l,n,f){return "<button class='"+((UV.f||'')===f?'on':'')+"' onclick='UV.f=\""+f+"\";UV.n=30;render()'>"+l+" "+n+"</button>"},opt=function(v,l,c){return "<option value='"+esc(v)+"'"+(v===c?' selected':'')+">"+esc(l)+"</option>"};
+ return "<div class='ulh'><input type='search' value='"+esc(UV.q||'')+"' oninput='ulQ(this.value)' placeholder='🔎 ابحث: استديو، شركة، مستأجر'><button class='p' onclick='mUnit()'>+ استديو</button><button onclick='mLeasePick()'>+ عقد</button></div>"
+ +"<div class='ulc'>"+chip('الكل',all.length,'')+chip('🟢 مؤجر',cnt(function(r){return r.st==='rent'}),'rent')+chip('⚪ شاغر',cnt(function(r){return r.st==='vac'}),'vac')+chip('🔴 متأخر',cnt(function(r){return r.st==='late'}),'late')+chip('⏳ ينتهي قريب',cnt(function(r){return r.soon}),'soon')+"</div>"
+ +"<div class='uls'><select onchange='UV.c=this.value;UV.n=30;render()'>"+opt('','كل الشركات',UV.c||'')+cos.map(function(c){return opt(c,c,UV.c||'')}).join('')+"</select><select onchange='UV.s=this.value;render()'>"+opt('name','ترتيب: الاسم',UV.s)+opt('end','ترتيب: انتهاء عقد الشركة',UV.s)+opt('rent','ترتيب: الإيجار',UV.s)+opt('profit','ترتيب: الربح (الأقل)',UV.s)+"</select></div>"
+ +"<div class='mu' id='ulcnt' style='font-size:12px;margin:0 2px 4px'>"+R.r.length+" استديو</div><div class='card ull' id='ulist'>"+list(R.r)+"</div>"};
+})();
+</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
