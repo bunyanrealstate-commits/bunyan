@@ -1,6 +1,6 @@
 {
- "name": "Bunyan Furnished",
- "short_name": "Bunyan",
+ "name": "Bunyan — عبد الحكيم",
+ "short_name": "بنيان حكيم",
  "start_url": "./index.html",
  "scope": "./",
  "display": "standalone",
@@ -8,7 +8,7 @@
  "lang": "ar",
  "dir": "rtl",
  "background_color": "#ffffff",
- "theme_color": "#1473e6",
+ "theme_color": "#2a9d5c",
  "icons": [
   {
    "src": "icon-192.png",
@@ -26,5 +26,6 @@
    "type": "image/png",
    "purpose": "maskable"
   }
- ]
+ ],
+ "id": "./?app=hakim"
 }

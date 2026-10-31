@@ -31,10 +31,19 @@ print('customer',len(cust))
 
 # Abdelhakim build: customer build preset to the group "مع عبد الحكيم" (2 partners, 50/50)
 seed='<script id="seed-hakim">(function(){function go(){try{if(!AUTH||!S)return;if(S._seedH)return;if((S.groups||[]).length||(S.units||[]).length){S._seedH=1;return}S.groups=[{id:"ghakim",name:"مع عبد الحكيم",n:2,share:50,custom:true,pn:"أسامة، عبد الحكيم"}];S._seedH=1;try{localStorage.setItem("bny_ws","ghakim")}catch(e){}WS="ghakim";save();render()}catch(e){}}var r0=render;render=function(){var o=r0.apply(this,arguments);setTimeout(go,0);return o};setTimeout(go,500)})();</script>'
-k=cust.rindex('</body>');hk=cust[:k]+seed+cust[k:]
+pre=r'<script>/* نسخة عبد الحكيم: تخزين منفصل + مزامنة للاستقبال فقط من hakim.json */window.HBUILD=1;(function(){try{var P=Storage.prototype,g=P.getItem,s=P.setItem,r=P.removeItem,L=function(t){try{return t===window.localStorage}catch(e){return false}};P.getItem=function(k){if(!L(this))return g.call(this,k);var v=g.call(this,"h:"+k);if(k==="bny_sync"&&v){try{var c=JSON.parse(v);c.path="hakim.json";v=JSON.stringify(c)}catch(e){}}return v};P.setItem=function(k,v){if(!L(this))return s.call(this,k,v);if(k==="bny_sync"){try{var c=JSON.parse(v);c.path="hakim.json";v=JSON.stringify(c)}catch(e){}}return s.call(this,"h:"+k,v)};P.removeItem=function(k){return L(this)?r.call(this,"h:"+k):r.call(this,k)}}catch(e){}var f0=window.fetch;window.fetch=function(u,o){try{var m=o&&o.method;if((m==="PUT"||m==="DELETE")&&/api\.github\.com\/repos\//.test(String(u))){return Promise.resolve(new Response(JSON.stringify({content:{sha:"local-"+Date.now()}}),{status:200,headers:{"Content-Type":"application/json"}}))}}catch(e){}return f0.apply(this,arguments)}})();</script>'
+hb=cust.index('<script>')
+cust_h=cust[:hb]+pre+cust[hb:]
+k=cust_h.rindex('</body>');hk=cust_h[:k]+seed+cust_h[k:]
 hk=hk.replace('<title>Bunyan Furnished</title>','<title>Bunyan Furnished — عبد الحكيم</title>',1)
 hd=os.path.join(os.path.dirname(d),'h');os.makedirs(hd,exist_ok=True)
 open(os.path.join(hd,'index.html'),'w',encoding='utf-8').write(hk)
-for f in ('manifest.webmanifest','sw.js','icon-192.png','icon-512.png','icon-maskable-512.png'):
+for f in ('sw.js','icon-192.png','icon-512.png','icon-maskable-512.png'):
     shutil.copy(os.path.join(os.path.dirname(d),f),os.path.join(hd,f))
+import json
+mf=json.load(open(os.path.join(os.path.dirname(d),'manifest.webmanifest'),encoding='utf-8'))
+mf.update({'name':'Bunyan — عبد الحكيم','short_name':'بنيان حكيم','id':'./?app=hakim','start_url':'./index.html','scope':'./','theme_color':'#2a9d5c'})
+json.dump(mf,open(os.path.join(hd,'manifest.webmanifest'),'w',encoding='utf-8'),ensure_ascii=False,indent=1)
+hk=hk.replace('content="#1473e6"','content="#2a9d5c"',1).replace('<link rel="apple-touch-icon" href="icon-192.png">','<link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-title" content="بنيان حكيم">',1)
+open(os.path.join(hd,'index.html'),'w',encoding='utf-8').write(hk)
 print('hakim',len(hk))
