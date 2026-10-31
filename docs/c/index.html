@@ -527,7 +527,7 @@ const cashBase=()=>{const gc=S.gc||{};return WS==='all'?(S.cash||0)+Object.value
 const cashNow=()=>cashBase()+mvO(0);
 const mig=()=>{if(S&&!S.groups){S.groups=[];save()}if(S&&S.units&&S.units.some(u=>!(u.name||'').trim())){S.units.forEach((u,i)=>{if(!(u.name||'').trim())u.name='استديو '+(i+1)});save()}if(S&&((S.debts&&S.debts.length)||(S.recv&&S.recv.length))){S.debts=[];S.recv=[];save()}if(S&&S.ot){S.cash=(S.cash||0)+mvO(S.ot)-mvO(0);delete S.ot;save()}if(S&&S.units&&S.units.some(u=>(u.leases||[]).some(L=>L.stubx&&!L.shv))){S.units.forEach(u=>(u.leases||[]).forEach(L=>{if(L.stubx&&!L.shv){L.sh=Math.max(0,(L.sh||0)-1);L.shv=1}}));if(!A||A.role!=='viewer')save()}};
 function fpos(){const t=today(),r={cash:cashNow(),rcv:0,accU:0,preCo:0,preI:0,fur:0,depP:0,due:0,accCo:0,unr:0,furPay:0,depH:0,fut:0};
- SU().forEach(u=>{const f=sh(u),b=pd(u.start),e=addM(b,u.cm),fe=Math.max(0,Math.min(1,(t-b)/((e-b)||1))),C=(u.total||isumOf(u))*fe;let P=0,D=0;
+ SU().forEach(u=>{const f=sh(u),b=pd(u.start),e=addM(b,u.cm),fe=Math.max(0,Math.min(1,(t-b)/((e-b)||1))),C=(u.total||isumOf(u))*fe;let P=0,D=0,AM=0;
   u.inst.forEach(i=>{const a=+i.a||0;if(i.p)P+=a;else if(pd(i.d)<=t)D+=a;else r.fut+=a*f});
   const x=P+D-C;r.due+=D*f;if(x>=0)r.preCo+=x*f;else r.accCo-=x*f;
   if(+u.furn){const sv=u.salv||0;r.fur+=(sv+(u.furn-sv)*(1-fe))*f;if(!u.fp)r.furPay+=u.furn*f}
@@ -536,8 +536,8 @@ function fpos(){const t=today(),r={cash:cashNow(),rcv:0,accU:0,preCo:0,preI:0,fu
     E+=(rv(i)+(L.advp===i?(L.advA||0):0)+ppA(L,i))*fr;if(!L.rcv.includes(i))B+=la(L,i);Ip+=(L.icost||0)*lf(L,i);Ia+=(L.icost||0)*lf(L,i)*fr;m+=lf(L,i)*fr}
    if(pd(L.start)<=t){E+=(L.advA===undefined&&L.stubA===undefined)?(L.adv||0):(L.stubA||0);if(L.rme&&L.router)Ip+=+L.router||0}
    Ia+=m*(L.rme?(L.router||0)/(lm(L)||1):0);
-   L.rcv.forEach(i=>{R+=rv(i)});R+=(L.adv||0)+ppT(L);if(L.penp&&L.pen){R+=L.pen;if(L.exit&&pd(L.exit)<=t)E+=L.pen}
-   const y=R+B-E;r.rcv+=B*f;if(y>=0)r.unr+=y*f;else r.accU-=y*f;r.preI+=(Ip-Ia)*f})});
+   let AR=0;L.rcv.forEach(i=>{R+=rv(i);if(i<L.months){const d0=payD(L,i),d1=i<L.months-1?payD(L,i+1):lend(L);if(d1>t){const s0=d0>t?d0:t,ff=Math.max(0,Math.min(1,(d1-s0)/Math.max(1,d1-d0)));AR+=rv(i)*ff;AM+=(d1-s0)/(864e5*30.4375)}}});R+=(L.adv||0)+ppT(L);if(L.penp&&L.pen){R+=L.pen;if(L.exit&&pd(L.exit)<=t)E+=L.pen}
+   const y=R+B-E;r.rcv+=B*f;if(y>=0)r.unr+=Math.max(0,y-AR)*f;else r.accU-=y*f;r.preI+=(Ip-Ia)*f});if(AM>0){const cm=u.cm||1;r.preCo-=(u.total||isumOf(u))/cm*AM*f;if(+u.furn)r.fur-=((+u.furn)-(u.salv||0))/cm*AM*f}});if(r.preCo<0){r.accCo-=r.preCo;r.preCo=0}
  if(WS==='all'||WS==='-')(S.dep||[]).forEach(x=>{if(x.r||x.mode==='chq')return;if(x.k==='t')r.depH+=+x.a||0;else r.depP+=+x.a||0});
  r.ptn=0;r.gpm=0;try{if(S.pmode==='me')r.ptn=mvO(0)-mvO(0,1);(S.groups||[]).forEach(g=>{if(WS==='all'||WS===g.id)r.gpm+=window.gpMine?gpMine(g):0})}catch(e){}
  r.A=r.cash+r.rcv+r.accU+r.preCo+r.preI+r.fur+r.depP+r.gpm;r.L=r.due+r.accCo+r.unr+r.furPay+r.depH+r.ptn;r.eq=r.A-r.L;return r}
