@@ -360,9 +360,9 @@ function project(ev){
   return{min,minD,rows:Object.values(m).sort((a,b)=>a.d-b.d)};
 }
 function render(){if(!AUTH){drawLogin();return}if(S&&(S.tab==='ac'||S.tab==='q'||S.tab==='sim'||S.tab==='fc'))S.tab='home';gi('login').innerHTML='';gi('who').innerHTML=esc(A.u)+' <button onclick="mPass()">🔑 كلمة المرور</button> <button onclick="logOut()">خروج</button>'+(US[0]===A?' <button onclick="adminUsers()">👥 المستخدمين</button>':'');
-  const T=[['home','الرئيسية'],['units','الاستديوهات'],['grp','المجموعات'],['acc','الحسابات'],['n','🔔 التنبيهات'+(nb()?' 🔴'+nb():'')],['ct','عقد العميل'],...(window.qrcTab?[['qrc','كاشير QR']]:[]),['log','سجل النشاط'+(CL==='yes'&&unread()?' 🔴'+unread():'')],['bk','💾 النسخ الاحتياطي']];
+  const T=[['home','الرئيسية'],['units','الاستديوهات'],['grp','المجموعات'],['acc','الحسابات'],['n','🔔 التنبيهات'+(nb()?' 🔴'+nb():'')],['ct','عقد العميل'],...(window.qrcTab?[['qrc','كاشير QR']]:[]),...(window.rmTab?[['rm','📐 مساحة الغرف']]:[]),['log','سجل النشاط'+(CL==='yes'&&unread()?' 🔴'+unread():'')],['bk','💾 النسخ الاحتياطي']];
   document.getElementById('nav').innerHTML=navHtml(T);
-  document.getElementById('app').innerHTML=(({home,units,bk:bkTab,sim,log:logTab,grp:grpTab,acc:accTab2,fc:fcTab,ac:acTab,q:queryTab,n:notifTab,ct:(window.ctTab||(()=>'')),qrc:(window.qrcTab||(()=>''))})[S.tab]||home)();
+  document.getElementById('app').innerHTML=(({home,units,bk:bkTab,sim,log:logTab,grp:grpTab,acc:accTab2,fc:fcTab,ac:acTab,q:queryTab,n:notifTab,ct:(window.ctTab||(()=>'')),qrc:(window.qrcTab||(()=>'')),rm:(window.rmTab||(()=>''))})[S.tab]||home)();
 }
 function openM(title,fields,fn){M={title,fields,fn};drawM()}
 function closeM(){M=null;drawM()}
@@ -840,8 +840,8 @@ try{const st=document.createElement('style');st.textContent='@media print{#nav,#
 
 /* ===== تبويبات مختصرة ===== */
 let MORE=false;
-const MAINT=['home','units','acc','grp','fc','q','ct','qrc','ac','sim','log','bk'];
-const NI={qrc:'<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 14h2v2h-2zM18 14h2v2M14 18h2M18 18h2v2h-2z"/>',ct:'<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/>',home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/>',units:'<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/>',grp:'<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.2c2.8.2 5 2.4 5 5.8"/>',acc:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',n:'<path d="M6 16V11a6 6 0 0112 0v5l1.5 2h-15z"/><path d="M10 21h4"/>',fc:'<path d="M3 17l6-6 4 4 8-9"/><path d="M15 6h6v6"/>',ac:'<rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M16 15h2"/>',q:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',sim:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/>',log:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',bk:'<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/>',more:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'};
+const MAINT=['home','units','acc','grp','fc','q','ct','qrc','rm','ac','sim','log','bk'];
+const NI={rm:'<path d="M3 7h18v10H3z"/><path d="M7 7v4M11 7v3M15 7v4M19 7v3"/>',qrc:'<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 14h2v2h-2zM18 14h2v2M14 18h2M18 18h2v2h-2z"/>',ct:'<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/>',home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/>',units:'<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/>',grp:'<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.2c2.8.2 5 2.4 5 5.8"/>',acc:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',n:'<path d="M6 16V11a6 6 0 0112 0v5l1.5 2h-15z"/><path d="M10 21h4"/>',fc:'<path d="M3 17l6-6 4 4 8-9"/><path d="M15 6h6v6"/>',ac:'<rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M16 15h2"/>',q:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',sim:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/>',log:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',bk:'<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/>',more:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'};
 function navHtml(T){const ico=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${NI[k]||NI.more}</svg>`,
  b=([k,l])=>{const m=String(l).match(/🔴(\d+)/),c=String(l).replace(/🔴\d*/g,'').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,'').trim();return `<button class="${S.tab==k?'on':''}" onclick="S.tab='${k}';render()">${ico(k)}<span>${esc(c)}</span>${m?`<i class="bdg">${m[1]}</i>`:''}</button>`},
  main=T.filter(x=>MAINT.includes(x[0])).sort((x,y)=>MAINT.indexOf(x[0])-MAINT.indexOf(y[0])),rest=T.filter(x=>!MAINT.includes(x[0])&&x[0]!=='n'),inRest=rest.some(x=>x[0]===S.tab),open=MORE||inRest;
@@ -1598,7 +1598,7 @@ var a1=accTab2;accTab2=function(){var h=a1();var k=h.indexOf("<div class='card'>
 </script>
 <style>.hdlogo{height:42px;width:auto;max-width:60vw;display:block}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hdlogo .hgf{fill:#fff}:root:not([data-theme="light"]) .hdlogo .hgt{fill:#cfe3ee}}:root[data-theme="dark"] .hdlogo .hgf{fill:#fff}:root[data-theme="dark"] .hdlogo .hgt{fill:#cfe3ee}</style>
 <script>
-(function(){var done=0,TB=['home','units','acc','grp','fc','q','ct','qrc','ac','sim','log','bk','n'];
+(function(){var done=0,TB=['home','units','acc','grp','fc','q','ct','qrc','rm','ac','sim','log','bk','n'];
 function gt(){try{return sessionStorage.getItem('bny_tab')||localStorage.getItem('bny_tab')}catch(e){return null}}
 var r0=render;render=function(){try{if(!done&&AUTH&&S){done=1;var s=gt();if(s&&TB.indexOf(s)>=0)S.tab=s;
   var y=0;try{y=+sessionStorage.getItem('bny_y')||0}catch(e){}if(y>0)setTimeout(function(){window.scrollTo(0,y)},350)}}catch(e){}
@@ -2618,6 +2618,79 @@ window.render=function(){
   return out;
 };
 /* the program may already be signed in and drawn before this tab loaded: redraw once so the tab shows */
+try{if(typeof AUTH!=="undefined"&&AUTH&&typeof S!=="undefined"&&S)window.render()}catch(e){}
+})();
+</script>
+<script id="rm-tab">
+/* مساحة الغرف: تبويب مستقل. يحفظ في مفتاح rm_rooms على الجهاز فقط ولا يلمس بيانات البرنامج (S) */
+(function(){
+if(window.__rmTab)return;window.__rmTab=1;
+var K='rm_rooms',AR='http://bunyanrealstate-commits.github.io/bunyan/measure/ar.html';
+var css='.rm{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px;padding-block:8px 120px}'
++'.rm .rc{background:var(--card,#fff);border:1px solid var(--bd,#d5d7dd);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}'
++'.rm h2{margin:0;font-size:18px}.rm .mu{color:var(--mu,#5b5f6a);font-size:13px;margin:0}'
++'.rm .arb{display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;background:#f2b705;color:#2a2100;font-weight:700;font-size:17px;border-radius:14px;padding:16px}'
++'.rm .tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:color-mix(in srgb,var(--tx,#111) 6%,transparent);padding:4px;border-radius:12px}'
++'.rm .tabs button{font:inherit;border:0;border-radius:9px;padding:9px;background:transparent;color:var(--mu,#5b5f6a);font-weight:600;cursor:pointer}'
++'.rm .tabs button.on{background:var(--card,#fff);color:var(--tx,#111);box-shadow:0 1px 3px rgba(0,0,0,.12)}'
++'.rm .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.rm .f{display:flex;flex-direction:column;gap:5px;min-width:0}'
++'.rm label{font-size:13px;color:var(--mu,#5b5f6a)}'
++'.rm input,.rm select{font:inherit;width:100%;box-sizing:border-box;padding:11px;border-radius:10px;border:1px solid var(--bd,#d5d7dd);background:transparent;color:var(--tx,#111)}'
++'.rm input[type=number]{font-size:19px;text-align:center;font-variant-numeric:tabular-nums}'
++'.rm .hero{background:color-mix(in srgb,#f2b705 18%,transparent);border-radius:14px;padding:16px;text-align:center}'
++'.rm .hero b{display:block;font-size:36px;line-height:1.15;font-variant-numeric:tabular-nums}'
++'.rm .row{display:flex;gap:10px}.rm .row button{flex:1}'
++'.rm .bp{font:inherit;font-weight:700;border:0;border-radius:11px;padding:12px;background:var(--ac,#1473e6);color:#fff;cursor:pointer}'
++'.rm .bg{font:inherit;border:1px solid var(--bd,#d5d7dd);border-radius:11px;padding:12px;background:transparent;color:var(--tx,#111);cursor:pointer}'
++'.rm .it{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--bd,#d5d7dd);border-radius:11px}'
++'.rm .it .n{flex:1;min-width:0}.rm .it small{color:var(--mu,#5b5f6a);font-variant-numeric:tabular-nums}'
++'.rm .it b{font-variant-numeric:tabular-nums}.rm .x{background:none;border:0;color:var(--mu,#5b5f6a);font-size:20px;cursor:pointer;padding:2px 8px}'
++'.rm .tot{display:flex;justify-content:space-between;font-weight:700;border-top:1px solid var(--bd,#d5d7dd);padding-top:8px}';
+var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
+function get(){try{return JSON.parse(localStorage.getItem(K)||'[]')}catch(e){return[]}}
+function put(v){try{localStorage.setItem(K,JSON.stringify(v))}catch(e){}}
+var V={mode:'tiles',tile:'0.60',tc:'',nL:'',nW:'',mL:'',mW:'',name:''},conf=-1;
+function f2(n){return Number(n).toFixed(2)}
+function es(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function n(v){v=parseFloat(v);return v>0?v:0}
+function cur(){var L,W;if(V.mode==='tiles'){var t=V.tile==='custom'?n(V.tc)/100:parseFloat(V.tile),tw=V.tile==='1.20'?0.6:t;L=n(V.nL)*t;W=n(V.nW)*tw}else{L=n(V.mL);W=n(V.mW)}return{L:L,W:W,A:L*W}}
+function hero(){var c=cur(),a=document.getElementById('rmA'),d=document.getElementById('rmD');if(!a)return;
+ if(c.L&&c.W){a.textContent=f2(c.A)+' م²';d.textContent=f2(c.L)+' م × '+f2(c.W)+' م'}else{a.textContent='—';d.textContent='مساحة الأرضية بالمتر المربع'}}
+function opt(v,t){return '<option value="'+v+'"'+(V.tile===v?' selected':'')+'>'+t+'</option>'}
+function inp(id,ph,step){return '<input type="number" inputmode="decimal" step="'+step+'" min="0" id="rm_'+id+'" value="'+es(V[id])+'" placeholder="'+ph+'" oninput="RM.v(\''+id+'\',this.value)">'}
+window.rmTab=function(){
+ var R=get(),tot=0,list=R.length?R.map(function(r,i){tot+=r.A;return '<div class="it"><div class="n"><b>'+es(r.name)+'</b><br><small>'+f2(r.L)+' × '+f2(r.W)+' م</small></div><b>'+f2(r.A)+' م²</b><button class="x" type="button" aria-label="حذف" onclick="RM.del('+i+')">'+(conf===i?'حذف؟':'×')+'</button></div>'}).join('')+(R.length>1?'<div class="tot"><span>الإجمالي</span><span>'+f2(tot)+' م²</span></div>':''):'<p class="mu">لا توجد غرف محفوظة. احسب المساحة واضغط «حفظ».</p>';
+ return '<div class="rm">'
+ +'<a class="arb" href="'+AR+'" target="_blank" rel="noopener">📷 قياس الأرضية بالكاميرا</a>'
+ +'<p class="mu" style="margin-top:-6px">يفتح الكاميرا في Chrome: تمشي على زوايا الغرفة وتضغط عند كل زاوية فتظهر المساحة. يحتاج إنترنت وجوال يدعم الواقع المعزز.</p>'
+ +'<div class="rc"><h2>حساب يدوي</h2>'
+ +'<div class="tabs"><button type="button" class="'+(V.mode==='tiles'?'on':'')+'" onclick="RM.m(\'tiles\')">بعدّ البلاط</button><button type="button" class="'+(V.mode==='meters'?'on':'')+'" onclick="RM.m(\'meters\')">بالمتر</button></div>'
+ +(V.mode==='tiles'
+   ?'<div class="f"><label for="rm_tile">مقاس البلاطة</label><select id="rm_tile" onchange="RM.v(\'tile\',this.value);render()">'+opt('0.60','60 × 60 سم')+opt('0.80','80 × 80 سم')+opt('1.20','120 × 60 سم (العدّ على الطول 120)')+opt('0.45','45 × 45 سم')+opt('0.40','40 × 40 سم')+opt('0.30','30 × 30 سم')+opt('custom','مقاس آخر…')+'</select></div>'
+    +(V.tile==='custom'?'<div class="f"><label for="rm_tc">مقاس البلاطة بالسنتيمتر</label>'+inp('tc','60','1')+'</div>':'')
+    +'<div class="two"><div class="f"><label for="rm_nL">عدد البلاط على الطول</label>'+inp('nL','7','0.25')+'</div><div class="f"><label for="rm_nW">عدد البلاط على العرض</label>'+inp('nW','5.5','0.25')+'</div></div>'
+    +'<p class="mu">البلاطة المقصوصة احسبها بالتقريب: نص = 0.5، ربع = 0.25.</p>'
+   :'<div class="two"><div class="f"><label for="rm_mL">الطول (متر)</label>'+inp('mL','4.20','0.01')+'</div><div class="f"><label for="rm_mW">العرض (متر)</label>'+inp('mW','3.50','0.01')+'</div></div>')
+ +'<div class="hero"><b id="rmA">—</b><span class="mu" id="rmD"></span></div>'
+ +'<div class="f"><label for="rm_name">اسم الغرفة أو الاستديو</label><input type="text" id="rm_name" value="'+es(V.name)+'" placeholder="مثال: استديو 12" oninput="RM.v(\'name\',this.value)"></div>'
+ +'<div class="row"><button class="bp" type="button" onclick="RM.save()">حفظ</button><button class="bg" type="button" onclick="RM.clear()">مسح</button></div></div>'
+ +'<div class="rc"><div class="row" style="align-items:center;justify-content:space-between"><h2>الغرف المحفوظة</h2><button class="bg" type="button" style="flex:none;padding:8px 14px" onclick="RM.copy(this)">نسخ</button></div>'+list+'</div>'
+ +'</div>';
+};
+window.RM={
+ v:function(k,x){V[k]=x;hero()},
+ m:function(x){V.mode=x;render()},
+ save:function(){var c=cur();if(!c.L||!c.W){var a=document.getElementById('rmA');if(a)a.textContent='أدخل الطول والعرض';return}
+  var R=get();R.unshift({name:V.name.trim()||('غرفة '+(R.length+1)),L:c.L,W:c.W,A:c.A});put(R);V.name='';conf=-1;render()},
+ clear:function(){V.nL=V.nW=V.mL=V.mW=V.name='';render()},
+ del:function(i){if(conf!==i){conf=i;render();setTimeout(function(){if(conf===i){conf=-1;try{if(S.tab==='rm')render()}catch(e){}}},3000);return}var R=get();R.splice(i,1);put(R);conf=-1;render()},
+ copy:function(b){var R=get();if(!R.length)return;var t=R.map(function(r){return r.name+': '+f2(r.A)+' م² ('+f2(r.L)+'×'+f2(r.W)+')'}).join('\n');
+  function ok(){b.textContent='تم النسخ';setTimeout(function(){b.textContent='نسخ'},1500)}
+  function fb(){var x=document.createElement('textarea');x.value=t;document.body.appendChild(x);x.select();try{document.execCommand('copy');ok()}catch(e){}x.remove()}
+  try{navigator.clipboard.writeText(t).then(ok,fb)}catch(e){fb()}}
+};
+var r0=window.render;
+window.render=function(){var o=r0.apply(this,arguments);try{if(typeof S!=='undefined'&&S&&S.tab==='rm')hero()}catch(e){}return o};
 try{if(typeof AUTH!=="undefined"&&AUTH&&typeof S!=="undefined"&&S)window.render()}catch(e){}
 })();
 </script>
