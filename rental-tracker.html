@@ -738,7 +738,7 @@ function home(){const ac=accr(),adv=SU().reduce((s,u)=>s+u.leases.reduce((x,L)=>
  nx=(()=>{const a=items().filter(x=>['inst','exp','debt'].includes(x.ty)&&x.amt).sort((a,b)=>a.d.localeCompare(b.d))[0];return a?{...a,n:dd(a.d)}:null})(),
  vf=SU().reduce((s,u)=>{const o=occ(u);s.v+=o.freeVal;s.d+=o.free;return s},{v:0,d:0}),
  C=(l,v,c,sub)=>`<div class='stat'><span>${l}</span><b class='${c==null?'':cls(c)}'>${v}</b>${sub?`<span>${sub}</span>`:''}</div>`;
- return `<div class='grid'>${C('الرصيد النقدي',$(cashNow()))}</div>`+(window.upBox?upBox():payRent())}
+ return `<div class='grid'>${C('الرصيد النقدي',$(cashNow()))}</div>`+(window.upBox?'':payRent())}
 const dfmt=d=>new Date(d+'T00:00').toLocaleDateString(LOC(),{weekday:'long',day:'numeric',month:'long',year:'numeric'}),
  badge=n=>`<span class='bd ${n<0?'b0':n<=7?'b1':n<=30?'b2':'b3'}'>${n<0?'متأخرة '+(-n)+' يوم':n===0?'اليوم':n===1?'غداً':'بعد '+n+' يوم'}</span>`;
 var PCN=30;function payCards(){const o=items().filter(x=>['inst','exp','debt'].includes(x.ty)&&x.amt).map(x=>({...x,n:dd(x.d)})).sort((a,b)=>a.d.localeCompare(b.d)),
@@ -2918,8 +2918,9 @@ var w0=waBtn;window.waBtn=waBtn=function(x){var h='';try{h=w0.apply(this,argumen
 <style id="upbcss">.upb{max-height:300px;overflow:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}.upr{display:grid;grid-template-columns:auto 1fr auto;gap:2px 10px;align-items:center;padding:8px 2px;border-bottom:1px solid var(--bd,#0001)}.upr:last-child{border-bottom:0}.upr .ud{font-size:12px;color:var(--mu,#666);white-space:nowrap}.upr .ul{min-width:0;font-weight:600;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.upr .ua{font-weight:700;white-space:nowrap}.upr .ux{grid-column:1/-1;display:flex;gap:6px;align-items:center;justify-content:flex-end}.upr .bd{font-size:11.5px}</style>
 <script>
 (function(){
+var hU=home;home=function(){var o=hU.apply(this,arguments);try{return upBox()+o}catch(e){return o}};
 window.upBox=function(){var L=[];try{L=items().filter(function(x){return ['inst','exp','debt','rent','recv'].indexOf(x.ty)>=0&&x.amt}).map(function(x){return Object.assign({},x,{n:dd(x.d)})}).filter(function(x){return x.n<=120}).sort(function(a,b){return a.d.localeCompare(b.d)})}catch(e){}
- if(!L.length)return '';var IN=['rent','recv'],ti=0,to=0;L.forEach(function(x){IN.indexOf(x.ty)>=0?ti+=x.amt:to+=x.amt});
+ if(!L.length)return "<div class='card'><h2>📅 الدفعات القادمة</h2><p class='mu'>مفيش دفعات قادمة خلال 120 يوم.</p></div>";var IN=['rent','recv'],ti=0,to=0;L.forEach(function(x){IN.indexOf(x.ty)>=0?ti+=x.amt:to+=x.amt});
  var fd=function(d){try{return new Date(d+'T00:00').toLocaleDateString(LOC(),{day:'numeric',month:'short',year:'numeric'})}catch(e){return d}};
  return "<div class='card'><h2>📅 الدفعات القادمة ("+L.length+")</h2><div class='mu' style='margin:-4px 0 6px;font-size:12.5px'>هتستلم <b class='pos'>"+$(ti)+"</b> • هتدفع <b class='neg'>"+$(to)+"</b></div><div class='upb'>"+L.map(function(x){var i=IN.indexOf(x.ty)>=0;return "<div class='upr'><span class='ud'>"+fd(x.d)+"</span><span class='ul'>"+(i?'⬇️ ':'⬆️ ')+esc(x.label)+"</span><b class='ua "+(i?'pos':'neg')+"'>"+$(x.amt)+"</b><span class='ux'>"+badge(x.n)+(x.ty==='rent'&&window.paidBtn?paidBtn(x):'')+"</span></div>"}).join('')+"</div></div>"};
 })();
