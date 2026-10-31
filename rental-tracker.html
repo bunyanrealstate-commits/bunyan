@@ -3216,5 +3216,34 @@ var f0=window.fetch;window.fetch=function(u,o){var p=f0.apply(this,arguments);tr
 window.hakimExport=exp;
 })();
 </script>
+<script id="hreqown">
+(function(){if(window.HBUILD)return;
+function cfg(){try{return JSON.parse(localStorage.getItem('bny_sync'))||null}catch(e){return null}}
+function dec(b){return JSON.parse(decodeURIComponent(escape(atob(String(b).replace(/\s/g,'')))))}
+function enc(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
+var REQ=[],SHA='',busy=false;
+function H(c){return{'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}
+function url(c){return 'https://api.github.com/repos/'+c.repo+'/contents/hakim-req.json'}
+async function poll(){var c=cfg();if(!c||!c.token||!AUTH||busy||document.hidden||navigator.onLine===false)return;busy=true;try{var r=await fetch(url(c)+'?t='+Date.now(),{headers:H(c),cache:'no-store'});if(r.ok){var j=await r.json();SHA=j.sha;var L=[];try{L=dec(j.content)||[]}catch(e){}var ch=JSON.stringify(L.map(function(x){return x.id}))!==JSON.stringify(REQ.map(function(x){return x.id}));REQ=L;if(ch)render()}else if(r.status===404){if(REQ.length){REQ=[];render()}SHA=''}}catch(e){}finally{busy=false}}
+async function setL(L){var c=cfg();if(!c)return false;var b={message:'req '+new Date().toISOString(),content:enc(L)};if(SHA)b.sha=SHA;var w=await fetch(url(c),{method:'PUT',headers:H(c),body:JSON.stringify(b)});if(w.ok){SHA=(await w.json()).content.sha;REQ=L;return true}await poll();return false}
+function tg(){return (S.groups||[]).filter(function(g){return /عبد\s*الحكيم|حكيم/.test(g.name||'')&&!/عمرو/.test(g.name||'')})[0]}
+function cnt(d,g){var U=(d.units||[]).filter(function(u){return !g||u.g===g}),L=0,R=0;U.forEach(function(u){(u.leases||[]).forEach(function(l){L++;R+=(l.rcv||[]).length})});return{u:U.length,l:L,r:R,e:(d.exp||[]).length}}
+function diff(x){var g=tg();if(!g)return '';var a=cnt(S,g.id),b=cnt(x.data,null),o=[];if(a.u!==b.u)o.push('استديوهات '+a.u+' ← '+b.u);if(a.l!==b.l)o.push('عقود '+a.l+' ← '+b.l);if(a.r!==b.r)o.push('دفعات مستلمة '+a.r+' ← '+b.r);if(a.e!==b.e)o.push('مصروفات '+a.e+' ← '+b.e);return o.join(' • ')}
+window.hreqOk=async function(id){var x=REQ.filter(function(r){return r.id===id})[0],g=tg();if(!x||!g){toast('مجموعة عبد الحكيم مش موجودة');return}var d=x.data||{},ids={};if(!(d.units||[]).length&&(S.units||[]).some(function(u){return u.g===g.id})){if(!window._hz||window._hz!==id){window._hz=id;toast('⚠️ الطلب ده هيمسح كل استديوهات المجموعة — دوس موافقة تاني للتأكيد');return}}
+ S.units=(S.units||[]).filter(function(u){return u.g!==g.id});(d.units||[]).forEach(function(u){u.g=g.id;ids[u.id]=1;S.units.push(u)});
+ var old={};(S.units||[]).forEach(function(u){if(u.g===g.id)old[u.id]=1});
+ S.exp=(S.exp||[]).filter(function(e){return !(e.u?old[e.u]||ids[e.u]:e.g===g.id)}).concat((d.exp||[]).filter(function(e){return e.u?ids[e.u]:true}).map(function(e){if(!e.u)e.g=g.id;return e}));
+ S.dep=(S.dep||[]).filter(function(e){return !ids[e.uid]}).concat((d.dep||[]).filter(function(e){return ids[e.uid]}));
+ S.gp=S.gp||{};if(d.gp&&d.gp[g.id])S.gp[g.id]=d.gp[g.id];S.gc=S.gc||{};if(d.gc&&d.gc[g.id]!=null)S.gc[g.id]=d.gc[g.id];
+ S.adj=(S.adj||[]).filter(function(a){return a.g!==g.id}).concat((d.adj||[]).filter(function(a){return a.g===g.id}));
+ try{logEv('موافقة على طلب من بنيان حكيم: '+(x.desc||''))}catch(e){}save();render();
+ await setL(REQ.filter(function(r){return r.id!==id}));render();toast('✅ اتوافق على التعديل واتبعت لبنيان حكيم')};
+window.hreqNo=async function(id){await setL(REQ.filter(function(r){return r.id!==id}));render();toast('اترفض الطلب')};
+function card(){if(!REQ.length)return '';var fd=function(t){try{return new Date(t).toLocaleString(LOC(),{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}catch(e){return ''}};
+ return "<div class='card' style='border-color:#2a9d5c'><h2>📨 طلبات تعديل من بنيان حكيم ("+REQ.length+")</h2>"+REQ.map(function(x){var df=diff(x);return "<div class='li' style='flex-wrap:wrap;gap:6px'><span style='flex:1 1 200px'><b>"+esc(x.desc||'تعديل')+"</b><br><span class='mu'>"+fd(x.at)+(df?' • '+df:'')+"</span></span><span style='display:flex;gap:6px'><button class='p' onclick=\"hreqOk('"+x.id+"')\">✅ موافقة</button><button class='x' onclick=\"hreqNo('"+x.id+"')\">✕ رفض</button></span></div>"}).join('')+"</div>"}
+var h0=home;home=function(){var o=h0.apply(this,arguments);try{return card()+o}catch(e){return o}};
+setInterval(poll,30000);addEventListener('visibilitychange',function(){if(!document.hidden)poll()});setTimeout(poll,2500);window.hreqPoll=poll;
+})();
+</script>
 </body>
 </html>

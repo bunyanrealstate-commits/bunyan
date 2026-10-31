@@ -314,7 +314,7 @@ label{margin:8px 0 4px!important;font-size:12.5px!important}
 <div id="app"></div>
 </main>
 <div id="modal"></div><div id="login"></div><div id="toast"></div>
-<script>/* نسخة عبد الحكيم: تخزين منفصل + مزامنة للاستقبال فقط من hakim.json */window.HBUILD=1;(function(){try{var P=Storage.prototype,g=P.getItem,s=P.setItem,r=P.removeItem,L=function(t){try{return t===window.localStorage}catch(e){return false}};P.getItem=function(k){if(!L(this))return g.call(this,k);var v=g.call(this,"h:"+k);if(k==="bny_sync"&&v){try{var c=JSON.parse(v);c.path="hakim.json";v=JSON.stringify(c)}catch(e){}}return v};P.setItem=function(k,v){if(!L(this))return s.call(this,k,v);if(k==="bny_sync"){try{var c=JSON.parse(v);c.path="hakim.json";v=JSON.stringify(c)}catch(e){}}return s.call(this,"h:"+k,v)};P.removeItem=function(k){return L(this)?r.call(this,"h:"+k):r.call(this,k)}}catch(e){}var f0=window.fetch;window.fetch=function(u,o){try{var m=o&&o.method;if((m==="PUT"||m==="DELETE")&&/api\.github\.com\/repos\//.test(String(u))){return Promise.resolve(new Response(JSON.stringify({content:{sha:"local-"+Date.now()}}),{status:200,headers:{"Content-Type":"application/json"}}))}}catch(e){}return f0.apply(this,arguments)}})();</script><script>/* تسريع: تخزين مُنسِّقات التاريخ بدل إنشائها كل مرة */(function(){try{var o=Date.prototype.toLocaleDateString,C={};Date.prototype.toLocaleDateString=function(l,op){try{var k=String(l)+'|'+(op?JSON.stringify(op):'');var f=C[k]||(C[k]=new Intl.DateTimeFormat(l,op));return f.format(this)}catch(e){return o.apply(this,arguments)}}}catch(e){}})();</script>
+<script>/* نسخة عبد الحكيم: تخزين منفصل + مزامنة للاستقبال فقط من hakim.json */window.HBUILD=1;(function(){try{var P=Storage.prototype,g=P.getItem,s=P.setItem,r=P.removeItem,L=function(t){try{return t===window.localStorage}catch(e){return false}};P.getItem=function(k){if(!L(this))return g.call(this,k);var v=g.call(this,"h:"+k);if(k==="bny_sync"&&v){try{var c=JSON.parse(v);c.path="hakim.json";v=JSON.stringify(c)}catch(e){}}return v};P.setItem=function(k,v){if(!L(this))return s.call(this,k,v);if(k==="bny_sync"){try{var c=JSON.parse(v);c.path="hakim.json";v=JSON.stringify(c)}catch(e){}}return s.call(this,"h:"+k,v)};P.removeItem=function(k){return L(this)?r.call(this,"h:"+k):r.call(this,k)}}catch(e){}var f0=window.fetch;window._rf=f0;window.fetch=function(u,o){try{var m=o&&o.method;if((m==="PUT"||m==="DELETE")&&/api\.github\.com\/repos\//.test(String(u))){return Promise.resolve(new Response(JSON.stringify({content:{sha:"local-"+Date.now()}}),{status:200,headers:{"Content-Type":"application/json"}}))}}catch(e){}return f0.apply(this,arguments)}})();</script><script>/* تسريع: تخزين مُنسِّقات التاريخ بدل إنشائها كل مرة */(function(){try{var o=Date.prototype.toLocaleDateString,C={};Date.prototype.toLocaleDateString=function(l,op){try{var k=String(l)+'|'+(op?JSON.stringify(op):'');var f=C[k]||(C[k]=new Intl.DateTimeFormat(l,op));return f.format(this)}catch(e){return o.apply(this,arguments)}}}catch(e){}})();</script>
 <script>/* توفير البطارية: المؤقتات القصيرة تتوقف والتطبيق في الخلفية */(function(){var si=window.setInterval;window.setInterval=function(f,t){if(typeof f!=='function'||!(t<60000))return si.apply(this,arguments);return si.call(window,function(){if(!document.hidden)f()},t)}})()</script>
 <script>/* إعادة رسم أخيرة بعد تحميل كل الإضافات */document.addEventListener('DOMContentLoaded',function(){try{if(typeof AUTH!=='undefined'&&AUTH)render()}catch(e){}});</script>
 
@@ -2725,5 +2725,53 @@ var f0=window.fetch;window.fetch=function(u,o){var p=f0.apply(this,arguments);tr
 window.hakimExport=exp;
 })();
 </script>
-<script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script><script id="seed-hakim">(function(){function go(){try{if(!AUTH||!S)return;if(S._seedH)return;if((S.groups||[]).length||(S.units||[]).length){S._seedH=1;return}S.groups=[{id:"ghakim",name:"مع عبد الحكيم",n:2,share:50,custom:true,pn:"أسامة، عبد الحكيم"}];S._seedH=1;try{localStorage.setItem("bny_ws","ghakim")}catch(e){}WS="ghakim";save();render()}catch(e){}}var r0=render;render=function(){var o=r0.apply(this,arguments);setTimeout(go,0);return o};setTimeout(go,500)})();</script></body>
+<script id="hreqown">
+(function(){if(window.HBUILD)return;
+function cfg(){try{return JSON.parse(localStorage.getItem('bny_sync'))||null}catch(e){return null}}
+function dec(b){return JSON.parse(decodeURIComponent(escape(atob(String(b).replace(/\s/g,'')))))}
+function enc(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
+var REQ=[],SHA='',busy=false;
+function H(c){return{'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}
+function url(c){return 'https://api.github.com/repos/'+c.repo+'/contents/hakim-req.json'}
+async function poll(){var c=cfg();if(!c||!c.token||!AUTH||busy||document.hidden||navigator.onLine===false)return;busy=true;try{var r=await fetch(url(c)+'?t='+Date.now(),{headers:H(c),cache:'no-store'});if(r.ok){var j=await r.json();SHA=j.sha;var L=[];try{L=dec(j.content)||[]}catch(e){}var ch=JSON.stringify(L.map(function(x){return x.id}))!==JSON.stringify(REQ.map(function(x){return x.id}));REQ=L;if(ch)render()}else if(r.status===404){if(REQ.length){REQ=[];render()}SHA=''}}catch(e){}finally{busy=false}}
+async function setL(L){var c=cfg();if(!c)return false;var b={message:'req '+new Date().toISOString(),content:enc(L)};if(SHA)b.sha=SHA;var w=await fetch(url(c),{method:'PUT',headers:H(c),body:JSON.stringify(b)});if(w.ok){SHA=(await w.json()).content.sha;REQ=L;return true}await poll();return false}
+function tg(){return (S.groups||[]).filter(function(g){return /عبد\s*الحكيم|حكيم/.test(g.name||'')&&!/عمرو/.test(g.name||'')})[0]}
+function cnt(d,g){var U=(d.units||[]).filter(function(u){return !g||u.g===g}),L=0,R=0;U.forEach(function(u){(u.leases||[]).forEach(function(l){L++;R+=(l.rcv||[]).length})});return{u:U.length,l:L,r:R,e:(d.exp||[]).length}}
+function diff(x){var g=tg();if(!g)return '';var a=cnt(S,g.id),b=cnt(x.data,null),o=[];if(a.u!==b.u)o.push('استديوهات '+a.u+' ← '+b.u);if(a.l!==b.l)o.push('عقود '+a.l+' ← '+b.l);if(a.r!==b.r)o.push('دفعات مستلمة '+a.r+' ← '+b.r);if(a.e!==b.e)o.push('مصروفات '+a.e+' ← '+b.e);return o.join(' • ')}
+window.hreqOk=async function(id){var x=REQ.filter(function(r){return r.id===id})[0],g=tg();if(!x||!g){toast('مجموعة عبد الحكيم مش موجودة');return}var d=x.data||{},ids={};if(!(d.units||[]).length&&(S.units||[]).some(function(u){return u.g===g.id})){if(!window._hz||window._hz!==id){window._hz=id;toast('⚠️ الطلب ده هيمسح كل استديوهات المجموعة — دوس موافقة تاني للتأكيد');return}}
+ S.units=(S.units||[]).filter(function(u){return u.g!==g.id});(d.units||[]).forEach(function(u){u.g=g.id;ids[u.id]=1;S.units.push(u)});
+ var old={};(S.units||[]).forEach(function(u){if(u.g===g.id)old[u.id]=1});
+ S.exp=(S.exp||[]).filter(function(e){return !(e.u?old[e.u]||ids[e.u]:e.g===g.id)}).concat((d.exp||[]).filter(function(e){return e.u?ids[e.u]:true}).map(function(e){if(!e.u)e.g=g.id;return e}));
+ S.dep=(S.dep||[]).filter(function(e){return !ids[e.uid]}).concat((d.dep||[]).filter(function(e){return ids[e.uid]}));
+ S.gp=S.gp||{};if(d.gp&&d.gp[g.id])S.gp[g.id]=d.gp[g.id];S.gc=S.gc||{};if(d.gc&&d.gc[g.id]!=null)S.gc[g.id]=d.gc[g.id];
+ S.adj=(S.adj||[]).filter(function(a){return a.g!==g.id}).concat((d.adj||[]).filter(function(a){return a.g===g.id}));
+ try{logEv('موافقة على طلب من بنيان حكيم: '+(x.desc||''))}catch(e){}save();render();
+ await setL(REQ.filter(function(r){return r.id!==id}));render();toast('✅ اتوافق على التعديل واتبعت لبنيان حكيم')};
+window.hreqNo=async function(id){await setL(REQ.filter(function(r){return r.id!==id}));render();toast('اترفض الطلب')};
+function card(){if(!REQ.length)return '';var fd=function(t){try{return new Date(t).toLocaleString(LOC(),{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}catch(e){return ''}};
+ return "<div class='card' style='border-color:#2a9d5c'><h2>📨 طلبات تعديل من بنيان حكيم ("+REQ.length+")</h2>"+REQ.map(function(x){var df=diff(x);return "<div class='li' style='flex-wrap:wrap;gap:6px'><span style='flex:1 1 200px'><b>"+esc(x.desc||'تعديل')+"</b><br><span class='mu'>"+fd(x.at)+(df?' • '+df:'')+"</span></span><span style='display:flex;gap:6px'><button class='p' onclick=\"hreqOk('"+x.id+"')\">✅ موافقة</button><button class='x' onclick=\"hreqNo('"+x.id+"')\">✕ رفض</button></span></div>"}).join('')+"</div>"}
+var h0=home;home=function(){var o=h0.apply(this,arguments);try{return card()+o}catch(e){return o}};
+setInterval(poll,30000);addEventListener('visibilitychange',function(){if(!document.hidden)poll()});setTimeout(poll,2500);window.hreqPoll=poll;
+})();
+</script>
+<script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script><script id="hguard">(function(){
+var D=["units","exp","dep","gp","gc","adj"];window._ug=0;["pointerdown","keydown","touchstart"].forEach(function(e){addEventListener(e,function(){window._ug=Date.now()},{capture:true,passive:true})});
+function pk(o){var r={};D.forEach(function(k){if(o&&o[k]!=null)r[k]=o[k]});return JSON.stringify(r)}
+function dec(b){return JSON.parse(decodeURIComponent(escape(atob(String(b).replace(/\s/g,"")))))}
+function enc(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
+window._cloudD=null;var f1=window.fetch;window.fetch=function(u,o){var p=f1.apply(this,arguments);try{if((!o||!o.method||o.method==="GET")&&/\/contents\/hakim\.json/.test(String(u))){return p.then(function(r){return r.clone().text().then(function(x){try{var j=JSON.parse(x);var d=j&&j.content?dec(j.content):(j&&j.units?j:null);if(d)window._cloudD=pk(d)}catch(e){}return r},function(){return r})})}}catch(e){}return p};
+function cfg(){try{return JSON.parse(localStorage.getItem("bny_sync"))||null}catch(e){return null}}
+function q(){try{return JSON.parse(localStorage.getItem("hreq_q"))||[]}catch(e){return []}}
+function sq(a){try{localStorage.setItem("hreq_q",JSON.stringify(a))}catch(e){}}
+var up=false;async function flush(){var a=q(),c=cfg();if(!a.length||!c||!c.token||up||navigator.onLine===false)return;up=true;
+ try{var u="https://api.github.com/repos/"+c.repo+"/contents/hakim-req.json",H={"Authorization":"Bearer "+c.token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};
+  var RF=window._rf||f1;var r=await RF(u+"?t="+Date.now(),{headers:H,cache:"no-store"}),sha="",L=[];if(r.ok){var j=await r.json();sha=j.sha;try{L=dec(j.content)||[]}catch(e){L=[]}}
+  L=L.concat(a);var b={message:"req "+new Date().toISOString(),content:enc(L)};if(sha)b.sha=sha;
+  var w=await RF(u,{method:"PUT",headers:H,body:JSON.stringify(b)});if(w.ok){sq([]);try{toast("📨 طلب التعديل وصل للبرنامج الأساسي")}catch(e){}bar()}}catch(e){}finally{up=false}}
+window.hreqFlush=flush;setInterval(flush,30000);addEventListener("online",flush);
+var P=Storage.prototype,s0=P.setItem;
+P.setItem=function(k,v){try{if(this===window.localStorage&&typeof A!=="undefined"&&A&&k===A.k){var old=localStorage.getItem(k);if(old){var nv=JSON.parse(v),pn=pk(nv);if(pn!==pk(JSON.parse(old))&&pn!==window._cloudD&&Date.now()-window._ug<2500&&!(nv.hist&&nv.hist[0]&&/إنشاء حساب|تسجيل (دخول|خروج)/.test(nv.hist[0].d||""))){var lq=q();if(lq.length&&JSON.stringify(lq[lq.length-1].data)===pn){try{S=JSON.parse(old)}catch(e){}return}var ds=(nv.hist&&nv.hist[0]&&Date.now()-nv.hist[0].t<8000)?String(nv.hist[0].d||""):"تعديل";var a=q();a.push({id:"r"+Date.now(),at:Date.now(),by:A.u,desc:ds,data:JSON.parse(pn)});sq(a);try{S=JSON.parse(old)}catch(e){}setTimeout(function(){try{render();toast("🔒 التعديل محتاج موافقة البرنامج الأساسي — اتبعت طلب")}catch(e){}},30);setTimeout(flush,300);return}}}}catch(e){}return s0.apply(this,arguments)};
+function bar(){try{var n=q().length,b=document.getElementById("hbar");if(!b){b=document.createElement("div");b.id="hbar";b.style.cssText="position:fixed;bottom:calc(10px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:40;background:#2a9d5c;color:#fff;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.2);white-space:nowrap";document.body.appendChild(b)}b.textContent=n?("⏳ "+n+" طلب تعديل مستني موافقة"):"🔒 أي تعديل بيحتاج موافقة البرنامج الأساسي"}catch(e){}}
+setTimeout(bar,800);
+})();</script></body>
 </html>
