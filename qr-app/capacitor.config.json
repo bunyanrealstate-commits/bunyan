@@ -1,0 +1,10 @@
+{
+ "appId": "com.bunyan.qrcashier",
+ "appName": "كاشير QR",
+ "webDir": "www",
+ "backgroundColor": "#eef2f0",
+ "server": {
+  "androidScheme": "https",
+  "cleartext": false
+ }
+}
