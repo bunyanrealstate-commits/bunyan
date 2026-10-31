@@ -1568,6 +1568,7 @@ var st;addEventListener('scroll',function(){clearTimeout(st);st=setTimeout(funct
 .sybn.pend{border-color:#d9a200;background:rgba(217,162,0,.12)}.sybn.err{border-color:#e5484d;background:rgba(229,72,77,.10)}
 details.syh{margin:6px 0;border:1px solid var(--bd,#cbd5e1);border-radius:10px;padding:6px 10px}details.syh summary{cursor:pointer;font-weight:700}
 .sybig{width:100%;padding:12px;font-size:15px;border-radius:12px}
+#modal .dlg .bt{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}#modal .dlg .bt button{flex:1 1 auto;white-space:nowrap}.sybig{margin-top:10px;flex:none}.sybn{margin-bottom:10px}details.syh{margin:10px 0}details.syh ol{color:var(--mu,inherit)}
 </style>
 <script>
 (function(){if(window.claude)return;
@@ -1594,7 +1595,7 @@ setInterval(function(){try{mk()}catch(e){}},1500);
 var o0=window.syOpen;window.syOpen=function(){o0.apply(this,arguments);try{var d=document.querySelector('#modal .dlg');if(!d)return;var s=st();
  var ban='<div class="sybn '+(s.k==='spin'?'pend':s.k==='off'?'':s.k)+'"><div class="ic">'+(s.k==='ok'?'✓':s.k==='err'?'!':s.k==='off'?'☁️':'⟳')+'</div><div><b>'+s.d+'</b><small>'+(s.k==='off'?'اربط مستودع GitHub الخاص لمزامنة بياناتك بين الأجهزة':s.k==='err'?'تحقق من المفتاح والمستودع والاتصال بالإنترنت':'بياناتك محفوظة في مستودعك الخاص على GitHub')+'</small></div></div>';
  var h2=d.querySelector('h2');if(h2)h2.insertAdjacentHTML('afterend',ban);
- var p=d.querySelector('p.mu');if(p&&/إعداد المزامنة/.test(p.textContent)){var det=document.createElement('details');det.className='syh';if(s.k==='off')det.open=true;det.innerHTML='<summary>كيف أعدّ المزامنة؟</summary>'+p.outerHTML;p.replaceWith(det)}
+ var p=d.querySelector('p.mu');if(p&&/إعداد المزامنة/.test(p.textContent)){var det=document.createElement('details');det.className='syh';if(s.k==='off')det.open=true;det.innerHTML='<summary>كيف أعدّ المزامنة؟</summary><ol style="margin:8px 0 4px;padding-inline-start:20px;line-height:1.8;font-size:13px"><li>أنشئ مستودعاً <b>خاصاً (Private)</b> على موقع GitHub.</li><li>أنشئ مفتاح <bdi dir="ltr">Fine-grained token</bdi> بصلاحية <bdi dir="ltr">Contents: Read and write</bdi> لهذا المستودع فقط.</li><li>الصق المفتاح هنا مع اسم المستودع.</li><li>كرّر نفس الإعداد على كل جهاز.</li></ol>';p.replaceWith(det)}
  if(s.k!=='off'){var bt=d.querySelector('.bt');if(bt){var big=document.createElement('button');big.className='p sybig';big.textContent='🔄 مزامنة الآن';big.onclick=function(){syNow();toast('جاري المزامنة…');syClose()};bt.parentNode.insertBefore(big,bt);var o=bt.querySelector('button[onclick="syNow()"]');if(o)o.remove()}}
  var st0=[].slice.call(d.querySelectorAll('p.mu')).find(function(x){return x.querySelector('#sy_st')});if(st0)st0.style.display='none'}catch(e){}};
 document.addEventListener('visibilitychange',paint);setInterval(paint,2000);
