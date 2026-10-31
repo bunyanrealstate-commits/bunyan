@@ -2371,9 +2371,13 @@ function card(g){var h0=hand(g),t=tot(g.id),_c=(function(){var w=WS;try{WS=g.id;
 function cards(){return(S.groups||[]).map(card).join('')}
 window.gpMine=function(g){return tot(g.id)*(S.pmode==='me'?shares(g)[0]/100:1)};
 var g0=grpTab;grpTab=function(){var o=g0.apply(this,arguments);try{return o}catch(e){return o}};
-var h0=home;home=function(){var o=h0.apply(this,arguments);try{var g=G(WS);if(g)return card(g)+o;if(WS==='all'&&(S.groups||[]).length)return cards()+o}catch(e){}return o};
+function blk(g){var t=tot(g.id),nm=names(g),sh=shares(g),P=pots(g.id),h="<div class='gpb'><div class='gph'><span>🤝 فلوس الشراكة</span><b>"+$(t)+"</b></div><div class='gps'>"+nm.map(function(n,i){return "<span>"+esc(n)+" <b>"+$(t*sh[i]/100)+"</b></span>"}).join('')+"</div><div class='gpbt'><button class='p' onclick=\"gpAdd('"+g.id+"',1)\">➕ دعم مالي</button><button onclick=\"gpAdd('"+g.id+"',-1)\">➖ سحب / صرف</button><button onclick=\"gpNames('"+g.id+"')\">👥 الأسماء</button></div>";
+ if(P.length){h+="<details><summary>الحركات ("+P.length+")</summary>";P.slice().map(function(x,i){return[x,i]}).reverse().forEach(function(p){var x=p[0];h+="<div class='li'><span>"+esc(x.w||(x.a>0?'دعم مالي':'سحب/صرف'))+" <span class='mu'>"+esc(x.d)+"</span></span><b class='"+(x.a>0?'pos':'neg')+"'>"+(x.a>0?'+':'')+$(x.a)+"</b><button class='x' onclick='gpDel(\""+g.id+"\","+p[1]+")'>🗑</button></div>"});h+="</details>"}
+ return h+"</div>"}
+var rg0=render;render=function(){var o=rg0.apply(this,arguments);try{if(!AUTH||S.tab!=='grp')return o;(S.groups||[]).forEach(function(g){var b=document.querySelector("#app button[onclick=\"setW('"+g.id+"')\"]");var li=b&&b.closest('.li');if(!li||li.nextElementSibling&&li.nextElementSibling.classList.contains('gpb'))return;li.insertAdjacentHTML('afterend',blk(g))})}catch(e){}return o};
 })();
 </script>
+<style id="gpbcss">.gpb{margin:-2px 0 12px;padding:10px 12px;border-radius:12px;background:var(--bg2,rgba(0,0,0,.04));border:1px dashed var(--bd,#0002)}.gph{display:flex;justify-content:space-between;align-items:center;font-weight:700}.gph b{font-size:18px}.gps{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0;font-size:13px}.gpbt{display:flex;flex-wrap:wrap;gap:6px}.gpbt button{font-size:12.5px;padding:5px 10px}.gpb details{margin-top:8px}.gpb summary{cursor:pointer;font-size:13px;color:var(--mu,#666)}</style>
 <script>
 (function(){
 window.gpOK=function(u){var g=(S.groups||[]).find(function(x){return x.id===u.g});return !!g};
