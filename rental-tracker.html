@@ -2617,6 +2617,8 @@ window.render=function(){
   }catch(e){}
   return out;
 };
+/* the program may already be signed in and drawn before this tab loaded: redraw once so the tab shows */
+try{if(typeof AUTH!=="undefined"&&AUTH&&typeof S!=="undefined"&&S)window.render()}catch(e){}
 })();
 </script>
 </body>
