@@ -1563,7 +1563,7 @@ var a1=accTab2;accTab2=function(){var h=a1();var k=h.indexOf("<div class='card'>
 <script>
 (function(){var done=0,TB=['home','units','acc','grp','fc','q','ct','ac','sim','log','bk','n'];
 function gt(){try{return sessionStorage.getItem('bny_tab')||localStorage.getItem('bny_tab')}catch(e){return null}}
-var r0=render;render=function(){try{if(!done&&AUTH&&S){done=1;var s=gt();if(s&&TB.indexOf(s)>=0&&(!S.tab||S.tab==='home'))S.tab=s;
+var r0=render;render=function(){try{if(!done&&AUTH&&S){done=1;var s=gt();if(s&&TB.indexOf(s)>=0)S.tab=s;
   var y=0;try{y=+sessionStorage.getItem('bny_y')||0}catch(e){}if(y>0)setTimeout(function(){window.scrollTo(0,y)},350)}}catch(e){}
  r0.apply(this,arguments);try{if(AUTH&&S&&S.tab){sessionStorage.setItem('bny_tab',S.tab);localStorage.setItem('bny_tab',S.tab)}}catch(e){}};
 try{if(AUTH&&S)render()}catch(e){}
