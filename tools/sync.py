@@ -15,6 +15,11 @@ a=out.find('<script>\n(function(){\nvar OW={')
 assert a>0,'owner block not found'
 b=out.index('</script>',a)+len('</script>')
 cust=out[:a]+out[b:]
+# the personal 'كاشير QR' tab stays out of the customer build
+q=cust.find('<script id="qrc-tab">')
+if q>0:
+    e=cust.index('</script>',q)+len('</script>');cust=cust[:q]+cust[e:]
+assert 'id="qrc-tab"' not in cust
 assert 'var OW=' not in cust and 'ownbtn' not in cust
 import shutil
 cd=os.path.join(os.path.dirname(d),'c');os.makedirs(cd,exist_ok=True)
