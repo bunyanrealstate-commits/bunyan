@@ -1,0 +1,27 @@
+name: Build Windows desktop app
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths: ['desktop/**', '.github/workflows/desktop.yml']
+permissions:
+  contents: write
+jobs:
+  win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Build installer
+        working-directory: desktop
+        run: |
+          npm install
+          npm run dist
+      - name: Publish release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete desktop-latest --cleanup-tag -y || true
+          gh release create desktop-latest desktop/dist/Bunyan-Furnished-Setup.exe --title "Bunyan Furnished for Windows" --notes "Windows installer"
