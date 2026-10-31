@@ -359,8 +359,8 @@ function project(ev){
     const k=mkey(e.d);m[k]=m[k]||{d:e.d,i:0,o:0};e.a>0?m[k].i+=e.a:m[k].o-=e.a;m[k].end=b});
   return{min,minD,rows:Object.values(m).sort((a,b)=>a.d-b.d)};
 }
-function render(){if(!AUTH){drawLogin();return}if(S&&(S.tab==='ac'||S.tab==='q'||S.tab==='sim'))S.tab='home';gi('login').innerHTML='';gi('who').innerHTML=esc(A.u)+' <button onclick="mPass()">🔑 كلمة المرور</button> <button onclick="logOut()">خروج</button>'+(US[0]===A?' <button onclick="adminUsers()">👥 المستخدمين</button>':'');
-  const T=[['home','الرئيسية'],['units','الاستديوهات'],['grp','المجموعات'],['acc','الحسابات'],['fc','التوقعات المالية'],['n','🔔 التنبيهات'+(nb()?' 🔴'+nb():'')],['ct','عقد العميل'],['log','سجل النشاط'+(CL==='yes'&&unread()?' 🔴'+unread():'')],['bk','💾 النسخ الاحتياطي']];
+function render(){if(!AUTH){drawLogin();return}if(S&&(S.tab==='ac'||S.tab==='q'||S.tab==='sim'||S.tab==='fc'))S.tab='home';gi('login').innerHTML='';gi('who').innerHTML=esc(A.u)+' <button onclick="mPass()">🔑 كلمة المرور</button> <button onclick="logOut()">خروج</button>'+(US[0]===A?' <button onclick="adminUsers()">👥 المستخدمين</button>':'');
+  const T=[['home','الرئيسية'],['units','الاستديوهات'],['grp','المجموعات'],['acc','الحسابات'],['n','🔔 التنبيهات'+(nb()?' 🔴'+nb():'')],['ct','عقد العميل'],['log','سجل النشاط'+(CL==='yes'&&unread()?' 🔴'+unread():'')],['bk','💾 النسخ الاحتياطي']];
   document.getElementById('nav').innerHTML=navHtml(T);
   document.getElementById('app').innerHTML=(({home,units,bk:bkTab,sim,log:logTab,grp:grpTab,acc:accTab2,fc:fcTab,ac:acTab,q:queryTab,n:notifTab,ct:(window.ctTab||(()=>''))})[S.tab]||home)();
 }
