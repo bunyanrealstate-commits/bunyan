@@ -440,7 +440,7 @@ const mprof=()=>{const t=today();return SU().reduce((s,u)=>s+u.leases.filter(L=>
 function ua(u){const f=sh(u),ue=(S.exp||[]).filter(x=>x.u===u.id).reduce((s,x)=>s+x.a*(x.n||1),0),full=(u.total||isumOf(u))+(+u.furn||0)+ue;
  const occN=u.leases.reduce((s,L)=>s+lm(L),0),inc=u.leases.reduce((s,L)=>s+Array.from({length:L.months},(_,i)=>la(L,i)).reduce((a,b)=>a+b,0)+Object.keys(L.rav||{}).reduce((q,i)=>q+(L.rav[i]-la(L,+i)),0)+(L.penp?L.pen||0:0)+(L.adv||0),0)*f,
  ic=u.leases.reduce((s,L)=>s+(L.icost||0)*lm(L)+(L.rme?L.router||0:0),0)*f,cost=full*f+ic,vac=Math.max(0,u.cm-occN),tg=(S.tp??25)/100,tr=u.cm?(full-(u.salv||0))*(1+tg)/u.cm:0;
- return{cost,inc,occ:occN,vac,tr,tg,pre:occ(u).freeVal,full:full-(u.salv||0),profit:inc-cost,need:vac?Math.max(0,((cost-(u.salv||0))*(1+tg)-inc)/f/vac):0}}
+ return{cost,inc,occ:occN,vac,tr,tg,pre:occ(u).freeVal,full:full-(u.salv||0),profit:inc-cost,need:vac?Math.max(0,((cost-(u.salv||0)*f)*(1+tg)-inc)/f/vac):0}}
 function ledger(){const t=today(),r=[];
  SU().forEach(u=>{const f=sh(u);
   u.inst.forEach(i=>{if(i.p)r.push({d:i.d,u:u.name,c:'co',w:'دفعة '+(u.company||'الشركة'),a:-i.a*f,p:u.partner,f})});
@@ -516,7 +516,7 @@ function stm(){const t=today(),lg=ledger(),sm=c=>lg.filter(x=>x.c===c).reduce((s
  return `<div class='card'><h2>الحركة النقدية (ما دخل وخرج فعلياً)</h2>${tbl(['البند','المبلغ'],row('إيجارات المستأجرين',rn)+row('شرط جزائي',pn)+row('<b>إجمالي الدخل</b>',R,R)+row('إيجار الشركة المدفوع',-co)+row('الأثاث (المدفوع)',-fu)+row('مصروفات أخرى',-ex)+row('<b>صافي الحركة النقدية</b>',R-E,R-E))}<p class='mu'>هذا كل ما دخل وخرج بتاريخه. أي قسط أو أثاث مدفوع مقدماً يُحتسب بالكامل هنا.</p></div>
 <div class='card'><h2>الربح المحاسبي (موزع على الشهور)</h2>${tbl(['البند','المبلغ'],row('إيجارات المستأجرين (الأشهر المنقضية)',AC.rentE)+row('شرط جزائي',AC.pen)+row('<b>إجمالي الدخل</b>',AC.earned,AC.earned)+row('إيجار الشركة (موزع على أيام العقد)',-AC.coC)+row('الأثاث (بعد قيمته المستردة، موزعاً)',-AC.fuC)+row('مصروفات (في شهرها)',-AC.exC)+row('<b>الربح الصافي</b>',AC.profit,AC.profit))}<p class='mu'>يُوزَّع إيجار كل شهر على أيامه (من موعد دفعه حتى موعد الدفعة التالية)، وتُوزَّع التكلفة على أيام العقد سواء كان الاستديو مشغولاً أو شاغراً، فيتساوى أساس الإيراد والتكلفة. الإيجار المقبوض عن أيام لم تأتِ بعد لا يُحتسب إيراداً حتى تنقضي أيامه.</p></div>
 <div class='card'><h2>وضعي المالي اليوم</h2>${tbl(['البند','المبلغ'],row('الرصيد النقدي',cash)+row('مستحقاتي لدى الآخرين (إيجارات تجاوزت موعدها)',rcvbl)+row('القيمة الحالية للأثاث (بعد النقص بمرور الوقت)',furA)+row('<b>إجمالي ما أملكه</b>',A)+row('يجب أن أدفعه الآن (دفعات تجاوزت موعدها)',-due)+(adv?row('إيجارات مقبوضة مقدماً (التزام حتى تنقضي أشهرها)',-adv):'')+row('<b>صافي رصيدي</b>',eq,eq))}<p class='mu'>دفعات شركة مستحقة عليّ (لم يحل موعدها بعد): ${$(fut)}</p></div>
-<div class='card'><h2>حالة الاستديوهات</h2>${tbl(['الاستديو','نسبة التأجير','ربح شهري','الربح من كل 100 صرفتها','أقل إيجار يحقق هدفك'],SU().map(u=>{const a=ua(u),pf=a.profit+(u.salv||0);return `<tr><td>${esc(u.name)}</td><td>${Math.round(a.occ/(u.cm||1)*100)}%</td><td class='${cls(pf)}'>${$(pf/(u.cm||1))}</td><td class='${cls(pf)}'>${a.cost?Math.round(pf/a.cost*100):0}%</td><td>${$(a.tr)}</td></tr>`}).join(''))}</div>`}
+<div class='card'><h2>حالة الاستديوهات</h2>${tbl(['الاستديو','نسبة التأجير','ربح شهري','الربح من كل 100 صرفتها','أقل إيجار يحقق هدفك'],SU().map(u=>{const a=ua(u),pf=a.profit+(u.salv||0)*sh(u);return `<tr><td>${esc(u.name)}</td><td>${Math.round(a.occ/(u.cm||1)*100)}%</td><td class='${cls(pf)}'>${$(pf/(u.cm||1))}</td><td class='${cls(pf)}'>${a.cost?Math.round(pf/a.cost*100):0}%</td><td>${$(a.tr)}</td></tr>`}).join(''))}</div>`}
 function accTab2(){return sumCards()+stm()+vacTbl()+accTab()+payAll()}
 let Q={t:'',ty:'',st:'',f:'',to:''};
 function recs(){let FR=1;const t=today(),r=[],P=(ty,d,w,u,a,done)=>r.push({ty,d,w,u,a:a*FR,done});
@@ -683,7 +683,7 @@ function accr(){const t=today();let rentE=0,pen=0,coC=0,fuC=0,isC=0,exC=0;
  SE().forEach(x=>{const un=x.u&&U(x.u),f=un?sh(un):shg(x.g);for(let i=0;i<(x.n||1);i++){if(addM(pd(x.d),i)<=t)exC+=x.a*f}});
  const earned=rentE+pen,cost=coC+fuC+isC+exC;return{earned,cost,profit:earned-cost,rentE,pen,coC,fuC,isC,exC}}
 function confirmM(msg,fn,ok){M={title:'تأكيد',msg,ok:ok||'تأكيد',fields:[],fn};drawM()}
-function home(){const ac=accr(),adv=SU().reduce((s,u)=>s+u.leases.reduce((x,L)=>x+L.rcv.filter(i=>payD(L,i)>today()).reduce((y,i)=>y+((L.rav||{})[i]??la(L,i)),0),0),0),ev=events(),p=project(ev),safe=Math.max(0,p.min-S.res),ann=SU().reduce((s,u)=>{const a=ua(u);return s+(a.profit+(u.salv||0))/(u.cm||1)*12},0),
+function home(){const ac=accr(),adv=SU().reduce((s,u)=>s+u.leases.reduce((x,L)=>x+L.rcv.filter(i=>payD(L,i)>today()).reduce((y,i)=>y+((L.rav||{})[i]??la(L,i)),0),0),0),ev=events(),p=project(ev),safe=Math.max(0,p.min-S.res),ann=SU().reduce((s,u)=>{const a=ua(u);return s+(a.profit+(u.salv||0)*sh(u))/(u.cm||1)*12},0),
  nx=(()=>{const a=items().filter(x=>['inst','exp','debt'].includes(x.ty)&&x.amt).sort((a,b)=>a.d.localeCompare(b.d))[0];return a?{...a,n:dd(a.d)}:null})(),
  vf=SU().reduce((s,u)=>{const o=occ(u);s.v+=o.freeVal;s.d+=o.free;return s},{v:0,d:0}),
  C=(l,v,c,sub)=>`<div class='stat'><span>${l}</span><b class='${c==null?'':cls(c)}'>${v}</b>${sub?`<span>${sub}</span>`:''}</div>`;
@@ -795,7 +795,7 @@ setTimeout(autoBk,5000);setInterval(autoBk,6*3600*1000);
 const _pcSplit="</div><div class='card'><h2>💰";
 const payAll=()=>{const h=payCards();return h.slice(0,h.indexOf(_pcSplit)+6)};
 const payRent=()=>{const h=payCards();return h.slice(h.indexOf(_pcSplit)+6)};
-function sumCards(){const ac=accr(),ann=SU().reduce((s,u)=>{const a=ua(u);return s+(a.profit+(u.salv||0))/(u.cm||1)*12},0),C=(l,v,c)=>`<div class='stat'><span>${l}</span><b class='${cls(c)}'>${v}</b></div>`;
+function sumCards(){const ac=accr(),ann=SU().reduce((s,u)=>{const a=ua(u);return s+(a.profit+(u.salv||0)*sh(u))/(u.cm||1)*12},0),C=(l,v,c)=>`<div class='stat'><span>${l}</span><b class='${cls(c)}'>${v}</b></div>`;
  return `<div class='grid'>${C('ربحي حتى اليوم',$(ac.profit),ac.profit)}${C('الربح السنوي المتوقع',$(ann),ann)}</div>`}
 
 try{const st=document.createElement('style');st.textContent='@media print{#nav,#ntb,#who,#ws,button,select,.noprint{display:none!important}body{background:#fff!important;color:#000!important}.card{box-shadow:none!important;border:1px solid #999!important;break-inside:avoid}}';document.head.appendChild(st)}catch(e){}
@@ -1445,7 +1445,7 @@ function kpi(){var t=today(),U=SU(),ac=accr(),cost=0,inc=0,act=0,occd=0,occN=0,c
  var avg=rents.length?rents.reduce(function(a,b){return a+b},0)/rents.length:0;
  U.forEach(function(u){pot+=(u.cm||0)*avg*sh(u)});
  var due=0,got=0;U.forEach(function(u){var f=sh(u);u.leases.forEach(function(L){for(var i=0;i<L.months;i++){if(payD(L,i)<=t){var a=la(L,i)*f;due+=a;if(L.rcv.includes(i))got+=a}}})});
- var ann=U.reduce(function(s,u){var a=ua(u);return s+(a.profit+(u.salv||0))/(u.cm||1)*12},0);
+ var ann=U.reduce(function(s,u){var a=ua(u);return s+(a.profit+(u.salv||0)*sh(u))/(u.cm||1)*12},0);
  return{cost:cost,inc:inc,act:act,occd:occd,occAll:cm?occN/cm*100:0,avg:avg,be:pot?cost/pot*100:0,due:due,got:got,ann:ann,fur:fur,per:per.sort(function(a,b){return b.p-a.p}),margin:inc?(inc-cost)/inc*100:0,ac:ac,roi:cost?ann/cost*100:0}}
 function chart(){var m=months12(),mx=Math.max.apply(null,m.map(function(x){return Math.max(x.i,x.o)}).concat([1]));
  return '<div class="bar">'+m.map(function(x){return '<div title="'+x.k+'"><span style="display:flex;align-items:flex-end;gap:1px;height:100px;width:100%"><i style="background:#16a34a;height:'+Math.max(1,x.i/mx*100)+'px"></i><i style="background:#dc2626;height:'+Math.max(1,x.o/mx*100)+'px"></i></span><small>'+x.k.slice(5)+'</small></div>'}).join('')+'</div><div class="lg2"><span><b style="background:#16a34a"></b>دخل</span><span><b style="background:#dc2626"></b>مصروف</span><span class="mu">آخر 12 شهر (نقدي)</span></div>'}
