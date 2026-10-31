@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [owner, customer]
+        variant: [owner, customer, hakim]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,6 +23,11 @@ jobs:
         if: matrix.variant == 'customer'
         run: |
           node -e "const f='capacitor.config.json',c=JSON.parse(require('fs').readFileSync(f));c.appId='com.bunyan.furnished.client';c.server.url='https://bunyanrealstate-commits.github.io/bunyan/c/';require('fs').writeFileSync(f,JSON.stringify(c,null,1))"
+          cat capacitor.config.json
+      - name: Abdelhakim variant config
+        if: matrix.variant == 'hakim'
+        run: |
+          node -e "const f='capacitor.config.json',c=JSON.parse(require('fs').readFileSync(f));c.appId='com.bunyan.furnished.hakim';c.appName='بنيان حكيم';c.server.url='https://bunyanrealstate-commits.github.io/bunyan/h/';require('fs').writeFileSync(f,JSON.stringify(c,null,1))"
           cat capacitor.config.json
       - run: npm install
       - run: npx cap add android
@@ -51,7 +56,7 @@ jobs:
           path: android/app/build/outputs/apk/debug/app-debug.apk
       - name: Publish APK to branch apk
         run: |
-          if [ "${{ matrix.variant }}" = "customer" ]; then NAME=Bunyan-Furnished-Customer.apk; BR=apk-customer; else NAME=Bunyan-Furnished.apk; BR=apk; fi
+          if [ "${{ matrix.variant }}" = "customer" ]; then NAME=Bunyan-Furnished-Customer.apk; BR=apk-customer; elif [ "${{ matrix.variant }}" = "hakim" ]; then NAME=Bunyan-Hakim.apk; BR=apk-hakim; else NAME=Bunyan-Furnished.apk; BR=apk; fi
           mkdir /tmp/out && cp android/app/build/outputs/apk/debug/app-debug.apk /tmp/out/$NAME
           cd /tmp/out && git init -q -b $BR && git config user.name github-actions && git config user.email actions@github.com
           git add . && git commit -q -m "Build APK" && git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git $BR
