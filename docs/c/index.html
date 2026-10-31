@@ -1229,7 +1229,7 @@ window.syncDirty=function(){var c=cfg();if(!c||!c.token)return;c.dirty=true;setC
 window.syNow=function(){pull(true)};
 window.syOpen=function(){var c=cfg()||{};
  box('<h2>☁️ المزامنة بين الأجهزة</h2><p class="mu">إعداد المزامنة: 1) أنشئ مستودعاً خاصاً (Private) على GitHub. 2) أنشئ Fine-grained token له صلاحية Contents: Read and write على هذا المستودع فقط. 3) الصق المفتاح هنا. نفس الإعداد على كل جهاز.</p>'+
- '<label>المستودع (المالك/الاسم)</label><input id="sy_r" dir="ltr" placeholder="owner/bunyan-data" value="'+esc(c.repo||'')+'">'+
+ '<label>المستودع (المالك/الاسم)</label><input id="sy_r" dir="ltr" placeholder="owner/bunyan-data" value="'+esc(c.repo||'bunyanrealstate-commits/bunyan-data2')+'">'+
  '<label>مفتاح GitHub (Token)</label><input id="sy_t" type="password" dir="ltr" autocomplete="off" value="'+esc(c.token||'')+'">'+
  '<label>اسم الملف</label><input id="sy_p" dir="ltr" value="'+esc(c.path||'book.json')+'">'+
  '<p class="mu">'+(c.token?'متصل':'غير متصل')+' — آخر مزامنة: <span id="sy_st">'+esc(c.last||'—')+'</span></p>'+
@@ -2042,27 +2042,6 @@ var r0=render;render=function(){try{if(AUTH&&A&&A.role!=='viewer'&&S&&S.units&&!
    S.conv=1;save();if(c.n)setTimeout(function(){render()},20);if(c.n)setTimeout(function(){toast('تم تحويل '+c.n+' عقد مستأجر للنظام الجديد'+(c.sk?' وتعذر تحويل '+c.sk:'')+' — الأرقام ثابتة')},400)}
   else{S.conv=1;save()}}}catch(e){}
  return r0.apply(this,arguments)};
-try{if(AUTH)render()}catch(e){}
-})();
-</script>
-<style id="syicss">#syinfo{display:none;align-items:center;gap:4px 8px;flex-wrap:wrap;margin:0 0 8px;padding:5px 10px;line-height:1.5;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--mu);font-size:11px;cursor:pointer}#syinfo b{color:var(--tx);direction:ltr;unicode-bidi:embed}#syinfo .k{direction:ltr;font-family:ui-monospace,Menlo,monospace;word-break:break-all;font-size:10.5px}#syinfo button{border:0;background:transparent;padding:0 4px;font-size:14px;cursor:pointer}#syinfo.ok{border-color:#2a9d5c}#syinfo.no{border-style:dashed}</style>
-<script>
-(function(){var full=false;
-function cf(){try{return JSON.parse(localStorage.getItem('bny_sync'))||null}catch(e){return null}}
-function esc2(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-function mask(t){t=String(t||'');return t.length>14?t.slice(0,11)+'••••••••'+t.slice(-4):t.replace(/./g,'•')}
-function draw(){var el=document.getElementById('syinfo');
- if(!AUTH){if(el)el.style.display='none';return}
- var host=document.getElementById('nav');if(!host||!host.parentNode)return;
- if(!el){el=document.createElement('div');el.id='syinfo';el.onclick=function(e){if(e.target.tagName==='BUTTON')return;syOpen()}}
- if(el.nextSibling!==host||el.parentNode!==host.parentNode)host.parentNode.insertBefore(el,host);
- var c=cf();el.style.display='flex';
- if(!c||!c.token){el.className='no';el.innerHTML='☁️ المزامنة غير مفعّلة — اضغط للإعداد';return}
- el.className='ok';
- el.innerHTML='☁️ المستودع: <b>'+esc2(c.repo)+'</b> • المفتاح: <span class="k">'+esc2(full?c.token:mask(c.token))+'</span><button type="button" id="syeye">'+(full?'🙈':'👁')+'</button> • <span id="syst2">'+esc2(c.last||'—')+'</span>'+(c.dirty?' • ⏳ بانتظار الرفع':'');
- var b=document.getElementById('syeye');if(b)b.onclick=function(e){e.stopPropagation();full=!full;draw()}}
-var r0=render;render=function(){r0.apply(this,arguments);try{draw()}catch(e){}};
-setInterval(function(){try{if(AUTH)draw()}catch(e){}},5000);
 try{if(AUTH)render()}catch(e){}
 })();
 </script>
