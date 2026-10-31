@@ -1506,5 +1506,30 @@ var a0=accTab2;accTab2=function(){return sumCards()+anCard()+agCard()+depCard()+
 var i0=items;items=function(){return i0().map(function(x){return x.ty==='end'?Object.assign({},x,{offs:[30,14,7,0]}):x})};
 })();
 </script>
+
+<script>
+(function(){
+var CATS=[['ك','كهرباء','⚡'],['م','مياه','💧'],['ص','صيانة','🔧'],['أ','أخرى','📦']];
+function catOf(x){if(x.cat)return x.cat;var w=x.w||'';return /كهرب/.test(w)?'ك':/مياه|ماء|مية/.test(w)?'م':/صيان|اصلاح|إصلاح|سباك/.test(w)?'ص':'';}
+window.mOp=function(cat){var us=SU();if(!us.length){toast('أضف استديو أولاً');return}var c=CATS.find(function(x){return x[0]===cat})||CATS[2];
+ openM(c[2]+' '+c[1],[{k:'u',l:'الاستديو',t:'s',o:us.map(function(u){return[u.id,u.name]}),v:us[0].id},{k:'a',l:'المبلغ',t:'n',v:0},{k:'d',l:'التاريخ',t:'d',v:td()},{k:'n',l:'يتكرر شهرياً كم مرة؟ (1 = مرة واحدة)',t:'n',v:1},{k:'note',l:'ملاحظة (اختياري)',v:''}],function(o){var a=+o.a||0;if(a<=0){toast('اكتب المبلغ');return}S.exp=S.exp||[];S.exp.push({id:uid(),u:o.u,g:'',w:c[1]+(o.note?' - '+o.note:''),a:a,d:o.d,n:Math.max(1,Math.round(+o.n||1)),cat:c[0]});logEv&&logEv('مصروف '+c[1])})};
+window.opCard=function(){var by={},tot={},all=0,rev=0;(S.exp||[]).forEach(function(x){var c=catOf(x);if(!c)return;var u=x.u&&U(x.u);if(!u)return;var v=x.a*(x.n||1)*sh(u);tot[c]=(tot[c]||0)+v;all+=v;var q=by[u.id]=by[u.id]||{n:u.name,k:0,m:0,s:0,o:0};q[c==='ك'?'k':c==='م'?'m':c==='ص'?'s':'o']+=v});
+ SU().forEach(function(u){rev+=ua(u).inc});
+ var h='<div class="card"><h2>🛠 كهرباء ومياه وصيانة</h2><p class="mu">الكهرباء والمياه والصيانة على الشركة ومشمولة للمستأجر في عقودك، فلا تتحمّلها أنت. استخدم هذا القسم فقط لو دفعت أي مبلغ منها من جيبك، وسيُخصم من الربح.</p><div class="bt">'+CATS.map(function(c){return '<button onclick="mOp(\''+c[0]+'\')">'+c[2]+' + '+c[1]+'</button>'}).join('')+'</div>';
+ if(all){h+='<div class="kp" style="margin-top:8px">'+CATS.map(function(c){return '<div class="stat"><span>'+c[2]+' '+c[1]+'</span><b class="neg">'+$(Math.round(tot[c[0]]||0))+'</b></div>'}).join('')+'<div class="stat"><span>إجمالي التشغيل</span><b class="neg">'+$(Math.round(all))+'</b><small>'+(rev?Math.round(all/rev*1000)/10+'% من إيراد الإيجار':'')+'</small></div></div>'+
+  tbl(['الاستديو','كهرباء','مياه','صيانة','أخرى','الإجمالي'],Object.keys(by).map(function(k){var q=by[k];return '<tr><td>'+esc(q.n)+'</td><td>'+$(Math.round(q.k))+'</td><td>'+$(Math.round(q.m))+'</td><td>'+$(Math.round(q.s))+'</td><td>'+$(Math.round(q.o))+'</td><td class="neg">'+$(Math.round(q.k+q.m+q.s+q.o))+'</td></tr>'}).join(''))}
+ return h+'</div>'};
+function rcpList(){var r=[];SU().forEach(function(u){var f=sh(u);u.leases.forEach(function(L,k){(L.rcv||[]).forEach(function(i){r.push({key:u.id+'l'+k+'_'+i,u:u,L:L,i:i,a:la(L,i)*f,due:iso(payD(L,i)),at:(L.rat||{})[i]||0})})})});return r.sort(function(a,b){return (b.at||0)-(a.at||0)||b.due.localeCompare(a.due)})}
+window.rcpCard=function(){var r=rcpList().slice(0,15);if(!r.length)return '';
+ return '<div class="card"><h2>🧾 سندات القبض</h2><p class="mu">آخر الإيجارات المستلمة. اضغط 🧾 لإصدار سند برقم تسلسلي وإرساله للمستأجر.</p>'+r.map(function(x,j){return '<div class="li"><span>'+esc(x.L.tenant||'مستأجر')+' • '+esc(x.u.name)+' <span class="mu">'+x.due+'</span></span><b class="pos">'+$(Math.round(x.a))+'</b><button onclick="mRcp('+j+')">🧾</button></div>'}).join('')+'</div>'};
+window.mRcp=function(j){var x=rcpList()[j];if(!x)return;S.rc=S.rc||{};if(!S.rc[x.key]){S.rcN=(S.rcN||0)+1;S.rc[x.key]=S.rcN;save()}
+ var no=String(S.rc[x.key]).padStart(4,'0'),pd2=x.at?iso(new Date(x.at)):x.due,
+ txt='سند قبض رقم '+no+'\nBunyan Furnished\n──────────\nالتاريخ: '+pd2+'\nاستلمنا من: '+(x.L.tenant||'')+'\nالمبلغ: '+Math.round(x.a)+'\nالبيان: إيجار استديو '+x.u.name+' — استحقاق '+x.due+'\nشاملة المياه والكهرباء والصيانة\n──────────\nشكراً لكم';
+ var d=document.getElementById('own2');if(d)d.remove();d=document.createElement('div');d.id='own2';d.className='ov';
+ d.innerHTML='<div class="dlg"><button class="xcl" onclick="document.getElementById(\'own2\').remove()">✕</button><h2>🧾 سند قبض '+no+'</h2><textarea id="rc_t" rows="9" style="width:100%" readonly>'+esc(txt)+'</textarea><div class="bt"><button onclick="cpy(document.getElementById(\'rc_t\').value,this)">📋 نسخ</button><button class="p" id="rc_w">📲 إرسال واتساب</button></div></div>';
+ document.body.appendChild(d);document.getElementById('rc_w').onclick=function(){var ph=(x.L.phone||'').replace(/\D/g,'');window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(txt),'_blank')}};
+var a1=accTab2;accTab2=function(){var h=a1();var k=h.indexOf("<div class='card'><h2>الحركة النقدية");return k>0?h.slice(0,k)+opCard()+rcpCard()+h.slice(k):h+opCard()+rcpCard()};
+})();
+</script>
 </body>
 </html>
