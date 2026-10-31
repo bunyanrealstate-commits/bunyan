@@ -3135,7 +3135,7 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.t
 })();
 </script>
 <style id="wsmcss">
-@media (max-width:860px){html body .hd.wsin>span{flex:none!important}html body .hd.wsin>.brand{margin:0!important}html body .hd.wsin>#pvb{margin:0 0 0 auto!important}html body .hd.wsin>span>#hmb{order:2!important}html body .hd.wsin>span>#bell{order:9!important}html body .hd.wsin .hdlogo{height:32px!important;max-width:150px!important}html body .hd.wsin #ws{display:none!important}}
+@media (max-width:860px){html body .hd.wsin>span{flex:none!important}html body .hd.wsin>.brand{margin:0!important}html body .hd.wsin>#pvb{margin:0 0 0 auto!important}html body .hd.wsin>span>#hmb{order:2!important}html body .hd.wsin .hdlogo{height:32px!important;max-width:150px!important}html body .hd.wsin #ws{display:none!important}}
 @media (max-width:860px){
 #hmp{padding:8px!important;gap:4px!important;border-radius:16px!important;box-shadow:0 12px 32px rgba(15,39,66,.22)!important;min-width:250px!important}
 #hmp>*{border:0!important;background:transparent!important;font-size:14.5px!important;font-weight:700!important;transition:background .15s}
@@ -3147,6 +3147,15 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.t
 #hmp #wsmi.op .ar{transform:rotate(-90deg)}
 #hmp .hsep{height:1px!important;min-height:0!important;padding:0!important;background:var(--bd,#0001)!important;margin:4px 6px!important}
 #hmp .umb,#hmp #who,#hmp #who>*{border:0!important;box-shadow:none!important;background:transparent!important}
+}
+@media (max-width:860px){
+html body .hd.wsin>#bell{order:-1;margin:0!important;flex:none!important}
+#hmp #syq{display:flex!important;align-items:center;gap:10px!important;min-height:46px;border-radius:12px!important;padding:8px 12px!important;font-size:14.5px!important;font-weight:700!important;background:transparent!important;border:0!important;color:var(--tx)!important}
+#hmp #syq svg{width:20px!important;height:20px!important;stroke:var(--ac,#1473e6)!important}
+#hmp #syq>span:not(.sd){display:inline!important;flex:1;text-align:start}
+#hmp #syq>span:not(.sd){font-size:12px!important;font-weight:600!important;color:var(--mu,#667)!important}#hmp #syq>span:not(.sd)::before{content:'المزامنة بين الأجهزة';display:block;font-size:14.5px;font-weight:700;color:var(--tx)}
+#hmp #syq .sd{order:9;width:10px!important;height:10px!important}
+#hmp #syq.ok{background:rgba(42,157,92,.08)!important}#hmp #syq.err{background:rgba(229,72,77,.08)!important}#hmp #syq.pend{background:rgba(217,162,0,.08)!important}
 }
 #wsub{position:fixed;z-index:70;background:var(--card,#fff);color:var(--tx);border-radius:14px;box-shadow:0 12px 32px rgba(15,39,66,.25);padding:6px;display:none;flex-direction:column;gap:3px;max-height:70vh;overflow:auto;border:1px solid var(--bd,#0001);animation:wsin .16s ease-out}
 #wsub.on{display:flex}
@@ -3169,8 +3178,12 @@ document.addEventListener('click',function(e){if(!e.target.closest('#wsub,#wsmi'
 function fx(){try{var hd=document.querySelector('.hd'),pn=document.getElementById('hmp');if(!hd||!pn)return;var it=document.getElementById('wsmi');
  if(mq.matches){hd.classList.add('wsin');if(!it){it=document.createElement('button');it.id='wsmi';it.type='button';it.onclick=function(e){e.stopPropagation();sub.classList.contains('on')?close():open(it)};}
   if(it.parentNode!==pn||pn.firstChild!==it)pn.insertBefore(it,pn.firstChild);var sp=document.getElementById('wssep');if(!sp){sp=document.createElement('div');sp.id='wssep';sp.className='hsep'}if(it.nextSibling!==sp)pn.insertBefore(sp,it.nextSibling);
-  it.innerHTML="<span>📂</span><span class='wl'><small>المجموعة</small>"+esc(cur())+"</span><span class='ar'>‹</span>";var hb=document.getElementById('hmb');if(hb)hb.style.display=''}
- else{hd.classList.remove('wsin');if(it)it.remove();var s2=document.getElementById('wssep');if(s2)s2.remove();close()}}catch(e){}}
+  it.innerHTML="<span>📂</span><span class='wl'><small>المجموعة</small>"+esc(cur())+"</span><span class='ar'>‹</span>";var hb=document.getElementById('hmb');if(hb)hb.style.display='';
+  var sy=document.getElementById('syq');if(sy&&sy.parentNode!==pn){pn.insertBefore(sy,sp.nextSibling)}if(sy){sy.title='المزامنة بين الأجهزة'}var pv0=document.getElementById('pvb'),br=hd.querySelector('.brand');if(pv0&&br&&pv0.previousElementSibling!==br)br.insertAdjacentElement('afterend',pv0);
+  var bl=document.getElementById('bell');if(bl&&hd.firstElementChild!==bl)hd.insertBefore(bl,hd.firstElementChild)}
+ else{hd.classList.remove('wsin');if(it)it.remove();var s2=document.getElementById('wssep');if(s2)s2.remove();close();
+  var sy2=document.getElementById('syq'),pv=document.getElementById('pvb');if(sy2&&sy2.parentNode!==hd&&pv)pv.insertAdjacentElement('afterend',sy2);
+  var bl2=document.getElementById('bell'),spn=document.querySelector('.hd>span');if(bl2&&spn&&bl2.parentNode!==spn)spn.insertBefore(bl2,spn.firstChild)}}catch(e){}}
 var r0=render;render=function(){var o=r0.apply(this,arguments);fx();return o};var w0=wsBar;wsBar=function(){var o=w0.apply(this,arguments);fx();return o};
 (mq.addEventListener?mq.addEventListener('change',fx):mq.addListener(fx));setTimeout(fx,0);setTimeout(fx,400);
 var mo=new MutationObserver(function(){if(!document.querySelector('.hd.mopen'))close()});var hd=document.querySelector('.hd');if(hd)mo.observe(hd,{attributes:true,attributeFilter:['class']});
