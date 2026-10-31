@@ -2688,7 +2688,7 @@ function fx(){try{var hd=document.querySelector('.hd'),pn=document.getElementByI
  if(mq.matches){hd.classList.add('wsin');if(!it){it=document.createElement('button');it.id='wsmi';it.type='button';it.onclick=function(e){e.stopPropagation();sub.classList.contains('on')?close():open(it)};}
   if(it.parentNode!==pn||pn.firstChild!==it)pn.insertBefore(it,pn.firstChild);var sp=document.getElementById('wssep');if(!sp){sp=document.createElement('div');sp.id='wssep';sp.className='hsep'}if(it.nextSibling!==sp)pn.insertBefore(sp,it.nextSibling);
   it.innerHTML="<span>📂</span><span class='wl'><small>المجموعة</small>"+esc(cur())+"</span><span class='ar'>‹</span>";var hb=document.getElementById('hmb');if(hb)hb.style.display='';
-  var sy=document.getElementById('syq');if(sy&&sy.parentNode!==pn){pn.insertBefore(sy,sp.nextSibling)}if(sy){sy.title='المزامنة بين الأجهزة'}var pv0=document.getElementById('pvb'),br=hd.querySelector('.brand');if(pv0&&br&&pv0.previousElementSibling!==br)br.insertAdjacentElement('afterend',pv0);
+  var sy=document.getElementById('syq');if(sy&&sy.parentNode!==pn&&!document.getElementById('setsub')){pn.insertBefore(sy,sp.nextSibling)}if(sy){sy.title='المزامنة بين الأجهزة'}var pv0=document.getElementById('pvb'),br=hd.querySelector('.brand');if(pv0&&br&&pv0.previousElementSibling!==br)br.insertAdjacentElement('afterend',pv0);
   var bl=document.getElementById('bell');if(bl&&hd.firstElementChild!==bl)hd.insertBefore(bl,hd.firstElementChild)}
  else{hd.classList.remove('wsin');if(it)it.remove();var s2=document.getElementById('wssep');if(s2)s2.remove();close();
   var sy2=document.getElementById('syq'),pv=document.getElementById('pvb');if(sy2&&sy2.parentNode!==hd&&pv)pv.insertAdjacentElement('afterend',sy2);
@@ -2774,6 +2774,52 @@ window.hkLink=function(){var h={};try{h=JSON.parse(localStorage.getItem('bny_hk'
  openM('🔗 ربط بنيان حكيم بمستودع منفصل',[{k:'repo',l:'المستودع الخاص ببنيان حكيم (مثال: bunyanrealstate-commits/bunyan-hakim) — سيبه فاضي عشان يستخدم مستودعك الأساسي',v:h.repo||''},{k:'token',l:'مفتاح (token) فيه صلاحية على المستودع ده (سيبه فاضي لو مفتاحك الأساسي عليه صلاحية)',v:h.token||''}],function(o){var r=String(o.repo||'').trim().replace(/^https?:\/\/github\.com\//,'').replace(/\/$/,''),t=String(o.token||'').trim();try{if(r)localStorage.setItem('bny_hk',JSON.stringify({repo:r,token:t}));else localStorage.removeItem('bny_hk')}catch(e){}setTimeout(function(){try{hakimExport();hreqPoll();toast(r?'✅ بنيان حكيم مربوط بـ '+r:'بنيان حكيم بيستخدم المستودع الأساسي')}catch(e){}},300)})};
 var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.tab!=='grp')return o;var g=(S.groups||[]).filter(function(g){return /عبد\s*الحكيم|حكيم/.test(g.name||'')&&!/عمرو/.test(g.name||'')})[0];if(!g)return o;var b=document.querySelector("#app button[onclick=\"setW('"+g.id+"')\"]"),li=b&&b.closest('.li');if(!li||document.getElementById('hklb'))return o;var h={};try{h=JSON.parse(localStorage.getItem('bny_hk'))||{}}catch(e){}
  li.insertAdjacentHTML('afterend',"<div id='hklb' style='margin:4px 0 8px'><button onclick='hkLink()'>🔗 ربط بنيان حكيم"+(h.repo?' • '+esc(h.repo):'')+"</button></div>")}catch(e){}return o};
+})();
+</script>
+<style id="setcss">
+@media (max-width:860px){
+#hmp #setmi{display:flex!important;align-items:center;gap:10px!important;min-height:46px;border-radius:12px!important}
+#hmp #setmi .wl{flex:1;text-align:start}
+#hmp #setmi .ar{font-size:18px;color:var(--ac,#1473e6);transition:transform .2s}
+#hmp #setmi.op{background:rgba(20,115,230,.08)!important}#hmp #setmi.op .ar{transform:rotate(180deg)}
+#hmp>#setsub{position:fixed!important;z-index:75;width:230px!important;min-height:0!important;height:auto!important;max-height:72vh;overflow:auto;display:none;flex-direction:column;gap:3px!important;padding:8px!important;margin:0!important;background:var(--card,#fff)!important;color:var(--tx);border-radius:14px!important;box-shadow:0 12px 32px rgba(15,39,66,.25);border:1px solid var(--bd,#0001)!important;animation:wsin .16s ease-out}
+#hmp>#setsub.on{display:flex!important}
+#setsub>*{width:100%!important;margin:0!important;order:0!important}#setsub>#syg::after{content:'إعدادات المزامنة';font-size:14.5px;font-weight:700}
+#setsub .sth{font-size:12px;font-weight:700;color:var(--mu,#667);padding:2px 8px 4px}
+#setsub button,#setsub .umb{display:flex!important;align-items:center;gap:10px;justify-content:flex-start!important;text-align:start;border:0!important;background:transparent!important;padding:10px 12px!important;border-radius:10px!important;font-size:14.5px!important;font-weight:700!important;color:var(--tx)!important;min-height:44px;height:auto!important}
+#setsub button:hover{background:var(--chrome2,rgba(0,0,0,.05))!important}
+#setsub .um{padding:0!important;border:0!important;background:transparent!important}
+#setsub .um .nm2{display:inline!important}
+#setsub .umb::after{content:'اللغة';order:-1;margin-inline-start:-4px}
+#setsub .umb>span:first-child{order:-2}
+#setsub .ump{position:static!important;box-shadow:none!important;min-width:0!important;max-width:none!important;margin-top:4px}
+#setsub .ump .natb{display:none!important}
+#setsub #syq{min-height:50px}
+#setsub #syq svg{width:20px!important;height:20px!important;stroke:var(--ac,#1473e6)!important}
+#setsub #syq>span:not(.sd){display:inline!important;flex:1;text-align:start;font-size:12px!important;font-weight:600!important;color:var(--mu,#667)!important}
+#setsub #syq>span:not(.sd)::before{content:'المزامنة بين الأجهزة';display:block;font-size:14.5px;font-weight:700;color:var(--tx)}
+#setsub #syq .sd{order:9;width:10px!important;height:10px!important}
+}
+</style>
+<script id="setjs">
+(function(){var mq=matchMedia('(max-width:860px)');
+function close(){var s=document.getElementById('setsub'),m=document.getElementById('setmi');if(s)s.classList.remove('on');if(m)m.classList.remove('op')}
+function place(){var s=document.getElementById('setsub'),m=document.getElementById('setmi'),p=document.getElementById('hmp');if(!s||!m||!p)return;var pr=p.getBoundingClientRect(),r=m.getBoundingClientRect(),vw=innerWidth,W=Math.min(230,vw-16),left=pr.right+6;if(left+W>vw-8)left=vw-W-8;s.style.left=left+'px';s.style.top=Math.max(8,Math.min(r.top,innerHeight-200))+'px'}
+function natLbl(){var c='';try{c=localStorage.getItem('bny_nat')||''}catch(e){}var b=document.getElementById('natb');return b?b.textContent.replace(/^🌍\s*/,''):'الجنسية'}
+function fx(){try{var hd=document.querySelector('.hd'),pn=document.getElementById('hmp');if(!hd||!pn)return;var sub=document.getElementById('setsub'),mi=document.getElementById('setmi'),lg=document.getElementById('lgm'),sy=document.getElementById('syq'),sp=document.querySelector('.hd>span');
+ if(mq.matches){
+  if(!mi){mi=document.createElement('button');mi.id='setmi';mi.type='button';mi.innerHTML="<span>⚙️</span><span class='wl'>الإعدادات</span><span class='ar'>›</span>";mi.onclick=function(e){e.stopPropagation();var s=document.getElementById('setsub');if(s.classList.contains('on'))close();else{s.classList.add('on');mi.classList.add('op');place()}}}
+  if(!sub){sub=document.createElement('div');sub.id='setsub';sub.addEventListener('click',function(e){e.stopPropagation()})}
+  var anchor=document.getElementById('wssep');if(mi.parentNode!==pn)(anchor&&anchor.parentNode===pn)?pn.insertBefore(mi,anchor.nextSibling):pn.insertBefore(mi,pn.firstChild);
+  if(sub.parentNode!==pn)pn.appendChild(sub);
+  if(!sub.querySelector('.sth'))sub.insertAdjacentHTML('afterbegin',"<div class='sth'>⚙️ الإعدادات</div>");
+  if(lg&&lg.parentNode!==sub)sub.appendChild(lg);
+  var nb=document.getElementById('natmi');if(!nb){nb=document.createElement('button');nb.id='natmi';nb.type='button';nb.onclick=function(){try{natOpen()}catch(e){}};}nb.innerHTML='<span>🌍</span><span>'+esc(natLbl())+'</span>';if(nb.parentNode!==sub)sub.appendChild(nb);
+  if(sy&&sy.parentNode!==sub)sub.appendChild(sy);
+ }else{close();if(mi)mi.remove();if(lg&&sp&&lg.parentNode!==sp)sp.insertBefore(lg,sp.firstChild);var pv=document.getElementById('pvb');if(sy&&pv&&sy.parentNode!==hd)pv.insertAdjacentElement('afterend',sy);if(sub)sub.remove()}}catch(e){}}
+var r0=render;render=function(){var o=r0.apply(this,arguments);fx();return o};(mq.addEventListener?mq.addEventListener('change',function(){setTimeout(fx,0)}):mq.addListener(function(){setTimeout(fx,0)}));setTimeout(fx,0);setTimeout(fx,500);
+var hd=document.querySelector('.hd');if(hd)new MutationObserver(function(){if(!hd.classList.contains('mopen'))close()}).observe(hd,{attributes:true,attributeFilter:['class']});
+document.addEventListener('click',function(e){if(!e.target.closest('#setsub,#setmi'))close()});
 })();
 </script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script><script id="hguard">(function(){
