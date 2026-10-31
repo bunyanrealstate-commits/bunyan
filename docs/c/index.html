@@ -1661,5 +1661,45 @@ var h0=render;render=function(){h0.apply(this,arguments);try{if(!AUTH||S.tab!=='
 try{if(AUTH)render()}catch(e){}
 })();
 </script>
+
+<style id="lgxcss">
+.ump.lgx{min-width:250px;max-width:86vw}
+.ump.lgx input{width:100%;box-sizing:border-box;margin:2px 0 6px;padding:9px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font-size:14px}
+.lgl2{max-height:46vh;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.ump.lgx .lgl2 button{display:flex!important;justify-content:space-between;align-items:center;gap:8px;text-align:start!important}
+.ump.lgx .lgl2 button small{opacity:.55;font-size:11px;white-space:nowrap}
+.ump.lgx .lgl2 button.cur{background:rgba(20,184,166,.15)!important;font-weight:700}
+.ump.lgx .natb{border:1px dashed var(--bd)!important;margin-bottom:4px;text-align:start!important}
+.nat-l{max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:2px;margin-top:8px}
+.nat-l button{text-align:start;display:flex;justify-content:space-between;gap:8px}
+</style>
+<script>
+(function(){
+var RAW="ml|മലയാളം|Malayalam|المالايالامية|0,tl|Tagalog|Tagalog|التاغالوغية|0,bn|বাংলা|Bengali|البنغالية|0,fa|فارسی|Persian|الفارسية|1,ta|தமிழ்|Tamil|التاميلية|0,te|తెలుగు|Telugu|التيلوغوية|0,kn|ಕನ್ನಡ|Kannada|الكانادا|0,mr|मराठी|Marathi|الماراثية|0,gu|ગુજરાતી|Gujarati|الغوجاراتية|0,pa|ਪੰਜਾਬੀ|Punjabi|البنجابية|0,ne|नेपाली|Nepali|النيبالية|0,si|සිංහල|Sinhala|السنهالية|0,ps|پښتو|Pashto|البشتوية|1,ku|کوردی|Kurdish|الكردية|1,sd|سنڌي|Sindhi|السندية|1,he|עברית|Hebrew|العبرية|1,tr|Türkçe|Turkish|التركية|0,ru|Русский|Russian|الروسية|0,uk|Українська|Ukrainian|الأوكرانية|0,fr|Français|French|الفرنسية|0,es|Español|Spanish|الإسبانية|0,pt|Português|Portuguese|البرتغالية|0,de|Deutsch|German|الألمانية|0,it|Italiano|Italian|الإيطالية|0,nl|Nederlands|Dutch|الهولندية|0,pl|Polski|Polish|البولندية|0,ro|Română|Romanian|الرومانية|0,el|Ελληνικά|Greek|اليونانية|0,zh|中文|Chinese|الصينية|0,ja|日本語|Japanese|اليابانية|0,ko|한국어|Korean|الكورية|0,id|Bahasa Indonesia|Indonesian|الإندونيسية|0,ms|Bahasa Melayu|Malay|الملايو|0,th|ไทย|Thai|التايلاندية|0,vi|Tiếng Việt|Vietnamese|الفيتنامية|0,sw|Kiswahili|Swahili|السواحيلية|0,am|አማርኛ|Amharic|الأمهرية|0,so|Soomaali|Somali|الصومالية|0,ha|Hausa|Hausa|الهوسا|0,yo|Yorùbá|Yoruba|اليوروبا|0,my|မြန်မာ|Burmese|البورمية|0,km|ខ្មែរ|Khmer|الخميرية|0,uz|Oʻzbekcha|Uzbek|الأوزبكية|0,az|Azərbaycan|Azerbaijani|الأذرية|0,sv|Svenska|Swedish|السويدية|0,ti|ትግርኛ|Tigrinya|التغرينية|0";
+var FULL={ar:1,en:1,hi:1,ur:1},META={ar:['العربية','Arabic','العربية'],en:['English','English','الإنجليزية'],hi:['हिन्दी','Hindi','الهندية'],ur:['اردو','Urdu','الأردية']};
+RAW.split(',').forEach(function(r){var a=r.split('|');LGS[a[0]]={n:a[1],s:a[0].toUpperCase(),d:a[4]==='1'?'rtl':'ltr',i:0};META[a[0]]=[a[1],a[2],a[3]]});
+var NAT="AE|الإمارات|Emirati|971|ar,EG|مصر|Egyptian|20|ar,SA|السعودية|Saudi|966|ar,JO|الأردن|Jordanian|962|ar,SY|سوريا|Syrian|963|ar,LB|لبنان|Lebanese|961|ar,PS|فلسطين|Palestinian|970|ar,IQ|العراق|Iraqi|964|ar,YE|اليمن|Yemeni|967|ar,SD|السودان|Sudanese|249|ar,MA|المغرب|Moroccan|212|ar,DZ|الجزائر|Algerian|213|ar,TN|تونس|Tunisian|216|ar,KW|الكويت|Kuwaiti|965|ar,QA|قطر|Qatari|974|ar,BH|البحرين|Bahraini|973|ar,OM|عُمان|Omani|968|ar,IN|الهند|Indian|91|hi,PK|باكستان|Pakistani|92|ur,BD|بنغلاديش|Bangladeshi|880|bn,LK|سريلانكا|Sri Lankan|94|si,NP|نيبال|Nepali|977|ne,PH|الفلبين|Filipino|63|tl,ID|إندونيسيا|Indonesian|62|id,MY|ماليزيا|Malaysian|60|ms,TH|تايلاند|Thai|66|th,VN|فيتنام|Vietnamese|84|vi,CN|الصين|Chinese|86|zh,JP|اليابان|Japanese|81|ja,KR|كوريا|Korean|82|ko,MM|ميانمار|Burmese|95|my,KH|كمبوديا|Cambodian|855|km,IR|إيران|Iranian|98|fa,AF|أفغانستان|Afghan|93|ps,TR|تركيا|Turkish|90|tr,RU|روسيا|Russian|7|ru,UA|أوكرانيا|Ukrainian|380|uk,UZ|أوزبكستان|Uzbek|998|uz,AZ|أذربيجان|Azerbaijani|994|az,GB|بريطانيا|British|44|en,US|أمريكا|American|1|en,FR|فرنسا|French|33|fr,DE|ألمانيا|German|49|de,ES|إسبانيا|Spanish|34|es,IT|إيطاليا|Italian|39|it,PT|البرتغال|Portuguese|351|pt,NL|هولندا|Dutch|31|nl,PL|بولندا|Polish|48|pl,RO|رومانيا|Romanian|40|ro,GR|اليونان|Greek|30|el,SE|السويد|Swedish|46|sv,ET|إثيوبيا|Ethiopian|251|am,KE|كينيا|Kenyan|254|sw,SO|الصومال|Somali|252|so,NG|نيجيريا|Nigerian|234|ha,GH|غانا|Ghanaian|233|en,UG|أوغندا|Ugandan|256|en".split(',').map(function(r){var a=r.split('|');return{c:a[0],ar:a[1],en:a[2],dial:a[3],l:a[4]}});
+var NK='bny_nat';function gnat(){try{return localStorage.getItem(NK)||''}catch(e){return ''}}
+function nm(l){var m=META[l]||[l,l,l];return m[0]}
+function sx(l){var m=META[l]||['','',''];return (nm(l)+' '+m[1]+' '+m[2]).toLowerCase()}
+function ar(){return LANG==='ar'}
+function build(){var u=document.querySelector('#lgm .ump');if(!u||u.dataset.x)return;u.dataset.x='1';u.classList.add('lgx');
+ u.innerHTML='<button class="natb" id="natb" onclick="natOpen()"></button><input id="lgq" type="search" autocomplete="off"><div class="lgl2" id="lgl2"></div>';
+ var q=document.getElementById('lgq');q.oninput=fill;q.onclick=function(e){e.stopPropagation()};u.onclick=function(e){e.stopPropagation()};fill();natLbl()}
+function natLbl(){var b=document.getElementById('natb'),q=document.getElementById('lgq');if(!b)return;var c=gnat(),n=NAT.filter(function(x){return x.c===c})[0];b.textContent='🌍 '+(ar()?'الجنسية: ':'Nationality: ')+(n?(ar()?n.ar:n.en):(ar()?'اختر':'choose'));if(q)q.placeholder=ar()?'🔎 ابحث عن لغة (50 لغة)':'🔎 Search a language (50)'}
+function fill(){var q=((document.getElementById('lgq')||{}).value||'').trim().toLowerCase(),L=document.getElementById('lgl2');if(!L)return;
+ L.innerHTML=Object.keys(LGS).filter(function(k){return !q||sx(k).indexOf(q)>-1}).map(function(k){return '<button data-l="'+k+'" class="'+(k===LANG?'cur':'')+'"><span>'+nm(k)+'</span><small>'+(FULL[k]?'':(ar()?'واجهة إنجليزية':'EN UI'))+'</small></button>'}).join('')||'<div class="mu" style="padding:8px">—</div>';
+ L.querySelectorAll('button').forEach(function(b){b.onclick=function(e){e.stopPropagation();setLang(b.dataset.l);fill();natLbl()}})}
+window.natOpen=function(){var d=document.getElementById('natx');if(d)d.remove();d=document.createElement('div');d.id='natx';d.className='ov';
+ d.innerHTML='<div class="dlg"><button class="xcl" onclick="document.getElementById(\'natx\').remove()">✕</button><h2>🌍 '+(ar()?'اختر جنسيتك':'Choose your nationality')+'</h2><div class="mu">'+(ar()?'بتختار اللغة المناسبة وكود الدولة لأرقام الواتساب تلقائياً':'Sets a suggested language and the default country code for WhatsApp numbers')+'</div><input id="natq" type="search" placeholder="'+(ar()?'🔎 ابحث':'🔎 Search')+'" style="width:100%;box-sizing:border-box;margin-top:8px"><div class="nat-l" id="natl"></div></div>';
+ document.body.appendChild(d);var q=d.querySelector('#natq');function f(){var s=q.value.trim().toLowerCase();d.querySelector('#natl').innerHTML=NAT.filter(function(x){return !s||(x.ar+' '+x.en+' '+x.dial).toLowerCase().indexOf(s)>-1}).map(function(x){return '<button data-c="'+x.c+'"><span>'+(ar()?x.ar:x.en)+'</span><small>+'+x.dial+'</small></button>'}).join('')}
+ q.oninput=f;f();d.querySelector('#natl').onclick=function(e){var b=e.target.closest('button');if(!b)return;var n=NAT.filter(function(x){return x.c===b.dataset.c})[0];try{localStorage.setItem(NK,n.c)}catch(x){}d.remove();if(n.l&&LGS[n.l]&&n.l!==LANG)setLang(n.l);natLbl();fill();try{toast((ar()?'تم: ':'Set: ')+(ar()?n.ar:n.en))}catch(x){}}};
+var wo=window.open;window.open=function(u){try{if(typeof u==='string'){var m=u.match(/^(https:\/\/wa\.me\/)(\d+)(.*)$/),c=gnat(),n=NAT.filter(function(x){return x.c===c})[0];if(m&&n&&/^0\d{6,11}$/.test(m[2])){arguments[0]=m[1]+n.dial+m[2].slice(1)+m[3]}}}catch(e){}return wo.apply(this,arguments)};
+var e0=ensureLang;ensureLang=function(){e0.apply(this,arguments);try{build()}catch(e){}};
+var s0=setLang;setLang=function(l){s0.apply(this,arguments);try{natLbl();fill()}catch(e){}};
+try{ensureLang()}catch(e){}
+if(!gnat()&&AUTH){}
+})();
+</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
