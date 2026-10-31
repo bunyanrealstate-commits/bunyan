@@ -503,11 +503,11 @@ function ldBackup(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.
 const bkAge=()=>{try{const d=localStorage.getItem('bunyan_bk');return d?Math.floor((today()-pd(d))/864e5):null}catch(e){return null}};
 setTimeout(()=>{if(AUTH&&S.units.length&&(bkAge()==null||bkAge()>=7))toast('⚠️ أنشئ نسخة احتياطية من تبويب النسخ الاحتياطي')},6000);
 const mvO=ot=>{const od=iso(new Date(ot)),t=today();let c=0;
- SU().forEach(u=>{const f=sh(u);u.inst.forEach(i=>{if(i.p&&(i.at||0)>ot)c-=i.a*f});if(u.fp&&(u.fat||0)>ot)c-=(u.furn||0)*f;
+ SU().forEach(u=>{const f=1;u.inst.forEach(i=>{if(i.p&&(i.at||0)>ot)c-=i.a*f});if(u.fp&&(u.fat||0)>ot)c-=(u.furn||0)*f;
   u.leases.forEach(L=>{L.rcv.forEach(i=>{if(((L.rat||{})[i]||0)>ot)c+=((L.rav||{})[i]??la(L,i))*f});if(L.penp&&(L.pat||0)>ot)c+=(L.pen||0)*f;if(L.adv&&(L.advat||0)>ot)c+=L.adv*f;(L.pp||[]).forEach(x=>{if((x.at||0)>ot)c+=(+x.a||0)*f});
    if(L.icost)for(let i=0;i<L.months;i++){const d=payD(L,i);if(d<=t&&iso(d)>od)c-=L.icost*lf(L,i)*f}
    if(L.rme&&L.router&&pd(L.start)<=t&&L.start>od)c-=L.router*f})});
- SE().forEach(x=>{const un=x.u&&U(x.u),f=un?sh(un):shg(x.g);for(let i=0;i<(x.n||1);i++){const d=addM(pd(x.d),i);if(d<=t&&iso(d)>od)c-=x.a*f}});
+ SE().forEach(x=>{const f=1;for(let i=0;i<(x.n||1);i++){const d=addM(pd(x.d),i);if(d<=t&&iso(d)>od)c-=x.a*f}});
  if(WS==='all'||WS==='-')(S.dep||[]).forEach(x=>{if(x.mode==='chq')return;const s=x.k==='t'?1:-1,a=+x.a||0;if((x.at||0)>ot)c+=s*a;if(x.r&&(x.rat||0)>ot)c-=s*a});
  (S.adj||[]).forEach(a=>{if(a.at>ot&&(WS==='all'||(a.g||'')===(WS==='-'?'':WS)))c+=a.a});return c};
 const cashBase=()=>{const gc=S.gc||{};return WS==='all'?(S.cash||0)+Object.values(gc).reduce((s,x)=>s+x,0):(WS==='-'?(S.cash||0):(gc[WS]||0))};
