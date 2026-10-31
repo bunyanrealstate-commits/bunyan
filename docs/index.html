@@ -1646,5 +1646,36 @@ var W=function(n){var f;try{f=eval(n)}catch(e){return}if(typeof f!=='function')r
 var wm=new WeakMap();['ua','occ'].forEach(function(n){var f;try{f=eval(n)}catch(e){return}var c=new WeakMap();var g=function(u){if(u&&typeof u==='object'){if(c.has(u))return c.get(u);var v=f.apply(this,arguments);c.set(u,v);if(!M.__w){M.__w=1;setTimeout(function(){c=new WeakMap();M.__w=0},0)}return v}return f.apply(this,arguments)};try{eval(n+'=g')}catch(e){}});
 var r0=render;render=function(){M={};return r0.apply(this,arguments)}})();
 </script>
+
+<style id="pvcss">
+.bq{filter:blur(7px)!important;user-select:none!important;-webkit-user-select:none!important;pointer-events:none!important}
+body.pv input[type=number],body.pv #modal input[type=date]{filter:blur(6px)}
+#pvb{display:inline-flex;align-items:center;justify-content:center;border:1.5px solid var(--bd,#cbd5e1);background:transparent;color:inherit;border-radius:999px;width:34px;height:34px;padding:0;font-size:16px;cursor:pointer;margin-inline-start:4px}
+body.pv #pvb{background:rgba(229,72,77,.12);border-color:#e5484d}
+.pvlock{padding:28px 18px;text-align:center}.pvlock b{display:block;font-size:18px;margin:6px 0}
+</style>
+<script>
+(function(){var KEY='bny_pv',on=false,busy=false,raf=0;
+try{on=localStorage.getItem(KEY)==='1'}catch(e){}
+var NUM=/^[\s\-+−−,.\d%٠-٩٫٬\/]+$/,DATE=/\d{4}-\d{2}-\d{2}|\d{1,2}:\d{2}/,TOK=/[+\-−]?(?:\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d{4,}(?:\.\d+)?|\d+(?:\.\d+)?%)/g;
+function skip(n){var e=n.parentElement;return !e||e.closest('.bq,script,style,textarea,#pvb,#syq,#clk,#bio,.nav')}
+function scan(root){if(!on||!root)return;busy=true;try{var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),list=[],n;while(n=w.nextNode())list.push(n);
+ list.forEach(function(n){if(skip(n))return;var s=n.nodeValue;if(!/\d/.test(s))return;var p=n.parentElement;
+  if(NUM.test(s)&&!DATE.test(s)&&p.childNodes.length===1){p.classList.add('bq');return}
+  if(DATE.test(s)&&NUM.test(s))return;
+  if(!TOK.test(s)){TOK.lastIndex=0;return}TOK.lastIndex=0;
+  var f=document.createDocumentFragment(),last=0,m;while(m=TOK.exec(s)){var idx=m.index;if(DATE.test(s.slice(Math.max(0,idx-5),idx+m[0].length+6)))continue;f.appendChild(document.createTextNode(s.slice(last,idx)));var sp=document.createElement('span');sp.className='bq';sp.textContent=m[0];f.appendChild(sp);last=idx+m[0].length}
+  TOK.lastIndex=0;if(last){f.appendChild(document.createTextNode(s.slice(last)));p.replaceChild(f,n)}})}catch(e){}busy=false}
+function all(){['app','ntb','modal','login'].forEach(function(id){scan(document.getElementById(id))})}
+function sched(){if(!on||busy||raf)return;raf=requestAnimationFrame(function(){raf=0;all()})}
+new MutationObserver(function(){sched()}).observe(document.body,{childList:true,subtree:true,characterData:true});
+function paint(){document.body.classList.toggle('pv',on);var b=document.getElementById('pvb');if(b){b.textContent=on?'🙈':'👁';b.title=on?'وضع الخصوصية مفعّل — اضغط لإظهار الأرقام':'إخفاء الأرقام والحسابات الخاصة'}}
+function set(v){on=v;try{v?localStorage.setItem(KEY,'1'):localStorage.removeItem(KEY)}catch(e){}paint();render()}
+window.pvToggle=async function(){if(!on){set(true);return}var B=window.bnyBio;if(B&&B.P&&B.P()){var ok=await B.ask('إظهار الأرقام');if(!ok)return}set(false)};
+function mk(){if(document.getElementById('pvb'))return;var a=document.getElementById('syq')||document.querySelector('.hd>span');if(!a)return;var b=document.createElement('button');b.id='pvb';b.type='button';b.onclick=pvToggle;(a.id==='syq'?a.parentNode:a).insertBefore(b,a.id==='syq'?a:a.firstChild);paint()}
+var r0=render;render=function(){var hide=on&&AUTH&&S&&S.tab==='ac';if(hide){var keep=S.tab;r0.apply(this,arguments);try{document.getElementById('app').innerHTML='<div class="card pvlock"><div style="font-size:34px">🔒</div><b>الحسابات الخاصة مخفية</b><span class="mu">وضع الخصوصية مفعّل. اضغط 🙈 في الأعلى لإظهارها.</span></div>'}catch(e){}}else r0.apply(this,arguments);try{mk();paint();all()}catch(e){}};
+setInterval(function(){try{mk()}catch(e){}},1500);paint();try{if(AUTH)render()}catch(e){}
+})();
+</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
