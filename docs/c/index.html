@@ -448,9 +448,14 @@ function mTxt(a,b){if(!a||!b||b<=a)return '';let n=0;while(n<600&&addM(a,n+1)<=b
 function mBtw(a,b){if(b<=a)return 0;let n=0;while(n<600&&addM(a,n+1)<=b)n++;const x=addM(a,n),y=addM(a,n+1),r=(b-x)/864e5,dm=Math.round((y-x)/864e5)||30;return n+(r>0.5?Math.round(r)/dm:0)}
 function winU(u){const MS=2629800000,s=pd(u.start),ce=addM(s,u.cm||12);let le=null;(u.leases||[]).forEach(L=>{let e=lend(L);if(L.exit&&pd(L.exit)<e)e=pd(L.exit);if(!le||e>le)le=e});if(!le||le<=s)return null;const e=le<ce?le:ce,mW=mBtw(s,e);let oc=0;(u.leases||[]).forEach(L=>{let a=pd(L.start),b=lend(L);if(L.exit&&pd(L.exit)<b)b=pd(L.exit);if(a<s)a=s;if(b>e)b=e;if(b>a)oc+=mBtw(a,b)});return{s,e,mW,oc:Math.min(oc,mW),occ:mW?Math.min(1,oc/mW):0}}
 function cWin(u,a,w){const f=sh(u),sv=(+u.salv||0)*f,ce=addM(pd(u.start),u.cm||12);return (a.cost+sv)*w.mW/(u.cm||1)-(w.e>=ce?sv:0)}
-function annW(){const t=today();let p=0,mW=0,oc=0,e0=null,s0=null;SU().forEach(u=>{if(addM(pd(u.start),u.cm)<=t)return;const w=winU(u);if(!w)return;const a=ua(u);p+=a.inc-cWin(u,a,w);mW+=w.mW;oc+=w.oc;if(!e0||w.e>e0)e0=w.e;if(!s0||w.s<s0)s0=w.s});
+function projU(u){const f=sh(u),s=pd(u.start),cm=u.cm||12,ce=addM(s,cm),mc=((u.total||isumOf(u))+(+u.furn||0))/cm,dc=mc/30,D=864e5;let months=0,F=0,le=null,iv=[];
+ (u.leases||[]).forEach(L=>{let a=pd(L.start),b=lend(L);if(L.exit&&pd(L.exit)<b)b=pd(L.exit);if(b<=a)return;months+=L.exit?mBtw(a,b):lm(L);if(a<s)F+=Math.round((Math.min(+s,+b)-a)/D);if(!le||b>le)le=b;const x=a<s?s:a,y=b>ce?ce:b;if(y>x)iv.push([+x,+y])});
+ if(!le)return null;const e=le<ce?le:ce;iv.sort((p,q)=>p[0]-q[0]);let cov=0,cur=null;iv.forEach(([x,y])=>{if(!cur||x>cur[1]){if(cur)cov+=cur[1]-cur[0];cur=[x,y]}else if(y>cur[1])cur[1]=y});if(cur)cov+=cur[1]-cur[0];
+ const gap=Math.max(0,Math.round((e-s)/D-cov/D)),net=F-gap,end=le>=ce;let cost=mc*months,adj=0;if(net<0)adj=-net*dc;else if(end)adj=-net*dc;cost+=adj;const sv=end?(+u.salv||0):0;cost-=sv;
+ const inc=ua(u).inc/(f||1);return{mc,months,F,gap,adj,sv,inc:inc*f,cost:cost*f,p:(inc-cost)*f,s,e,end}}
+function annW(){const t=today();let mo=0,p=0,mW=0,oc=0,e0=null,s0=null;SU().forEach(u=>{if(addM(pd(u.start),u.cm)<=t)return;const w=winU(u);if(!w)return;const a=ua(u);const P=projU(u);p+=P?P.p:0;if(P)mo+=P.months;mW+=w.mW;oc+=w.oc;if(!e0||w.e>e0)e0=w.e;if(!s0||w.s<s0)s0=w.s});
  let gx=0;if(e0){const tt=today();SE().forEach(x=>{if(x.u)return;const f=shg(x.g);for(let i=0;i<(x.n||1);i++){const d=addM(pd(x.d),i);if(d>=tt&&d<e0)gx+=(+x.a||0)*f}})}
- return{p:p-gx,gx,occ:mW?oc/mW:0,mW,s:s0,e:e0}}
+ return{p:p-gx,gx,occ:mW?oc/mW:0,mW,s:s0,e:e0,mo}}
 function annP(){return annW().p}
 function ledger(){const t=today(),r=[];
  SU().forEach(u=>{const f=sh(u);
@@ -842,7 +847,7 @@ const _pcSplit="</div><div class='card'><h2>💰";
 const payAll=()=>{const h=payCards();return h.slice(0,h.indexOf(_pcSplit)+6)};
 const payRent=()=>{const h=payCards();return h.slice(h.indexOf(_pcSplit)+6)};
 function sumCards(){const ac=accr(),W=annW(),ann=W.p,gx=W.gx,C=(l,v,c,sub)=>`<div class='stat'><span>${l}</span><b class='${cls(c)}'>${v}</b>${sub?`<span>${sub}</span>`:''}</div>`,fd=d=>d?d.toLocaleDateString(LOC(),{day:'numeric',month:'short',year:'numeric'}):'';
- return `<div class='grid'>${C(S.pmode==='me'?'ربحي حتى اليوم':'ربح المجموعة حتى اليوم',$(ac.profit),ac.profit)}${C('الربح المتوقع على مدة العقود',$(ann),ann,W.e?'من استلام الشركة '+fd(W.s)+' حتى آخر عقد '+fd(W.e)+' ('+mTxt(W.s,W.e)+')':'لا توجد عقود مستأجرين')}${C('نسبة الإشغال على العقود',W.mW?Math.round(W.occ*100)+'%':'—',null,W.mW?'شهور مؤجرة '+(Math.round(W.occ*W.mW*10)/10)+' من '+(Math.round(W.mW*10)/10):'')}</div>${gx?`<p class='mu'>بعد خصم مصروفات عامة متوقعة حتى آخر عقد: ${$(gx)}</p>`:''}`}
+ return `<div class='grid'>${C(S.pmode==='me'?'ربحي حتى اليوم':'ربح المجموعة حتى اليوم',$(ac.profit),ac.profit)}${C('الربح المتوقع على مدة العقود',$(ann),ann,W.e?'على '+(Math.round(W.mo*100)/100)+' شهر عقود مستأجرين • حتى '+fd(W.e):'لا توجد عقود مستأجرين')}${C('نسبة الإشغال على العقود',W.mW?Math.round(W.occ*100)+'%':'—',null,W.mW?'شهور مؤجرة '+(Math.round(W.occ*W.mW*10)/10)+' من '+(Math.round(W.mW*10)/10):'')}</div>${(()=>{const r=SU().map(u=>({u,P:projU(u)})).filter(x=>x.P&&addM(pd(x.u.start),x.u.cm)>today()).slice(0,6);if(!r.length)return '';const f=x=>$(Math.round(x));return `<div class='mu' style='margin-top:6px;line-height:1.9'>`+r.map(({u,P})=>{const k=sh(u),rent=P.months?P.inc/k/P.months:0;return `<b>${esc(u.name)}:</b> تكلفة الشهر (${f(u.total||isumOf(u))} شركة + ${f(+u.furn||0)} فرش) ÷ ${u.cm||12} = ${f(P.mc)} • الإيجار ${f(rent)} − ${f(P.mc)} = ${f(rent-P.mc)} × ${Math.round(P.months*100)/100} شهر = ${f((rent-P.mc)*P.months)}`+(P.F?` • أيام مجانية من الشركة: ${P.F}`:'')+(P.gap?` • أيام فاضية: ${P.gap}`:'')+(Math.abs(P.adj)>0.5?(P.adj>0?` • خصم أيام فاضية ${f(P.adj)}`:` • مكسب أيام مجانية ${f(-P.adj)}`):'')+(P.sv?` • استرداد الأثاث ${f(P.sv)}`:'')+(k!==1?` • × حصتي`:'')}).join('<br>')+`</div>`})()}${gx?`<p class='mu'>بعد خصم مصروفات عامة متوقعة حتى آخر عقد: ${$(gx)}</p>`:''}`}
 
 try{const st=document.createElement('style');st.textContent='@media print{#nav,#ntb,#who,#ws,button,select,.noprint{display:none!important}body{background:#fff!important;color:#000!important}.card{box-shadow:none!important;border:1px solid #999!important;break-inside:avoid}}';document.head.appendChild(st)}catch(e){}
 
@@ -1497,7 +1502,7 @@ function kpi(){var t=today(),U=SU(),ac=accr(),costW=0,W=annW(),cost=0,inc=0,act=
  U.forEach(function(u){var a=ua(u),f=sh(u);cost+=a.cost;inc+=a.inc;occN+=a.occ;cm+=u.cm||0;fur+=(+u.furn||0)*f;
   var b=pd(u.start),e=addM(b,u.cm);if(b<=t&&t<e){act++;if(u.leases.some(function(L){return pd(L.start)<=t&&t<(L.exit?pd(L.exit):lend(L))}))occd++}
   u.leases.forEach(function(L){rents.push((L.rent||0)+(L.inet||0))});
-  var w=winU(u),cw=w?cWin(u,a,w):a.cost;costW+=cw;per.push({n:u.name,p:a.inc-cw,i:a.inc,c:cw,o:(w?w.occ:0)})});
+  var w=winU(u),P=projU(u),cw=P?P.cost:a.cost;costW+=cw;per.push({n:u.name,p:a.inc-cw,i:a.inc,c:cw,o:(w?w.occ:0)})});
  var avg=rents.length?rents.reduce(function(a,b){return a+b},0)/rents.length:0;
  U.forEach(function(u){pot+=(u.cm||0)*avg*sh(u)});
  var due=0,got=0;U.forEach(function(u){var f=sh(u);u.leases.forEach(function(L){for(var i=0;i<L.months;i++){if(payD(L,i)<=t){var a=la(L,i)*f;due+=a;if(L.rcv.includes(i))got+=a}}})});
