@@ -2544,7 +2544,7 @@ var mb=document.createElement('button');mb.id='hmb';mb.type='button';mb.textCont
 var pn=document.createElement('div');pn.id='hmp';hd.appendChild(pn);sp.appendChild(mb);
 mb.onclick=function(e){e.stopPropagation();hd.classList.toggle('mopen')};
 pn.addEventListener('click',function(e){var t=e.target.closest('button');if(t&&!t.closest('.umb'))setTimeout(function(){hd.classList.remove('mopen')},150)});
-document.addEventListener('click',function(e){if(!e.target.closest('#hmp,#hmb'))hd.classList.remove('mopen')});
+document.addEventListener('click',function(e){if(!e.target.closest('#hmp,#hmb,.ov,#modal,#natx,#toast'))hd.classList.remove('mopen')});
 function lb(c){if(c.tagName!=='BUTTON')return;var t=(c.textContent||'').trim();if(t.length>3)return;var n=c.getAttribute('title')||(/toggleMode/.test(c.getAttribute('onclick')||'')?'الوضع الليلي / النهاري':'');if(n)c.setAttribute('data-lb',' '+n.split(' — ')[0])}
 var busy=false;function sync(){if(busy)return;busy=true;try{
  if(mq.matches){[].slice.call(sp.children).forEach(function(c){if(!keep[c.id]){pn.appendChild(c);lb(c)}});if(sp.lastElementChild!==mb)sp.appendChild(mb);mb.style.display=pn.children.length?'':'none'}
@@ -2819,7 +2819,7 @@ function fx(){try{var hd=document.querySelector('.hd'),pn=document.getElementByI
  }else{var sg2=document.getElementById('syg'),sq2=document.getElementById('syq');if(sg2&&sq2&&sg2.parentNode===document.getElementById('setsub'))sq2.insertAdjacentElement('afterend',sg2);close();if(mi)mi.remove();if(lg&&sp&&lg.parentNode!==sp)sp.insertBefore(lg,sp.firstChild);var pv=document.getElementById('pvb');if(sy&&pv&&sy.parentNode!==hd)pv.insertAdjacentElement('afterend',sy);if(sub)sub.remove()}}catch(e){}}
 var r0=render;render=function(){var o=r0.apply(this,arguments);fx();return o};(mq.addEventListener?mq.addEventListener('change',function(){setTimeout(fx,0)}):mq.addListener(function(){setTimeout(fx,0)}));setTimeout(fx,0);setTimeout(fx,500);
 var hd=document.querySelector('.hd');if(hd)new MutationObserver(function(){if(!hd.classList.contains('mopen'))close()}).observe(hd,{attributes:true,attributeFilter:['class']});
-document.addEventListener('click',function(e){if(!e.target.closest('#setsub,#setmi'))close()});
+document.addEventListener('click',function(e){if(!e.target.closest('#setsub,#setmi,.ov,#modal,#natx,#toast'))close()});
 })();
 </script>
 <style id="hdx3">
@@ -2860,13 +2860,13 @@ function natClose(){var n=document.getElementById('natx');if(n)n.remove()}
 function wsClose(){var w=document.getElementById('wsub'),b=document.getElementById('wsmi');if(w)w.classList.remove('on');if(b)b.classList.remove('op')}
 function setClose(){var w=document.getElementById('setsub'),b=document.getElementById('setmi');if(w)w.classList.remove('on');if(b)b.classList.remove('op')}
 document.addEventListener('click',function(e){var t=e.target;
- if(t.closest('#natmi,#natb')){lgClose();setClose();wsClose();var hd=document.querySelector('.hd');if(hd)hd.classList.remove('mopen');setTimeout(function(){var x=document.getElementById('natx');if(x&&x.parentNode!==document.body)document.body.appendChild(x)},0)}
- else if(t.closest('#syq,#syg')){lgClose();setClose();wsClose();var hd2=document.querySelector('.hd');if(hd2)hd2.classList.remove('mopen')}
+ if(t.closest('#natmi,#natb')){lgClose();setTimeout(function(){var x=document.getElementById('natx');if(x&&x.parentNode!==document.body)document.body.appendChild(x)},0)}
+ else if(t.closest('#syq,#syg')){lgClose()}
  else if(t.closest('#lgm .umb')){natClose()}
  else if(t.closest('#wsmi')){setClose();lgClose()}
  else if(t.closest('#setmi')){wsClose()}
 },true);
-var n0=window.natOpen;if(n0)window.natOpen=function(){lgClose();setClose();wsClose();var hd=document.querySelector('.hd');if(hd)hd.classList.remove('mopen');var r=n0.apply(this,arguments);var x=document.getElementById('natx');if(x)x.style.zIndex='400';return r};
+var n0=window.natOpen;if(n0)window.natOpen=function(){lgClose();var r=n0.apply(this,arguments);var x=document.getElementById('natx');if(x)x.style.zIndex='400';return r};
 })();
 </script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script><script id="hguard">(function(){
