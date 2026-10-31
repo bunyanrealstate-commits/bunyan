@@ -2860,5 +2860,13 @@ var h1=home;home=function(){var o=h1.apply(this,arguments);try{var r=inc(),c=fun
 return "<div class='card'><h2>📈 إجمالي الدخل — "+esc(wname())+"</h2><div class='grid'>"+c('كل ما قبضته من الإيجارات',r.all,'حصتي منه: '+$(r.mine))+c('قبضته هذا الشهر',r.mon)+c('لسه مستحق من العقود الحالية',r.due)+c('إجمالي العقود (قبضت + مستحق)',r.all+r.due)+"</div></div>"+o}catch(e){return o}};
 })();
 </script>
+<script>
+(function(){
+var m0=mPay;
+window.mPay=function(id,k){var r=m0.apply(this,arguments);try{var L=U(id).leases[k];setTimeout(function(){var d=document.querySelector('.dlg');if(!d||d.querySelector('#pmh'))return;var inp=d.querySelector('input');if(!inp)return;var full=(L.rent||0)+(L.inet||0)||1;var h=document.createElement('div');h.id='pmh';h.style.cssText='margin:8px 0;padding:8px 10px;border-radius:10px;background:rgba(22,163,74,.12);font-weight:700;font-size:14px';inp.insertAdjacentElement('afterend',h);
+function up(){var a=+inp.value||0;if(!a){h.textContent='الإيجار الشهري: '+$(full);return}var mo=a/full,n=Math.floor(mo+1e-9),rm=a-n*full;h.innerHTML='المبلغ '+$(a)+' = <span style="color:#16a34a">'+(Math.round(mo*100)/100)+' شهر</span> (الإيجار الشهري '+$(full)+')'+(n&&rm>0.5?'<br><small>'+n+' شهر كامل + '+$(Math.round(rm))+' من الشهر التالي</small>':'')}
+inp.addEventListener('input',up);inp.addEventListener('change',up);up()},250)}catch(e){}return r};
+})();
+</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
