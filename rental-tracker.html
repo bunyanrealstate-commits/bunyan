@@ -1924,7 +1924,7 @@ function draw(){var f=LN.f,edit=LN.k!=null,h='<div class="dlg ln"><h2>📄 '+(ed
  h+='<h3>جدول الدفعات</h3><div class="hn" id="ln_hint"></div><div id="ln_rows"></div><div id="ln_sum" class="sm"></div>';
  h+='<div class="ab"><button onclick="lnAdd()">+ دفعة</button>'+(LN.canBuild?'<button onclick="lnRebuild()">🔄 إعادة بناء الجدول</button>':'')+'</div>';
  if(!edit){h+='<div class="gr" style="margin-top:8px"><div><label>طريقة دفع الدفعة الأولى</label><select id="ln_pm" onchange="lnF(\'pm0\',this.value)"><option value="cash"'+(f.pm0==='cash'?' selected':'')+'>نقداً</option><option value="bank"'+(f.pm0==='bank'?' selected':'')+'>تحويل بنكي</option><option value="chq"'+(f.pm0==='chq'?' selected':'')+'>شيك</option></select></div></div>'
-  +'<div class="ck"><input type="checkbox" id="ln_fp" '+(LN.firstPaid?'checked':'')+' onchange="lnT(\'fp\',this.checked)"><label for="ln_fp">تم استلام الدفعة الأولى الآن</label></div>'}
+  +'<div class="ck"><input type="checkbox" id="ln_fp" '+(LN.firstPaid?'checked':'')+' onchange="lnT(\'fp\',this.checked)"><label for="ln_fp">تم استلام الدفعة الأولى الآن <small class="mu">(مطلوب: إيجار شهر على الأقل)</small></label></div>'}
  h+='<h3>الشيكات</h3><div class="ck"><input type="checkbox" id="ln_ck" '+(f.chqOn?'checked':'')+' onchange="lnT(\'ck\',this.checked)"><label for="ln_ck">'+(edit?'إعادة كتابة الشيكات من الجدول (يمسح شيكاتي الحالية)':'شيك لكل دفعة قادمة (ضمان لالتزام المستأجر بالدفع، للعلم فقط ولا يغيّر الحسابات)')+'</label></div>';
  h+='<h3>التأمين المسترد</h3><div class="gr"><div><label>نوع التأمين</label><select id="ln_dk" onchange="lnF(\'dk\',this.value)"><option value=""'+(!f.dk?' selected':'')+'>بدون تأمين</option><option value="chq"'+(f.dk==='chq'?' selected':'')+'>شيك ضمان بدون تاريخ</option><option value="cash"'+(f.dk==='cash'?' selected':'')+'>تأمين نقدي</option></select></div></div>'
   +'<div id="ln_dx" class="gr" style="display:'+(f.dk?'':'none')+'"><div><label>مبلغ التأمين (فارغ = إيجار شهر)</label><input id="ln_da" type="number" inputmode="decimal" value="'+esc(f.da)+'" oninput="lnF(\'da\',this.value)"></div></div>';
@@ -1965,6 +1965,7 @@ window.lnSave=function(){var f=LN.f,u=U(LN.uid),edit=LN.k!=null;if(!u){lnClose()
  if(!(+f.cmo>0)){toast(L2('اكتب مدة العقد بالشهور','Enter the contract length in months'));return}
  var rows=LN.rows.slice();if(!rows.length){toast(L2('جدول الدفعات فاضي','The payment schedule is empty'));return}
  for(var i=0;i<rows.length;i++){if(!rows[i].d){toast(L2('الدفعة '+(i+1)+' بدون تاريخ','Payment '+(i+1)+' has no date'));return}if(!(+rows[i].a>0)){toast(L2('الدفعة '+(i+1)+' بدون مبلغ','Payment '+(i+1)+' has no amount'));return}}
+ if(!edit){var fr=rows.filter(function(r){return r.first})[0]||rows[0];if(!LN.firstPaid){toast(L2('العقد لا يتم إلا بعد استلام إيجار شهر على الأقل — علّم "تم استلام الدفعة الأولى الآن"','The contract requires at least one month rent paid'));return}if((+fr.a||0)+0.5<(+f.rent||0)){toast(L2('الدفعة الأولى لازم تكون إيجار شهر على الأقل ('+$(+f.rent)+')','First payment must be at least one month rent'));return}}
  rows.forEach(function(r,i){r._i=i;r.a=+r.a});
  rows.sort(function(a,b){return a.d<b.d?-1:(a.d>b.d?1:a._i-b._i)});
  var L=edit?u.leases[LN.k]:{id:uid(),rcv:[],rat:{},rav:{},pp:[]};
