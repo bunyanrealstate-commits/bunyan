@@ -315,6 +315,8 @@ label{margin:8px 0 4px!important;font-size:12.5px!important}
 </main>
 <div id="modal"></div><div id="login"></div><div id="toast"></div>
 <script>/* توفير البطارية: المؤقتات القصيرة تتوقف والتطبيق في الخلفية */(function(){var si=window.setInterval;window.setInterval=function(f,t){if(typeof f!=='function'||!(t<60000))return si.apply(this,arguments);return si.call(window,function(){if(!document.hidden)f()},t)}})()</script>
+<script>/* إعادة رسم أخيرة بعد تحميل كل الإضافات */document.addEventListener('DOMContentLoaded',function(){try{if(typeof AUTH!=='undefined'&&AUTH)render()}catch(e){}});</script>
+
 <script>
 const K='rent_tracker_v2',uid=()=>Math.random().toString(36).slice(2,9);
 var LANG='ar';try{LANG=localStorage.getItem('bny_lang')||'ar'}catch(e){}
