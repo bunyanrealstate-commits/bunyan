@@ -963,7 +963,7 @@ const VC={
   r.onend=()=>{b&&b.classList.remove('rec');this.sr=null;if(fin.trim()){this.go()}};
   try{r.start()}catch(e){this.sr=null}}
 };
-(function(){const nb0=ntBar;ntBar=function(){nb0();try{if(!AUTH)return;if(!document.getElementById('vbtn')){const hd=document.querySelector('.hd>span');if(hd){const b=document.createElement('button');b.id='vbtn';b.title='أوامر صوتية';b.textContent='🎤';b.onclick=function(){VC.open()};hd.insertBefore(b,hd.firstChild)}}}catch(e){}}})();
+(function(){const nb0=ntBar;ntBar=function(){nb0();try{if(!AUTH)return;if(false){const hd=document.querySelector('.hd>span');if(hd){const b=document.createElement('button');b.id='vbtn';b.title='أوامر صوتية';b.textContent='🎤';b.onclick=function(){VC.open()};hd.insertBefore(b,hd.firstChild)}}}catch(e){}}})();
 
 (function(){const nb1=ntBar;ntBar=function(){nb1();try{if(!AUTH)return;const w=gi('who');if(!w||w.querySelector('.um'))return;const adm=!!w.querySelector('[onclick^="adminUsers"]')||(CL==='yes'&&!!ME&&!!ME.isOwner),n=(A&&A.u)||'';
 w.innerHTML=`<div class="um"><button class="umb" onclick="event.stopPropagation();this.parentNode.classList.toggle('open')"><span class="av">${esc(n.slice(0,1).toUpperCase())}</span><span class="nm2">${esc(n)}</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><div class="ump"><div class="who2">تم الدخول باسم: <b>${esc(n)}</b></div><button onclick="mPass()">🔑 تغيير كلمة المرور</button>${adm?'<button onclick="adminUsers()">👥 المستخدمين</button>':''}<button class="dg" onclick="logOut()">⎋ تسجيل خروج</button></div></div>`}catch(e){}};
@@ -1637,7 +1637,7 @@ function st(){var c=cfg();if(!c||!c.token)return{k:'off',t:'مزامنة',d:'غ�
  if(c.dirty)return{k:'pend',t:'قيد الحفظ',d:'تغييرات لم تُرسل بعد'};
  if(c.last&&c.last.charAt(0)==='✓')return{k:'ok',t:'تمت '+c.last.slice(2),d:'آخر مزامنة '+c.last.slice(2)};
  return{k:'pend',t:'مزامنة',d:'متصل'}}
-var ICON='<svg viewBox="0 0 24 24"><path d="M7 18a4.5 4.5 0 01-.6-8.96A6 6 0 0117.7 8.3 4.2 4.2 0 0117 18z"/></svg>';
+var ICON='<svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11V10a4 4 0 014-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 01-4 4H3"/></svg>';
 var SPIN='<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-3-6.7"/><path d="M21 3v6h-6"/></svg>';
 function paint(){var b=document.getElementById('syq');if(!b)return;var s=st();b.className=(s.k==='off'?'':s.k==='spin'?'spin pend':s.k);
  var h=(s.k==='spin'?SPIN:ICON)+'<span class="sd"></span><span>'+s.t+'</span>';if(b.dataset.h!==h){b.innerHTML=h;b.dataset.h=h}
@@ -1649,7 +1649,7 @@ function mk(){var b=document.getElementById('syq');if(!b)return false;
 var r0=render;render=function(){r0.apply(this,arguments);try{mk()}catch(e){}};
 setInterval(function(){try{mk()}catch(e){}},1500);
 var o0=window.syOpen;window.syOpen=function(){o0.apply(this,arguments);try{var d=document.querySelector('#modal .dlg');if(!d)return;var s=st();
- var ban='<div class="sybn '+(s.k==='spin'?'pend':s.k==='off'?'':s.k)+'"><div class="ic">'+(s.k==='ok'?'✓':s.k==='err'?'!':s.k==='off'?'☁️':'⟳')+'</div><div><b>'+s.d+'</b><small>'+(s.k==='off'?'اربط مستودع GitHub الخاص لمزامنة بياناتك بين الأجهزة':s.k==='err'?'تحقق من المفتاح والمستودع والاتصال بالإنترنت':'بياناتك محفوظة في مستودعك الخاص على GitHub')+'</small></div></div>';
+ var ban='<div class="sybn '+(s.k==='spin'?'pend':s.k==='off'?'':s.k)+'"><div class="ic">'+(s.k==='ok'?'✓':s.k==='err'?'!':s.k==='off'?'🔄':'⟳')+'</div><div><b>'+s.d+'</b><small>'+(s.k==='off'?'اربط مستودع GitHub الخاص لمزامنة بياناتك بين الأجهزة':s.k==='err'?'تحقق من المفتاح والمستودع والاتصال بالإنترنت':'بياناتك محفوظة في مستودعك الخاص على GitHub')+'</small></div></div>';
  var h2=d.querySelector('h2');if(h2)h2.insertAdjacentHTML('afterend',ban);
  var p=d.querySelector('p.mu');if(p&&/إعداد المزامنة/.test(p.textContent)){var det=document.createElement('details');det.className='syh';if(s.k==='off')det.open=true;det.innerHTML='<summary>كيف أعدّ المزامنة؟</summary><ol style="margin:8px 0 4px;padding-inline-start:20px;line-height:1.8;font-size:13px"><li>أنشئ مستودعاً <b>خاصاً (Private)</b> على موقع GitHub.</li><li>أنشئ مفتاح <bdi dir="ltr">Fine-grained token</bdi> بصلاحية <bdi dir="ltr">Contents: Read and write</bdi> لهذا المستودع فقط.</li><li>الصق المفتاح هنا مع اسم المستودع.</li><li>كرّر نفس الإعداد على كل جهاز.</li></ol>';p.replaceWith(det)}
  if(s.k!=='off'){var bt=d.querySelector('.bt');if(bt){var big=document.createElement('button');big.className='p sybig';big.textContent='🔄 مزامنة الآن';big.onclick=function(){syNow();toast('جاري المزامنة…');syClose()};bt.parentNode.insertBefore(big,bt);var o=bt.querySelector('button[onclick="syNow()"]');if(o)o.remove()}}
