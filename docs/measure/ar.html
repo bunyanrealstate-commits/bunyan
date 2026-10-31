@@ -1,0 +1,188 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f2b705">
+<title>قياس الأرضية بالكاميرا</title>
+<style>
+:root{--bg:#eef0ee;--card:#fff;--fg:#1d2420;--muted:#5f6a64;--line:#d5dad6;--accent:#f2b705;--ink:#2a2100;--soft:#fff6d6;
+  --font:"Segoe UI",Tahoma,system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root{--bg:#141816;--card:#1d2220;--fg:#e8ece9;--muted:#9aa59f;--line:#2e3532;--accent:#f5c22a;--ink:#221a00;--soft:#2c2710;color-scheme:dark}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:16px;line-height:1.5}
+.page{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px;
+  padding:calc(18px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(30px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+h1{font-size:1.4rem;margin:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
+ol{margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:6px}
+.btn{font:inherit;font-weight:700;border:0;border-radius:12px;padding:15px;cursor:pointer;background:var(--accent);color:var(--ink);width:100%}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--fg);font-weight:500}
+.note{font-size:.88rem;color:var(--muted);margin:0}
+.err{background:#fde8e4;color:#7a2416;border-radius:12px;padding:12px;font-size:.92rem}
+.hero{background:var(--soft);border-radius:14px;padding:18px;text-align:center}
+.hero b{display:block;font-size:2.6rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.sides{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:11px}
+.item b{font-variant-numeric:tabular-nums}
+input{font:inherit;width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+/* AR overlay */
+#ov{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;color:#fff;font-family:var(--font)}
+#ov .top{margin:calc(12px + env(safe-area-inset-top,0px)) 12px 0;background:rgba(0,0,0,.6);border-radius:14px;padding:10px 14px;text-align:center}
+#ov .top b{font-size:2rem;display:block;font-variant-numeric:tabular-nums}
+#ov .msg{font-size:.92rem}
+#ov .bar{display:flex;gap:10px;margin:0 12px calc(16px + env(safe-area-inset-bottom,0px));pointer-events:auto}
+#ov .bar button{font:inherit;font-weight:700;border:0;border-radius:14px;padding:16px 10px;flex:1;background:rgba(0,0,0,.6);color:#fff}
+#ov .bar #add{flex:2;background:#f2b705;color:#2a2100;font-size:1.1rem}
+#ov .cross{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
+</style></head><body>
+
+<div class="page" id="home">
+  <h1>قياس الأرضية بالكاميرا</h1>
+  <div class="card">
+    <strong>الطريقة</strong>
+    <ol>
+      <li>اضغط «ابدأ القياس» واسمح بالكاميرا.</li>
+      <li>وجّه الجوال للأرض وحرّكه ببطء يمين ويسار حتى تظهر الدائرة الصفراء على الأرض.</li>
+      <li>امشِ لأول زاوية في الغرفة، ضع الدائرة على الزاوية بالضبط واضغط «نقطة».</li>
+      <li>كرر في كل زاوية بالترتيب (4 زوايا للغرفة العادية).</li>
+      <li>اضغط «انتهيت» لتظهر المساحة.</li>
+    </ol>
+    <p class="note">لو الزاوية عليها أثاث، ضع النقطة على الأرض أقرب ما يمكن لخط الجدار.</p>
+  </div>
+  <div class="err" id="err" hidden></div>
+  <button class="btn" id="start" type="button">ابدأ القياس</button>
+
+  <div class="card" id="result" hidden>
+    <div class="hero"><b id="rArea">—</b><span class="sides">مساحة الأرضية م²</span></div>
+    <div class="sides" id="rSides"></div>
+    <input id="rName" type="text" placeholder="اسم الغرفة (مثال: غرفة 3)">
+    <button class="btn" id="rSave" type="button">حفظ</button>
+  </div>
+
+  <div class="card">
+    <strong>الغرف المقاسة</strong>
+    <div class="list" id="list"></div>
+  </div>
+</div>
+
+<div id="ov" hidden>
+  <div class="top"><b id="oArea">0.00 م²</b><span class="msg" id="oMsg">حرّك الجوال ببطء فوق الأرض…</span></div>
+  <div class="cross"></div>
+  <div class="bar">
+    <button id="undo" type="button">تراجع</button>
+    <button id="add" type="button">نقطة</button>
+    <button id="done" type="button">انتهيت</button>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+const $=id=>document.getElementById(id);
+const f2=n=>Number(n).toFixed(2);
+const KEY='ar-floor-v1';
+let saved=[];try{saved=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){}
+let last=null;
+
+function showErr(t){$('err').textContent=t;$('err').hidden=false}
+function renderList(){
+  const el=$('list');el.innerHTML='';
+  if(!saved.length){el.innerHTML='<p class="note">لم تحفظ أي غرفة بعد.</p>';return}
+  let tot=0;
+  saved.forEach((r,i)=>{tot+=r.A;const d=document.createElement('div');d.className='item';
+    d.innerHTML='<span></span><b>'+f2(r.A)+' م²</b>';d.querySelector('span').textContent=r.name;
+    d.onclick=()=>{if(d.dataset.c){saved.splice(i,1);store();renderList()}else{d.dataset.c=1;d.querySelector('b').textContent='اضغط مرة ثانية للحذف'}};
+    el.appendChild(d)});
+  if(saved.length>1){const d=document.createElement('div');d.className='item';d.innerHTML='<strong>الإجمالي</strong><b>'+f2(tot)+' م²</b>';el.appendChild(d)}
+}
+function store(){try{localStorage.setItem(KEY,JSON.stringify(saved))}catch(e){}}
+renderList();
+
+// geometry
+function polyArea(p){let a=0;for(let i=0;i<p.length;i++){const q=p[i],r=p[(i+1)%p.length];a+=q.x*r.z-r.x*q.z}return Math.abs(a)/2}
+const flatDist=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
+
+async function supported(){
+  if(!window.isSecureContext)return 'افتح الصفحة من رابط https.';
+  if(!navigator.xr)return 'المتصفح لا يدعم الواقع المعزز. افتح الصفحة في Google Chrome.';
+  try{if(!(await navigator.xr.isSessionSupported('immersive-ar')))return 'جوالك لا يدعم الواقع المعزز، أو تطبيق «خدمات Google Play للواقع المعزز» (Google Play Services for AR) غير مثبت. ثبّته من متجر Play وحاول مرة ثانية.'}
+  catch(e){return 'تعذر التحقق من دعم الواقع المعزز.'}
+  return null;
+}
+supported().then(e=>{if(e){showErr(e)}});
+
+$('start').onclick=async()=>{
+  const e=await supported();if(e){showErr(e);return}
+  $('err').hidden=true;
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setPixelRatio(window.devicePixelRatio);renderer.setSize(innerWidth,innerHeight);renderer.xr.enabled=true;
+  document.body.appendChild(renderer.domElement);
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,0.01,40);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x444444,2));
+
+  const reticle=new THREE.Mesh(new THREE.RingGeometry(0.06,0.08,32).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xf2b705}));
+  const dot=new THREE.Mesh(new THREE.CircleGeometry(0.012,16).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffffff}));
+  reticle.add(dot);reticle.matrixAutoUpdate=false;reticle.visible=false;scene.add(reticle);
+
+  const pts=[],marks=[];
+  const lineMat=new THREE.LineBasicMaterial({color:0xf2b705});
+  const lineGeo=new THREE.BufferGeometry();const line=new THREE.Line(lineGeo,lineMat);scene.add(line);
+  const pin=()=>new THREE.Mesh(new THREE.SphereGeometry(0.025,16,12),new THREE.MeshBasicMaterial({color:0xf2b705}));
+  const cur=new THREE.Vector3();let hasHit=false;
+
+  let session;
+  try{
+    session=await navigator.xr.requestSession('immersive-ar',{requiredFeatures:['hit-test'],optionalFeatures:['dom-overlay'],domOverlay:{root:$('ov')}});
+  }catch(err){showErr('لم يبدأ الواقع المعزز: تأكد أنك سمحت بالكاميرا، ثم حاول مرة ثانية.');renderer.domElement.remove();return}
+  $('ov').hidden=false;
+  renderer.xr.setReferenceSpaceType('local');
+  await renderer.xr.setSession(session);
+  const viewer=await session.requestReferenceSpace('viewer');
+  const hitSource=await session.requestHitTestSource({space:viewer});
+
+  // stop taps on overlay buttons from also counting as AR "select"
+  $('ov').addEventListener('beforexrselect',ev=>ev.preventDefault());
+
+  function redraw(){
+    const arr=pts.slice();if(hasHit&&pts.length)arr.push(cur.clone());
+    if(pts.length>=2)arr.push(pts[0].clone());
+    lineGeo.setFromPoints(arr.length?arr:[new THREE.Vector3()]);
+  }
+  function hud(){
+    let msg;
+    if(!hasHit)msg='حرّك الجوال ببطء فوق الأرض حتى تظهر الدائرة';
+    else if(!pts.length)msg='ضع الدائرة على أول زاوية واضغط «نقطة»';
+    else msg='آخر ضلع: '+f2(flatDist(pts[pts.length-1],cur))+' م · النقاط: '+pts.length;
+    $('oMsg').textContent=msg;
+    const live=hasHit&&pts.length>=2?polyArea([...pts,cur]):pts.length>=3?polyArea(pts):0;
+    $('oArea').textContent=f2(live)+' م²';
+  }
+  $('add').onclick=()=>{if(!hasHit)return;const p=cur.clone();pts.push(p);const m=pin();m.position.copy(p);scene.add(m);marks.push(m);redraw();hud();if(navigator.vibrate)navigator.vibrate(30)};
+  $('undo').onclick=()=>{if(!pts.length)return;pts.pop();scene.remove(marks.pop());redraw();hud()};
+  $('done').onclick=()=>{
+    if(pts.length<3){$('oMsg').textContent='تحتاج 3 زوايا على الأقل';return}
+    const sides=pts.map((p,i)=>flatDist(p,pts[(i+1)%pts.length]));
+    last={A:polyArea(pts),sides};session.end();
+  };
+  session.addEventListener('end',()=>{
+    renderer.setAnimationLoop(null);renderer.domElement.remove();$('ov').hidden=true;
+    if(last){$('result').hidden=false;$('rArea').textContent=f2(last.A)+' م²';
+      $('rSides').textContent='الأضلاع: '+last.sides.map(s=>f2(s)+' م').join(' · ');
+      $('result').scrollIntoView({behavior:'smooth'})}
+  });
+
+  renderer.setAnimationLoop((t,frame)=>{
+    if(!frame)return;
+    const ref=renderer.xr.getReferenceSpace();
+    const hits=frame.getHitTestResults(hitSource);
+    if(hits.length){const pose=hits[0].getPose(ref);reticle.visible=true;reticle.matrix.fromArray(pose.transform.matrix);
+      cur.setFromMatrixPosition(reticle.matrix);hasHit=true}
+    else{reticle.visible=false;hasHit=false}
+    redraw();hud();
+    renderer.render(scene,camera);
+  });
+};
+
+$('rSave').onclick=()=>{if(!last)return;saved.unshift({name:$('rName').value.trim()||('غرفة '+(saved.length+1)),A:last.A});store();renderList();$('result').hidden=true;$('rName').value='';last=null};
+</script>
+</body></html>
