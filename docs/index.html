@@ -2992,17 +2992,41 @@ html body #nav{position:sticky!important;top:var(--hdh,46px)!important;z-index:2
  html body .umb{height:32px!important;padding:0 6px 0 4px!important}
  html body #nav{background:var(--card)!important}
  html body .hd>h1,html body .hd .brand{flex:none!important}
- html body .hd>span{flex:1 1 auto!important;overflow-x:auto!important;overflow-y:visible;scrollbar-width:none;justify-content:flex-start!important;padding:2px 0}
- html body .hd>span::-webkit-scrollbar{display:none}
- html body .hd>span>*{flex:none!important;min-width:auto!important}
- html body .hd #ws{width:auto!important;max-width:140px!important;min-width:90px!important}
- html body .hd .ump{position:fixed!important;top:calc(var(--hdh,44px) + 4px)!important;inset-inline-end:8px!important;inset-inline-start:auto!important;max-height:70vh;overflow-y:auto}
+ html body .hd>span{flex:1 1 auto!important;min-width:0;justify-content:flex-end!important}
+ html body .hd>span>*{flex:none!important}
+ html body .hd #ws{flex:1 1 auto!important;width:auto!important;min-width:0!important;max-width:none!important}
+ #hmb{display:inline-flex!important;width:34px;height:34px;padding:0!important;align-items:center;justify-content:center;font-size:20px!important;border-radius:10px!important;background:var(--chrome2)!important;color:var(--cfg,inherit)!important;border:1px solid var(--cbd,#3a3b41)!important;order:9}
+ #hmp{display:none;position:fixed;top:calc(var(--hdh,44px) + 4px);inset-inline-end:8px;z-index:60;min-width:230px;max-height:75vh;overflow-y:auto;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:14px;box-shadow:0 14px 40px rgba(0,0,0,.3);padding:8px;flex-direction:column;gap:6px}
+ .hd.mopen #hmp{display:flex}
+ #hmp>*{width:100%!important;height:auto!important;min-height:40px;justify-content:flex-start!important;gap:8px;margin:0!important;padding:8px 10px!important;border-radius:10px!important;order:0!important;box-sizing:border-box}
+ #hmp .nm2{display:inline!important}
+ #hmp .um{padding:0!important}#hmp .um>.umb{width:100%;justify-content:flex-start}
+ #hmp>:empty{display:none!important}
+ #hmp [data-lb]::after{content:attr(data-lb);font-size:14.5px;font-weight:700}
+ #hmp .ump{position:static!important;box-shadow:none!important;margin-top:4px;min-width:0}
 }
 </style>
 <script>
 (function(){var h=document.querySelector('.hd');if(!h)return;var r=document.documentElement;
 function set(){r.style.setProperty('--hdh',Math.round(h.getBoundingClientRect().height)+'px')}
 set();if(window.ResizeObserver)new ResizeObserver(set).observe(h);addEventListener('resize',set);addEventListener('load',set)})();
+</script>
+<script>
+(function(){var hd=document.querySelector('.hd'),sp=document.querySelector('.hd>span');if(!hd||!sp)return;
+var mq=matchMedia('(max-width:860px)'),keep={ws:1,bell:1,hmb:1};
+var mb=document.createElement('button');mb.id='hmb';mb.type='button';mb.textContent='☰';mb.title='المزيد';mb.style.display='none';
+var pn=document.createElement('div');pn.id='hmp';hd.appendChild(pn);sp.appendChild(mb);
+mb.onclick=function(e){e.stopPropagation();hd.classList.toggle('mopen')};
+pn.addEventListener('click',function(e){var t=e.target.closest('button');if(t&&!t.closest('.umb'))setTimeout(function(){hd.classList.remove('mopen')},150)});
+document.addEventListener('click',function(e){if(!e.target.closest('#hmp,#hmb'))hd.classList.remove('mopen')});
+function lb(c){if(c.tagName!=='BUTTON')return;var t=(c.textContent||'').trim();if(t.length>3)return;var n=c.getAttribute('title')||(/toggleMode/.test(c.getAttribute('onclick')||'')?'الوضع الليلي / النهاري':'');if(n)c.setAttribute('data-lb',' '+n.split(' — ')[0])}
+var busy=false;function sync(){if(busy)return;busy=true;try{
+ if(mq.matches){[].slice.call(sp.children).forEach(function(c){if(!keep[c.id]){pn.appendChild(c);lb(c)}});if(sp.lastElementChild!==mb)sp.appendChild(mb);mb.style.display=pn.children.length?'':'none'}
+ else{[].slice.call(pn.children).forEach(function(c){sp.insertBefore(c,mb)});mb.style.display='none';hd.classList.remove('mopen')}
+}finally{busy=false}}
+new MutationObserver(function(){setTimeout(sync,0)}).observe(sp,{childList:true});
+(mq.addEventListener?mq.addEventListener('change',sync):mq.addListener(sync));sync();
+})();
 </script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
