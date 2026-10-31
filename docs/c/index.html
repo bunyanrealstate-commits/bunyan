@@ -2387,7 +2387,7 @@ var s0=setF;setF=function(u,a,b,oa){var r=s0.apply(this,arguments);try{if(a==='g
 function inc(){var t=today(),ym=iso(t).slice(0,7),r={all:0,mon:0,due:0,mine:0};
 SU().forEach(function(u){var f=shR(u.g);(u.leases||[]).forEach(function(L){for(var i=0;i<L.months;i++){var a=(L.rcv||[]).indexOf(i)>=0?(L.rav&&L.rav[i]!=null?+L.rav[i]:la(L,i)):0;if(a){r.all+=a;r.mine+=a*f;var at=(L.rat||{})[i];if(at&&iso(new Date(at)).slice(0,7)===ym)r.mon+=a}else r.due+=la(L,i)}(L.pp||[]).forEach(function(x){var a=+x.a||0;r.all+=a;r.mine+=a*f;if(x.at&&iso(new Date(x.at)).slice(0,7)===ym)r.mon+=a})})});return r}
 var h1=home;home=function(){var o=h1.apply(this,arguments);try{var r=inc(),c=function(l,v,sub){return "<div class='stat'><span>"+l+"</span><b class='pos'>"+$(v)+"</b>"+(sub?"<span>"+sub+"</span>":"")+"</div>"};
-return "<div class='card'><h2>📈 إجمالي الدخل — "+esc(wname())+"</h2><div class='grid'>"+c('كل ما قبضته من الإيجارات',r.all,'حصتي منه: '+$(r.mine))+c('قبضته هذا الشهر',r.mon)+c('لسه مستحق من العقود الحالية',r.due)+c('إجمالي العقود (قبضت + مستحق)',r.all+r.due)+"</div></div>"+o}catch(e){return o}};
+return "<div class='card'><h2>📈 إجمالي الدخل — "+esc(wname())+"</h2><div class='grid'>"+c('كل ما قبضته من الإيجارات',r.all,'حصتي منه: '+$(r.mine))+"</div></div>"+o}catch(e){return o}};
 })();
 </script>
 <script>
