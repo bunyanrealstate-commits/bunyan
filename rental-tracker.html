@@ -309,7 +309,7 @@ label{margin:8px 0 4px!important;font-size:12.5px!important}
 </head>
 <body>
 <main>
-<div class="hd"><h1 class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="3" y="9" width="6" height="14" rx="1" fill="#5aa9ff"/><rect x="10" y="3" width="6" height="20" rx="1" fill="#fff"/><rect x="17" y="12" width="6" height="11" rx="1" fill="#5aa9ff"/></svg><span>Bunyan Furnished</span></h1><span><select id="ws" onchange="setW(this.value)"></select> <span id="who"></span> <button onclick="toggleMode()">🌓</button></span></div>
+<div class="hd"><h1 class="brand" aria-label="Bunyan Furnished"><svg class="hdlogo" viewBox="-30 -10 500 175" height="42" role="img" aria-label="Bunyan Furnished"><defs><linearGradient id="hgg" gradientUnits="userSpaceOnUse" x1="-20" y1="0" x2="450" y2="0"><stop offset="0" stop-color="#1b4764"/><stop offset=".45" stop-color="#1e6368"/><stop offset="1" stop-color="#3aa66c"/></linearGradient></defs><g class="hgf" fill="url(#hgg)" fill-rule="evenodd"><path d="M0,0 H34 C54,0 62,10 62,24 C62,36 55,43 46,46 C58,49 66,57 66,72 C66,90 54,100 34,100 H0 Z M17,14 V40 H32 C41,40 45,36 45,27 C45,18 41,14 32,14 Z M17,54 V86 H34 C45,86 49,80 49,70 C49,60 45,54 34,54 Z"/><path d="M0,100 C-16,98 -28,86 -28,66 C-24,82 -12,92 4,93 L4,100 Z"/><path d="M72,0 H89 V68 C89,80 94,86 103,86 C112,86 117,80 117,68 V0 H134 V68 C134,92 122,100 103,100 C84,100 72,92 72,68 Z"/><path d="M146,100 V0 H162 L196,70 V0 H212 V100 H196 L162,30 V100 Z"/><path d="M222,0 H240 L256,36 L272,0 H290 L265,58 V100 H247 V58 Z"/><path d="M298,100 L326,0 H344 L372,100 H354 L350,82 H320 L316,100 Z M324,68 H346 L335,26 Z"/><path d="M384,100 V0 H400 L434,70 V0 H450 V100 H434 L400,30 V100 Z"/></g><text x="213" y="150" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="600" font-size="52" letter-spacing="9" fill="#1d4b66" class="hgt">Furnished</text></svg></h1><span><select id="ws" onchange="setW(this.value)"></select> <span id="who"></span> <button onclick="toggleMode()">🌓</button></span></div>
 <div id="ntb"></div><div class="nav" id="nav"></div>
 <div id="app"></div>
 <p class="mu">إصدار البرنامج: 31-10</p>
@@ -1535,5 +1535,5 @@ var a1=accTab2;accTab2=function(){var h=a1();var k=h.indexOf("<div class='card'>
 <script>
 (function(){var d1=drawLic;drawLic=function(m){d1.apply(this,arguments);try{if(TRIAL>0){var d=gi('login').querySelector('.dlg');if(d&&!d.querySelector('.xcl')){var b=document.createElement('button');b.className='xcl';b.type='button';b.setAttribute('aria-label','رجوع');b.textContent='✕';b.onclick=function(){LIC=true;gi('login').innerHTML='';render()};d.insertBefore(b,d.firstChild)}}}catch(e){}}})();
 </script>
-</body>
+<style>.hdlogo{height:42px;width:auto;max-width:60vw;display:block}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hdlogo .hgf{fill:#fff}:root:not([data-theme="light"]) .hdlogo .hgt{fill:#cfe3ee}}:root[data-theme="dark"] .hdlogo .hgf{fill:#fff}:root[data-theme="dark"] .hdlogo .hgt{fill:#cfe3ee}</style></body>
 </html>
