@@ -1,6 +1,6 @@
 {
  "appId": "com.bunyan.roommeasure",
- "appName": "مقياس الغرف",
+ "appName": "مساحة الغرف",
  "webDir": "www",
  "backgroundColor": "#eef0ee",
  "server": {
