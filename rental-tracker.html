@@ -633,9 +633,9 @@ function sched(o){const n=Math.max(1,o.n|0),cm=o.cm||12,tot=o.total||0,r=[];if(!
  const first=o.first||Math.round(tot/n),rest=n>1?Math.round((tot-first)/(n-1)):0;
  const P0=o.pstart||o.start;r.push({d:P0,a:first,p:false});for(let i=1;i<n;i++)r.push({d:iso(addM(pd(P0),Math.round(i*cm/n))),a:rest,p:false});
  if(n>1&&tot)r[n-1].a+=tot-r.reduce((s,x)=>s+x.a,0);for(let i=0;i<Math.min(o.paidN|0,n);i++)r[i].p=true;return r}
-const FSO=[['me','من أموالي الخاصة (رأس مال يُسترد من الإيجار)'],['cash','من الرصيد النقدي في البرنامج'],['old','دُفع سابقاً (دون خصم من أي رصيد)'],['','لم يُدفع بعد']];
+const FSO=[['me','من أموالي الخاصة (رأس مال يُسترد من الإيجار)'],['cash','من الرصيد النقدي في البرنامج'],['gp','من فلوس الشراكة (دعم الشركاء)'],['old','دُفع سابقاً (دون خصم من أي رصيد)'],['','لم يُدفع بعد']];
 const fsrcOf=u=>u.fsrc!=null?u.fsrc:(!u.fp?'':(u.fat>0?'cash':((S.tx||[]).some(x=>x.c==='تمويل استديو'&&x.w==='تمويل استديو '+u.name)?'me':'old')));
-const fsrcLbl=u=>({me:'من أموالي الخاصة',cash:'من الرصيد النقدي',old:'دُفع سابقاً'})[fsrcOf(u)]||'';
+const fsrcLbl=u=>({me:'من أموالي الخاصة',cash:'من الرصيد النقدي',gp:'من فلوس الشراكة',old:'دُفع سابقاً'})[fsrcOf(u)]||'';
 function setF(u,a,b,oldAmt){const f=sh(u),amt=(+u.furn||0)*f,oa=(oldAmt==null?(+u.furn||0):oldAmt)*f;S.tx=S.tx||[];
  if(a==='me'&&b==='me'){if(Math.abs(amt-oa)>=0.5)S.tx.push({id:uid(),k:'me',d:td(),w:'تعديل أثاث '+u.name,a:oa-amt,c:'تمويل استديو',u:u.id})}
  else{if(a==='me'&&oa)S.tx.push({id:uid(),k:'me',d:td(),w:'إلغاء دفع أثاث '+u.name+' من أموالي الخاصة',a:oa,c:'تمويل استديو',u:u.id});
@@ -785,10 +785,10 @@ function cashNote(){if(WS==='all'||WS==='-'||!(S.cash>0))return '';return `<div 
 function resetAll(){confirmM('هل تريد حذف كل البيانات نهائياً؟ لا يمكن استرجاعها.',()=>{S={hist:S.hist,cash:0,res:0,tp:25,units:[],debts:[],recv:[],exp:[],tab:'home',sim:{total:0,cm:12,n:4,furn:0,share:50,rent:0,rm:12}};PREVL=null;logEv('حذف كل البيانات')})}
 function mBackup(){openM('نسخة احتياطية',[{k:'j',l:'انسخ هذا النص واحفظه، أو الصق نصاً قديماً واضغط حفظ للاستعادة',v:JSON.stringify(S)}],o=>{try{const x=JSON.parse(o.j);if(x.units)S=x}catch(e){toast('النص غير صحيح')}})}
 function delU(id){confirmM('هل تريد حذف الاستديو بكل دفعاتها وعقودها ومصاريفها؟',()=>{S.units=S.units.filter(u=>u.id!==id);S.exp=(S.exp||[]).filter(x=>x.u!==id);UV.open=null})}
-function delI(id,k){U(id).inst.splice(k,1);syncTot(U(id));save();render()}
+function delI(id,k){const u0=U(id),i0=u0.inst[k];if(i0&&i0.gid&&window.gpRm)gpRm(u0.g,'i'+i0.gid);U(id).inst.splice(k,1);syncTot(U(id));save();render()}
 function delL(id,k){U(id).leases.splice(k,1);save();render()}
-function tog(id){const u=U(id);if(u.fp){setF(u,fsrcOf(u),'');save();render();return}openM('دفع الأثاث — '+u.name,[{k:'fsrc',l:'الأثاث: من أين تم دفعه؟',t:'s',o:FSO.filter(x=>x[0]),v:'me'}],o=>setF(u,'',o.fsrc))}
-function togI(id,k){const i=U(id).inst[k];if(i.p){i.p=false;i.at=0;save();render();return}openM('تسجيل دفعة للشركة — '+$(i.a),[{k:'s',l:'من أين دُفعت؟',t:'s',o:[['','دون خصم من الرصيد النقدي (دُفعت من خارج البرنامج)'],['cash','من الرصيد النقدي في البرنامج']],v:''}],o=>{i.p=true;i.at=o.s==='cash'?Date.now():0})}
+function tog(id){const u=U(id);if(u.fp){setF(u,fsrcOf(u),'');save();render();return}openM('دفع الأثاث — '+u.name,[{k:'fsrc',l:'الأثاث: من أين تم دفعه؟',t:'s',o:FSO.filter(x=>x[0]&&(x[0]!=='gp'||gpOK(u))),v:'me'}],o=>setF(u,'',o.fsrc))}
+function togI(id,k){const u=U(id),i=u.inst[k];if(i.p){i.p=false;i.at=0;if(window.gpRm)gpRm(u.g,'i'+i.gid);save();render();return}openM('تسجيل دفعة للشركة — '+$(i.a),[{k:'s',l:'من أين دُفعت؟',t:'s',o:[['','دون خصم من الرصيد النقدي (دُفعت من خارج البرنامج)'],['cash','من الرصيد النقدي في البرنامج']].concat(gpOK(u)?[['gp','من فلوس الشراكة (دعم الشركاء)']]:[]),v:''}],o=>{i.p=true;i.at=o.s==='cash'?Date.now():0;if(o.s==='gp'){i.gid=i.gid||uid();gpPay(u.g,'i'+i.gid,-i.a,'دفعة '+(u.company||'الشركة')+' — '+u.name)}})}
 function togR(id,k,i){const L=U(id).leases[k],r=L.rcv,x=r.indexOf(i),a=la(L,i);L.rat=L.rat||{};L.rav=L.rav||{};x>=0?(r.splice(x,1),delete L.rat[i],delete L.rav[i]):(r.push(i),L.rat[i]=Date.now(),L.rav[i]=a);save();render()}
 /* ===== تنبيه النسخة الاحتياطية + تقرير المجموعات الشهري ===== */
 function bkWarn(){if(!S||!S.units||!S.units.length)return'';let l='';try{l=localStorage.getItem('bunyan_bk')||''}catch(e){}
@@ -2841,6 +2841,14 @@ function card(g){var t=tot(g.id),nm=names(g),sh=shares(g),h="<div class='card'><
 function cards(){return(S.groups||[]).filter(function(g){return(g.n||1)>1}).map(card).join('')}
 var g0=grpTab;grpTab=function(){var o=g0.apply(this,arguments);try{var c=cards();return o+(c||"<div class='card'><p class='mu'>🤝 فلوس الشراكة تظهر للمجموعات اللي فيها أكتر من شريك (عدد الشركاء 2 أو أكتر).</p></div>")}catch(e){return o}};
 var h0=home;home=function(){var o=h0.apply(this,arguments);try{var g=G(WS);if(g&&(g.n||1)>1)return card(g)+o}catch(e){}return o};
+})();
+</script>
+<script>
+(function(){
+window.gpOK=function(u){var g=(S.groups||[]).find(function(x){return x.id===u.g});return !!(g&&(g.n||1)>1)};
+window.gpRm=function(gid,key){if(!S.gp||!S.gp[gid])return;S.gp[gid]=S.gp[gid].filter(function(x){return x.key!==key})};
+window.gpPay=function(gid,key,a,w){if(!gid){toast('الاستديو لازم يكون في مجموعة فيها شركاء');return}S.gp=S.gp||{};S.gp[gid]=S.gp[gid]||[];gpRm(gid,key);S.gp[gid].push({id:uid(),d:td(),a:a,w:w,key:key})};
+var s0=setF;setF=function(u,a,b,oa){var r=s0.apply(this,arguments);try{if(a==='gp'||b==='gp')gpRm(u.g,'f'+u.id);if(b==='gp'&&u.furn)gpPay(u.g,'f'+u.id,-(+u.furn),'فرش '+u.name)}catch(e){}return r};
 })();
 </script>
 </body>
