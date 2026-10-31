@@ -439,7 +439,7 @@ function fcTab(){const t=today(),led=ledger(),done=led.filter(x=>x.a>0).reduce((
  let h=`<div class='card'><h2>التوقعات المالية للفترة القادمة</h2>`+[3,6,12,24].map(n=>`<button class='${HZ==n?'p':''}' onclick='HZ=${n};render()' style='margin-left:6px'>${n} أشهر</button>`).join('')+`<button onclick='HZ=lastM();render()' style='margin-left:6px'>لآخر عقد</button></div><div class='grid'><div class='stat'><span>الدخل (المستلم + القادم)</span><b class='pos'>${$(done+inn)}</b><span>استلمت ${$(done)} + قادم ${$(inn)}</span></div><div class='stat'><span>المصروفات (ما دفعته + القادم)</span><b class='neg'>${$(paid+out)}</b><span>دفعت ${$(paid)} + قادم ${$(out)}</span></div><div class='stat'><span>الربح الصافي</span><b class='${cls(done+inn-paid-out)}'>${$(done+inn-paid-out)}</b></div><div class='stat'><span>الرصيد المتوقع في نهاية الفترة</span><b class='${cls(cashNow()+inn-out)}'>${$(cashNow()+inn-out)}</b></div><div class='stat'><span>أقل رصيد سيتوفر لدي خلال الفترة</span><b class='${cls(mn)}'>${$(mn)}</b></div><div class='stat'><span>إيجار محتمل من الأشهر الشاغرة</span><b>${$(vac)}</b><span>بحسب هدف ربحك</span></div></div>`;
  return h+`<div class='card'><h2>شهر بشهر</h2>`+tbl(['الشهر','داخل','خارج','الباقي','لدي','','أكبر مصروف في الشهر'],rows.map(r=>`<tr class='${r.end<0?'r0':''}'><td>${mname(r.d)}</td><td class='pos'>${$(r.i)}</td><td class='neg'>${$(r.o)}</td><td class='${cls(r.i-r.o)}'>${$(r.i-r.o)}</td><td class='${cls(r.end)}'>${$(r.end)}</td><td><div style='height:6px;border-radius:3px;background:${r.end<0?'var(--bad)':'var(--ok)'};width:${Math.round(Math.abs(r.end)/mx*80)+4}px'></div></td><td>${topO(ev,r.d)}</td></tr>`).join(''))+`<p class='mu'>تعتمد التوقعات على الدفعات والإيجارات التي لم يتم تسجيلها بعد وعلى المصروفات المتكررة. الأشهر الشاغرة في عقود الشركة لا تُحتسب كدخل.</p></div>`}
 const ef=x=>x.u&&U(x.u)?sh(U(x.u)):1;
-const mp=(u,L)=>((L.rent||0)+(L.inet||0)-(L.icost||0)-(L.rme?(L.router||0)/(lm(L)||1):0)-ua(u).full/(u.cm||1))*sh(u);
+const mp=(u,L)=>((L.rent||0)+(L.inet||0)-(L.icost||0)-(L.rme?(L.router||0)/(lm(L)||1):0)-(ua(u).full+(+u.salv||0))/(u.cm||1))*sh(u);
 const mprof=()=>{const t=today();return SU().reduce((s,u)=>s+u.leases.filter(L=>pd(L.start)<=t&&lend(L)>t).reduce((x,L)=>x+mp(u,L),0),0)};
 function ua(u){const f=sh(u),ue=(S.exp||[]).filter(x=>x.u===u.id).reduce((s,x)=>s+x.a*(x.n||1),0),full=(u.total||isumOf(u))+(+u.furn||0)+ue;
  const occN=u.leases.reduce((s,L)=>s+lm(L),0),inc=u.leases.reduce((s,L)=>s+Array.from({length:L.months},(_,i)=>la(L,i)).reduce((a,b)=>a+b,0)+Object.keys(L.rav||{}).reduce((q,i)=>q+(L.rav[i]-la(L,+i)),0)+(L.penp?L.pen||0:0)+(L.adv||0)+ppT(L),0)*f,
@@ -675,7 +675,7 @@ function mUnit(id){if(!id&&LICMAX&&S.units.length>=LICMAX){toast('باقتك ت�
   setF(nu,'',fs)})}
 function unitCard(u){const a=ua(u),t=today(),end=addM(pd(u.start),u.cm),rem=Math.max(0,Math.ceil((end-t)/2629800000)),tot=u.total||isumOf(u),pdd=paidOf(u);
  let h=`<div class='card'><div class='li' style='border:0'><b style='font-size:18px'>${esc(u.name)}</b> <span class='mu'>• ${esc(u.company||'بدون شركة — اضغط ✎ عدّل واكتب اسمها')}</span><span><button onclick="mUnit('${u.id}')">✎ تعديل</button> <button class='x' onclick="delU('${u.id}')">🗑 حذف الاستديو</button></span></div></div>`;
- h+=`<div class='card'><h2>📄 عقد الشركة (${esc(u.company||'')})</h2><div class='kv'><div><small>المدة</small><b>${u.cm} شهر</b></div><div><small>من</small><b>${u.start}</b></div><div><small>حتى</small><b>${iso(end)}</b></div><div><small>المتبقي</small><b>${rem} شهر</b></div></div><div class='kv'><div><small>الإجمالي</small><b>${$(tot)}</b></div><div><small>مدفوع</small><b class='pos'>${$(pdd)}</b></div><div><small>المتبقي</small><b class='neg'>${$(tot-pdd)}</b></div></div>${u.total&&u.total!==isumOf(u)?`<p class='neg'>الدفعات المسجلة ${$(isumOf(u))} من ${$(u.total)} — أضف المتبقي</p>`:''}`;
+ h+=`<div class='card'><h2>📄 عقد الشركة (${esc(u.company||'')})</h2><div class='kv'><div><small>المدة</small><b>${u.cm} شهر</b></div><div><small>من</small><b>${u.start}</b></div><div><small>حتى</small><b>${iso(end)}</b></div><div><small>${pd(u.start)>t?'يبدأ بعد':'المتبقي'}</small><b>${pd(u.start)>t?Math.ceil((pd(u.start)-t)/864e5)+' يوم':rem+' شهر'}</b></div></div><div class='kv'><div><small>الإجمالي</small><b>${$(tot)}</b></div><div><small>مدفوع</small><b class='pos'>${$(pdd)}</b></div><div><small>المتبقي</small><b class='neg'>${$(tot-pdd)}</b></div></div>${u.total&&u.total!==isumOf(u)?`<p class='neg'>الدفعات المسجلة ${$(isumOf(u))} من ${$(u.total)} — أضف المتبقي</p>`:''}`;
  u.inst.forEach((i,k)=>h+=`<div class='li'><span>دفعة ${k+1} • ${i.d}</span><b>${$(i.a)}</b><button class='${i.p?'p':''}' onclick="togI('${u.id}',${k})">${i.p?'تم دفعها ✓':'لم يتم بعد'}</button><button onclick="mInst('${u.id}',${k})">✎</button><button class='x' onclick="delI('${u.id}',${k})">✕</button></div>`);
  h+=`<button onclick="mInst('${u.id}')" style='margin-top:8px'>+ دفعة</button></div>`;
  h+=`<div class='card'><h2>🛋 الأثاث</h2><p>التكلفة <b>${$(u.furn||0)}</b> • ${u.fp?'مدفوع ✓ '+fsrcLbl(u):'لم يُدفع بعد'} <button onclick="tog('${u.id}')">${u.fp?'لم يُدفع بعد':'مدفوع ✓'}</button>${u.salv?`<br>القيمة المستردة في نهاية العقد: <b>${$(u.salv)}</b>`:''}</p>${capLine(u)}</div>`;
@@ -1539,7 +1539,7 @@ addEventListener('popstate',function(){if(skip){skip=0;return}
  if(typeof UV!=='undefined'&&UV.open){UV.open=null;render();return}
  if(S&&S.tab&&S.tab!=='home'){S.tab='home';render();window.scrollTo(0,0)}});
 var r0=render;render=function(){r0.apply(this,arguments);try{var a=document.getElementById('app');
- if(S&&S.tab&&S.tab!=='home'&&a&&!a.querySelector('.bkb')){a.insertAdjacentHTML('afterbegin','<button class="bkb" onclick="goBack()">→ رجوع للرئيسية</button>');if(!(history.state&&history.state.tab))history.pushState({tab:1},'')}}catch(e){}};
+ if(S&&S.tab&&S.tab!=='home'&&!(S.tab==='units'&&typeof UV!=='undefined'&&UV.open)&&a&&!a.querySelector('.bkb')){a.insertAdjacentHTML('afterbegin','<button class="bkb" onclick="goBack()">→ رجوع للرئيسية</button>');if(!(history.state&&history.state.tab))history.pushState({tab:1},'')}}catch(e){}};
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeTop()});
 })();
 </script>
@@ -3062,6 +3062,14 @@ accTab2=function(){var h=a3();try{var t=document.createElement('div');t.innerHTM
  if(ex&&op)ex.after(op);if(xp)t.appendChild(xp);
  return t.innerHTML}catch(e){return h}};
 var st=document.createElement('style');st.textContent='details.acd>summary{cursor:pointer;font-weight:700;font-size:15px;color:var(--ac);list-style:none;display:flex;align-items:center;gap:8px}details.acd>summary::-webkit-details-marker{display:none}details.acd>summary::before{content:"▸";transition:transform .2s}details.acd[open]>summary::before{transform:rotate(90deg)}html[dir=rtl] details.acd>summary::before{content:"◂"}html[dir=rtl] details.acd[open]>summary::before{transform:rotate(-90deg)}details.acd[open]>summary{margin-bottom:10px}';document.head.appendChild(st);
+})();
+</script>
+<script id="homeord">
+(function(){
+function syncOn(){try{var c=JSON.parse(localStorage.getItem('bny_sync'));return !!(c&&c.token&&c.repo)}catch(e){return false}}
+var bw=bkWarn;bkWarn=function(){if(syncOn())return '';return bw.apply(this,arguments)};
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.tab!=='home')return o;var a=document.getElementById('app');if(!a)return o;
+ [].slice.call(a.querySelectorAll(':scope>.card')).forEach(function(c){var h=c.querySelector(':scope>h2');var t=h?h.textContent:'';if(/نسخة تجريبية|نسخة احتياطية/.test(t))a.appendChild(c)})}catch(e){}return o};
 })();
 </script>
 </body>
