@@ -1167,7 +1167,7 @@ addEventListener('touchmove',function(e){if(!on||busy)return;var d=e.touches[0].
  pull=Math.min(d*.55,110);bar.style.transition='none';bar.style.transform='translateY('+(pull-100)+'%)';bar.style.transform='translateY('+(pull-56)+'px)';ar.style.transform='rotate('+(pull>=TH?180:0)+'deg)';lab.textContent=pull>=TH?'اترك للتحديث':'اسحب للتحديث'},{passive:true});
 function end(){if(!on)return;on=false;bar.style.transition='transform .25s';
  if(pull>=TH&&!busy){busy=true;lab.textContent='جاري التحديث…';ar.textContent='⟳';ar.style.transform='';bar.classList.add('spin');bar.style.transform='translateY(12px)';
-  setTimeout(function(){try{if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration)navigator.serviceWorker.getRegistration().then(function(r){r&&r.update&&r.update()}).catch(function(){})}catch(e){}location.reload()},350)}
+  setTimeout(function(){try{if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration)navigator.serviceWorker.getRegistration().then(function(r){r&&r.update&&r.update()}).catch(function(){})}catch(e){}try{var n=String(Date.now());sessionStorage.setItem('bny_ul',n);localStorage.setItem('bny_ul',n)}catch(e){}location.reload()},350)}
  else{bar.style.transform='translateY(-100%)'}pull=0}
 addEventListener('touchend',end,{passive:true});addEventListener('touchcancel',end,{passive:true});
 })()</script>
@@ -1824,6 +1824,16 @@ window.chqCard=function(){var R=[];SU().forEach(function(u){u.leases.forEach(fun
  return '<div class="card"><h2>📑 الشيكات التي معي (ضمان)</h2><p class="mu">للعلم فقط: الشيك ضمان لالتزام المستأجر بالدفع، ولا يغيّر الحسابات.</p><div class="kp">'+(R.length?st('شيكات الإيجار',R.length,$(sum(R,function(x){return x.c.a}))):'')+(sc.length?st('شيكات التأمين',sc.length,$(sum(sc,function(x){return x.a}))):'')+'</div>'
   +R.slice(0,80).map(function(x){return '<div class="li" style="cursor:pointer" onclick="mChq(\''+x.u.id+'\','+x.k+','+x.q+')"><span>📑 '+esc(x.L.tenant||'مستأجر')+' • '+esc(x.u.name)+' <span class="mu">'+(x.c.no?'رقم '+esc(x.c.no)+' • ':'')+esc(x.c.d)+'</span></span><b>'+$(x.c.a)+'</b></div>'}).join('')+'</div>'};
 var a2=accTab2;accTab2=function(){var h=a2(),c='';try{c=chqCard()}catch(e){}if(!c)return h;var k=h.indexOf('<div class="card"><h2>🔐 التأمينات');return k>0?h.slice(0,k)+c+h.slice(k):c+h};
+})();
+</script>
+<script>
+(function(){if(window.claude)return;var SK='bny_sess',UK='bny_uv';
+function ss(k,v){try{v==null?sessionStorage.removeItem(k):sessionStorage.setItem(k,v)}catch(e){}}
+function sg(k){try{return sessionStorage.getItem(k)}catch(e){return null}}
+/* يبقى المستخدم داخلاً طوال جلسة التطبيق (يتحمل السحب للتحديث، ويُمسح عند إغلاق التطبيق) */
+var r0=render;render=function(){r0.apply(this,arguments);try{if(AUTH&&A&&A.u&&A.k!=='cloud'){ss(SK,A.u);ss(UK,(typeof UV!=='undefined'&&UV&&UV.open)||'')}}catch(e){}};
+var lo=logOut;logOut=function(){ss(SK,null);ss(UK,null);return lo.apply(this,arguments)};
+try{var u=sg(SK);if(u&&!AUTH){var f=US.find(function(x){return x.u===u});if(f){A=f;S=ld(f.k);AUTH=true;var o=sg(UK);if(o&&typeof UV!=='undefined'&&U(o))UV.open=o;render()}}}catch(e){}
 })();
 </script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
