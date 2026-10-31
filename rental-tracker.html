@@ -2004,5 +2004,48 @@ addEventListener('touchend',function(e){if(!ok)return;ok=false;var t=e.changedTo
  var rtl=document.documentElement.dir==='rtl',next=rtl?dx>0:dx<0,j=i+(next?1:-1);if(j<0||j>=bs.length)return;bs[j].click()},{passive:true});
 })();
 </script>
+<script>
+(function(){
+function tot(L){var s=0,i;for(i=0;i<L.months;i++)s+=la(L,i);Object.keys(L.rav||{}).forEach(function(q){s+=(L.rav[q]-la(L,+q))});return s+(L.penp?(L.pen||0):0)+(L.adv||0)+ppT(L)}
+function got(L){var s=0;(L.rcv||[]).forEach(function(i){s+=(L.rav&&L.rav[i]!=null)?L.rav[i]:la(L,i)});return s+(L.adv||0)+ppT(L)}
+function opn(L){var r=[];for(var i=0;i<L.months;i++)if((L.rcv||[]).indexOf(i)<0)r.push(iso(payD(L,i))+':'+Math.round(la(L,i)));return r.sort().join('|')}
+function convL(L){
+ var orig=L.orig||L.months,rm=Math.min(L.months,orig),xd=+L.xd>0?+L.xd:0,newStyle=!(L.advA===undefined&&L.stubA===undefined),st=newStyle?(+L.stubA||0):0,adA=newStyle?(+L.advA||0):0,
+  sx=!!(L.stubx&&L.shv),chq=(window.chqList?chqList(L):[]).map(function(c){return {no:c.no,d:c.d,a:c.a}}),
+  rav=L.rav||{},rat=L.rat||{},ov=L.ov||{},rcv=(L.rcv||[]).slice(),i;
+ var endFull=addM(pd(L.start),xd?orig-1:orig);if(xd)endFull.setDate(endFull.getDate()+xd);
+ var rows=[];
+ for(i=0;i<orig;i++){var paid=rcv.indexOf(i)>=0,pa=ppA(L,i),a=(paid?((rav[i]!=null)?rav[i]:la(L,i)):la(L,i))+pa+((newStyle&&L.advp===i)?adA:0);rows.push({d:iso(payD(L,i)),a:a,oi:i})}
+ var merge=st>0&&sx&&rcv.indexOf(0)>=0,shift=(st>0&&!merge)?1:0;
+ var sch=[],o={rcv:[],rat:{},rav:{},ov:{},pp:[]};
+ if(shift){sch.push({d:L.start,a:st});o.rcv.push(0);o.rat[0]=L.advat||pd(L.start).getTime();o.rav[0]=st}
+ rows.forEach(function(r){var n=r.oi+shift,a=r.a;if(merge&&r.oi===0)a+=st;sch.push({d:r.d,a:a});
+  if(rcv.indexOf(r.oi)>=0){o.rcv.push(n);if(rat[r.oi]!=null)o.rat[n]=rat[r.oi];if(rav[r.oi]!=null)o.rav[n]=rav[r.oi]+((merge&&r.oi===0)?st:0)}
+  if(ov[r.oi]!=null)o.ov[n]=ov[r.oi]});
+ (L.pp||[]).forEach(function(x){o.pp.push({i:x.i+shift,a:x.a,at:x.at})});
+ if(adA>0&&L.advp!=null)o.pp.push({i:L.advp+shift,a:adA,at:L.advat||pd(L.start).getTime()});
+ L.sch=sch;L.orig=sch.length;L.months=Math.min(sch.length,rm+shift);L.cmo=xd?(orig-1+xd/30):orig;L.end=iso(endFull);
+ L.rcv=o.rcv.sort(function(a,b){return a-b});L.rat=o.rat;L.rav=o.rav;L.ov=o.ov;L.pp=o.pp;L.chq=chq;
+ L.xd=0;L.sh=0;delete L.stub;delete L.stubx;delete L.shv;delete L.stubd;
+ if(newStyle){L.adv=0;L.advat=0;delete L.advA;delete L.stubA;delete L.advp;delete L.advm}
+ return L}
+window.convOne=function(u,k){var L=u.leases[k];if(!L||L.sch)return false;
+ var C=JSON.parse(JSON.stringify(L)),b={t:tot(C),g:got(C),o:opn(C)};
+ try{convL(C);var a={t:tot(C),g:got(C),o:opn(C)};
+  if(Math.abs(a.t-b.t)>0.5||Math.abs(a.g-b.g)>0.5)return false;
+  var bo=b.o.split('|').filter(Boolean).map(function(x){return x.split(':')[1]}).sort().join(','),ao=a.o.split('|').filter(Boolean).map(function(x){return x.split(':')[1]}).sort().join(',');
+  if(bo!==ao)return false;
+  u.leases[k]=C;return true}catch(e){return false}};
+window.convAll=function(){var n=0,sk=0;(S.units||[]).forEach(function(u){(u.leases||[]).forEach(function(L,k){if(L.sch)return;if(convOne(u,k))n++;else sk++})});return {n:n,sk:sk}};
+var r0=render;render=function(){try{if(AUTH&&A&&A.role!=='viewer'&&S&&S.units&&!S.conv&&CL!=='wait'&&(typeof LIC==='undefined'||LIC===true||window.claude)){
+  var old=(S.units||[]).some(function(u){return (u.leases||[]).some(function(L){return !L.sch})});
+  if(old){var bk=JSON.stringify(strip(S)),c=convAll();
+   if(c.n){try{localStorage.setItem('bny_pre_sync',JSON.stringify({t:Date.now(),s:JSON.parse(bk)}))}catch(e){}try{logEv('تحويل '+c.n+' عقد مستأجر للنظام الجديد (جدول دفعات)')}catch(e){}}
+   S.conv=1;save();if(c.n)setTimeout(function(){render()},20);if(c.n)setTimeout(function(){toast('تم تحويل '+c.n+' عقد مستأجر للنظام الجديد'+(c.sk?' وتعذر تحويل '+c.sk:'')+' — الأرقام ثابتة')},400)}
+  else{S.conv=1;save()}}}catch(e){}
+ return r0.apply(this,arguments)};
+try{if(AUTH)render()}catch(e){}
+})();
+</script>
 </body>
 </html>
