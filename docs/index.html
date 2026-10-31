@@ -2803,5 +2803,29 @@ try{if(AUTH)render();else drawLogin()}catch(e){}
 function u(){try{b.classList.toggle('on',navigator.onLine===false)}catch(e){}}
 addEventListener('online',function(){u();try{if(typeof toast==='function')toast('رجع الإنترنت')}catch(e){}});addEventListener('offline',u);u()})();
 </script>
+<style id="covcss">.ucov{border-radius:14px;overflow:hidden;margin-bottom:12px;border:1px solid var(--bd,#0002);line-height:0;position:relative}.ucov svg{width:100%;height:auto;display:block}.ucov .cn{position:absolute;right:12px;bottom:10px;color:#fff;font:700 17px/1.2 system-ui,sans-serif;text-shadow:0 1px 6px #0009;line-height:1.2}.hd .brand{cursor:pointer;-webkit-tap-highlight-color:transparent}</style>
+<script>
+(function(){
+function h(s){var x=2166136261;s=String(s);for(var i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,16777619)}return x>>>0}
+var PAL=[['#e8d9c4','#2f5d62','#d9a441','#8a5a3b'],['#dfe6ee','#1e3a5f','#e07a5f','#5b6b7a'],['#ece3d6','#6b7f5e','#c9a227','#7a5c45'],['#e9dde4','#5a3e6b','#e0a458','#6d5a64'],['#dde9e6','#1f6f6b','#f2b134','#4a5d5a'],['#efe0d2','#9c4a3a','#3d6c8c','#7d6149']];
+window.studioCover=function(u){var k=h((u.id||'')+(u.name||'')),P=PAL[k%PAL.length],w=P[0],a=P[1],g=P[2],f=P[3],v=k>>3,sofaR=v&1,win=(v>>1)%3,plant=(v>>3)&1,lamp=(v>>4)&1;
+var W=640,H=240,fl=H-52,o='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" role="img" aria-label="'+String(u.name||'').replace(/[<>&"]/g,'')+'">';
+o+='<rect width="'+W+'" height="'+H+'" fill="'+w+'"/><rect y="'+fl+'" width="'+W+'" height="52" fill="'+f+'" opacity=".55"/>';
+var wx=sofaR?60:380;
+o+='<rect x="'+wx+'" y="28" width="200" height="'+(win==1?90:120)+'" rx="6" fill="#bfe3f5"/><path d="M'+wx+' 28 L'+(wx+200)+' '+(28+(win==1?90:120))+'" stroke="#fff" opacity=".35" stroke-width="18"/><rect x="'+wx+'" y="28" width="200" height="'+(win==1?90:120)+'" rx="6" fill="none" stroke="#fff" stroke-width="6"/><path d="M'+(wx+100)+' 28v'+(win==1?90:120)+'M'+wx+' '+(win==1?73:88)+'h200" stroke="#fff" stroke-width="4"/>';
+var sx=sofaR?330:70;
+o+='<rect x="'+sx+'" y="'+(fl-62)+'" width="230" height="56" rx="12" fill="'+a+'"/><rect x="'+(sx-12)+'" y="'+(fl-38)+'" width="30" height="42" rx="10" fill="'+a+'"/><rect x="'+(sx+212)+'" y="'+(fl-38)+'" width="30" height="42" rx="10" fill="'+a+'"/><rect x="'+(sx+14)+'" y="'+(fl-34)+'" width="202" height="34" rx="8" fill="#fff" opacity=".18"/><circle cx="'+(sx+50)+'" cy="'+(fl-44)+'" r="14" fill="'+g+'"/><circle cx="'+(sx+180)+'" cy="'+(fl-44)+'" r="14" fill="#fff" opacity=".6"/>';
+var tx=sofaR?200:330;
+o+='<rect x="'+tx+'" y="'+(fl-16)+'" width="80" height="12" rx="4" fill="'+f+'"/><rect x="'+(tx+8)+'" y="'+(fl-4)+'" width="6" height="10" fill="'+f+'"/><rect x="'+(tx+66)+'" y="'+(fl-4)+'" width="6" height="10" fill="'+f+'"/>';
+if(plant)o+='<rect x="'+(sofaR?570:20)+'" y="'+(fl-24)+'" width="26" height="30" rx="4" fill="'+g+'"/><path d="M'+(sofaR?583:33)+' '+(fl-24)+'c-30-30-20-50-4-62 8 18 20 30 4 62zM'+(sofaR?583:33)+' '+(fl-24)+'c28-24 30-46 18-60-14 14-22 30-18 60z" fill="#4c9a6a"/>';
+if(lamp)o+='<path d="M'+(sofaR?310:600)+' '+(fl+4)+'V70" stroke="'+f+'" stroke-width="4"/><path d="M'+((sofaR?310:600)-20)+' 70h40l-8-26h-24z" fill="'+g+'"/>';
+o+='<rect x="0" y="'+(H-70)+'" width="'+W+'" height="70" fill="#000" opacity=".28"/></svg>';return o};
+var u0=unitCard;unitCard=function(u){var r=u0.apply(this,arguments);try{return '<div class="ucov">'+studioCover(u)+'<div class="cn">'+String(u.name||'').replace(/[<>&]/g,'')+(u.company?' · '+String(u.company).replace(/[<>&]/g,''):'')+'</div></div>'+r}catch(e){return r}};
+function goHome(e){try{if(e){e.preventDefault&&e.preventDefault()}S.tab='home';UV.open=null;try{localStorage.setItem('bny_tab','home')}catch(_){}render();scrollTo(0,0)}catch(_){}}
+function bind(){var b=document.querySelector('.hd .brand');if(b&&!b._home){b._home=1;b.setAttribute('role','button');b.setAttribute('aria-label','Bunyan Furnished — الرئيسية');b.addEventListener('click',goHome)}}
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{bind()}catch(e){}return o};
+try{bind()}catch(e){}
+})();
+</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
