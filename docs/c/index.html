@@ -2815,8 +2815,8 @@ function fx(){try{var hd=document.querySelector('.hd'),pn=document.getElementByI
   if(!sub.querySelector('.sth'))sub.insertAdjacentHTML('afterbegin',"<div class='sth'>⚙️ الإعدادات</div>");
   if(lg&&lg.parentNode!==sub)sub.appendChild(lg);
   var nb=document.getElementById('natmi');if(!nb){nb=document.createElement('button');nb.id='natmi';nb.type='button';nb.onclick=function(){try{natOpen()}catch(e){}};}nb.innerHTML='<span>🌍</span><span>'+esc(natLbl())+'</span>';if(nb.parentNode!==sub)sub.appendChild(nb);
-  if(sy&&sy.parentNode!==sub)sub.appendChild(sy);
- }else{close();if(mi)mi.remove();if(lg&&sp&&lg.parentNode!==sp)sp.insertBefore(lg,sp.firstChild);var pv=document.getElementById('pvb');if(sy&&pv&&sy.parentNode!==hd)pv.insertAdjacentElement('afterend',sy);if(sub)sub.remove()}}catch(e){}}
+  if(sy&&sy.parentNode!==sub)sub.appendChild(sy);var sg=document.getElementById('syg');if(sg&&sg.parentNode!==sub)sub.appendChild(sg);
+ }else{var sg2=document.getElementById('syg'),sq2=document.getElementById('syq');if(sg2&&sq2&&sg2.parentNode===document.getElementById('setsub'))sq2.insertAdjacentElement('afterend',sg2);close();if(mi)mi.remove();if(lg&&sp&&lg.parentNode!==sp)sp.insertBefore(lg,sp.firstChild);var pv=document.getElementById('pvb');if(sy&&pv&&sy.parentNode!==hd)pv.insertAdjacentElement('afterend',sy);if(sub)sub.remove()}}catch(e){}}
 var r0=render;render=function(){var o=r0.apply(this,arguments);fx();return o};(mq.addEventListener?mq.addEventListener('change',function(){setTimeout(fx,0)}):mq.addListener(function(){setTimeout(fx,0)}));setTimeout(fx,0);setTimeout(fx,500);
 var hd=document.querySelector('.hd');if(hd)new MutationObserver(function(){if(!hd.classList.contains('mopen'))close()}).observe(hd,{attributes:true,attributeFilter:['class']});
 document.addEventListener('click',function(e){if(!e.target.closest('#setsub,#setmi'))close()});
