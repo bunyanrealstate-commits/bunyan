@@ -1209,13 +1209,13 @@ function autoRes(rem,sha){var a=info(S),b=info(rem),c=cfg(),same=false;
 window.syKeepCloud=function(){syClose();var r=window._syRem;if(!r)return;try{localStorage.setItem('bny_pre_sync',JSON.stringify({t:Date.now(),s:strip(S)}))}catch(e){}adopt(r.rem,r.sha)};
 window.syKeepMine=function(){syClose();var r=window._syRem,c=cfg();if(!r||!c)return;c.sha=r.sha;setCfg(c);push()};
 window.syRestore=function(){var x=preSync();if(!x)return;syClose();confirmM('استرجاع النسخة المستبدلة من '+tf(x.t)+'؟ ستحل محل البيانات الحالية وتُرفع للسحابة.',function(){var tab=S.tab;S=Object.assign(blank(),x.s);S.tab=tab;try{localStorage.removeItem('bny_pre_sync')}catch(e){}})};
-async function push(){var c=cfg();if(!c||!c.token||!AUTH)return;if(busy){tm=setTimeout(push,2000);return}busy=true;
+async function push(){var c=cfg();if(!c||!c.token||!AUTH)return;if(navigator.onLine===false){c.dirty=true;setCfg(c);return}if(busy){tm=setTimeout(push,2000);return}busy=true;
  try{var body={message:'sync '+new Date().toISOString(),content:enc(strip(S))};if(c.sha)body.sha=c.sha;
   var r=await api(c,'PUT',body);
   if(r.ok){var j=await r.json();c=cfg();c.sha=j.content.sha;c.dirty=false;setCfg(c);stat('✓ '+nowS())}
   else if(r.status===409||r.status===422){busy=false;c.dirty=true;setCfg(c);return pull(true)}
   else stat('✗ '+r.status)}catch(e){stat('✗ '+(e&&e.message||''))}finally{busy=false}}
-async function pull(user){var c=cfg();if(!c||!c.token||!AUTH||busy)return;busy=true;
+async function pull(user){var c=cfg();if(!c||!c.token||!AUTH||busy)return;if(navigator.onLine===false){if(user)toast('مفيش إنترنت دلوقتي — بياناتك محفوظة على الجهاز');return}busy=true;
  try{var r=await api(c,'GET');
   if(r.status===404){busy=false;c.sha='';setCfg(c);return push()}
   if(r.status===401||r.status===403){stat('✗ '+r.status);if(user)toast('المفتاح أو المستودع غير صحيح');return}
@@ -1595,7 +1595,7 @@ details.syh{margin:6px 0;border:1px solid var(--bd,#cbd5e1);border-radius:10px;p
 var CK='bny_sync',inflight=0,lastTap=0;
 var f0=window.fetch;window.fetch=function(u){var g=String(u&&u.url||u).indexOf('api.github.com')>=0;if(g)inflight++;var p=f0.apply(this,arguments);if(g){var d=function(){inflight=Math.max(0,inflight-1);paint()};p.then(d,d)}return p};
 function cfg(){try{return JSON.parse(localStorage.getItem(CK))||null}catch(e){return null}}
-function st(){var c=cfg();if(!c||!c.token)return{k:'off',t:'مزامنة',d:'غير متصل'};
+function st(){var c=cfg();if(!c||!c.token)return{k:'off',t:'مزامنة',d:'غير متصل'};if(navigator.onLine===false)return{k:'pend',t:'بدون نت',d:'بدون إنترنت — التغييرات محفوظة على الجهاز وتتزامن أول ما يرجع النت'};
  if(inflight>0)return{k:'spin',t:'جاري…',d:'جاري المزامنة'};
  if(c.last&&c.last.charAt(0)==='✗')return{k:'err',t:'فشلت',d:'فشلت المزامنة ('+c.last.slice(2)+')'};
  if(c.dirty)return{k:'pend',t:'قيد الحفظ',d:'تغييرات لم تُرسل بعد'};
@@ -1618,7 +1618,7 @@ var o0=window.syOpen;window.syOpen=function(){o0.apply(this,arguments);try{var d
  var p=d.querySelector('p.mu');if(p&&/إعداد المزامنة/.test(p.textContent)){var det=document.createElement('details');det.className='syh';if(s.k==='off')det.open=true;det.innerHTML='<summary>كيف أعدّ المزامنة؟</summary><ol style="margin:8px 0 4px;padding-inline-start:20px;line-height:1.8;font-size:13px"><li>أنشئ مستودعاً <b>خاصاً (Private)</b> على موقع GitHub.</li><li>أنشئ مفتاح <bdi dir="ltr">Fine-grained token</bdi> بصلاحية <bdi dir="ltr">Contents: Read and write</bdi> لهذا المستودع فقط.</li><li>الصق المفتاح هنا مع اسم المستودع.</li><li>كرّر نفس الإعداد على كل جهاز.</li></ol>';p.replaceWith(det)}
  if(s.k!=='off'){var bt=d.querySelector('.bt');if(bt){var big=document.createElement('button');big.className='p sybig';big.textContent='🔄 مزامنة الآن';big.onclick=function(){syNow();toast('جاري المزامنة…');syClose()};bt.parentNode.insertBefore(big,bt);var o=bt.querySelector('button[onclick="syNow()"]');if(o)o.remove()}}
  var st0=[].slice.call(d.querySelectorAll('p.mu')).find(function(x){return x.querySelector('#sy_st')});if(st0)st0.style.display='none'}catch(e){}};
-document.addEventListener('visibilitychange',paint);setInterval(paint,5000);
+document.addEventListener('visibilitychange',paint);addEventListener('online',paint);addEventListener('offline',paint);setInterval(paint,5000);
 })();
 </script>
 <style id="tidy">
@@ -2265,6 +2265,12 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);try{
 var d0=drawLogin;drawLogin=function(){var o=d0.apply(this,arguments);try{var d=document.querySelector('#login .dlg');if(d&&!d.querySelector('.reh'))d.insertAdjacentHTML('afterbegin','<div class="reh lgh">'+skyline(420,90,5)+'</div>')}catch(e){}return o};
 try{if(AUTH)render();else drawLogin()}catch(e){}
 })();
+</script>
+<style id="offcss">#offb{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:50;background:#1f2937;color:#fff;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.25);display:none;pointer-events:none}#offb.on{display:block}</style>
+<script>
+(function(){var b=document.createElement('div');b.id='offb';b.textContent='📴 بدون إنترنت — البرنامج شغّال من الجهاز';document.body.appendChild(b);
+function u(){try{b.classList.toggle('on',navigator.onLine===false)}catch(e){}}
+addEventListener('online',function(){u();try{if(typeof toast==='function')toast('رجع الإنترنت')}catch(e){}});addEventListener('offline',u);u()})();
 </script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
