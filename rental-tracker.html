@@ -3672,5 +3672,24 @@ try{if(AUTH)render()}catch(e){}
 })();
 </script>
 
+<script id="backgest">
+(function(){
+function N(){try{return window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()&&Capacitor.Plugins&&Capacitor.Plugins.App}catch(e){return null}}
+var last=0;
+function back(canGoBack){try{
+ var hd=document.querySelector('.hd.mopen');if(hd){var b=document.querySelector('.hd .hmb,#hmb,[onclick*="mopen"]');hd.classList.remove('mopen');try{var hm=document.getElementById('hmp');if(hm)hm.classList.remove('on','op')}catch(e){}return}
+ var im=document.querySelector('body>.fx-img');if(im){im.remove();return}
+ var ovs=[].slice.call(document.querySelectorAll('body>.ov'));if(ovs.length){ovs[ovs.length-1].remove();return}
+ var m=document.getElementById('modal');if(m&&m.innerHTML.trim()){try{closeM()}catch(e){m.innerHTML=''}return}
+ if(canGoBack){history.back();return}
+ if(typeof UV!=='undefined'&&UV.open){UV.open=null;render();scrollTo(0,0);return}
+ if(S&&S.tab&&S.tab!=='home'){S.tab='home';render();scrollTo(0,0);return}
+ var now=Date.now();if(now-last<2000){N().minimizeApp?N().minimizeApp():N().exitApp();last=0;return}
+ last=now;toast('اسحب تاني عشان تخرج من البرنامج')}catch(e){}}
+function init(){var A=N();if(!A||!A.addListener)return;A.addListener('backButton',function(e){back(e&&e.canGoBack)})}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+window.bnyBack=back;
+})();
+</script>
 </body>
 </html>
