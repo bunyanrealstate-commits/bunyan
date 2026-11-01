@@ -312,9 +312,9 @@ let SNAP=null,ocrW=null,ocrP=null,ocrBusy=false;
 function grab(src){try{const w=src.videoWidth||src.naturalWidth||src.width,h=src.videoHeight||src.naturalHeight||src.height;if(!w||!h)return null;const k=Math.min(1,1600/Math.max(w,h)),c=document.createElement("canvas");c.width=Math.round(w*k);c.height=Math.round(h*k);c.getContext("2d").drawImage(src,0,0,c.width,c.height);return c}catch(e){return null}}
 function loadS(urls){return new Promise((res,rej)=>{let i=0;const go=()=>{if(window.Tesseract)return res(window.Tesseract);if(i>=urls.length)return rej();const s=document.createElement("script");s.src=urls[i++];s.onload=()=>window.Tesseract?res(window.Tesseract):go();s.onerror=go;document.head.appendChild(s)};go()})}
 function getOcr(){if(ocrW)return Promise.resolve(ocrW);if(ocrP)return ocrP;
- ocrP=(async()=>{let local=false;try{const r=await fetch("tess/eng.traineddata.gz",{method:"HEAD"});local=r.ok}catch(e){}
+ ocrP=(async()=>{let local=false;try{const r=await fetch("tess/eng.traineddata",{method:"HEAD"});local=r.ok}catch(e){}
   const T=await loadS(local?["tess/tesseract.min.js"]:["https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js","https://unpkg.com/tesseract.js@5.1.1/dist/tesseract.min.js"]);
-  const base=location.href.replace(/[^/]*$/,"");const opt=local?{workerPath:base+"tess/worker.min.js",corePath:base+"tess/",langPath:base+"tess/",gzip:true,workerBlobURL:false}:{};
+  const base=location.href.replace(/[^/]*$/,"");const opt=local?{workerPath:base+"tess/worker.min.js",corePath:base+"tess/",langPath:base+"tess/",gzip:false,workerBlobURL:false}:{};
   ocrW=await T.createWorker("eng",1,opt);try{await ocrW.setParameters({tessedit_pageseg_mode:"11"})}catch(e){}return ocrW})().catch(e=>{ocrP=null;throw e});return ocrP}
 function prep(c){const x=c.getContext("2d",{willReadFrequently:true}),d=x.getImageData(0,0,c.width,c.height),p=d.data;for(let i=0;i<p.length;i+=4){const g=.299*p[i]+.587*p[i+1]+.114*p[i+2],v=g>150?255:g<90?0:(g-90)*4.25;p[i]=p[i+1]=p[i+2]=v}x.putImageData(d,0,0);return c}
 function parseLabel(t,code){const L=String(t||"").split(/\n/).map(x=>x.replace(/[|_~`'"“”‘’«»]/g," ").replace(/\s+/g," ").trim()).filter(x=>x.length>1);
