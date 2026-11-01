@@ -3219,5 +3219,79 @@ window.bnyBack=back;
  if(co){co.classList.add('coc');[].forEach.call(co.querySelectorAll('.li'),function(li){var b=li.querySelector('button[onclick^="togI("]');if(b){b.textContent=b.classList.contains('p')?'✓ اتدفعت':'لسه'}var sp=li.querySelector('span');if(sp)sp.textContent=sh(sp.textContent.replace(/دفعة\s*(\d+)\s*•\s*/,'$1 • '))});[].forEach.call(co.querySelectorAll('.kv b'),function(x){x.textContent=sh(x.textContent)})}
  if(fu&&tn&&fu.compareDocumentPosition(tn)&Node.DOCUMENT_POSITION_FOLLOWING)tn.insertAdjacentElement('afterend',fu)}catch(e){}return o};try{if(AUTH)render()}catch(e){}})();
 </script>
+<style id="aicss">
+#aifab{position:fixed;left:max(14px,env(safe-area-inset-left,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:300;width:58px;height:58px;border-radius:50%;border:0;background:linear-gradient(145deg,#14b8a6,#0d6f5e);color:#fff;font-size:27px;box-shadow:0 8px 22px rgba(13,111,94,.45);cursor:pointer;display:flex;align-items:center;justify-content:center}
+body:has(.ov) #aifab,body.pv #aifab{display:none}
+#aix .dlg{max-width:620px;width:calc(100% - 16px);height:calc(100dvh - 40px);max-height:calc(100dvh - 40px);display:flex;flex-direction:column;padding:14px!important;padding-top:52px!important}
+#aix .aih{display:flex;align-items:center;gap:8px;margin:0 0 8px}#aix .aih h2{margin:0;font-size:18px;flex:1}
+#aix .ail{flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:4px 2px}
+#aix .am{max-width:88%;padding:10px 13px;border-radius:16px;line-height:1.65;font-size:15px;white-space:pre-wrap;word-break:break-word}
+#aix .am.u{align-self:flex-start;background:var(--ac,#14b8a6);color:#fff;border-bottom-right-radius:5px}
+#aix .am.a{align-self:flex-end;background:var(--card2,#eef7f5);border:1px solid var(--bd,#d6e7e2);border-bottom-left-radius:5px}
+#aix .am.e{align-self:center;background:rgba(229,72,77,.1);color:#c0392b;font-size:13.5px}
+#aix .aiq{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+#aix .aiq button{font-size:13px;padding:6px 10px;border-radius:999px;border:1.5px solid var(--bd,#cfe3de);background:var(--card,#fff);color:inherit;cursor:pointer}
+#aix .aif{display:flex;gap:8px;align-items:flex-end;margin-top:6px}
+#aix .aif textarea{flex:1;min-height:46px;max-height:130px;resize:none;border-radius:14px;border:1.5px solid var(--bd,#cfe3de);padding:10px 12px;font:inherit;background:var(--card,#fff);color:inherit;box-sizing:border-box}
+#aix .aif button{height:46px;min-width:56px;border-radius:14px;border:0;background:var(--ac,#14b8a6);color:#fff;font-size:20px;cursor:pointer}
+#aix .aik{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:14px;background:var(--card2,#f3faf8);border:1px dashed var(--bd,#cfe3de);font-size:14px;line-height:1.6}
+#aix .aik input{direction:ltr;padding:10px;border-radius:10px;border:1.5px solid var(--bd,#cfe3de);font:inherit;background:var(--card,#fff);color:inherit}
+#aix .typing{opacity:.65}
+</style>
+<script id="aijs">
+(function(){
+if(window.HBUILD===undefined)window.HBUILD=window.HBUILD;
+var KEY='bny_ai_key',H=[],busy=false,SM=null,smTried=false;
+function key(){try{return localStorage.getItem(KEY)||''}catch(e){return ''}}
+function E(x){return esc(x==null?'':String(x))}
+function md(t){return E(t).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/^#+\s*(.+)$/gm,'<b>$1</b>').replace(/^\s*[-•]\s+/gm,'• ')}
+async function sampler(){if(smTried)return SM;smTried=true;try{if(window.claude&&claude.use){SM=await claude.use('sample')}}catch(e){SM=null}return SM}
+function r2(n){return Math.round((+n||0)*100)/100}
+function ctx(){var t=today(),o={today:iso(t),group:(S.groups||[]).filter(function(g){return g.id===WS})[0]||WS,mode:S.pmode==='me'?'حصتي الشخصية':'المجموعة كاملة',cash:r2(cashNow())};
+ try{o.profitToDate=rcvP()}catch(e){}
+ try{o.partnershipFund=(S.gp||{})[WS]||[]}catch(e){}
+ o.studios=SU().map(function(u){var cm=u.cm||12,T=(u.total||isumOf(u)),fu=+u.furn||0;return {name:u.name,company:u.company,companyStart:u.start,companyMonths:cm,companyEnd:iso(addM(pd(u.start),cm)),freeDays:u.grace||0,companyTotal:T,furniture:fu,furniturePaid:!!u.fp,furnitureSalvageAtEnd:+u.salv||0,monthlyCost:r2((T+fu)/cm),share:sh(u),
+  installments:u.inst.map(function(i,k){return {n:k+1,date:i.d,amount:i.a,paid:!!i.p}}),
+  leases:u.leases.map(function(L){var rows=[];for(var i=0;i<L.months;i++){var got=(L.rcv||[]).indexOf(i)>=0,at=(L.rat||{})[i];rows.push({n:i+1,due:iso(payD(L,i)),amount:r2(la(L,i)),paid:got,paidOn:at?iso(new Date(at)):null,paidAmount:got?r2((L.rav&&L.rav[i]!=null)?L.rav[i]:la(L,i)):null})}
+   var e;try{e=iso(lend(L))}catch(x){e=L.end}return {tenant:L.tenant,phone:L.phone,start:L.start,end:e,stoppedOn:L.exit||null,monthlyRent:L.rent,payDay:L.day,contractMonths:L.cmo||L.months,note:L.note||'',schedule:rows,deposit:(window.depOf&&L.id&&depOf(L))||null,cheques:(window.chqList?chqList(L):[]).length}})}});
+ o.expenses=SE().map(function(x){var u=x.u&&U(x.u);return {on:u?u.name:'عام',what:x.w,amount:x.a,date:x.d,repeatMonths:x.n||1}});
+ o.cashMovements=(S.adj||[]).filter(function(a){return WS==='all'||(a.g||'')===((WS==='-')?'':WS)}).map(function(a){return {date:iso(new Date(a.at)),amount:a.a,what:a.w,kind:a.k||'adjust',person:a.p==='__me'?'أنا':a.p}});
+ o.cashNote=(S.cnote||{})[(WS==='all'||WS==='-')?'':WS]||'';
+ try{o.upcoming=items().filter(function(x){var n=dd(x.d);return n>=-60&&n<=120}).map(function(x){return {type:x.ty,date:x.d,daysLeft:dd(x.d),what:x.label,amount:r2(x.amt)}})}catch(e){}
+ try{o.recentEdits=(S.hist||[]).slice(0,15).map(function(h){return {when:iso(new Date(h.t)),by:h.by,what:String(h.d||'').slice(0,160)}})}catch(e){}
+ return JSON.stringify(o)}
+var SYS="إنت مساعد ذكي جوه برنامج «بنيان فيرنيشد» لإدارة استديوهات مفروشة بيأجرها المالك (أسامة) من شركات ويفرشها ويأجرها بالشهر، غالباً بالشراكة مع شركاء. رد دايماً بالعامية المصرية، باختصار ووضوح، واعرض الحساب خطوة بخطوة بالأرقام لما السؤال فيه أرقام. اعتمد بس على البيانات اللي في JSON تحت ومتألفش أرقام؛ لو المعلومة مش موجودة قول كده.\n"
++"قواعد الحساب في البرنامج:\n- تكلفة الشهر للاستديو = (إجمالي عقد الشركة + تمن الفرش) ÷ عدد شهور عقد الشركة.\n- الربح حتى اليوم = الإيجار المقبوض − (تكلفة الشهر × عدد الشهور اللي اتقبض إيجارها) − المصاريف. الإيجار المقبوض لوحده مش ربح.\n- الربح المتوقع على مدة العقود = (الإيجار الشهري − تكلفة الشهر) × شهور عقد المستأجر. أيام الشركة المجانية بتغطي أيام الفاضي أو بتتحسب مكسب.\n- قيمة الأثاث المستردة بتتحسب بس في نهاية عقد الشركة.\n- الرصيد النقدي = كل الفلوس اللي دخلت فعلاً − اللي خرجت فعلاً (دفعات الشركة المدفوعة من النقدي، المصاريف، السحوبات) + الرجوع.\n- فلوس الشراكة: الشركاء بيحطوها وبيتدفع منها أول دفعة للشركة وتمن الفرش؛ باقي دفعات الشركة من الإيجارات.\n- السحب الشخصي أو للشريك بيقلل النقدي بس ومش مصروف ولا بيقلل الربح، ويفضل دين على الشخص لحد ما يرجّعه.\n- الحساب بالشهر، والأيام بس للباقي (الإيجار ÷ 30 × الأيام).\n- الأرقام على مستوى المجموعة كاملة إلا لو الوضع «حصتي الشخصية».\nلو المستخدم طلب تعديل بيانات، قوله يعمله بنفسه من المكان الفلاني في البرنامج (إنت بتقرا بس).";
+function draw(){var d=document.getElementById('aix');if(!d)return;var L=d.querySelector('.ail');var h='';
+ if(!H.length)h+="<div class='am a'>أهلاً 👋 اسألني عن أي حاجة في البرنامج: الربح جه منين، مين متأخر، الدفعة الجاية إمتى، لو أجّرت بسعر تاني هيحصل إيه…</div><div class='aiq'>"+['الربح لحد النهارده جه منين؟','إيه الدفعات اللي عليّ الشهرين الجايين؟','مين متأخر في الدفع؟','لو العقد اتجدد بـ 3500 الربح هيبقى كام؟','لخصلي وضع كل استديو'].map(function(q){return "<button onclick=\"aiAsk(this.textContent)\">"+E(q)+"</button>"}).join('')+"</div>";
+ H.forEach(function(m){h+="<div class='am "+(m.role==='user'?'u':(m.err?'e':'a'))+"'>"+(m.role==='user'?E(m.content):md(m.content))+"</div>"});
+ if(busy)h+="<div class='am a typing'>بفكر… ⏳</div>";
+ L.innerHTML=h;L.scrollTop=L.scrollHeight}
+async function needKey(){var s=await sampler();return !s&&!key()}
+function keyUI(){return "<div class='aik'><b>🔑 تفعيل المساعد على الموبايل</b><span>المساعد بيحتاج مفتاح Claude API. اعمله مرة واحدة من console.anthropic.com ← API Keys، وانسخه هنا. المفتاح بيتحفظ على الجهاز ده بس، ومش بيتزامن ولا بيتبعت لأي حد غير Anthropic.</span><input id='aikey' placeholder='sk-ant-...' autocomplete='off'><button class='p' onclick='aiSaveKey()'>حفظ المفتاح</button></div>"}
+window.aiSaveKey=function(){var v=(document.getElementById('aikey')||{}).value||'';v=v.trim();if(!/^sk-ant-/.test(v)){toast('المفتاح لازم يبدأ بـ sk-ant-');return}try{localStorage.setItem(KEY,v)}catch(e){}aiOpen()};
+window.aiForget=function(){confirmM('تمسح مفتاح المساعد من الجهاز ده؟',function(){try{localStorage.removeItem(KEY)}catch(e){}document.getElementById('aix')&&document.getElementById('aix').remove()})};
+window.aiOpen=async function(){var d=document.getElementById('aix');if(d)d.remove();d=document.createElement('div');d.id='aix';d.className='ov fx-ov';d.onclick=function(e){if(e.target===d)d.remove()};
+ var nk=await needKey();
+ d.innerHTML="<div class='dlg'><button class='xcl' onclick=\"this.closest('.ov').remove()\">✕</button><div class='aih'><h2>🤖 المساعد</h2>"+(key()?"<button style='font-size:12px;padding:4px 9px' onclick='aiForget()'>🔑 المفتاح</button>":"")+(H.length?"<button style='font-size:12px;padding:4px 9px' onclick='aiClear()'>🧹 جديد</button>":"")+"</div>"+(nk?keyUI():"<div class='ail'></div><div class='aif'><textarea id='aiin' rows='1' placeholder='اكتب سؤالك…' onkeydown=\"if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiAsk()}\"></textarea><button onclick='aiAsk()'>➤</button></div>")+"</div>";
+ document.body.appendChild(d);if(!nk){draw();setTimeout(function(){var i=document.getElementById('aiin');i&&i.focus()},80)}};
+window.aiClear=function(){H=[];aiOpen()};
+window.aiAsk=async function(q){var i=document.getElementById('aiin');q=String(q||(i&&i.value)||'').trim();if(!q||busy)return;if(i)i.value='';H.push({role:'user',content:q});busy=true;draw();
+ var msgs=H.filter(function(m){return !m.err}).slice(-12).map(function(m){return {role:m.role,content:m.content}});
+ msgs[0]={role:'user',content:'بيانات البرنامج الحالية (JSON):\n'+ctx()+'\n\n'+(msgs[0].role==='user'?msgs[0].content:'')};
+ if(msgs[0].role!=='user')msgs.unshift({role:'user',content:'بيانات البرنامج الحالية (JSON):\n'+ctx()});
+ var ans='',err='';
+ try{var s=await sampler();
+  if(s){var r=await s([{role:'user',content:SYS}].concat([{role:'assistant',content:'تمام، فاهم القواعد.'}]).concat(msgs),{cache:false,modelTier:'default'});ans=r.text}
+  else{var k=key();if(!k)throw new Error('nokey');
+   var rs=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-5-5',max_tokens:1800,system:SYS,messages:msgs})});
+   var j=await rs.json();if(!rs.ok)throw new Error((j&&j.error&&j.error.message)||('HTTP '+rs.status));ans=(j.content||[]).filter(function(c){return c.type==='text'}).map(function(c){return c.text}).join('\n')}}
+ catch(e){err=String(e&&e.message||e);if(err==='nokey')err='محتاج مفتاح API الأول.';else if(/invalid x-api-key|authentication/i.test(err))err='المفتاح غلط — امسحه من زرار 🔑 وحط مفتاح صح.';else if(/credit|billing/i.test(err))err='رصيد حساب الـ API خلص — اشحن من console.anthropic.com.';else if(/Failed to fetch|NetworkError/i.test(err))err='مفيش اتصال بالإنترنت، أو المساعد مش متاح من هنا.';else err='حصل خطأ: '+err}
+ busy=false;H.push(err?{role:'assistant',content:err,err:1}:{role:'assistant',content:ans||'…'});draw()};
+function fab(){if(document.getElementById('aifab'))return;var b=document.createElement('button');b.id='aifab';b.type='button';b.title='اسأل المساعد';b.textContent='🤖';b.onclick=aiOpen;document.body.appendChild(b)}
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{var f=document.getElementById('aifab');if(AUTH){fab();document.getElementById('aifab').style.display=''}else if(f)f.style.display='none'}catch(e){}return o};
+try{if(AUTH)render()}catch(e){}
+})();
+</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
