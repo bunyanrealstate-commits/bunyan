@@ -2298,6 +2298,7 @@ function parse(text){
 let pendingCode=null;
 // ---------- read name + price from the label (OCR) ----------
 let SNAP=null,ocrW=null,ocrP=null,ocrBusy=false;
+function grabBox(src,b){try{const W=src.videoWidth||src.naturalWidth||src.width,H=src.videoHeight||src.naturalHeight||src.height;if(!b||!W)return grab(src);let x=b.x-b.width*.7,y=b.y-b.height*.9,w=b.width*2.4,h=b.height*4.2;x=Math.max(0,x);y=Math.max(0,y);w=Math.min(W-x,w);h=Math.min(H-y,h);if(w<40||h<40)return grab(src);const k=Math.min(3,Math.max(1,1100/w)),c=document.createElement("canvas");c.width=Math.round(w*k);c.height=Math.round(h*k);c.getContext("2d").drawImage(src,x,y,w,h,0,0,c.width,c.height);return c}catch(e){return grab(src)}}
 function grab(src){try{const w=src.videoWidth||src.naturalWidth||src.width,h=src.videoHeight||src.naturalHeight||src.height;if(!w||!h)return null;const k=Math.min(1,1600/Math.max(w,h)),c=document.createElement("canvas");c.width=Math.round(w*k);c.height=Math.round(h*k);c.getContext("2d").drawImage(src,0,0,c.width,c.height);return c}catch(e){return null}}
 function loadS(urls){return new Promise((res,rej)=>{let i=0;const go=()=>{if(window.Tesseract)return res(window.Tesseract);if(i>=urls.length)return rej();const s=document.createElement("script");s.src=urls[i++];s.onload=()=>window.Tesseract?res(window.Tesseract):go();s.onerror=go;document.head.appendChild(s)};go()})}
 function getOcr(){if(ocrW)return Promise.resolve(ocrW);if(ocrP)return ocrP;
@@ -2315,13 +2316,13 @@ function parseLabel(t,code){const L=String(t||"").split(/\n/).map(x=>x.replace(/
  const sc=l=>(l.match(/[A-Za-z؀-ۿ]/g)||[]).length-(l.match(/[^A-Za-z؀-ۿ0-9 .\-\/x]/g)||[]).length*2;
  cand.sort((a,b)=>sc(b)-sc(a));let name=(cand[0]||"").replace(/^[^A-Za-z؀-ۿ0-9]+|[^A-Za-z؀-ۿ0-9)]+$/g,"").trim();
  if(price!=null&&!(price>0&&price<100000))price=null;return{name,price}}
-async function ocrFill(code){const c=SNAP;SNAP=null;if(!c||ocrBusy)return;ocrBusy=true;const st=$("sheetTitle"),t0=st?st.textContent:"";
- try{if(st)st.textContent="⏳ بقرأ الاسم والسعر من الملصق…";const w=await getOcr();if($("sheet").hidden||pendingCode!==code)return;
+async function ocrFill(code,priceOnly){const c=SNAP;SNAP=null;if(!c||ocrBusy)return;ocrBusy=true;const st=$("sheetTitle"),t0=st?st.textContent:"";
+ try{if(st)st.textContent=priceOnly?"⏳ بقرأ السعر من الملصق…":"⏳ بقرأ الاسم والسعر من الملصق…";const w=await getOcr();if($("sheet").hidden||pendingCode!==code)return;
   const r=await w.recognize(prep(c));if($("sheet").hidden||pendingCode!==code)return;const o=parseLabel(r&&r.data&&r.data.text,code);
-  if(o.name&&!$("pName").value)$("pName").value=(typeof toAr==="function"&&toAr(o.name))||o.name;if(o.price!=null&&!$("pPrice").value)$("pPrice").value=String(o.price);
+  if(!priceOnly&&o.name&&!$("pName").value)$("pName").value=(typeof toAr==="function"&&toAr(o.name))||o.name;if(o.price!=null&&!$("pPrice").value)$("pPrice").value=String(o.price);
   if(o.price!=null){if(!$("pName").value)$("pName").value="منتج "+code;if(st)st.textContent="✅ اتقرأ من الملصق";toast("📷 اتقرأ: "+$("pName").value+" — "+fmt(o.price)+" "+CUR);
    setTimeout(()=>{if(!$("sheet").hidden&&pendingCode===code){const f=$("prodForm");f.requestSubmit?f.requestSubmit():f.dispatchEvent(new Event("submit",{cancelable:true}))}},900)}
-  else{if(st)st.textContent="منتج جديد — ما قدرتش أقرأ السعر، اكتبه";$("pPrice").focus()}
+  else{if(st)st.textContent=(priceOnly?"🔁 كود شبه — ":"منتج جديد — ")+"ما قدرتش أقرأ السعر، اكتبه";$("pPrice").focus()}
  }catch(e){if(st)st.textContent=t0||"منتج جديد"}finally{ocrBusy=false}}
 
 
@@ -2333,8 +2334,8 @@ function handleCode(text){
   if(p){addToCart(text,p.name,p.price);return}
   pendingCode=text; $("sheetCode").textContent="الكود: "+text; $("pName").value=""; $("pPrice").value="";
   const st0=$("sheetTitle"),sim=similarOf(text);if(st0)st0.textContent="منتج جديد";
-  if(sim){$("pName").value=sim.p.name;if(st0)st0.textContent="🔁 كود شبه «"+sim.p.name+"» — اكتب السعر";$("sheetCode").textContent="الكود: "+text+"  •  شبه: "+sim.code+(sim.p.price!=null?" ("+fmt(+sim.p.price)+" "+CUR+")":"");SNAP=null;
-   $("sheet").hidden=false;setTimeout(()=>{$("pPrice").focus()},60);return}
+  if(sim){$("pName").value=sim.p.name;if(st0)st0.textContent="🔁 كود شبه «"+sim.p.name+"» — اكتب السعر";$("sheetCode").textContent="الكود: "+text+"  •  شبه: "+sim.code+(sim.p.price!=null?" ("+fmt(+sim.p.price)+" "+CUR+")":"");
+   $("sheet").hidden=false;setTimeout(()=>{$("pPrice").focus()},60);if(SNAP)ocrFill(text,1);return}
   $("sheet").hidden=false; setTimeout(()=>$("pName").focus(),50); if(SNAP)ocrFill(text);
 }
 function similarOf(code){code=String(code||"").trim();if(!/^\d{6,}$/.test(code))return null;const strip=c=>c.length>=12?c.slice(0,-1):c,a=strip(code);let best=null;
@@ -2430,14 +2431,14 @@ async function startLive(){
   $("vf").querySelector("#vfMsg").hidden=true;setStatus("وجّه الكاميرا على الكود…");
   try{const r=$("vf").getBoundingClientRect();if(r.top<60||r.bottom>innerHeight)$("vf").scrollIntoView({block:"start",behavior:"smooth"})}catch(e){}
   setTimeout(()=>{if(stream)try{getOcr().catch(()=>{})}catch(e){}},5000);
-  const hit=(txt,t)=>{const gap=t-seenAt,same=txt===last;seenAt=t;if(t>=holdUntil&&(!same||gap>450)){last=txt;holdUntil=t+900;SNAP=grab(v);handleCode(txt)}};
+  const hit=(txt,t,box)=>{const gap=t-seenAt,same=txt===last;seenAt=t;if(t>=holdUntil&&(!same||gap>450)){last=txt;holdUntil=t+900;SNAP=box?grabBox(v,box):grab(v);handleCode(txt)}};
   const tick=()=>{
     if(!stream)return;
     raf=requestAnimationFrame(tick);
     if(v.readyState<2||document.hidden)return;
     const now=Date.now();
     if(["sheet","mSheet","pSheet","eSheet","hSheet","fSheet","lSheet","iSheet"].some(id=>{const e=$(id);return e&&!e.hidden})){seenAt=now;return}
-    if(BD){if(!bdBusy){bdBusy=true;BD.detect(v).then(a=>{bdBusy=false;if(a&&a.length&&stream)hit(a[0].rawValue,Date.now())}).catch(()=>{bdBusy=false})}return}
+    if(BD){if(!bdBusy){bdBusy=true;BD.detect(v).then(a=>{bdBusy=false;if(a&&a.length&&stream)hit(a[0].rawValue,Date.now(),a[0].boundingBox)}).catch(()=>{bdBusy=false})}return}
     if(now-lastDec<70)return;lastDec=now;flip^=1;
     const k=Math.min(1,(flip?640:960)/v.videoWidth),w=Math.round(v.videoWidth*k),h=Math.round(v.videoHeight*k);
     let r=null;if(flip){const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(v,0,0,w,h);if(typeof window.jsQR==="function"){const d=x.getImageData(0,0,w,h);r=window.jsQR(d.data,w,h,{inversionAttempts:"dontInvert"})}}
