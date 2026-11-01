@@ -3814,7 +3814,7 @@ function aMonth(q){var now=today(),y=now.getFullYear(),m=now.getMonth();if(/ال
 function aRatios(){var W=annW(),inc=0,cost=0;SU().forEach(function(u){var P=projU(u);if(P){inc+=P.inc;cost+=P.inc-P.p}});var h='**📈 المؤشرات:**\n';
  if(inc)h+='• هامش الربح = الربح المتوقع ÷ الإيراد = '+F(W.p)+' ÷ '+F(inc)+' = '+(W.p/inc*100).toFixed(1)+'%\n';if(cost>0)h+='• العائد على التكلفة = الربح ÷ التكلفة = '+F(W.p)+' ÷ '+F(cost)+' = '+(W.p/cost*100).toFixed(1)+'%\n';
  SU().forEach(function(u){var L=u.leases[u.leases.length-1];if(!L||!L.rent)return;var net=(u.total||isumOf(u))+(+u.furn||0)-(+u.salv||0);h+='• نقطة التعادل لـ '+u.name+' = (الشركة + الفرش − الأثاث المسترد) ÷ (الإيجار × '+(u.cm||12)+') = '+F(net)+' ÷ '+F(L.rent*(u.cm||12))+' = '+(net/(L.rent*(u.cm||12))*100).toFixed(1)+'% من المدة لازم تكون مؤجرة\n'});return h}
-var HOW=[[/استديو جديد|اضيف استديو|ضيف استديو/,'**إضافة استديو:** الاستديوهات ← زرار «+ استديو» ← اكتب الاسم والشركة وتاريخ الاستلام والمدة والإجمالي والدفعات والفرش ← حفظ.'],
+var HOW=[[/استديو جديد|اضيف استديو|ضيف استديو|اضافه استديو|اضافة استديو/,'**إضافة استديو:** الاستديوهات ← زرار «+ استديو» ← اكتب الاسم والشركة وتاريخ الاستلام والمدة والإجمالي والدفعات والفرش ← حفظ.'],
  [/عقد (مستاجر|جديد)|اضيف مستاجر|ضيف مستاجر/,'**عقد مستأجر جديد:** افتح الاستديو ← «+ عقد مستأجر» ← الاسم ورقم الواتساب والبداية والمدة والإيجار ويوم الدفع والدفعة الأولى تغطي كام شهر ← الجدول بيتبني لوحده ← حفظ. لازم المستأجر يدفع شهر على الأقل.'],
  [/استلم|استلام|سجل (دفعه|ايجار)|دفع الايجار/,'**تسجيل إيجار اتقبض:** افتح الاستديو ← «💵 استلام مبلغ» ← اكتب المبلغ ← حفظ. أو من التنبيه في الداشبورد اضغط «دفع». النقدي بيزيد، والدفعة بتخضر، والربح لحد النهارده بيتحدّث.'],
  [/تمديد|امد|يمد|اجدد|تجديد/,'**تمديد عقد:** افتح الاستديو ← «➕ تمديد» ← الشهور والأيام الإضافية والإيجار الجديد لو اتغير ← تمديد. الدفعات والشيكات وتاريخ النهاية بيتعدلوا لوحدهم.'],
@@ -3865,12 +3865,14 @@ var PRE=['وبال','فال','بال','وال','لل','ال','و','ف','ب','ل'
 function stem(t){var w=t;for(var i=0;i<PRE.length;i++){var p=PRE[i];if(w.indexOf(p)===0&&w.length-p.length>=(p.length===1?4:3)){w=w.slice(p.length);break}}for(var j=0;j<SUF.length;j++){var s=SUF[j];if(w.length-s.length>=3&&w.slice(-s.length)===s){w=w.slice(0,-s.length);break}}return w}
 function toks(q){return nz(q).replace(/[^؀-ۿa-z0-9.%+\-*/×÷ ]/g,' ').split(/\s+/).filter(Boolean)}
 function lev(a,b){if(Math.abs(a.length-b.length)>2)return 9;var m=[],i,j;for(i=0;i<=a.length;i++)m[i]=[i];for(j=0;j<=b.length;j++)m[0][j]=j;for(i=1;i<=a.length;i++)for(j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return m[a.length][b.length]}
-function feq(a,b){if(a===b)return true;var sa=stem(a),sb=stem(b);if(sa===sb)return true;var L=Math.min(sa.length,sb.length);return (L>=4&&lev(sa,sb)<=1)||(L>=7&&lev(sa,sb)<=2)}
+function pre(t){for(var i=0;i<PRE.length;i++){var p=PRE[i];if(t.indexOf(p)===0&&t.length-p.length>=(p.length===1?4:3))return t.slice(p.length)}return t}
+function col(x){return x.replace(/(.)\1+/g,'$1')}
+function feq(a,b){if(a===b)return true;a=col(a);b=col(b);if(a===b)return true;var sa=stem(a),sb=stem(b);if(sa===sb)return true;var L=Math.min(sa.length,sb.length);if(sa[0]===sb[0]&&((L>=4&&lev(sa,sb)<=1)||(L>=8&&lev(sa,sb)<=2)))return true;var pa=pre(a),pb=pre(b),L2=Math.min(pa.length,pb.length);return pa[0]===pb[0]&&((L2>=4&&lev(pa,pb)<=1)||(L2>=8&&lev(pa,pb)<=2))}
 function hasW(T,w){var ws=w.split(' ');if(ws.length>1){var j=T.join(' ');return j.indexOf(nz(w))>=0||ws.every(function(x){return T.some(function(t){return feq(t,x)})})}return T.some(function(t){return feq(t,w)})}
 var MON=['يناير','فبراير','مارس','ابريل','مايو','يونيو','يوليو','اغسطس','سبتمبر','اكتوبر','نوفمبر','ديسمبر'],MONs=[['جانيوري','january','jan'],['فبراير','february','feb'],['مارس','march'],['ابريل','april','apr'],['مايو','may'],['يونيه','june'],['يوليه','july'],['اغسطس','august'],['سبتمبر','september','sep'],['اكتوبر','october','oct'],['نوفمبر','november','nov'],['ديسمبر','december','dec']];
 function findMonth(q){var z=nz(q);for(var i=0;i<12;i++){if(z.indexOf(MON[i])>=0||MONs[i].some(function(x){return z.indexOf(x)>=0}))return i}var m=z.match(/شهر\s*(\d{1,2})(?!\d)/);if(m&&+m[1]>=1&&+m[1]<=12)return +m[1]-1;return -1}
 function partners(){var g=(S.groups||[]).filter(function(x){return x.id===WS})[0],n=g?String(g.name||'').replace(/^\s*مع\s+/,''):'';return n?n.split(/\s+و(?=\S)/).map(function(x){return x.trim()}).filter(Boolean):[]}
-function findPartner(q){var z=nz(q),r=null;partners().forEach(function(p){if(z.indexOf(nz(p))>=0)r=p});return r}
+function findPartner(q){var z=col(nz(q)),r=null;partners().forEach(function(p){if(z.indexOf(col(nz(p)))>=0)r=p});return r}
 /* ---------- خريطة البرنامج: مكان كل حاجة ---------- */
 var MAP=[
  ['الرصيد النقدي|النقدي|الكاش','الداشبورد ← أول كارت «💵 الرصيد النقدي» (اضغط عليه يفتح المعادلة). وكمان في الحسابات.'],
@@ -3956,41 +3958,55 @@ function aCompanyIf(q){var nums=(nz(q).match(/\d+/g)||[]).map(Number),T=nums.fil
  return '**لو عقد الشركة لـ '+st.name+' بقى '+F(T)+':**\n• تكلفة الشهر = ('+F(T)+' + '+F(fu)+') ÷ '+cm+' = '+F(mc)+' (بدل '+F(B.mcOf(st))+')\n'+(rent?'• ربح الشهر بإيجار '+F(rent)+' = '+F(rent-mc)+'\n':'')+'• أقل إيجار يغطي التكلفة: '+F(mc)}
 function aEdits(){var H=(S.hist||[]).slice(0,8);if(!H.length)return 'مفيش تعديلات متسجلة.';return '**🕘 آخر التعديلات:**\n'+H.map(function(e){return '• '+new Date(e.t).toLocaleString(LOC(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})+' — '+(e.by||'')+': '+String(e.d||'').slice(0,110)}).join('\n')+'\n\nالسجل كله في تبويب «سجل النشاط».'}
 function aDaysTo(q){var t=B.findTenant(nz(q)),st=!t&&B.findStudio(nz(q));if(t){var e=B.leaseEnd(t.L);return '⏳ عقد '+(t.L.tenant||'')+' بيخلص '+fd(e)+' — فاضل '+B.rem(e)+'.'}if(st){var e2=addM(pd(st.start),st.cm||12);return '⏳ عقد الشركة لـ '+st.name+' بيخلص '+fd(e2)+' — فاضل '+B.rem(e2)+'.'}return null}
-function aSmall(q){var z=nz(q);if(/^(السلام|سلام|اهلا|هاي|hi|hello|صباح|مساء)/.test(z))return 'أهلاً بيك يا '+((A&&A.u)||'أسامة')+' 👋 اسألني عن أي رقم أو مكان في البرنامج.';if(/شكرا|متشكر|تسلم|ميرسي|thanks/.test(z))return 'العفو 🌷 أي سؤال تاني أنا موجود.';if(/انت مين|اسمك|بتعمل ايه|بتعرف ايه/.test(z))return 'أنا مساعد بنيان 🤖. شغال جوه البرنامج من غير إنترنت ومن غير اشتراك. بقرا أرقامك وعقودك وبحسبلك خطوة بخطوة، وبعرف مكان كل حاجة في البرنامج، وبتعلم من تصحيحاتك (👎).';return null}
+function aSmall(q){var z=nz(q);if(/انت مين|مين انت|اسمك ايه|اسمك|مين عملك|مين صممك|عرفني بنفسك|انت ايه/.test(z))return aWho();if(/^(انا مين|مين انا|اعرف عني ايه|تعرفني)/.test(z))return aMe();if(/^(السلام|سلام|اهلا|هاي|hi|hello|صباح|مساء)/.test(z))return 'أهلاً بيك يا '+((A&&A.u)||'أسامة')+' 👋 اسألني عن أي رقم أو مكان في البرنامج.';if(/شكرا|متشكر|تسلم|ميرسي|thanks/.test(z))return 'العفو 🌷 أي سؤال تاني أنا موجود.';if(/انت مين|اسمك|بتعمل ايه|بتعرف ايه/.test(z))return 'أنا مساعد بنيان 🤖. شغال جوه البرنامج من غير إنترنت ومن غير اشتراك. بقرا أرقامك وعقودك وبحسبلك خطوة بخطوة، وبعرف مكان كل حاجة في البرنامج، وبتعلم من تصحيحاتك (👎).';return null}
+
+/* ---------- إنترنت: عملات وتعريفات ---------- */
+var CUR=[['AED',/درهم|اماراتي|aed/],['EGP',/جنيه|مصري|egp|بالمصري/],['USD',/دولار|usd|\$/],['EUR',/يورو|eur/],['SAR',/ريال|سعودي|sar/],['KWD',/دينار|كويتي|kwd/],['GBP',/استرليني|جنيه انجليزي|gbp/]];
+function rates(){var c=null;try{c=JSON.parse(localStorage.getItem('bny_fx')||'null')}catch(e){}if(c&&Date.now()-c.t<6*3600e3)return Promise.resolve(c);return fetch('https://open.er-api.com/v6/latest/AED').then(function(r){return r.json()}).then(function(j){if(!j||!j.rates)throw new Error('x');var o={t:Date.now(),r:j.rates,u:j.time_last_update_utc};try{localStorage.setItem('bny_fx',JSON.stringify(o))}catch(e){}return o}).catch(function(){if(c)return c;throw new Error('net')})}
+function aFx(q){var z=nz(q),found=[];CUR.forEach(function(c){var m=z.search(c[1]);if(m>=0)found.push([m,c[0]])});found.sort(function(a,b){return a[0]-b[0]});var from=(found[0]||[0,'AED'])[1],to=(found[1]||[0,from==='EGP'?'AED':'EGP'])[1];if(from===to)to=from==='AED'?'EGP':'AED';
+ var n=(z.match(/\d+(\.\d+)?/)||[])[0];var amt=n?+n:0;if(!amt){var cn=0;try{cn=cashNow()}catch(e){}if(/نقدي|رصيد|معايا/.test(z))amt=cn;else amt=1}
+ return rates().then(function(o){var a=o.r[from],b=o.r[to];if(!a||!b)return 'العملة دي مش عندي.';var v=amt/a*b;return '💱 **'+F(amt)+' '+from+' = '+(v>=100?F(v):v.toFixed(3))+' '+to+'**\n• سعر الصرف: 1 '+from+' = '+(b/a).toFixed(4)+' '+to+'\n• المصدر: open.er-api.com — آخر تحديث '+(o.u||'')+'\n(أرقام البرنامج نفسها بتفضل بعملتها الأصلية.)'}).catch(function(){return '⚠️ محتاج إنترنت عشان أجيب سعر الصرف دلوقتي.'})}
+function aWiki(term){term=String(term||'').replace(/[؟?!.]/g,'').trim();if(!term)return null;return fetch('https://ar.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(term.replace(/\s+/g,'_'))).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){if(!j||!j.extract)throw 0;return '🌐 **'+(j.title||term)+'** (من ويكيبيديا):\n'+String(j.extract).slice(0,700)+'\n\n(ده تعريف عام من الإنترنت، مش من بيانات برنامجك.)'}).catch(function(){return 'مش لاقي تعريف لـ «'+term+'» في البرنامج ولا على الإنترنت.'})}
+function aMe(){var g=(S.groups||[]).filter(function(x){return x.id===WS})[0];return '👤 إنت **'+(nm2()||'صاحب الحساب')+'**'+(A&&A.role?' ('+({owner:'المالك',manager:'مدير',accountant:'محاسب',viewer:'مشاهد'}[A.role]||A.role)+')':'')+'.\n• المجموعة المفتوحة: '+(g?g.name+' — '+(g.n||2)+' شركاء':B.grpName())+'\n• عندك '+SU().length+' استديو، و'+B.allLeases().length+' عقد مستأجر.\n• النقدي: '+F(cashNow())+' — الربح لحد النهارده: '+F(rcvP().profit)}
+function nm2(){try{return (A&&A.u)||''}catch(e){return ''}}
+function aWho(){return '✦ أنا **بنيان** — مساعدك الشخصي جوه Bunyan Furnished.\n• بعرف كل استديوهاتك وعقودك ودفعاتك وفلوسك، وبحسبلك أي رقم خطوة بخطوة.\n• بعرف مكان كل حاجة في البرنامج، وأقدر أنفّذلك أوامر زي «استلمت إيجار عبد الرحمن» أو «سجل مصروف 300 صيانة» بعد ما توافق.\n• بسمعك بالصوت 🎙️ وأقدر أرد بالصوت 🔊.\n• بشتغل من غير اشتراك، وبستخدم الإنترنت بس لأسعار العملات والتعريفات.\n• وبتعلم من 👍 و👎.'}
 /* ---------- النوايا ---------- */
 var I=[
- {id:'late',l:'مين متأخر',k:{متاخر:4,'ما دفعش':4,مدفعش:4,'مش دافع':4,متاخرين:4,تاخير:3},f:function(){return B.aLate()}},
- {id:'cash',l:'الرصيد النقدي',k:{نقدي:4,كاش:4,رصيد:3,'معايا كام':4,'في ايدي':3,خزنه:3,سيوله:3},f:function(){return B.aCash()}},
- {id:'profit',l:'الربح لحد النهارده',k:{ربح:3,مكسب:3,كسبت:3,بكسب:2,ارباح:3,'لحد النهارده':1,'حتي اليوم':1},f:function(){return B.aProfit()}},
- {id:'proj',l:'الربح المتوقع',k:{متوقع:4,هكسب:4,'اخر العقد':3,'مده العقود':3,'هيطلع كام':3,توقع:2},f:function(){return B.aProj()}},
+ {id:'late',l:'مين متأخر',k:{دفعش:4,مدفعش:4,متاخر:4,'ما دفعش':4,مدفعش:4,'مش دافع':4,متاخرين:4,تاخير:3},f:function(){return B.aLate()}},
+ {id:'cash',l:'الرصيد النقدي',k:{نقدي:4,كاش:4,الكاش:4,رصيد:3,'معايا كام':4,'في ايدي':3,خزنه:4,سيوله:4,فلوس:3,فلوسي:4},f:function(){return B.aCash()}},
+ {id:'profit',l:'الربح لحد النهارده',k:{ربح:3,ربحي:3,ربحنا:3,مكسب:3,كسبت:3,كسبنا:3,بكسب:2,ارباح:3,'لحد النهارده':1,'حتي اليوم':1},f:function(){return B.aProfit()}},
+ {id:'proj',l:'الربح المتوقع',k:{متوقع:4,هكسب:5,هنكسب:5,'اخر العقد':3,'مده العقود':3,'هيطلع كام':3,هيطلع:2,'في الاخر':4,الاخر:2,توقع:2},f:function(){return B.aProj()}},
  {id:'forecast',l:'هيكفي النقدي؟',k:{'هتفضل':4,'هيفضل':4,'هيبقي معاي':5,'هتبقي':2,'معايا هيبقي':5,'هيبقي معايا':5,'هيفضل معايا':5,هيكفي:5,تكفي:4,'هقدر ادفع':5,'اقدر ادفع':5,'هلحق':3,'ينقص':2,عجز:4,'توقع النقدي':5,'السيوله الجايه':5},f:aForecast},
  {id:'next',l:'الدفعة الجاية',k:{'الدفعه الجايه':8,'اول دفعه جايه':8,'اقرب دفعه':8,'الدفعه اللي جايه':8,'الدفعه القادمه':8},f:aNext},
  {id:'upcoming',l:'الدفعات الجاية',k:{دفعات:3,مواعيد:3,هدفع:3,هستلم:3,الجاي:2,القادمه:2,الجايه:2,'هدفع كام':4,'هستلم كام':4,اقساط:2},f:function(q){return B.aUpcoming(nz(q))}},
  {id:'today',l:'مواعيد النهارده',k:{'النهارده فيه':5,'بكره فيه':5,'مواعيد النهارده':5,'مواعيد بكره':5,'ايه النهارده':4,'عندي ايه':4},f:aToday},
- {id:'company',l:'دفعات الشركة',k:{شركه:2,شركات:2,'دفعات الشركه':5,'اقساط الشركه':5,'عقد الشركه':3,apex:2},f:function(){return B.aCompany()}},
+ {id:'company',l:'دفعات الشركة',k:{شركه:2,شركات:2,للشركه:3,دفعنا:3,'دفعات الشركه':5,'اقساط الشركه':5,'عقد الشركه':3,apex:2},f:function(){return B.aCompany()}},
  {id:'fund',l:'فلوس الشراكة',k:{شراكه:4,'الشركا حطوا':4,'راس المال':4,دعم:2,'حطينا كام':4},f:function(){return B.aFund()}},
- {id:'shares',l:'نصيب كل شريك',k:{نصيب:5,حصه:4,'كل شريك':5,'ليه كام':3,'ليا كام':3,الشركاء:2,'نقسم':3,تقسيم:3},f:aShares},
+ {id:'shares',l:'نصيب كل شريك',k:{نصيب:6,نصيبه:6,نصيبي:6,حصه:5,'كل شريك':6,'ليه كام':3,'ليا كام':3,الشركاء:2,'نقسم':6,تقسيم:6},f:aShares},
  {id:'exp',l:'المصاريف',k:{مصاريف:4,مصروف:4,صرفت:3,'اتصرف':3},f:function(){return B.aExp()}},
- {id:'draw',l:'السحب ومين عليه',k:{سحب:4,سحبت:4,'عليه كام':4,دين:3,مديون:3,سلف:3,سلفه:3},f:function(){return B.aDraw()}},
- {id:'ends',l:'نهاية العقود',k:{بيخلص:4,بتخلص:4,نهايه:3,ينتهي:4,انتهاء:4,تجديد:3,فاضل:3,'باقي كام شهر':4},f:function(q){return aDaysTo(q)||(/^\s*و/.test(nz(q))&&(CTX.tn||CTX.st)?aDaysTo(CTX.tn?CTX.tn.L.tenant:CTX.st.name):null)||B.aEnds()}},
- {id:'occ',l:'الإشغال والشاغر',k:{اشغال:4,فاضي:3,شاغر:4,مؤجر:3,'مين مؤجر':4},f:function(){return B.aOcc()}},
+ {id:'draw',l:'السحب ومين عليه',k:{سحب:4,السحب:4,سحبت:4,'عليه كام':5,دين:3,مديون:5,سلف:4,سلفه:4},f:function(){return B.aDraw()}},
+ {id:'ends',l:'نهاية العقود',k:{بيخلص:5,بتخلص:5,هيخلص:5,تخلص:5,هتخلص:5,نهايه:3,ينتهي:4,انتهاء:4,تجديد:3,فاضل:3,'باقي كام شهر':4},f:function(q){return aDaysTo(q)||(/^\s*و/.test(nz(q))&&(CTX.tn||CTX.st)?aDaysTo(CTX.tn?CTX.tn.L.tenant:CTX.st.name):null)||B.aEnds()}},
+ {id:'occ',l:'الإشغال والشاغر',k:{اشغال:5,فاضي:5,شاغر:6,مؤجر:3,'مين مؤجر':5},f:function(){return B.aOcc()}},
  {id:'furn',l:'الأثاث',k:{اثاث:4,فرش:4,عفش:3},f:function(){return B.aFurn()}},
  {id:'dep',l:'التأمين والشيكات',k:{تامين:4,شيك:4,شيكات:4,ضمان:3},f:function(){return B.aDep()}},
  {id:'month',l:'تقرير شهر',k:{تقرير:4,'الشهر ده':3,'الشهر اللي فات':4,'شهر':1},f:function(q){return B.aMonth(nz(q))}},
  {id:'ratios',l:'هامش الربح والعائد',k:{هامش:5,عائد:5,تعادل:5,مؤشرات:4,نسبه:2,roi:5},f:function(){return B.aRatios()}},
  {id:'count',l:'الأعداد',k:{'عدد':4,'كام استديو':5,'كام مستاجر':5,'كام عقد':5,'كام شيك':4},f:aCount},
- {id:'totals',l:'الإجماليات',k:{اجمالي:4,مجموع:3,'كل العقود':4,'قيمه العقود':5,'باقي يتقبض':5,'باقي يتدفع':5},f:aTotals},
- {id:'best',l:'أكسب استديو',k:{اكسب:5,'احسن استديو':5,افضل:3,ترتيب:3,'بيخسر':4,مقارنه:4},f:aBest},
+ {id:'totals',l:'الإجماليات',k:{يتقبض:4,يتدفع:4,قيمه:2,اجمالي:4,مجموع:3,'كل العقود':4,'قيمه العقود':5,'باقي يتقبض':5,'باقي يتدفع':5},f:aTotals},
+ {id:'best',l:'أكسب استديو',k:{'اكسب استديو':7,'بيكسب اكتر':7,اكسب:3,'احسن استديو':6,احسن:5,افضل:4,ترتيب:4,'بيخسر':4,مقارنه:5},f:aBest},
  {id:'edits',l:'آخر التعديلات',k:{'مين عدل':5,'اخر تعديل':5,تعديلات:4,سجل:3,'مين غير':5},f:aEdits},
  {id:'where',l:'مكان حاجة في البرنامج',k:{فين:5,مكان:5,'الاقي':4,'القي':4,'الاقيه':4},f:function(q){return aWhere(q)}},
- {id:'how',l:'إزاي أعمل حاجة',k:{ازاي:5,'اعمل ايه':4,طريقه:4,خطوات:4,'اضيف':3,'اسجل':3},f:function(q){return B.aHow(nz(q))||aWhere(q)}},
+ {id:'how',l:'إزاي أعمل حاجة',k:{ازاي:4,'اعمل ايه':4,طريقه:4,خطوات:4,'اضيف':3,'اسجل':3,'اعمل':2},f:function(q){return B.aHow(nz(q))}},
  {id:'define',l:'يعني إيه',k:{'يعني ايه':6,'ايه هو':5,'ايه هي':5,'ايه معني':6,اشرح:4,'يقصد':3,تعريف:5},f:function(q){return aDefine(q)}},
  {id:'whatif',l:'لو الإيجار اتغير',k:{'لو اجرت':6,'لو الايجار':6,'لو جددت':6,'لو خليت':4,'لو زودت':4,'لو نزلت':4},f:function(q){return B.aWhatIf(nz(q))}},
  {id:'vacant',l:'لو الاستديو فضي',k:{'لو فضي':6,'لو اتقفل':5,'لو مشي':5,'لو متاجرش':6,فضي:3,متاجرش:4,'قعد فاضي':4},f:aVacancy},
  {id:'compif',l:'لو سعر الشركة اتغير',k:{'لو الشركه':6,'لو العقد بقي':5,'لو الشركه غلت':6},f:aCompanyIf},
- {id:'date',l:'تاريخ النهارده',k:{'النهارده كام':6,'التاريخ':4,'الساعه كام':6,'النهارده ايه':5},f:aDate},
- {id:'summary',l:'ملخص الوضع',k:{ملخص:5,لخص:5,وضع:3,'عامل ايه':4,اخبار:4,'نظره عامه':5},f:function(){return B.think1('ملخص الوضع')}},
- {id:'help',l:'بتعرف تجاوب على إيه',k:{مساعده:4,'بتعرف ايه':5,'اسالك ايه':5,اقتراحات:4,'تجاوب علي ايه':6,'تعرف تجاوب':6,'تقدر تعمل ايه':6},f:function(){return help2()}}];
+ {id:'date',l:'تاريخ النهارده',k:{'النهارده كام':6,'التاريخ':4,تاريخ:4,'الساعه كام':6,'النهارده ايه':5},f:aDate},
+ {id:'summary',l:'ملخص الوضع',k:{ملخص:5,لخص:5,لخصلي:6,وضع:3,'عامل ايه':4,اخبار:4,'نظره عامه':5},f:function(){return B.think1('ملخص الوضع')}},
+ {id:'fx',l:'تحويل عملة',k:{درهم:3,جنيه:2,مصري:2,دولار:3,يورو:3,ريال:3,'سعر الصرف':6,'سعر الدولار':6,'بكام مصري':6,'بالمصري':5,عمله:4,حول:3,تحويل:2},f:function(q){return aFx(q)}},
+ {id:'who',l:'إنت مين',k:{'انت مين':8,'اسمك':6,'مين عملك':8},f:function(){return aWho()}},
+ {id:'me',l:'أنا مين',k:{'انا مين':8,'تعرفني':6},f:function(){return aMe()}},
+ {id:'help',l:'بتعرف تجاوب على إيه',k:{مساعده:4,'بتعرف ايه':5,'اسالك ايه':5,اسالك:4,'تعمل ايه':4,تقدر:2,اقتراحات:4,'تجاوب علي ايه':6,'تعرف تجاوب':6,'تقدر تعمل ايه':6},f:function(){return help2()}}];
 function help2(){return 'بعرف كل اللي في برنامجك وبحسب منه. أمثلة:\n• **أرقام:** النقدي جه منين؟ — الربح لحد النهارده — الربح المتوقع — الإجماليات — نصيب كل شريك\n• **مواعيد:** الدفعة الجاية — الدفعات الجاية — مواعيد النهارده — مين متأخر — العقود بتخلص إمتى\n• **توقع:** النقدي هيكفي دفعة الشركة؟ — لو أجرت بـ 3500 — لو الاستديو فضي شهر — لو الشركة بقت 27000\n• **مستأجر/استديو بالاسم:** عبد الرحمن دفع كام؟ — حالة ابيكس\n• **تقارير:** تقرير ديسمبر — هامش الربح — أكسب استديو\n• **مكان:** فين التقرير الشهري؟ — فين صورة الهوية؟\n• **شرح:** يعني إيه نقطة التعادل؟ — إزاي أمد عقد؟\n• **حاسبة:** 3200 × 6\nولو مفهمتش، اضغط 👎 وقولي قصدك، وهتعلم.'}
 /* ---------- التعلم ---------- */
 var LK='bny_ai_learn';function learned(){try{return JSON.parse(localStorage.getItem(LK))||[]}catch(e){return []}}
@@ -4001,18 +4017,32 @@ window.aiLearn=function(q,id){var a=learned(),s=sig(q).join(' ');a=a.filter(func
 function fromLearned(q){var s=sig(q),best=null,bs=0;learned().forEach(function(x){var v=jac(s,x.s.split(' '));if(v>bs){bs=v;best=x}});return bs>=0.6?best.i:null}
 /* ---------- الفهم ---------- */
 var CTX={};
-function score(q){var T=toks(q),z=nz(q);return I.map(function(it){var s=0;Object.keys(it.k).forEach(function(w){var nw=nz(w);if(nw.indexOf(' ')>=0?z.indexOf(nw)>=0:hasW(T,nw))s+=it.k[w]});return {it:it,s:s}}).sort(function(a,b){return b.s-a.s})}
+function score(q){var T=toks(q),z=nz(q),H=function(w){return hasW(T,w)};var bonus={};
+ if((H('توقع')||H('متوقع'))&&(H('الربح')||H('ربح')))bonus.proj=5;
+ if(H('الساعه')&&H('كام'))bonus.date=7;
+ if((H('هيبقي')||H('هفضل')||H('هيفضل')||H('هتفضل')||H('هتبقي'))&&(H('معايا')||H('النقدي')||H('الفلوس')))bonus.forecast=6;
+ if((H('بيخلص')||H('هيخلص')||H('ينتهي')||H('فاضل'))&&(H('العقد')||H('عقد')))bonus.ends=4;
+ if(H('الدفعه')&&!/دفعات/.test(z)&&(H('الجايه')||H('القادمه')||H('اقرب')||H('اول')||H('جايه')))bonus.next=6;
+ if((H('توقع')||H('هيكفي')||H('هتكفي')||H('هيفضل')||H('عجز')||H('هقدر'))&&(H('النقدي')||H('فلوس')||H('الفلوس')||H('ادفع')||H('القسط')||H('عجز')))bonus.forecast=6;
+ if((H('النهارده')||H('بكره'))&&(H('مواعيد')||H('فيه')||H('عندي')))bonus.today=6;
+ if(H('النهارده')&&H('كام')&&T.length<=3)bonus.date=6;
+ if(/(^|\s)عليه\s/.test(z)||H('مديون'))bonus.draw=4;
+ return I.map(function(it){var s=bonus[it.id]||0,ks=Object.keys(it.k);ks.forEach(function(w){var nw=nz(w);if(nw.indexOf(' ')>=0&&z.indexOf(nw)>=0)s+=it.k[w]});T.forEach(function(t){var b=0;ks.forEach(function(w){var nw=nz(w);if(nw.indexOf(' ')<0&&it.k[w]>b&&(STRICT[nw]?stem(col(t))===stem(nw)||col(t)===nw||pre(col(t))===nw:feq(t,nw)))b=it.k[w]});s+=b});return {it:it,s:s}}).sort(function(a,b){return b.s-a.s})}
+var STRICT={'فاضي':1,'فاضل':1,'اكسب':1,'مكسب':1,'عليه':1,'ليه':1,'شاغر':1,'شراكه':1,'تعرفني':1}
+var FILL=/(^|\s)(لو\s*سمحت+|يا\s*بنيان+|بالظبط+|بالتفصيل+|بسرعه+|دلوقتي+|ممكن\s*تقولي+|عايز\s*اعرف+|عاوز\s*اعرف+|عاوزز\s*اعرف|قولي+|بقولك+|طب|هو|ممكن|من\s*فضلك|معلش|بالله\s*عليك)(?=\s|$)/g;
+function cleanQ(q){var z=nz(q).replace(/[؟?!.]+/g,' ');var T=z.split(/\s+/).filter(Boolean),out=[];for(var k=0;k<T.length;k++){var t=T[k];if(t==='لو'&&T[k+1]&&(feq(T[k+1],'سمحت')||/^سم/.test(T[k+1])||/^س.?حت/.test(T[k+1]))){k++;continue}if(/^(يا)$/.test(t)&&T[k+1]&&feq(T[k+1],'بنيان')){k++;continue}if(['بالظبط','بالتفصيل','بسرعه','دلوقتي','قولي','بقولك','طب','هو','ممكن','تقولي','عايز','عاوز','اعرف','سمحت','معلش','فضلك'].some(function(f){var c=col(t);return c===f||(t.length>=5&&c[0]===f[0]&&lev(c,f)<=1)})&&!(t==='هو'&&k>0))continue;out.push(t)}return out.join(' ')||z}
 function run(it,q){try{return it.f(q)}catch(e){return null}}
-function ask(raw){var q=String(raw||'').trim(),z=nz(q);if(!q)return {t:help2()};
+function ask(raw){var q0=String(raw||'').trim();if(!q0)return {t:help2()};var q=cleanQ(q0),z=nz(q);if(!z)return {t:help2()};
  var sm=aSmall(q);if(sm&&toks(q).length<=5)return {t:sm};
- var c=aCalc(q);if(c&&!/لو|ايجار|ربح/.test(z))return {t:c};
+ var c=aCalc(q);if(c&&!/لو|ايجار|ربح|درهم|جنيه|دولار/.test(z))return {t:c,i:'calc'};
  var tn=B.findTenant(z),st=!tn&&B.findStudio(z),mo=findMonth(q),pt=findPartner(q);
  var L=fromLearned(q);if(L){var li=I.filter(function(x){return x.id===L})[0];if(li){var r0=run(li,q);if(r0){CTX={i:L,tn:tn||CTX.tn,st:st||CTX.st};return {t:r0,i:L}}}}
  var sc=score(q),top=sc[0];
  if(/^\s*لو\s/.test(z)&&!(top&&top.s>=6&&/vacant|compif/.test(top.it.id))){var w=B.aWhatIf(z)||aVacancy(q)||aCompanyIf(q);if(w)return {t:w,i:'whatif'}}
  if(/فين|مكان/.test(z)){var wh=aWhere(q);if(wh)return {t:wh,i:'where'}}
- if(/يعني ايه|ايه هو|ايه هي|ايه معني|اشرح|تعريف/.test(z)){var df=aDefine(q);if(df)return {t:df,i:'define'}}
- if(pt&&/نصيب|حصه|ليه كام|ربح|كسب/.test(z))return {t:aShares(q),i:'shares'};
+ if(/يعني ايه|ايه هو|ايه هي|ايه معني|اشرح|تعريف|معني/.test(z)){var df=aDefine(q);if(df)return {t:df,i:'define'};var term=String(q).replace(/(يعني ايه|يعني إيه|ايه هو|إيه هو|ايه هي|إيه هي|ايه معنى|إيه معنى|معنى|معني|اشرح(لي)?|تعريف|يا بنيان|[؟?])/g,' ').replace(/\s+/g,' ').trim();if(term&&term.split(' ').length<=4&&!aWhere(q))return {t:aWiki(term),i:'wiki'}}
+ if(/درهم|جنيه|دولار|يورو|ريال|دينار|سعر الصرف|بالمصري|بكام مصري/.test(z)&&!/ايجار|ربح|مصروف|دفعه|قسط/.test(z))return {t:aFx(q),i:'fx'};
+ if(pt&&/نصيب|حصه|(^|\s)ليه كام|ربح|كسب/.test(z))return {t:aShares(q),i:'shares'};
  if(pt&&/عليه|سحب/.test(z))return {t:B.aDraw(),i:'draw'};
  /* متابعة: سؤال قصير بدون نية واضحة */
  var short=toks(q).length<=4;
@@ -4027,33 +4057,96 @@ function ask(raw){var q=String(raw||'').trim(),z=nz(q);if(!q)return {t:help2()};
  var old=B.think1(q);if(old&&!/^مش متأكد/.test(old))return {t:old,i:'old'};
  var wh2=aWhere(q);if(wh2)return {t:wh2,i:'where'};var df2=aDefine(q);if(df2)return {t:df2,i:'define'};
  return {t:'السؤال ده يا إما برّه البرنامج، يا إما مفهمتوش 🤔 لو قصدك حاجة في البرنامج اختار منها وأنا هتعلم:',ask:sc.filter(function(x){return x.s>0}).slice(0,4).map(function(x){return x.it}).concat(sc.filter(function(x){return x.s===0}).map(function(x){return x.it}).filter(function(it){return /cash|profit|upcoming|late|summary|help/.test(it.id)})).slice(0,6)}}
-window.bnyAsk=ask;window.bnyIntents=I;window.bnyRun=function(id,q){var it=I.filter(function(x){return x.id===id})[0];return it?(run(it,q)||it.f(it.l)):''};
+window.bnyAsk=ask;window.bnyScore=function(q){return score(cleanQ(q)).slice(0,4).map(function(x){return x.it.id+':'+x.s}).join(' ')+' | clean='+cleanQ(q)};window.bnyIntents=I;window.bnyRun=function(id,q){var it=I.filter(function(x){return x.id===id})[0];return it?(run(it,q)||it.f(it.l)):''};
 window.bnyThink=function(q){return ask(q).t};
 })();
 </script>
-<script id="aijs">
+<style id="aicss3">
+#aifab{background:radial-gradient(circle at 30% 30%,#7ef0dd,#14b8a6 45%,#0b3b4a 100%)!important;box-shadow:0 8px 26px rgba(20,184,166,.55),0 0 0 4px rgba(255,255,255,.65)!important;font-size:0!important;animation:aiPulse 3.2s ease-in-out infinite}
+#aifab::after{content:'✦';font-size:26px;color:#fff;text-shadow:0 0 10px rgba(255,255,255,.8)}
+@keyframes aiPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+#aix.ov{background:linear-gradient(180deg,#071b24 0%,#0b3140 38%,#0e2a33 100%)!important;align-items:stretch!important;justify-content:stretch!important;padding:0!important}
+#aix .ai3{position:relative;display:flex;flex-direction:column;width:100%;height:100dvh;max-width:720px;margin:0 auto;color:#eaf6f3;padding:calc(10px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-right,0px));box-sizing:border-box}
+#aix .a3top{display:flex;align-items:center;gap:10px}
+#aix .a3top b{flex:1;font-size:16px;letter-spacing:.2px}#aix .a3top small{display:block;font-size:11.5px;opacity:.65;font-weight:600}
+#aix .a3x{width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.1);color:#fff;font-size:18px;cursor:pointer}
+#aix .orb{width:38px;height:38px;border-radius:50%;flex:0 0 auto;background:conic-gradient(from 0deg,#14b8a6,#6ee7f9,#a78bfa,#f0b429,#14b8a6);filter:saturate(1.2);position:relative;animation:orbSpin 6s linear infinite;box-shadow:0 0 18px rgba(110,231,249,.55)}
+#aix .orb::after{content:'';position:absolute;inset:4px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.95),rgba(255,255,255,.15) 45%,rgba(11,49,64,.9) 75%)}
+#aix .orb.big{width:92px;height:92px;margin:6px auto 10px}
+#aix .orb.live{animation:orbSpin 1.2s linear infinite,orbBeat .8s ease-in-out infinite}
+@keyframes orbSpin{to{transform:rotate(360deg)}}@keyframes orbBeat{50%{box-shadow:0 0 34px 10px rgba(110,231,249,.65)}}
+#aix .a3body{flex:1;overflow:auto;padding:8px 2px 12px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
+#aix .hello{text-align:center;padding:10px 6px 4px}#aix .hello h3{margin:0 0 4px;font-size:22px;font-weight:900;color:#fff}#aix .hello p{margin:0;opacity:.75;font-size:14px}
+#aix .sg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:10px}
+#aix .sg button{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:start;padding:12px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);color:#eaf6f3;cursor:pointer;min-width:0}
+#aix .sg button i{font-style:normal;font-size:20px}#aix .sg button b{font-size:14px}#aix .sg button small{font-size:11.5px;opacity:.65}
+#aix .mu3{align-self:flex-start;max-width:85%;padding:10px 14px;border-radius:18px 18px 4px 18px;background:linear-gradient(135deg,#14b8a6,#0d8a74);color:#fff;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+#aix .ma3{align-self:flex-end;display:flex;gap:8px;max-width:94%;align-items:flex-start}
+#aix .ma3 .orb{width:28px;height:28px;margin-top:4px;animation-duration:10s}
+#aix .card3{background:#fff;color:#14232a;border-radius:18px 18px 18px 4px;padding:12px 14px;font-size:14.5px;line-height:1.7;white-space:pre-wrap;word-break:break-word;box-shadow:0 8px 24px rgba(0,0,0,.25);min-width:0}
+#aix .card3 b{color:#0d6f5e}
+#aix .act3{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+#aix .act3 button{border:1px solid #d6e7e2;background:#f4faf8;color:#14232a;border-radius:999px;padding:4px 10px;font-size:12.5px;cursor:pointer}
+#aix .act3 button.do{background:#0d8a74;color:#fff;border-color:#0d8a74;font-weight:800}
+#aix .chips3{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}#aix .chips3 button{border:1px solid #cfe3de;background:#fff;color:#0d6f5e;border-radius:999px;padding:5px 11px;font-size:12.5px;cursor:pointer;font-weight:700}
+#aix .think3{display:flex;gap:5px;padding:12px 14px;background:#fff;border-radius:18px}#aix .think3 i{width:7px;height:7px;border-radius:50%;background:#14b8a6;animation:dot 1s infinite}#aix .think3 i:nth-child(2){animation-delay:.15s}#aix .think3 i:nth-child(3){animation-delay:.3s}
+@keyframes dot{50%{transform:translateY(-5px);opacity:.4}}
+#aix .bar3{display:flex;align-items:flex-end;gap:8px;padding-top:8px}
+#aix .bar3 textarea{flex:1;min-height:50px;max-height:120px;resize:none;border-radius:26px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.09);color:#fff;padding:14px 18px;font:inherit;font-size:15px;box-sizing:border-box;outline:none}
+#aix .bar3 textarea::placeholder{color:rgba(234,246,243,.55)}
+#aix .mic3,#aix .snd3{width:50px;height:50px;border-radius:50%;border:0;flex:0 0 auto;cursor:pointer;font-size:21px;color:#fff}
+#aix .mic3{background:linear-gradient(145deg,#14b8a6,#0d6f5e);box-shadow:0 6px 18px rgba(20,184,166,.45)}#aix .mic3.rec{background:linear-gradient(145deg,#ff5a5f,#c81e1e);animation:aiPulse 1s infinite}
+#aix .snd3{background:rgba(255,255,255,.12)}
+#aix .live3{text-align:center;font-size:13px;opacity:.8;min-height:18px}
+</style>
+<script id="aijs3">
 (function(){
-var H=[],busy=false;
+var H=[],busy=false,REC=false,VO=(function(){try{return localStorage.getItem('bny_ai_voice')==='1'}catch(e){return false}})(),fromVoice=false;
 function E(x){return esc(x==null?'':String(x))}
 function md(t){return E(t).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')}
-function draw(){var d=document.getElementById('aix');if(!d)return;var L=d.querySelector('.ail');var h='';
- if(!H.length)h+="<div class='am a'>أهلاً 👋 أنا مساعد بنيان. شغال من غير إنترنت ومن غير اشتراك، بعرف كل أرقامك وعقودك ومكان كل حاجة في البرنامج، وبحسبلك خطوة بخطوة. ولو جاوبت غلط اضغط 👎 وأنا هتعلم. اسألني:</div><div class='aiq'>"+['الربح لحد النهارده جه منين؟','النقدي هيكفي دفعة الشركة؟','الدفعة الجاية','مين متأخر؟','نصيب كل شريك','لو أجرت بـ 3500 الربح هيبقى كام؟','فين التقرير الشهري؟','يعني إيه نقطة التعادل؟','بتعرف تجاوب على إيه؟'].map(function(q){return "<button onclick=\"aiAsk(this.textContent)\">"+E(q)+"</button>"}).join('')+"</div>";
- H.forEach(function(m,ix){h+="<div class='am "+(m.role==='user'?'u':'a')+"'>"+(m.role==='user'?E(m.content):md(m.content))+"</div>";
-  if(m.role!=='user'&&m.ask)h+="<div class='aiq'>"+m.ask.map(function(it){return "<button onclick=\"aiPick("+ix+",'"+it.id+"')\">"+E(it.l)+"</button>"}).join('')+"</div>";
-  if(m.role!=='user'&&m.q&&!m.ask&&!m.fb)h+="<div class='aifb'><button title='إجابة صح' onclick='aiFb("+ix+",1)'>👍</button><button title='مش ده قصدي' onclick='aiFb("+ix+",0)'>👎</button></div>";
-  if(m.fb==='pick')h+="<div class='aiq'><span style='width:100%;font-size:13px;opacity:.75'>كان قصدك إيه؟ اختار وأنا هتعلم:</span>"+bnyIntents.map(function(it){return "<button onclick=\"aiPick("+ix+",'"+it.id+"')\">"+E(it.l)+"</button>"}).join('')+"</div>"});
- L.innerHTML=h;L.scrollTop=L.scrollHeight}
-window.aiOpen=function(){var d=document.getElementById('aix');if(d)d.remove();d=document.createElement('div');d.id='aix';d.className='ov fx-ov';d.onclick=function(e){if(e.target===d)d.remove()};
- d.innerHTML="<div class='dlg'><button class='xcl' onclick=\"this.closest('.ov').remove()\">✕</button><div class='aih'><h2>🤖 المساعد</h2>"+(H.length?"<button style='font-size:12px;padding:4px 9px' onclick='aiClear()'>🧹 جديد</button>":"")+"</div><div class='ail'></div><div class='aif'><textarea id='aiin' rows='1' placeholder='اكتب سؤالك…' onkeydown=\"if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiAsk()}\"></textarea><button onclick='aiAsk()'>➤</button></div></div>";
+function nm(){try{return (A&&A.u)||''}catch(e){return ''}}
+function greet(){var h=new Date().getHours();return h<12?'صباح الخير':(h<18?'مساء الخير':'مساء النور')}
+var SG=[['💵','النقدي','معايا كام وجه منين','الرصيد النقدي جه منين؟'],['📅','الدفعة الجاية','إمتى وبكام','الدفعة الجاية'],['🔴','المتأخرين','مين ما دفعش','مين متأخر؟'],['📈','ربحي','لحد النهارده','الربح لحد النهارده جه منين؟'],['🔮','النقدي هيكفي؟','توقع الفلوس','النقدي هيكفي دفعة الشركة؟'],['👥','نصيب الشركاء','كل واحد ليه كام','نصيب كل شريك'],['📊','تقرير الشهر','اللي فات','تقرير الشهر اللي فات'],['💱','تحويل عملة','درهم ← جنيه','3200 درهم بكام مصري؟']];
+function nTTS(){try{return window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()&&Capacitor.Plugins&&Capacitor.Plugins.TextToSpeech||null}catch(e){return null}}
+function speak(t){try{if(!VO)return;var NT=nTTS();if(NT){var s0=String(t).replace(/\*\*/g,'').replace(/[\u2190-\u21FF\u2600-\u27BF\uD800-\uDFFF\u2022\u2014]/g,' ').replace(/\n+/g,'. ').slice(0,1200);var o0=document.querySelector('#aix .orb.big,#aix .a3top .orb');o0&&o0.classList.add('live');NT.stop().catch(function(){}).then(function(){return NT.speak({text:s0,lang:'ar-EG',rate:1.0,pitch:1.0,volume:1.0,category:'playback'})}).catch(function(){return NT.speak({text:s0,lang:'ar',rate:1.0})}).catch(function(){}).then(function(){o0&&o0.classList.remove('live')});return}if(!window.speechSynthesis)return;speechSynthesis.cancel();var s=String(t).replace(/\*\*/g,'').replace(/[•←→✅⏳🔴⚠️📍📘🔮👥💵📅📈📊💱🏠🏢🛋🧾🤝🙋💸🕘🏆⏭🔢💯👤🧮✦🌷👋🤔—]/g,' ').replace(/\n+/g,'. ').slice(0,900);var u=new SpeechSynthesisUtterance(s);u.lang='ar-EG';var v=speechSynthesis.getVoices().filter(function(v){return /^ar/i.test(v.lang)});if(v[0])u.voice=v.filter(function(x){return /EG/i.test(x.lang)})[0]||v[0];u.rate=1.02;var o=document.querySelector('#aix .orb.big,#aix .a3top .orb');o&&o.classList.add('live');u.onend=function(){o&&o.classList.remove('live')};speechSynthesis.speak(u)}catch(e){}}
+function draw(scroll){var d=document.getElementById('aix');if(!d)return;var L=d.querySelector('.a3body'),h='';
+ if(!H.length)h+="<div class='hello'><div class='orb big'></div><h3>"+greet()+(nm()?' يا '+E(nm()):'')+" 👋</h3><p>أنا بنيان، مساعدك الشخصي. أقدر أساعدك في إيه النهارده؟</p></div><div class='sg'>"+SG.map(function(s){return "<button onclick=\"aiAsk('"+s[3].replace(/'/g,"\\'")+"')\"><i>"+s[0]+"</i><b>"+s[1]+"</b><small>"+s[2]+"</small></button>"}).join('')+"</div>";
+ H.forEach(function(m,ix){if(m.role==='user'){h+="<div class='mu3'>"+E(m.content)+"</div>";return}
+  h+="<div class='ma3'><div class='orb'></div><div class='card3'>"+md(m.content);
+  if(m.cmd&&!m.done)h+="<div class='act3'><button class='do' onclick='aiDo("+ix+")'>✅ نفّذ</button><button onclick='aiNo("+ix+")'>إلغاء</button></div>";
+  if(m.ask)h+="<div class='chips3'>"+m.ask.map(function(it){return "<button onclick=\"aiPick("+ix+",'"+it.id+"')\">"+E(it.l)+"</button>"}).join('')+"</div>";
+  if(m.fb==='pick')h+="<div class='chips3'><span style='width:100%;font-size:12.5px;opacity:.7'>كان قصدك إيه؟ اختار وأنا هتعلم:</span>"+bnyIntents.map(function(it){return "<button onclick=\"aiPick("+ix+",'"+it.id+"')\">"+E(it.l)+"</button>"}).join('')+"</div>";
+  if(m.q&&!m.ask&&!m.cmd)h+="<div class='act3'><button onclick='aiSay("+ix+")'>🔊</button>"+(m.fb?'':"<button onclick='aiFb("+ix+",1)'>👍</button><button onclick='aiFb("+ix+",0)'>👎</button>")+"</div>";
+  h+="</div></div>"});
+ if(busy)h+="<div class='ma3'><div class='orb'></div><div class='think3'><i></i><i></i><i></i></div></div>";
+ L.innerHTML=h;if(scroll!==false)L.scrollTop=L.scrollHeight}
+window.aiOpen=function(){var d=document.getElementById('aix');if(d)d.remove();d=document.createElement('div');d.id='aix';d.className='ov';
+ d.innerHTML="<div class='ai3'><div class='a3top'><div class='orb'></div><b>بنيان<small>مساعدك الشخصي</small></b>"+"<button class='a3x' title='قراءة الإجابات بالصوت' onclick='aiVoice(this)'>"+(VO?'🔊':'🔈')+"</button>"+(H.length?"<button class='a3x' title='محادثة جديدة' onclick='aiClear()'>＋</button>":"")+"<button class='a3x' onclick=\"this.closest('.ov').remove();try{speechSynthesis.cancel()}catch(e){}\">✕</button></div><div class='a3body'></div><div class='live3' id='ailive'></div><div class='bar3'><button class='mic3' id='aimic' onclick='aiMic()'>🎙️</button><textarea id='aiin' rows='1' placeholder='اسأل بنيان أي حاجة…' onkeydown=\"if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiAsk()}\"></textarea><button class='snd3' onclick='aiAsk()'>➤</button></div></div>";
  document.body.appendChild(d);draw()};
+window.aiVoice=function(b){VO=!VO;try{localStorage.setItem('bny_ai_voice',VO?'1':'0')}catch(e){}b.textContent=VO?'🔊':'🔈';toast(VO?'هقرالك الإجابات بالصوت':'القراءة بالصوت اتقفلت');if(!VO)try{speechSynthesis.cancel()}catch(e){}};
+window.aiSay=function(ix){var m=H[ix];if(!m)return;var o=VO;VO=true;speak(m.content);VO=o};
 window.aiClear=function(){H=[];aiOpen()};
-window.aiAsk=function(q){var i=document.getElementById('aiin');q=String(q||(i&&i.value)||'').trim();if(!q)return;if(i)i.value='';H.push({role:'user',content:q});var r;try{r=bnyAsk(q)}catch(e){r={t:'حصل خطأ وأنا بحسب: '+(e&&e.message)}}H.push({role:'assistant',content:r.t,ask:r.ask||null,q:q,i:r.i});draw()};
-window.aiPick=function(ix,id){var m=H[ix];if(!m)return;aiLearn(m.q,id);var t=bnyRun(id,m.q);m.ask=null;m.fb='ok';H.push({role:'assistant',content:(t||'…')+'\n\n✅ اتعلمت: المرة الجاية لما تسأل كده هجاوبك على طول.',q:m.q,i:id,fb:'ok'});draw()};
-window.aiFb=function(ix,ok){var m=H[ix];if(!m)return;if(ok){m.fb='ok';if(m.i&&m.i!=='old'&&m.i!=='tenant'&&m.i!=='studio')aiLearn(m.q,m.i);toast('شكراً 🌷')}else m.fb='pick';draw()};
-function fab(){if(document.getElementById('aifab'))return;var b=document.createElement('button');b.id='aifab';b.type='button';b.title='اسأل المساعد';b.textContent='🤖';b.onclick=aiOpen;document.body.appendChild(b)}
+function cmdOf(q){try{if(typeof VC==='undefined'||!VC.parse)return null;var t=VC.nm(q);if(!/^(استلمت|قبضت|اتقبض|سجل|ضيف|اضف|دفعت|سددت|صرفت|افتح|روح|وديني|خدني)/.test(t))return null;var p=VC.parse(q);if(!p||p.kind==='err'||p.kind==='cash'||p.kind==='late')return p&&p.kind==='err'?{err:p.txt}:null;return p}catch(e){return null}}
+window.aiAsk=async function(q){var i=document.getElementById('aiin');q=String(q||(i&&i.value)||'').trim();if(!q||busy)return;if(i)i.value='';var v=fromVoice;fromVoice=false;H.push({role:'user',content:q});
+ var c=cmdOf(q);if(c){if(c.err){H.push({role:'assistant',content:'⚠️ '+c.err});draw();return}if(c.kind==='nav'){VC.run(c);H.push({role:'assistant',content:'تمام، فتحتلك الصفحة 👌'});draw();setTimeout(function(){var d=document.getElementById('aix');d&&d.remove()},500);return}H.push({role:'assistant',content:'📝 '+c.txt+'\nأنفّذ؟',cmd:c});draw();if(v)speak(c.txt+'. أنفّذ؟');return}
+ busy=true;draw();await new Promise(function(r){setTimeout(r,220)});var r;try{r=bnyAsk(q);if(r&&r.then)r=await r;if(r&&r.t&&r.t.then)r.t=await r.t}catch(e){r={t:'حصل خطأ وأنا بحسب: '+(e&&e.message)}}
+ busy=false;H.push({role:'assistant',content:r.t,ask:r.ask||null,q:q,i:r.i});draw();if(v||VO)speak(r.t)};
+window.aiDo=function(ix){var m=H[ix];if(!m||!m.cmd)return;var res='';try{res=VC.run(m.cmd)}catch(e){res='معرفتش أنفّذ: '+(e&&e.message)}m.done=1;H.push({role:'assistant',content:'✅ '+(res||'اتنفّذ')});draw()};
+window.aiNo=function(ix){var m=H[ix];if(m)m.done=1;H.push({role:'assistant',content:'تمام، اتلغى.'});draw()};
+window.aiPick=function(ix,id){var m=H[ix];if(!m)return;aiLearn(m.q,id);var t=bnyRun(id,m.q);m.ask=null;m.fb='ok';H.push({role:'assistant',content:(t||'…')+'\n\n✅ اتعلمت: المرة الجاية هجاوبك على طول.',q:m.q,i:id,fb:'ok'});draw()};
+window.aiFb=function(ix,ok){var m=H[ix];if(!m)return;if(ok){m.fb='ok';if(m.i&&!/^(old|tenant|studio|fx|wiki|calc)$/.test(m.i))aiLearn(m.q,m.i);toast('شكراً 🌷')}else m.fb='pick';draw(false)};
+window.aiMic=async function(){var b=document.getElementById('aimic'),lv=document.getElementById('ailive'),inp=document.getElementById('aiin'),orb=document.querySelector('#aix .orb');
+ var N=typeof VC!=='undefined'&&VC.nat&&VC.nat();
+ if(N){if(REC){try{await N.stop()}catch(e){}return}try{var pm=await N.requestPermissions();if(pm.speechRecognition!=='granted'){lv.textContent='⚠️ اسمح للتطبيق بالمايك من إعدادات الموبايل';return}}catch(e){}
+  var txt='',fin=async function(){if(!REC)return;REC=false;b.classList.remove('rec');orb&&orb.classList.remove('live');lv.textContent='';try{await N.removeAllListeners()}catch(e){}if(txt.trim()){fromVoice=true;aiAsk(txt)}};
+  try{await N.addListener('partialResults',function(d){txt=((d&&d.matches)||[])[0]||txt;inp.value=txt});await N.addListener('listeningState',function(d){if(d&&d.status==='stopped')fin()});REC=true;b.classList.add('rec');orb&&orb.classList.add('live');lv.textContent='🎙️ بسمعك… اتكلم';await N.start({language:'ar-EG',maxResults:1,partialResults:true,popup:false})}catch(e){REC=false;b.classList.remove('rec');lv.textContent='⚠️ المايك مش متاح'}return}
+ var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){lv.textContent='⚠️ المايك مش متاح هنا — استخدم مايك الكيبورد';return}
+ if(REC&&window._aisr){window._aisr.stop();return}var r=new SR();window._aisr=r;r.lang='ar-EG';r.interimResults=true;r.onresult=function(e){var t='';for(var k=0;k<e.results.length;k++)t+=e.results[k][0].transcript;inp.value=t};r.onend=function(){REC=false;b.classList.remove('rec');orb&&orb.classList.remove('live');lv.textContent='';if(inp.value.trim()){fromVoice=true;aiAsk()}};r.onerror=function(){lv.textContent='⚠️ ماسمعتش، جرّب تاني'};REC=true;b.classList.add('rec');orb&&orb.classList.add('live');lv.textContent='🎙️ بسمعك… اتكلم';try{r.start()}catch(e){}};
+function fab(){if(document.getElementById('aifab'))return;var b=document.createElement('button');b.id='aifab';b.type='button';b.title='بنيان — مساعدك الشخصي';b.onclick=aiOpen;document.body.appendChild(b)}
 var r0=render;render=function(){var o=r0.apply(this,arguments);try{var f=document.getElementById('aifab');if(AUTH){fab();document.getElementById('aifab').style.display=''}else if(f)f.style.display='none'}catch(e){}return o};
 try{if(AUTH)render()}catch(e){}
 })();
 </script>
+
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
