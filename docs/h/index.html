@@ -3238,6 +3238,7 @@ body:has(.ov) #aifab,body.pv #aifab{display:none}
 #aix .aik{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:14px;background:var(--card2,#f3faf8);border:1px dashed var(--bd,#cfe3de);font-size:14px;line-height:1.6}
 #aix .aik input{direction:ltr;padding:10px;border-radius:10px;border:1.5px solid var(--bd,#cfe3de);font:inherit;background:var(--card,#fff);color:inherit}
 #aix .typing{opacity:.65}
+#aix .aifb{display:flex;gap:6px;align-self:flex-end;margin-top:-4px}#aix .aifb button{border:0;background:transparent;font-size:16px;opacity:.55;cursor:pointer;padding:2px 4px}#aix .aifb button:hover{opacity:1}
 </style>
 <script id="brainjs">(function(){
 function nz(s){return String(s||'').replace(/[ً-ْـ]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/[٠-٩]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'.indexOf(d)}).replace(/[,،]/g,'').toLowerCase()}
@@ -3339,7 +3340,7 @@ function aHow(q){for(var i=0;i<HOW.length;i++)if(HOW[i][0].test(q))return HOW[i]
 function help(){return 'أنا بعرف كل اللي في برنامجك وبحسب منه على طول. جرّب تسألني مثلاً:\n• الرصيد النقدي جه منين؟\n• الربح لحد النهارده / الربح المتوقع\n• الدفعات الجاية / دفعات الشركة\n• مين متأخر؟\n• عبد الرحمن دفع كام وباقي كام؟\n• حالة استديو ابيكس\n• لو أجّرت بـ 3500 الربح هيبقى كام؟\n• تقرير شهر أكتوبر\n• فلوس الشراكة / المصاريف / السحب\n• العقود بتخلص إمتى؟\n• إزاي أمدّ عقد / أضيف مصروف؟'}
 function think(raw){var q=nz(raw),parts=[];
  var how=/ازاي|اعمل|اضيف|ضيف|طريقه|فين/.test(q)?aHow(q):null;if(how)return how;
- if(/^\s*لو\b|لو اجرت|لو جددت|لو الايجار|لو خليت|لو زودت|لو نزلت/.test(q)){var w=aWhatIf(q);if(w)return w}
+ if(/^\s*لو\s|لو اجرت|لو جددت|لو الايجار|لو خليت|لو زودت|لو نزلت/.test(q)){var w=aWhatIf(q);if(w)return w}
  var tn=findTenant(q),st=!tn&&findStudio(q);
  if(/متاخر|ما دفعش|مدفعش|مش دافع/.test(q))parts.push(aLate());
  if(tn&&!parts.length)parts.push(aTenant(tn,q));
@@ -3364,7 +3365,179 @@ function think(raw){var q=nz(raw),parts=[];
  if(!parts.length)return 'مش متأكد قصدك إيه. '+help();
  var seen={};return parts.filter(function(p){if(seen[p])return false;seen[p]=1;return true}).join('\n\n———\n\n')}
 window.bnyEarn=function(L,a,b){var s=0,end=+leaseEnd(L);for(var i=0;i<L.months;i++){var x=+payD(L,i),y=i+1<L.months?+payD(L,i+1):end;if(y<=x)continue;var o=Math.max(0,Math.min(y,+b)-Math.max(x,+a));s+=la(L,i)*o/(y-x)}return s};
-window.bnyThink=think;window.bnyHelp=help;
+window.bnyThink=think;window.bnyHelp=help;window.BNY={nz:nz,F:F,fd:fd,days:days,when:when,mcOf:mcOf,amtOf:amtOf,leaseEnd:leaseEnd,allLeases:allLeases,findTenant:findTenant,findStudio:findStudio,grpName:grpName,modeTxt:modeTxt,rem:rem,aCash:aCash,aProfit:aProfit,aProj:aProj,aUpcoming:aUpcoming,aLate:aLate,aTenant:aTenant,aStudio:aStudio,aCompany:aCompany,aFund:aFund,aExp:aExp,aDraw:aDraw,aEnds:aEnds,aOcc:aOcc,aWhatIf:aWhatIf,aFurn:aFurn,aDep:aDep,aMonth:aMonth,aRatios:aRatios,aHow:aHow,HOW:HOW,MON:MON,think1:think};
+})();
+</script>
+<script id="brain2js">(function(){if(!window.BNY)return;var B=BNY,nz=B.nz,F=B.F,fd=B.fd;
+/* ---------- لغة ---------- */
+var PRE=['وبال','فال','بال','وال','لل','ال','و','ف','ب','ل','ك'],SUF=['هما','كم','هم','ها','ات','ين','ون','يه','ه','ي','ك','ا'];
+function stem(t){var w=t;for(var i=0;i<PRE.length;i++){var p=PRE[i];if(w.indexOf(p)===0&&w.length-p.length>=(p.length===1?4:3)){w=w.slice(p.length);break}}for(var j=0;j<SUF.length;j++){var s=SUF[j];if(w.length-s.length>=3&&w.slice(-s.length)===s){w=w.slice(0,-s.length);break}}return w}
+function toks(q){return nz(q).replace(/[^؀-ۿa-z0-9.%+\-*/×÷ ]/g,' ').split(/\s+/).filter(Boolean)}
+function lev(a,b){if(Math.abs(a.length-b.length)>2)return 9;var m=[],i,j;for(i=0;i<=a.length;i++)m[i]=[i];for(j=0;j<=b.length;j++)m[0][j]=j;for(i=1;i<=a.length;i++)for(j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return m[a.length][b.length]}
+function feq(a,b){if(a===b)return true;var sa=stem(a),sb=stem(b);if(sa===sb)return true;var L=Math.min(sa.length,sb.length);return (L>=4&&lev(sa,sb)<=1)||(L>=7&&lev(sa,sb)<=2)}
+function hasW(T,w){var ws=w.split(' ');if(ws.length>1){var j=T.join(' ');return j.indexOf(nz(w))>=0||ws.every(function(x){return T.some(function(t){return feq(t,x)})})}return T.some(function(t){return feq(t,w)})}
+var MON=['يناير','فبراير','مارس','ابريل','مايو','يونيو','يوليو','اغسطس','سبتمبر','اكتوبر','نوفمبر','ديسمبر'],MONs=[['جانيوري','january','jan'],['فبراير','february','feb'],['مارس','march'],['ابريل','april','apr'],['مايو','may'],['يونيه','june'],['يوليه','july'],['اغسطس','august'],['سبتمبر','september','sep'],['اكتوبر','october','oct'],['نوفمبر','november','nov'],['ديسمبر','december','dec']];
+function findMonth(q){var z=nz(q);for(var i=0;i<12;i++){if(z.indexOf(MON[i])>=0||MONs[i].some(function(x){return z.indexOf(x)>=0}))return i}var m=z.match(/شهر\s*(\d{1,2})(?!\d)/);if(m&&+m[1]>=1&&+m[1]<=12)return +m[1]-1;return -1}
+function partners(){var g=(S.groups||[]).filter(function(x){return x.id===WS})[0],n=g?String(g.name||'').replace(/^\s*مع\s+/,''):'';return n?n.split(/\s+و(?=\S)/).map(function(x){return x.trim()}).filter(Boolean):[]}
+function findPartner(q){var z=nz(q),r=null;partners().forEach(function(p){if(z.indexOf(nz(p))>=0)r=p});return r}
+/* ---------- خريطة البرنامج: مكان كل حاجة ---------- */
+var MAP=[
+ ['الرصيد النقدي|النقدي|الكاش','الداشبورد ← أول كارت «💵 الرصيد النقدي» (اضغط عليه يفتح المعادلة). وكمان في الحسابات.'],
+ ['ربح المجموعه|الربح حتي اليوم|الربح لحد النهارده|ربحي','الداشبورد ← كارت «📈 ربح المجموعة حتى اليوم» جنب النقدي، وفي الحسابات فوق.'],
+ ['الربح المتوقع','الداشبورد ← كارت «📊 الربح المتوقع على مدة العقود»، وفي الحسابات.'],
+ ['الدفعات القادمه|الدفعات الجايه|المواعيد','الداشبورد ← «📅 الدفعات القادمة» تحت النقدي — اضغط عليها تفتح.'],
+ ['التنبيهات|الجرس|الاشعارات','الجرس 🔔 فوق جنب ☰، أو تبويب «التنبيهات».'],
+ ['التقرير الشهري|تقرير','الحسابات ← زرار «📊 التقرير الشهري» فوق.'],
+ ['المصاريف|مصروف','الحسابات ← كارت «💼 النقدي: مصاريف وسحب» ← 💸 مصروف. ومصروف استديو معين كمان من صفحة الاستديو ← «+ مصروف على الاستديو».'],
+ ['السحب|سحب|رجوع الفلوس|رجع فلوس','الحسابات ← كارت «💼 النقدي: مصاريف وسحب» ← 🙋 سحب ليا / 🤝 سحب لشريك / ↩️ رجّع فلوس.'],
+ ['الملاحظه|ملاحظه دايمه','الحسابات ← كارت النقدي ← الخانة الصفرا 📝.'],
+ ['فلوس الشراكه|الشراكه','الداشبورد ← كارت «🤝 فلوس الشراكة»، والتفاصيل في تبويب المجموعات.'],
+ ['عقد الشركه|دفعات الشركه|اقساط الشركه','الاستديوهات ← افتح الاستديو ← أول كارت «📄 عقد الشركة».'],
+ ['عقد المستاجر|عقود المستاجرين','الاستديوهات ← افتح الاستديو ← كارت «👤 عقود المستأجرين».'],
+ ['الاثاث|الفرش','الاستديوهات ← افتح الاستديو ← كارت «🛋 الأثاث» تحت عقود المستأجرين.'],
+ ['ملف المستاجر|الهويه|صوره العقد|المستندات','الاستديوهات ← افتح الاستديو ← في عقد المستأجر زرار «👤 ملف».'],
+ ['التمديد|تمديد','الاستديوهات ← افتح الاستديو ← في عقد المستأجر زرار «➕ تمديد».'],
+ ['استلام مبلغ|تسجيل ايجار','الاستديوهات ← افتح الاستديو ← «💵 استلام مبلغ». أو من تنبيه الدفعة في الداشبورد.'],
+ ['وقف العقد|المستاجر مشي','الاستديوهات ← افتح الاستديو ← «⏹ وقف العقد».'],
+ ['جدول الدفعات','الاستديوهات ← افتح الاستديو ← تحت عقد المستأجر (المربعات بالتواريخ).'],
+ ['الشيكات|شيك','الاستديوهات ← افتح الاستديو ← تحت عقد المستأجر (الشيكات الرمادي)، وفي «👤 ملف».'],
+ ['التامين','الاستديوهات ← افتح الاستديو ← عقد المستأجر ← خانة «التأمين».'],
+ ['استديو جديد|اضافه استديو','الاستديوهات ← زرار «+ استديو».'],
+ ['عقد جديد','الاستديوهات ← «+ عقد»، أو جوه الاستديو «+ عقد مستأجر».'],
+ ['حذف استديو|تعديل استديو','الاستديوهات ← افتح الاستديو ← «✎ تعديل» أو «🗑 حذف الاستديو» فوق.'],
+ ['المجموعات|الشركاء|النسب','تبويب «المجموعات». وتغيير المجموعة الحالية من ☰ ← المجموعة.'],
+ ['اللغه','☰ ← ⚙️ الإعدادات ← اللغة.'],['الجنسيه','☰ ← ⚙️ الإعدادات ← الجنسية.'],
+ ['المزامنه|الاجهزه','☰ ← ⚙️ الإعدادات ← المزامنة بين الأجهزة.'],
+ ['النسخ الاحتياطي|نسخه احتياطيه|باك اب','تبويب «💾 النسخ الاحتياطي».'],
+ ['سجل التعديلات|سجل النشاط|مين عدل','تبويب «سجل النشاط»، وآخر 3 تعديلات في الداشبورد.'],
+ ['مقارنه الاستديوهات|الاكسب','الحسابات ← كارت «🏆 مقارنة الاستديوهات» (لما يبقى فيه استديوهات بدأت).'],
+ ['التحليل المالي|هامش|العائد|التعادل|الاشغال','الحسابات ← كارت «📊 التحليل المالي».'],
+ ['الخصوصيه|العين|اخفاء الارقام','العين 👁 فوق جنب اللوجو.'],
+ ['عقد العميل|طباعه العقد','تبويب «عقد العميل».'],
+ ['الوضع الليلي|الدارك','☰ ← الوضع الليلي / النهاري.'],
+ ['المساعد|الروبوت','الزرار الأخضر 🤖 تحت على الشمال.'],
+ ['تجديد','الداشبورد ← كارت «🔄 عقود قربت تخلص» (بيظهر قبل النهاية بـ 45 يوم).']];
+function aWhere(q){var z=nz(q),best=null,bl=0;MAP.forEach(function(m){m[0].split('|').forEach(function(k){if(z.indexOf(k)>=0&&k.length>bl){bl=k.length;best=m}})});if(!best){var T=toks(q);MAP.forEach(function(m){m[0].split('|').forEach(function(k){if(k.length>=4&&hasW(T,k)&&k.length>bl){bl=k.length;best=m}})})}
+ return best?'📍 **'+best[0].split('|')[0]+'**: '+best[1]:null}
+/* ---------- القاموس: يعني إيه ---------- */
+function W(){return annW()}
+var GL=[
+ ['تكلفه الشهر',function(){return 'تكلفة الشهر = (إجمالي عقد الشركة + تمن الفرش) ÷ عدد شهور عقد الشركة.\n'+SU().map(function(u){return '• '+u.name+': ('+F(u.total||isumOf(u))+' + '+F(+u.furn||0)+') ÷ '+(u.cm||12)+' = '+F(B.mcOf(u))}).join('\n')+'\nدي اللي بيتخصم من الإيجار عشان يطلع الربح.'}],
+ ['هامش الربح',function(){return B.aRatios()+'\nهامش الربح = كل 100 جنيه إيجار بيفضل منهم كام ربح.'}],
+ ['العائد',function(){return B.aRatios()+'\nالعائد على التكلفة = كل 100 جنيه بتصرفها بترجعلك كام ربح.'}],
+ ['نقطه التعادل',function(){return B.aRatios()+'\nنقطة التعادل = أقل نسبة من المدة لازم الاستديو يكون مؤجر فيها عشان ميخسرش.'}],
+ ['الاشغال',function(){return 'الإشغال = الاستديوهات المؤجرة ÷ كل الاستديوهات.\n'+B.aOcc()}],
+ ['الايام المجانيه|ايام مجانيه|فتره السماح',function(){return 'الأيام المجانية = أيام بتديهالك الشركة قبل بداية العقد من غير فلوس. بتغطي أيام الفاضي، ولو الاستديو اتأجر فيها بتبقى مكسب.\n'+SU().map(function(u){return '• '+u.name+': '+(u.grace||0)+' يوم'}).join('\n')}],
+ ['القيمه المسترده|الاثاث المسترد',function(){return 'القيمة المستردة = اللي هترجعه من الأثاث (بيعه أو نقله) في نهاية عقد الشركة. بتتحسب في الآخر بس، مش من الأول.\n'+B.aFurn()}],
+ ['الرصيد النقدي|النقدي',function(){return 'الرصيد النقدي = الفلوس اللي في إيدك فعلاً: اللي دخل − اللي خرج.\n'+B.aCash()}],
+ ['الربح حتي اليوم|الربح لحد النهارده',function(){return B.aProfit()}],
+ ['الربح المتوقع',function(){return 'الربح المتوقع = (متوسط الإيجار − تكلفة الشهر) × شهور عقود المستأجرين، ± الأيام المجانية/الفاضية، + الأثاث المسترد لو العقد وصل لنهاية عقد الشركة.\n'+B.aProj()}],
+ ['فلوس الشراكه',function(){return 'فلوس الشراكة = الفلوس اللي الشركاء حطوها في الأول. منها أول دفعة للشركة وتمن الفرش، والباقي من الإيجارات.\n'+B.aFund()}],
+ ['شيك ضمان|التامين',function(){return 'شيك الضمان/التأمين = ضمان من المستأجر بيترد في الآخر. شيك الضمان مش بيدخل النقدي، والتأمين النقدي بيدخل.\n'+B.aDep()}],
+ ['حصتي|المجموعه كامله|وضع الحساب',function(){return 'البرنامج بيحسب على مستوى المجموعة كاملة. ولو اخترت «حصتي» (من تبويب المجموعات ← طريقة حساب الأرقام) الأرقام بتتضرب في نسبتك. الوضع الحالي: '+(S.pmode==='me'?'حصتي':'المجموعة كاملة')+'.'}],
+ ['السحب',function(){return 'السحب = فلوس خرجت من النقدي لحد (إنت أو شريك) وهترجع. بيقلل النقدي بس، ومش مصروف ولا بيقلل الربح.\n'+B.aDraw()}],
+ ['المصروف',function(){return 'المصروف = فلوس اتصرفت على الشغل (صيانة، كهرباء…). بيقلل النقدي والربح.\n'+B.aExp()}]];
+function aDefine(q){var z=nz(q),best=null,bl=0;GL.forEach(function(g){g[0].split('|').forEach(function(k){if(z.indexOf(k)>=0&&k.length>bl){bl=k.length;best=g}})});return best?'📘 **'+best[0].split('|')[0]+'**\n'+best[1]():null}
+/* ---------- إجابات جديدة ---------- */
+function aCount(){var L=B.allLeases(),act=L.filter(function(x){return !x.L.exit&&B.leaseEnd(x.L)>today()}),ch=0;L.forEach(function(x){ch+=window.chqList?chqList(x.L).length:0});
+ return '**🔢 الأعداد — '+B.grpName()+':**\n• الاستديوهات: '+SU().length+'\n• عقود المستأجرين: '+L.length+' (ساري منها '+act.length+')\n• المستأجرين: '+Array.from(new Set(L.map(function(x){return nz(x.L.tenant)}))).filter(Boolean).length+'\n• دفعات الشركات: '+SU().reduce(function(s,u){return s+u.inst.length},0)+'\n• الشيكات معاك: '+ch+'\n• المصاريف المتسجلة: '+SE().length}
+function aTotals(){var tv=0,got=0,left=0,cv=0,cp=0;B.allLeases().forEach(function(x){var L=x.L,f=sh(x.u);for(var i=0;i<L.months;i++){var a=la(L,i)*f;tv+=a;(L.rcv||[]).indexOf(i)>=0?got+=B.amtOf(L,i)*f:left+=a}});SU().forEach(function(u){var f=sh(u);cv+=(u.total||isumOf(u))*f;u.inst.forEach(function(i){if(i.p)cp+=i.a*f})});
+ return '**💯 الإجماليات'+B.modeTxt()+':**\n• قيمة كل عقود المستأجرين: '+F(tv)+'\n  ✅ اتقبض: '+F(got)+'\n  ⏳ باقي يتقبض: '+F(left)+'\n• قيمة كل عقود الشركات: '+F(cv)+'\n  ✅ اتدفع: '+F(cp)+'\n  ⏳ باقي يتدفع: '+F(cv-cp)+'\n• الفرش: '+F(SU().reduce(function(s,u){return s+(+u.furn||0)*sh(u)},0))}
+function flows(limDays){var t=today(),r=[];items().forEach(function(x){var n=dd(x.d);if(n<0||n>limDays)return;if(x.ty==='rent'||x.ty==='recv')r.push({d:x.d,a:+x.amt,l:x.label});else if(x.ty==='inst'||x.ty==='debt'||x.ty==='exp')r.push({d:x.d,a:-x.amt,l:x.label})});return r.sort(function(a,b){return a.d.localeCompare(b.d)})}
+function aForecast(q){var lim=365,m=B.findMonth?-1:-1,mo=findMonth(q),c=cashNow(),h='**🔮 توقع النقدي'+B.modeTxt()+'** (لو كل حاجة اتدفعت في ميعادها):\n• معاك دلوقتي: '+F(c)+'\n';var stop=null;if(mo>=0){var y=today().getFullYear();if(mo<today().getMonth())y++;stop=iso(new Date(y,mo+1,0))}
+ var low=c,lowD=null,neg=null;flows(lim).forEach(function(x){if(stop&&x.d>stop)return;c+=x.a;h+='• '+fd(x.d)+': '+x.l+' '+(x.a<0?'− ':'+ ')+F(Math.abs(x.a))+' → يبقى '+F(c)+(c<0?' ⚠️':'')+'\n';if(c<low){low=c;lowD=x.d}if(c<0&&!neg)neg=x});
+ h+='\n'+(neg?'⚠️ **النقدي هيقل عن صفر يوم '+fd(neg.d)+'** عند «'+neg.l+'». محتاج تدبر '+F(-low)+' قبلها (من فلوس الشراكة أو الشركاء).':'✅ النقدي هيكفي كل الدفعات، وأقل رصيد هيوصله '+F(low)+(lowD?' يوم '+fd(lowD):'')+'.');return h}
+function aNext(q){var only=/شرك|قسط/.test(nz(q))?'inst':/ايجار|مستاجر|هستلم/.test(nz(q))?'rent':'';var x=items().filter(function(x){return dd(x.d)>=0&&(only?x.ty===only:(x.ty==='rent'||x.ty==='inst'))}).sort(function(a,b){return a.d.localeCompare(b.d)})[0];if(!x)return 'مفيش دفعات جاية.';
+ return '⏭ **الدفعة الجاية'+(only==='inst'?' للشركة':only==='rent'?' من مستأجر':'')+':** '+x.label+'\n• المبلغ: '+F(x.amt)+'\n• الميعاد: '+fd(x.d)+' ('+B.when(dd(x.d))+')'+(x.ty==='inst'?'\n• معاك نقدي دلوقتي '+F(cashNow())+(cashNow()>=x.amt?' ✅ يكفي':' ⚠️ مش كفاية — ناقص '+F(x.amt-cashNow())):'')}
+function aToday(q){var z=nz(q),d=/بكره|بكرا/.test(z)?1:0,L=items().filter(function(x){return dd(x.d)===d});var w=d?'بكرة':'النهارده';return '📅 '+w+' '+fd(new Date(today().getTime()+d*864e5))+':\n'+(L.length?L.map(function(x){return '• '+x.label+(x.amt?' — '+F(x.amt):'')}).join('\n'):'مفيش مواعيد '+w+' ✅')}
+function aShares(q){var g=(S.groups||[]).filter(function(x){return x.id===WS})[0];if(!g)return 'اختار مجموعة الأول من ☰ عشان أحسب نصيب كل شريك.';var n=g.n||2,ps=['أنا'].concat(partners()).slice(0,n),one=findPartner(q),P=rcvP().profit,E=annW().p,C=cashNow(),fund=((S.gp||{})[WS]||[]).filter(function(x){return x.a>0}).reduce(function(s,x){return s+x.a},0);
+ var mode=S.pmode==='me',k=mode?1:1/n,h='**👥 نصيب الشركاء — '+g.name+'** ('+n+' شركاء، كل واحد '+(Math.round(10000/n)/100)+'%):\n';if(mode)h+='(الأرقام دلوقتي على وضع «حصتي» فهي نصيبك أصلاً)\n';
+ h+='• الربح لحد النهارده '+F(P)+' ÷ '+n+' = '+F(P*k)+' لكل واحد\n• الربح المتوقع '+F(E)+' ÷ '+n+' = '+F(E*k)+' لكل واحد\n• النقدي '+F(C)+' ÷ '+n+' = '+F(C*k)+' لكل واحد\n'+(fund?'• فلوس الشراكة اللي اتحطت '+F(fund)+' ÷ '+n+' = '+F(fund/n)+' لكل واحد\n':'');
+ var b={};(S.adj||[]).forEach(function(a){if(a.k&&(a.g||'')===WS){b[a.p]=(b[a.p]||0)+(-a.a)}});var bk=Object.keys(b).filter(function(x){return Math.abs(b[x])>0.004});if(bk.length){h+='\n**المسحوب (لسه عليه):**\n';bk.forEach(function(p){h+='• '+(p==='__me'?'إنت':p)+': '+F(b[p])+'\n'})}
+ if(one)h+='\n➡️ **'+one+'**: ربحه لحد النهارده '+F(P*k)+'، والمتوقع '+F(E*k)+(b[one]?'، وعليه مسحوب '+F(b[one]):'');return h}
+function aCalc(q){var e=nz(q).replace(/×|x/g,'*').replace(/÷/g,'/').replace(/في(?=\s*\d)/g,'*').replace(/على(?=\s*\d)/g,'/').replace(/زائد|زايد/g,'+').replace(/ناقص/g,'-').replace(/[^\d.+\-*/() ]/g,' ').trim();if(!/\d\s*[+\-*/]\s*\d/.test(e))return null;try{var v=Function('"use strict";return ('+e.replace(/\s+/g,'')+')')();if(!isFinite(v))return null;return '🧮 '+e.replace(/\s+/g,' ')+' = **'+F(v)+'**'}catch(x){return null}}
+function aDate(){var t=new Date();return '📅 النهارده '+t.toLocaleDateString(LOC(),{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'، والساعة '+t.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}
+function aBest(){var t=today(),r=SU().map(function(u){var P=projU(u),f=sh(u),mc=B.mcOf(u),cur=u.leases.filter(function(L){return !L.exit&&pd(L.start)<=t&&B.leaseEnd(L)>t})[0];return {u:u,p:P?P.p:0,m:cur?(cur.rent-mc)*f:-mc*f,cur:cur}}).sort(function(a,b){return b.m-a.m});if(!r.length)return 'مفيش استديوهات.';
+ return '**🏆 ترتيب الاستديوهات بربح الشهر الحالي:**\n'+r.map(function(x,i){return (i===0?'🥇 ':'• ')+x.u.name+': '+(x.cur?'إيجار '+F(x.cur.rent)+' − تكلفة '+F(B.mcOf(x.u))+' = '+F(x.m)+' في الشهر':'⚪ شاغر — بيخسر '+F(-x.m)+' في الشهر')+' (المتوقع على مدة العقود '+F(x.p)+')'}).join('\n')}
+function aVacancy(q){var nums=(nz(q).match(/\d+/g)||[]).map(Number),n=nums.filter(function(x){return x<=24})[0]||1,unit=/يوم|ايام/.test(nz(q))?'d':'m',st=B.findStudio(nz(q))||SU()[0];if(!st)return null;var mc=B.mcOf(st),L=st.leases[st.leases.length-1],rent=L?L.rent:0,dv=unit==='d'?n/30:n;
+ return '**لو '+st.name+' فضي '+n+(unit==='d'?' يوم':' شهر')+':**\n• بتخسر الإيجار: '+F(rent)+' × '+(Math.round(dv*100)/100)+' = '+F(rent*dv)+'\n• والتكلفة مستمرة: '+F(mc)+' × '+(Math.round(dv*100)/100)+' = '+F(mc*dv)+'\n• يعني الربح المتوقع بيقل بـ '+F(rent*dv)+' (لأن التكلفة كانت محسوبة أصلاً)'+((st.grace||0)?'\n• والـ '+st.grace+' يوم المجانية من الشركة بتغطي جزء من الفاضي.':'')}
+function aCompanyIf(q){var nums=(nz(q).match(/\d+/g)||[]).map(Number),T=nums.filter(function(x){return x>=1000})[0],st=B.findStudio(nz(q))||SU()[0];if(!T||!st)return null;var fu=+st.furn||0,cm=st.cm||12,mc=(T+fu)/cm,L=st.leases[st.leases.length-1],rent=L?L.rent:0;
+ return '**لو عقد الشركة لـ '+st.name+' بقى '+F(T)+':**\n• تكلفة الشهر = ('+F(T)+' + '+F(fu)+') ÷ '+cm+' = '+F(mc)+' (بدل '+F(B.mcOf(st))+')\n'+(rent?'• ربح الشهر بإيجار '+F(rent)+' = '+F(rent-mc)+'\n':'')+'• أقل إيجار يغطي التكلفة: '+F(mc)}
+function aEdits(){var H=(S.hist||[]).slice(0,8);if(!H.length)return 'مفيش تعديلات متسجلة.';return '**🕘 آخر التعديلات:**\n'+H.map(function(e){return '• '+new Date(e.t).toLocaleString(LOC(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})+' — '+(e.by||'')+': '+String(e.d||'').slice(0,110)}).join('\n')+'\n\nالسجل كله في تبويب «سجل النشاط».'}
+function aDaysTo(q){var t=B.findTenant(nz(q)),st=!t&&B.findStudio(nz(q));if(t){var e=B.leaseEnd(t.L);return '⏳ عقد '+(t.L.tenant||'')+' بيخلص '+fd(e)+' — فاضل '+B.rem(e)+'.'}if(st){var e2=addM(pd(st.start),st.cm||12);return '⏳ عقد الشركة لـ '+st.name+' بيخلص '+fd(e2)+' — فاضل '+B.rem(e2)+'.'}return null}
+function aSmall(q){var z=nz(q);if(/^(السلام|سلام|اهلا|هاي|hi|hello|صباح|مساء)/.test(z))return 'أهلاً بيك يا '+((A&&A.u)||'أسامة')+' 👋 اسألني عن أي رقم أو مكان في البرنامج.';if(/شكرا|متشكر|تسلم|ميرسي|thanks/.test(z))return 'العفو 🌷 أي سؤال تاني أنا موجود.';if(/انت مين|اسمك|بتعمل ايه|بتعرف ايه/.test(z))return 'أنا مساعد بنيان 🤖. شغال جوه البرنامج من غير إنترنت ومن غير اشتراك. بقرا أرقامك وعقودك وبحسبلك خطوة بخطوة، وبعرف مكان كل حاجة في البرنامج، وبتعلم من تصحيحاتك (👎).';return null}
+/* ---------- النوايا ---------- */
+var I=[
+ {id:'late',l:'مين متأخر',k:{متاخر:4,'ما دفعش':4,مدفعش:4,'مش دافع':4,متاخرين:4,تاخير:3},f:function(){return B.aLate()}},
+ {id:'cash',l:'الرصيد النقدي',k:{نقدي:4,كاش:4,رصيد:3,'معايا كام':4,'في ايدي':3,خزنه:3,سيوله:3},f:function(){return B.aCash()}},
+ {id:'profit',l:'الربح لحد النهارده',k:{ربح:3,مكسب:3,كسبت:3,بكسب:2,ارباح:3,'لحد النهارده':1,'حتي اليوم':1},f:function(){return B.aProfit()}},
+ {id:'proj',l:'الربح المتوقع',k:{متوقع:4,هكسب:4,'اخر العقد':3,'مده العقود':3,'هيطلع كام':3,توقع:2},f:function(){return B.aProj()}},
+ {id:'forecast',l:'هيكفي النقدي؟',k:{'هتفضل':4,'هيفضل':4,'هيبقي معاي':5,'هتبقي':2,'معايا هيبقي':5,'هيبقي معايا':5,'هيفضل معايا':5,هيكفي:5,تكفي:4,'هقدر ادفع':5,'اقدر ادفع':5,'هلحق':3,'ينقص':2,عجز:4,'توقع النقدي':5,'السيوله الجايه':5},f:aForecast},
+ {id:'next',l:'الدفعة الجاية',k:{'الدفعه الجايه':8,'اول دفعه جايه':8,'اقرب دفعه':8,'الدفعه اللي جايه':8,'الدفعه القادمه':8},f:aNext},
+ {id:'upcoming',l:'الدفعات الجاية',k:{دفعات:3,مواعيد:3,هدفع:3,هستلم:3,الجاي:2,القادمه:2,الجايه:2,'هدفع كام':4,'هستلم كام':4,اقساط:2},f:function(q){return B.aUpcoming(nz(q))}},
+ {id:'today',l:'مواعيد النهارده',k:{'النهارده فيه':5,'بكره فيه':5,'مواعيد النهارده':5,'مواعيد بكره':5,'ايه النهارده':4,'عندي ايه':4},f:aToday},
+ {id:'company',l:'دفعات الشركة',k:{شركه:2,شركات:2,'دفعات الشركه':5,'اقساط الشركه':5,'عقد الشركه':3,apex:2},f:function(){return B.aCompany()}},
+ {id:'fund',l:'فلوس الشراكة',k:{شراكه:4,'الشركا حطوا':4,'راس المال':4,دعم:2,'حطينا كام':4},f:function(){return B.aFund()}},
+ {id:'shares',l:'نصيب كل شريك',k:{نصيب:5,حصه:4,'كل شريك':5,'ليه كام':3,'ليا كام':3,الشركاء:2,'نقسم':3,تقسيم:3},f:aShares},
+ {id:'exp',l:'المصاريف',k:{مصاريف:4,مصروف:4,صرفت:3,'اتصرف':3},f:function(){return B.aExp()}},
+ {id:'draw',l:'السحب ومين عليه',k:{سحب:4,سحبت:4,'عليه كام':4,دين:3,مديون:3,سلف:3,سلفه:3},f:function(){return B.aDraw()}},
+ {id:'ends',l:'نهاية العقود',k:{بيخلص:4,بتخلص:4,نهايه:3,ينتهي:4,انتهاء:4,تجديد:3,فاضل:3,'باقي كام شهر':4},f:function(q){return aDaysTo(q)||(/^\s*و/.test(nz(q))&&(CTX.tn||CTX.st)?aDaysTo(CTX.tn?CTX.tn.L.tenant:CTX.st.name):null)||B.aEnds()}},
+ {id:'occ',l:'الإشغال والشاغر',k:{اشغال:4,فاضي:3,شاغر:4,مؤجر:3,'مين مؤجر':4},f:function(){return B.aOcc()}},
+ {id:'furn',l:'الأثاث',k:{اثاث:4,فرش:4,عفش:3},f:function(){return B.aFurn()}},
+ {id:'dep',l:'التأمين والشيكات',k:{تامين:4,شيك:4,شيكات:4,ضمان:3},f:function(){return B.aDep()}},
+ {id:'month',l:'تقرير شهر',k:{تقرير:4,'الشهر ده':3,'الشهر اللي فات':4,'شهر':1},f:function(q){return B.aMonth(nz(q))}},
+ {id:'ratios',l:'هامش الربح والعائد',k:{هامش:5,عائد:5,تعادل:5,مؤشرات:4,نسبه:2,roi:5},f:function(){return B.aRatios()}},
+ {id:'count',l:'الأعداد',k:{'عدد':4,'كام استديو':5,'كام مستاجر':5,'كام عقد':5,'كام شيك':4},f:aCount},
+ {id:'totals',l:'الإجماليات',k:{اجمالي:4,مجموع:3,'كل العقود':4,'قيمه العقود':5,'باقي يتقبض':5,'باقي يتدفع':5},f:aTotals},
+ {id:'best',l:'أكسب استديو',k:{اكسب:5,'احسن استديو':5,افضل:3,ترتيب:3,'بيخسر':4,مقارنه:4},f:aBest},
+ {id:'edits',l:'آخر التعديلات',k:{'مين عدل':5,'اخر تعديل':5,تعديلات:4,سجل:3,'مين غير':5},f:aEdits},
+ {id:'where',l:'مكان حاجة في البرنامج',k:{فين:5,مكان:5,'الاقي':4,'القي':4,'الاقيه':4},f:function(q){return aWhere(q)}},
+ {id:'how',l:'إزاي أعمل حاجة',k:{ازاي:5,'اعمل ايه':4,طريقه:4,خطوات:4,'اضيف':3,'اسجل':3},f:function(q){return B.aHow(nz(q))||aWhere(q)}},
+ {id:'define',l:'يعني إيه',k:{'يعني ايه':6,'ايه هو':5,'ايه هي':5,'ايه معني':6,اشرح:4,'يقصد':3,تعريف:5},f:function(q){return aDefine(q)}},
+ {id:'whatif',l:'لو الإيجار اتغير',k:{'لو اجرت':6,'لو الايجار':6,'لو جددت':6,'لو خليت':4,'لو زودت':4,'لو نزلت':4},f:function(q){return B.aWhatIf(nz(q))}},
+ {id:'vacant',l:'لو الاستديو فضي',k:{'لو فضي':6,'لو اتقفل':5,'لو مشي':5,'لو متاجرش':6,فضي:3,متاجرش:4,'قعد فاضي':4},f:aVacancy},
+ {id:'compif',l:'لو سعر الشركة اتغير',k:{'لو الشركه':6,'لو العقد بقي':5,'لو الشركه غلت':6},f:aCompanyIf},
+ {id:'date',l:'تاريخ النهارده',k:{'النهارده كام':6,'التاريخ':4,'الساعه كام':6,'النهارده ايه':5},f:aDate},
+ {id:'summary',l:'ملخص الوضع',k:{ملخص:5,لخص:5,وضع:3,'عامل ايه':4,اخبار:4,'نظره عامه':5},f:function(){return B.think1('ملخص الوضع')}},
+ {id:'help',l:'بتعرف تجاوب على إيه',k:{مساعده:4,'بتعرف ايه':5,'اسالك ايه':5,اقتراحات:4,'تجاوب علي ايه':6,'تعرف تجاوب':6,'تقدر تعمل ايه':6},f:function(){return help2()}}];
+function help2(){return 'بعرف كل اللي في برنامجك وبحسب منه. أمثلة:\n• **أرقام:** النقدي جه منين؟ — الربح لحد النهارده — الربح المتوقع — الإجماليات — نصيب كل شريك\n• **مواعيد:** الدفعة الجاية — الدفعات الجاية — مواعيد النهارده — مين متأخر — العقود بتخلص إمتى\n• **توقع:** النقدي هيكفي دفعة الشركة؟ — لو أجرت بـ 3500 — لو الاستديو فضي شهر — لو الشركة بقت 27000\n• **مستأجر/استديو بالاسم:** عبد الرحمن دفع كام؟ — حالة ابيكس\n• **تقارير:** تقرير ديسمبر — هامش الربح — أكسب استديو\n• **مكان:** فين التقرير الشهري؟ — فين صورة الهوية؟\n• **شرح:** يعني إيه نقطة التعادل؟ — إزاي أمد عقد؟\n• **حاسبة:** 3200 × 6\nولو مفهمتش، اضغط 👎 وقولي قصدك، وهتعلم.'}
+/* ---------- التعلم ---------- */
+var LK='bny_ai_learn';function learned(){try{return JSON.parse(localStorage.getItem(LK))||[]}catch(e){return []}}
+function setLearned(a){try{localStorage.setItem(LK,JSON.stringify(a.slice(-300)))}catch(e){}}
+function sig(q){return toks(q).map(stem).filter(function(t){return t.length>=2&&!/^(انا|انت|هو|هي|ده|دي|اللي|في|من|علي|عن|مع|كام|ايه|عايز|ممكن|لو|يا|بس|طيب|هل|اي)$/.test(t)})}
+function jac(a,b){if(!a.length||!b.length)return 0;var n=0;a.forEach(function(x){if(b.some(function(y){return feq(x,y)}))n++});return n/Math.max(a.length,b.length)}
+window.aiLearn=function(q,id){var a=learned(),s=sig(q).join(' ');a=a.filter(function(x){return x.s!==s});a.push({s:s,i:id,t:Date.now()});setLearned(a)};
+function fromLearned(q){var s=sig(q),best=null,bs=0;learned().forEach(function(x){var v=jac(s,x.s.split(' '));if(v>bs){bs=v;best=x}});return bs>=0.6?best.i:null}
+/* ---------- الفهم ---------- */
+var CTX={};
+function score(q){var T=toks(q),z=nz(q);return I.map(function(it){var s=0;Object.keys(it.k).forEach(function(w){var nw=nz(w);if(nw.indexOf(' ')>=0?z.indexOf(nw)>=0:hasW(T,nw))s+=it.k[w]});return {it:it,s:s}}).sort(function(a,b){return b.s-a.s})}
+function run(it,q){try{return it.f(q)}catch(e){return null}}
+function ask(raw){var q=String(raw||'').trim(),z=nz(q);if(!q)return {t:help2()};
+ var sm=aSmall(q);if(sm&&toks(q).length<=5)return {t:sm};
+ var c=aCalc(q);if(c&&!/لو|ايجار|ربح/.test(z))return {t:c};
+ var tn=B.findTenant(z),st=!tn&&B.findStudio(z),mo=findMonth(q),pt=findPartner(q);
+ var L=fromLearned(q);if(L){var li=I.filter(function(x){return x.id===L})[0];if(li){var r0=run(li,q);if(r0){CTX={i:L,tn:tn||CTX.tn,st:st||CTX.st};return {t:r0,i:L}}}}
+ var sc=score(q),top=sc[0];
+ if(/^\s*لو\s/.test(z)&&!(top&&top.s>=6&&/vacant|compif/.test(top.it.id))){var w=B.aWhatIf(z)||aVacancy(q)||aCompanyIf(q);if(w)return {t:w,i:'whatif'}}
+ if(/فين|مكان/.test(z)){var wh=aWhere(q);if(wh)return {t:wh,i:'where'}}
+ if(/يعني ايه|ايه هو|ايه هي|ايه معني|اشرح|تعريف/.test(z)){var df=aDefine(q);if(df)return {t:df,i:'define'}}
+ if(pt&&/نصيب|حصه|ليه كام|ربح|كسب/.test(z))return {t:aShares(q),i:'shares'};
+ if(pt&&/عليه|سحب/.test(z))return {t:B.aDraw(),i:'draw'};
+ /* متابعة: سؤال قصير بدون نية واضحة */
+ var short=toks(q).length<=4;
+ if((tn||st)&&(!top||top.s<3)){CTX={i:tn?'tenant':'studio',tn:tn,st:st};return {t:tn?B.aTenant(tn,z):B.aStudio(st),i:CTX.i}}
+ if(mo>=0&&(!top||top.s<4||top.it.id==='month'))return {t:B.aMonth(z+' '+MON[mo]),i:'month'};
+ if(short&&(!top||top.s<3)&&(CTX.tn||CTX.st)&&/^(و|طب|طيب|بالنسبه|وال|ولسه|وهو|وهي)/.test(z)){if(/فاضل|بيخلص|ينتهي/.test(z)){var dt=aDaysTo(CTX.tn?CTX.tn.L.tenant:CTX.st.name);if(dt)return {t:dt,i:'ends'}}return {t:CTX.tn?B.aTenant(CTX.tn,z):B.aStudio(CTX.st),i:CTX.tn?'tenant':'studio'}}
+ if(short&&(!top||top.s<3)&&CTX.i){var prev=I.filter(function(x){return x.id===CTX.i})[0];if(/^و|^طب|^طيب|^بالنسبه|^وال/.test(z)){if(prev){var rr=run(prev,q);if(rr)return {t:rr,i:CTX.i}}}}
+ if(top&&top.s>=3){var out=[],ids=[];sc.filter(function(x){return x.s>=Math.max(3,top.s-1)}).slice(0,2).forEach(function(x){var r=(tn&&x.it.id!=='late'&&x.it.id!=='ends'&&!/upcoming|next|dep/.test(x.it.id))?null:run(x.it,q);if(r&&out.indexOf(r)<0){out.push(r);ids.push(x.it.id)}});
+  if(tn&&!out.length){out.push(B.aTenant(tn,z));ids.push('tenant')}if(st&&!out.length){out.push(B.aStudio(st));ids.push('studio')}
+  if(out.length){CTX={i:ids[0],tn:tn,st:st};return {t:out.join('\n\n———\n\n'),i:ids[0]}}}
+ if(tn){CTX={i:'tenant',tn:tn};return {t:B.aTenant(tn,z),i:'tenant'}}if(st){CTX={i:'studio',st:st};return {t:B.aStudio(st),i:'studio'}}
+ var old=B.think1(q);if(old&&!/^مش متأكد/.test(old))return {t:old,i:'old'};
+ var wh2=aWhere(q);if(wh2)return {t:wh2,i:'where'};var df2=aDefine(q);if(df2)return {t:df2,i:'define'};
+ return {t:'السؤال ده يا إما برّه البرنامج، يا إما مفهمتوش 🤔 لو قصدك حاجة في البرنامج اختار منها وأنا هتعلم:',ask:sc.filter(function(x){return x.s>0}).slice(0,4).map(function(x){return x.it}).concat(sc.filter(function(x){return x.s===0}).map(function(x){return x.it}).filter(function(it){return /cash|profit|upcoming|late|summary|help/.test(it.id)})).slice(0,6)}}
+window.bnyAsk=ask;window.bnyIntents=I;window.bnyRun=function(id,q){var it=I.filter(function(x){return x.id===id})[0];return it?(run(it,q)||it.f(it.l)):''};
+window.bnyThink=function(q){return ask(q).t};
 })();
 </script>
 <script id="aijs">
@@ -3373,14 +3546,19 @@ var H=[],busy=false;
 function E(x){return esc(x==null?'':String(x))}
 function md(t){return E(t).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')}
 function draw(){var d=document.getElementById('aix');if(!d)return;var L=d.querySelector('.ail');var h='';
- if(!H.length)h+="<div class='am a'>أهلاً 👋 أنا مساعد البرنامج، شغال على الموبايل من غير إنترنت ومن غير أي اشتراك. بعرف كل الأرقام والعقود والدفعات، وبحسبلك خطوة بخطوة. اسألني:</div><div class='aiq'>"+['الربح لحد النهارده جه منين؟','الرصيد النقدي جه منين؟','الدفعات الجاية','مين متأخر؟','لو أجرت بـ 3500 الربح هيبقى كام؟','ملخص الوضع','إزاي أمدّ عقد؟'].map(function(q){return "<button onclick=\"aiAsk(this.textContent)\">"+E(q)+"</button>"}).join('')+"</div>";
- H.forEach(function(m){h+="<div class='am "+(m.role==='user'?'u':'a')+"'>"+(m.role==='user'?E(m.content):md(m.content))+"</div>"});
+ if(!H.length)h+="<div class='am a'>أهلاً 👋 أنا مساعد بنيان. شغال من غير إنترنت ومن غير اشتراك، بعرف كل أرقامك وعقودك ومكان كل حاجة في البرنامج، وبحسبلك خطوة بخطوة. ولو جاوبت غلط اضغط 👎 وأنا هتعلم. اسألني:</div><div class='aiq'>"+['الربح لحد النهارده جه منين؟','النقدي هيكفي دفعة الشركة؟','الدفعة الجاية','مين متأخر؟','نصيب كل شريك','لو أجرت بـ 3500 الربح هيبقى كام؟','فين التقرير الشهري؟','يعني إيه نقطة التعادل؟','بتعرف تجاوب على إيه؟'].map(function(q){return "<button onclick=\"aiAsk(this.textContent)\">"+E(q)+"</button>"}).join('')+"</div>";
+ H.forEach(function(m,ix){h+="<div class='am "+(m.role==='user'?'u':'a')+"'>"+(m.role==='user'?E(m.content):md(m.content))+"</div>";
+  if(m.role!=='user'&&m.ask)h+="<div class='aiq'>"+m.ask.map(function(it){return "<button onclick=\"aiPick("+ix+",'"+it.id+"')\">"+E(it.l)+"</button>"}).join('')+"</div>";
+  if(m.role!=='user'&&m.q&&!m.ask&&!m.fb)h+="<div class='aifb'><button title='إجابة صح' onclick='aiFb("+ix+",1)'>👍</button><button title='مش ده قصدي' onclick='aiFb("+ix+",0)'>👎</button></div>";
+  if(m.fb==='pick')h+="<div class='aiq'><span style='width:100%;font-size:13px;opacity:.75'>كان قصدك إيه؟ اختار وأنا هتعلم:</span>"+bnyIntents.map(function(it){return "<button onclick=\"aiPick("+ix+",'"+it.id+"')\">"+E(it.l)+"</button>"}).join('')+"</div>"});
  L.innerHTML=h;L.scrollTop=L.scrollHeight}
 window.aiOpen=function(){var d=document.getElementById('aix');if(d)d.remove();d=document.createElement('div');d.id='aix';d.className='ov fx-ov';d.onclick=function(e){if(e.target===d)d.remove()};
  d.innerHTML="<div class='dlg'><button class='xcl' onclick=\"this.closest('.ov').remove()\">✕</button><div class='aih'><h2>🤖 المساعد</h2>"+(H.length?"<button style='font-size:12px;padding:4px 9px' onclick='aiClear()'>🧹 جديد</button>":"")+"</div><div class='ail'></div><div class='aif'><textarea id='aiin' rows='1' placeholder='اكتب سؤالك…' onkeydown=\"if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiAsk()}\"></textarea><button onclick='aiAsk()'>➤</button></div></div>";
  document.body.appendChild(d);draw()};
 window.aiClear=function(){H=[];aiOpen()};
-window.aiAsk=function(q){var i=document.getElementById('aiin');q=String(q||(i&&i.value)||'').trim();if(!q)return;if(i)i.value='';H.push({role:'user',content:q});var a;try{a=bnyThink(q)}catch(e){a='حصل خطأ وأنا بحسب: '+(e&&e.message)}H.push({role:'assistant',content:a});draw()};
+window.aiAsk=function(q){var i=document.getElementById('aiin');q=String(q||(i&&i.value)||'').trim();if(!q)return;if(i)i.value='';H.push({role:'user',content:q});var r;try{r=bnyAsk(q)}catch(e){r={t:'حصل خطأ وأنا بحسب: '+(e&&e.message)}}H.push({role:'assistant',content:r.t,ask:r.ask||null,q:q,i:r.i});draw()};
+window.aiPick=function(ix,id){var m=H[ix];if(!m)return;aiLearn(m.q,id);var t=bnyRun(id,m.q);m.ask=null;m.fb='ok';H.push({role:'assistant',content:(t||'…')+'\n\n✅ اتعلمت: المرة الجاية لما تسأل كده هجاوبك على طول.',q:m.q,i:id,fb:'ok'});draw()};
+window.aiFb=function(ix,ok){var m=H[ix];if(!m)return;if(ok){m.fb='ok';if(m.i&&m.i!=='old'&&m.i!=='tenant'&&m.i!=='studio')aiLearn(m.q,m.i);toast('شكراً 🌷')}else m.fb='pick';draw()};
 function fab(){if(document.getElementById('aifab'))return;var b=document.createElement('button');b.id='aifab';b.type='button';b.title='اسأل المساعد';b.textContent='🤖';b.onclick=aiOpen;document.body.appendChild(b)}
 var r0=render;render=function(){var o=r0.apply(this,arguments);try{var f=document.getElementById('aifab');if(AUTH){fab();document.getElementById('aifab').style.display=''}else if(f)f.style.display='none'}catch(e){}return o};
 try{if(AUTH)render()}catch(e){}
