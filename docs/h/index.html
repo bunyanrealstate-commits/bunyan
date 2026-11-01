@@ -316,6 +316,8 @@ label{margin:8px 0 4px!important;font-size:12.5px!important}
 <div id="app"></div>
 </main>
 <div id="modal"></div><div id="login"></div><div id="toast"></div>
+<script id="monearly">(function(){var K='bny_mon_err';function push(e){try{var L=JSON.parse(localStorage.getItem(K)||'[]');var m=String(e.m||'').slice(0,200),k=m+'|'+(e.l||'');var x=L.find(function(z){return z.k===k});if(x){x.n++;x.t=Date.now()}else L.push({k:k,m:m,l:e.l||'',t:Date.now(),n:1,tab:(window.S&&S.tab)||''});L.sort(function(a,b){return b.t-a.t});localStorage.setItem(K,JSON.stringify(L.slice(0,60)))}catch(x){}}
+window.__monPush=push;addEventListener('error',function(ev){if(!ev||!ev.message)return;if(/ResizeObserver|Script error/.test(ev.message))return;push({m:ev.message,l:(ev.lineno||'')+':'+(ev.colno||'')})});addEventListener('unhandledrejection',function(ev){var r=ev&&ev.reason;var m=r&&(r.message||String(r))||'promise';if(/AbortError|NotAllowedError|Failed to fetch|NetworkError|Load failed/i.test(m))return;push({m:'Promise: '+m,l:''})})})()</script>
 <script>/* نسخة عبد الحكيم: تخزين منفصل + مزامنة للاستقبال فقط من hakim.json */window.HBUILD=1;(function(){try{var P=Storage.prototype,g=P.getItem,s=P.setItem,r=P.removeItem,L=function(t){try{return t===window.localStorage}catch(e){return false}};P.getItem=function(k){if(!L(this))return g.call(this,k);var v=g.call(this,"h:"+k);if(k==="bny_sync"&&v){try{var c=JSON.parse(v);c.path="hakim.json";c.dirty=false;if(!c.sha)c.sha="h0";v=JSON.stringify(c)}catch(e){}}return v};P.setItem=function(k,v){if(!L(this))return s.call(this,k,v);if(k==="bny_sync"){try{var c=JSON.parse(v);c.path="hakim.json";c.dirty=false;if(!c.sha||/^local-/.test(c.sha))c.sha="h0";v=JSON.stringify(c)}catch(e){}}return s.call(this,"h:"+k,v)};P.removeItem=function(k){return L(this)?r.call(this,"h:"+k):r.call(this,k)}}catch(e){}var f0=window.fetch;window._rf=f0;window.fetch=function(u,o){try{var m=o&&o.method;if((m==="PUT"||m==="DELETE")&&/api\.github\.com\/repos\//.test(String(u))){return Promise.resolve(new Response(JSON.stringify({content:{sha:"local-"+Date.now()}}),{status:200,headers:{"Content-Type":"application/json"}}))}}catch(e){}return f0.apply(this,arguments)}})();</script><script>(function(){var si=window.setInterval;window.setInterval=function(f,ms){if(typeof f!=='function')return si.apply(window,arguments);var a=[].slice.call(arguments,2);return si.call(window,function(){if(document.hidden&&ms>=1000)return;f.apply(this,a)},ms)}})()</script><script>/* تسريع: تخزين مُنسِّقات التاريخ بدل إنشائها كل مرة */(function(){try{var o=Date.prototype.toLocaleDateString,C={};Date.prototype.toLocaleDateString=function(l,op){try{var k=String(l)+'|'+(op?JSON.stringify(op):'');var f=C[k]||(C[k]=new Intl.DateTimeFormat(l,op));return f.format(this)}catch(e){return o.apply(this,arguments)}}}catch(e){}})();</script>
 <script>/* توفير البطارية: المؤقتات القصيرة تتوقف والتطبيق في الخلفية */(function(){var si=window.setInterval;window.setInterval=function(f,t){if(typeof f!=='function'||!(t<60000))return si.apply(this,arguments);return si.call(window,function(){if(!document.hidden)f()},t)}})()</script>
 <script>/* إعادة رسم أخيرة بعد تحميل كل الإضافات */document.addEventListener('DOMContentLoaded',function(){try{if(typeof AUTH!=='undefined'&&AUTH)render()}catch(e){}});</script>
@@ -4315,6 +4317,63 @@ var L=document.getElementById('login');if(L)new MutationObserver(add).observe(L,
 })()</script>
 <script id="bootjs">(function(){var done=false;function go(){if(done)return;done=true;try{if(typeof render==='function'&&typeof AUTH!=='undefined'&&AUTH)render()}catch(e){}requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.add('bny-ready')})})}
 if(document.readyState==='complete'||document.readyState==='interactive')setTimeout(go,0);else document.addEventListener('DOMContentLoaded',go);setTimeout(function(){document.documentElement.classList.add('bny-ready')},2500)})()</script>
+<script id="monjs">(function(){if(window.HBUILD)return;
+var KE='bny_mon_err',KR='bny_mon_rep',PERF={n:0,sum:0,max:0,slow:0},LT=0;
+function rd(k,d){try{return JSON.parse(localStorage.getItem(k)||'null')||d}catch(e){return d}}
+var r0=render;render=function(){var t=performance.now(),o=r0.apply(this,arguments),d=performance.now()-t;PERF.n++;PERF.sum+=d;if(d>PERF.max)PERF.max=d;if(d>400)PERF.slow++;return o};
+try{new PerformanceObserver(function(l){l.getEntries().forEach(function(e){if(e.duration>300)LT++})}).observe({entryTypes:['longtask']})}catch(e){}
+var fin=function(v){return typeof v==='number'&&isFinite(v)},okD=function(d){return typeof d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(d)&&!isNaN(new Date(d))};
+function audit(){var I=[],F=[],add=function(sev,area,msg){I.push({sev:sev,area:area,msg:msg})};
+ try{var ids={},gs={};(S.groups||[]).forEach(function(g){gs[g.id]=1});
+  (S.units||[]).forEach(function(u){var nm='«'+(u.name||'بدون اسم')+'»';
+   if(ids[u.id])add('err','بيانات','استديو '+nm+' متكرر بنفس الرقم الداخلي');ids[u.id]=1;
+   if(u.g&&!gs[u.g])add('warn','مجموعات','استديو '+nm+' مربوط بمجموعة مش موجودة');
+   if(!(+u.cm>0))add('err','عقد الشركة','مدة عقد الشركة في '+nm+' مش مظبوطة');
+   if(!okD(u.start))add('err','عقد الشركة','تاريخ بداية عقد الشركة في '+nm+' مش مظبوط');
+   var T=0;(u.inst||[]).forEach(function(i,k){if(!fin(+i.a)||+i.a<0)add('err','دفعات الشركة','الدفعة '+(k+1)+' في '+nm+' مبلغها مش رقم صحيح');else T+=+i.a;if(!okD(i.d))add('warn','دفعات الشركة','الدفعة '+(k+1)+' في '+nm+' تاريخها مش مظبوط')});
+   if(+u.total>0&&(u.inst||[]).length&&Math.abs(T-u.total)>1)add('warn','دفعات الشركة','مجموع دفعات '+nm+' ('+$(T)+') مش زي إجمالي عقد الشركة ('+$(u.total)+')');
+   if(u.furn!=null&&!fin(+u.furn))add('err','الأثاث','تكلفة أثاث '+nm+' مش رقم');
+   (u.leases||[]).forEach(function(L){var tn='عقد '+(L.tenant||'مستأجر')+' في '+nm;
+    if(!(+L.months>0))add('err','عقود المستأجرين',tn+': المدة مش مظبوطة');if(!fin(+L.rent))add('err','عقود المستأجرين',tn+': الإيجار مش رقم');if(!okD(L.start))add('err','عقود المستأجرين',tn+': تاريخ البداية مش مظبوط');
+    var r=L.rcv||[],u2=[];r.forEach(function(x){if(u2.indexOf(x)<0)u2.push(x)});if(u2.length!==r.length){L.rcv=u2;F.push('شلت دفعة إيجار متسجلة مرتين في '+tn)}
+    var bad=u2.filter(function(x){return !(x>=0&&x<(+L.months||0)+2)});if(bad.length)add('warn','عقود المستأجرين',tn+': فيه دفعة مستلمة رقمها برّه مدة العقد');
+    if(L.rav)Object.keys(L.rav).forEach(function(k){if(!fin(+L.rav[k]))add('err','عقود المستأجرين',tn+': مبلغ مستلم مش رقم')})})});
+  (S.exp||[]).forEach(function(x){if(!fin(+x.a))add('err','المصروفات','مصروف «'+(x.w||x.d||'')+'» مبلغه مش رقم');if(x.d&&!okD(x.d))add('warn','المصروفات','مصروف «'+(x.w||'')+'» تاريخه مش مظبوط')});
+  (S.adj||[]).forEach(function(a){if(!fin(+a.a))add('err','النقدي','حركة نقدي «'+(a.w||'')+'» مبلغها مش رقم')});
+  var refs={};(S.units||[]).forEach(function(u){refs['f'+u.id]=1;(u.inst||[]).forEach(function(i){if(i.gid)refs['i'+i.gid]=1})});
+  (S.adj||[]).forEach(function(a){if(a.ref&&!refs[a.ref])add('warn','النقدي','حركة «'+(a.w||'')+'» مربوطة بدفعة اتمسحت')});
+  Object.keys(S.gp||{}).forEach(function(g){(S.gp[g]||[]).forEach(function(e){if(!fin(+e.a))add('err','فلوس الشراكة','حركة «'+(e.w||'')+'» مبلغها مش رقم');if(e.key&&!refs[e.key])add('warn','فلوس الشراكة','حركة «'+(e.w||'')+'» مربوطة بدفعة اتمسحت')})});
+  var w0=WS;try{(S.groups||[]).concat([{id:'-'}]).forEach(function(g){WS=g.id;var c=cashNow(),pr=rcvP().profit;if(!fin(c))add('err','الحسابات','الرصيد النقدي لمجموعة «'+(g.name||'بدون مجموعة')+'» طالع مش رقم');if(!fin(pr))add('err','الحسابات','الربح لمجموعة «'+(g.name||'بدون مجموعة')+'» طالع مش رقم');try{var F2=fpos();if(!fin(F2.eq))add('err','الحسابات','«وضعي المالي» لمجموعة «'+(g.name||'بدون مجموعة')+'» طالع مش رقم')}catch(e){add('err','الحسابات','«وضعي المالي» وقع بخطأ: '+e.message)}})}finally{WS=w0}
+ }catch(e){add('err','المراقب','الفحص نفسه وقع: '+e.message)}
+ try{var c=JSON.parse(localStorage.getItem('bny_sync')||'null');if(c&&/✗/.test(c.last||''))add('warn','المزامنة','آخر مزامنة فشلت ('+c.last+')');if(!window.bkSafe||!bkSafe())add('warn','النسخ الاحتياطي','مفيش نسخة احتياطية حديثة (مزامنة / يومية / درايف)')}catch(e){}
+ var E=rd(KE,[]).filter(function(e){return Date.now()-e.t<7*864e5});E.forEach(function(e){add('err','أخطاء برمجية',e.m+(e.n>1?' (×'+e.n+')':'')+(e.tab?' — في تبويب '+e.tab:''))});
+ if(PERF.n>5&&PERF.sum/PERF.n>250)add('warn','الأداء','الصفحات بتاخد وقت ('+Math.round(PERF.sum/PERF.n)+' مللي ثانية في المتوسط)');if(LT>5)add('warn','الأداء','حصل '+LT+' تعليق للشاشة أكتر من 0.3 ثانية');
+ if(F.length){try{save()}catch(e){}}
+ var rep={t:Date.now(),v:(document.querySelector('meta[name=bny-ver]')||{}).content||'',issues:I,fixed:F,perf:{renders:PERF.n,avg:PERF.n?Math.round(PERF.sum/PERF.n):0,max:Math.round(PERF.max),long:LT}};
+ var old=rd(KR,{});var fx=(old.fixedLog||[]).concat(F.map(function(m){return {t:Date.now(),m:m}})).slice(-30);rep.fixedLog=fx;try{localStorage.setItem(KR,JSON.stringify(rep))}catch(e){}
+ var ek=I.filter(function(x){return x.sev==='err'}).map(function(x){return x.msg}).join('|');if(ek&&ek!==window.__monLast){window.__monLast=ek;try{toast('🛡️ المراقب لقى '+I.filter(function(x){return x.sev==='err'}).length+' مشكلة — بص على الداشبورد')}catch(e){}}
+ if(F.length){try{toast('🛠️ المراقب صلّح لوحده: '+F[0]+(F.length>1?' (+'+(F.length-1)+')':''))}catch(e){}}
+ upload(rep);return rep}
+var upT=0;function upload(rep){try{var c=JSON.parse(localStorage.getItem('bny_sync')||'null');if(!c||!c.token||!c.repo||navigator.onLine===false)return;var key=JSON.stringify([rep.issues,rep.fixed]);if(key===window.__monUp&&Date.now()-upT<6*3600e3)return;window.__monUp=key;upT=Date.now();
+ var u='https://api.github.com/repos/'+c.repo+'/contents/monitor.json',H={'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},body=Object.assign({},rep,{ua:navigator.userAgent.slice(0,120)});
+ fetch(u+'?t='+Date.now(),{headers:H,cache:'no-store'}).then(function(r){return r.ok?r.json():{}}).then(function(j){var b={message:'monitor '+new Date().toISOString(),content:btoa(unescape(encodeURIComponent(JSON.stringify(body))))};if(j&&j.sha)b.sha=j.sha;return fetch(u,{method:'PUT',headers:H,body:JSON.stringify(b)})}).catch(function(){})}catch(e){}}
+window.monAudit=function(show){var r=audit();if(show){render();toast(r.issues.length?'🛡️ لقيت '+r.issues.length+' ملاحظة':'✅ كل حاجة سليمة')}return r};
+window.monClearErr=function(){try{localStorage.removeItem(KE)}catch(e){}monAudit(true)};
+window.monCopy=function(){var r=rd(KR,{});var t='تقرير مراقب بنيان '+new Date(r.t||Date.now()).toLocaleString('ar-EG')+'\n'+(r.issues||[]).map(function(x){return (x.sev==='err'?'❌ ':'⚠️ ')+x.area+': '+x.msg}).join('\n')+'\nالأداء: متوسط '+((r.perf||{}).avg||0)+'ms، أقصى '+((r.perf||{}).max||0)+'ms';try{navigator.clipboard.writeText(t).then(function(){toast('اتنسخ التقرير — ابعتهولي')})}catch(e){}};
+function card(full){var r=rd(KR,null);if(!r)return '';var I=r.issues||[],E=I.filter(function(x){return x.sev==='err'}),W=I.filter(function(x){return x.sev!=='err'});
+ if(!full&&!E.length)return '';
+ var li=function(x){return '<div style="padding:7px 0;border-bottom:1px dashed var(--bd,#dde);font-size:13.5px">'+(x.sev==='err'?'❌':'⚠️')+' <b>'+esc(x.area)+':</b> '+esc(x.msg)+'</div>'};
+ var h='<div class="card" id="moncard"'+(E.length?' style="border-top:5px solid #e05252!important"':'')+'><h2>🛡️ مراقب البرنامج</h2>';
+ h+=(I.length?(full?I:E).slice(0,full?40:6).map(li).join(''):'<p class="pos" style="font-weight:700">✅ كل حاجة سليمة — مفيش أخطاء في الحسابات ولا في البرنامج</p>');
+ var fx=(r.fixedLog||[]).slice(-5).reverse();if(full&&fx.length)h+='<p style="margin:10px 0 4px;font-weight:700">🛠️ اتصلح لوحده مؤخراً:</p>'+fx.map(function(f){return '<div class="mu" style="font-size:12.5px">• '+esc(f.m)+' — '+new Date(f.t).toLocaleDateString('ar-EG')+'</div>'}).join('');
+ if(full)h+='<p class="mu" style="font-size:12px;margin-top:8px">آخر فحص: '+new Date(r.t).toLocaleString('ar-EG')+' • سرعة الصفحات: متوسط '+r.perf.avg+' مللي ثانية • أبطأ صفحة '+r.perf.max+' مللي ثانية</p>';
+ h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="p" onclick="monAudit(true)">🔍 افحص دلوقتي</button>'+(full?'<button onclick="monCopy()">📋 انسخ التقرير</button>'+(rd(KE,[]).length?'<button onclick="monClearErr()">🧹 امسح الأخطاء القديمة</button>':''):'<button onclick="S.tab=\'bk\';render();setTimeout(function(){var c=document.getElementById(\'moncard\');c&&c.scrollIntoView({block:\'start\'})},150)">التفاصيل</button>')+'</div>';
+ return h+'</div>'}
+var hm=home;home=function(){return card(false)+hm()};
+var bk=bkTab;bkTab=function(){return card(true)+bk()};
+var sv=0,lastSig='';var rr=render;render=function(){var o=rr.apply(this,arguments);clearTimeout(sv);sv=setTimeout(function(){try{if(!AUTH)return;var sig=JSON.stringify([S.units,S.exp,S.adj,S.gp]).length+':'+(S.hist&&S.hist.length);if(sig===lastSig)return;lastSig=sig;audit()}catch(e){}},4000);return o};
+setTimeout(function(){try{if(AUTH){audit();if(S.tab==='home')render()}}catch(e){}},5000);setInterval(function(){try{if(AUTH&&!document.hidden)audit()}catch(e){}},15*60*1000);
+})()</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script><script id="hguard">(function(){
 var D=["units","exp","dep","gp","gc","adj"];window._ug=0;["pointerdown","keydown","touchstart"].forEach(function(e){addEventListener(e,function(){window._ug=Date.now()},{capture:true,passive:true})});
 function pk(o){var r={};D.forEach(function(k){if(o&&o[k]!=null)r[k]=o[k]});return JSON.stringify(r)}
