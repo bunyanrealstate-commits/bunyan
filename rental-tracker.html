@@ -658,11 +658,12 @@ function setF(u,a,b,oldAmt){const f=sh(u),amt=(+u.furn||0)*f,oa=(oldAmt==null?(+
   if(b==='me'&&amt)S.tx.push({id:uid(),k:'me',d:td(),w:'أثاث '+u.name+' من أموالي الخاصة',a:-amt,c:'تمويل استديو',u:u.id})}
  u.fat=b==='cash'?(a==='cash'&&u.fat?u.fat:Date.now()):0;u.fsrc=b;u.fp=!!b}
 function capOf(u){const f=sh(u),t=today(),b=pd(u.start),e=addM(b,u.cm),fe=Math.max(0,Math.min(1,(t-b)/((e-b)||1)));
- const cF=fsrcOf(u)==='me'?(+u.furn||0)*f:0,sv=Math.min(+u.salv||0,+u.furn||0)*f,rF=cF*fe;
+ const cF=fsrcOf(u)==='me'?(+u.furn||0)*f:0,sv=Math.min(+u.salv||0,+u.furn||0)*f,rF=Math.min(cF,cF/(u.cm||1)*furMo(u));
  const cI=+u.capI||0,P=u.inst.filter(i=>i.p).reduce((s,i)=>s+(+i.a||0),0),C=(u.total||isumOf(u))*fe,rI=cI&&P?cI*Math.min(1,C/P):0;
  return {cap:cF+cI,rec:Math.min(cF+cI,rF+rI)}}
-function furRec(u){const F=+u.furn||0;if(F<0.5)return '';const f=sh(u),cm=u.cm||1,t=today(),b=pd(u.start),e=addM(b,cm),fe=Math.max(0,Math.min(1,(t-b)/((e-b)||1))),mo=F/cm*f,rc=F*fe*f;
- return `<div class='stat' style='margin-top:8px'><span>♻️ رأس مال الفرش بيترد من الإيجار</span><b>${$(mo)} كل شهر</b><span>${$(F*f)} ÷ ${cm} شهر (مدة عقد الشركة) • اترد لحد النهارده: <strong class='pos'>${$(rc)}</strong> • الباقي: <strong>${$(F*f-rc)}</strong></span><span class='mu' style='font-size:12px'>ده مش مصروف ضايع: جزء ثابت من إيجار كل شهر بيرجّع تمن الفرش كله لحد آخر عقد الشركة، والربح محسوب بعده.</span></div>`}
+function furMo(u){let m=0;u.leases.forEach(L=>(L.rcv||[]).forEach(i=>{if(i<L.months)m+=lf(L,i)}));return m}
+function furRec(u){const F=+u.furn||0;if(F<0.5)return '';const f=sh(u),cm=u.cm||1,rm=furMo(u),mo=F/cm*f,rc=Math.min(F,F/cm*rm)*f;
+ return `<div class='stat' style='margin-top:8px'><span>♻️ رأس مال الفرش بيترد من الإيجار</span><b>${$(mo)} كل شهر</b><span>${$(F*f)} ÷ ${cm} شهر (مدة عقد الشركة) • اترد من الإيجار اللي قبضته (${Math.round(rm*10)/10} شهر): <strong class='pos'>${$(rc)}</strong> • الباقي: <strong>${$(F*f-rc)}</strong></span><span class='mu' style='font-size:12px'>مع كل شهر إيجار بتقبضه بيرجعلك جزء ثابت من تمن الفرش، لحد ما يرجع كله في آخر عقد الشركة. والربح محسوب بعد ما يترد.</span></div>`}
 function capLine(u){const c=capOf(u);if(c.cap<0.5)return '';return `<div class='stat' style='margin-top:8px'><span>💼 رأس مالي الخاص في الاستديو</span><b>${$(c.cap)}</b><span>استُرد من الإيجار حتى اليوم: <strong class='pos'>${$(c.rec)}</strong> • المتبقي: <strong>${$(c.cap-c.rec)}</strong></span><span class='mu' style='font-size:12px'>يُسترد جزء ثابت من الإيجار كل شهر على مدة العقد، والربح محسوب بعد استرداده.</span></div>`}
 function mUnit(id){if(!id&&LICMAX&&S.units.length>=LICMAX){toast('باقتك تسمح بـ '+LICMAX+' وحدة فقط — للترقية تواصل مع المالك');return}const u=id?U(id):{};
  const A1=[{k:'name',l:'اسم الاستديو',v:u.name},{k:'g',l:'المجموعة (الشراكة)',t:'s',o:[['','بدون مجموعة'],...grps().map(g=>[g.id,g.name])],v:u.g??(WS==='all'||WS==='-'?'':WS)},{k:'company',l:'اسم الشركة',v:u.company},{k:'start',l:'بداية العقد (مع الشركة)',t:'d',v:u.start||td()},{k:'grace',l:'أيام السماح: عدد الأيام التي تسمح لك الشركة بالتسكين فيها قبل بداية العقد (0 إن لم يوجد)',t:'n',v:u.grace||0},{k:'cm',l:'المدة بالشهور (12 أو 15...)',t:'n',v:u.cm??12},{k:'total',l:'المبلغ الإجمالي',t:'n',v:u.total||0}],
@@ -4525,6 +4526,37 @@ var b0=bkTab;bkTab=function(){var o=st(),dir=o.dir||'DOCUMENTS';
 <p>📂 الفولدر: <b dir='ltr'>${where(dir)}</b><br><span class='mu'>افتح تطبيق «الملفات» ← الذاكرة الداخلية ← ${dir==='DOCUMENTS'?'Documents ← '+DIR:'Android ← data ← … ← files ← '+DIR}</span></p>
 <p>${o.d?'آخر نسخة: <b dir="ltr">'+esc(o.n||'')+'</b> — '+new Date(o.t).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}):'<span class="mu">لسه ما اتعملتش أول نسخة</span>'}</p>
 <button class='p' onclick='bnyDailyBk()'>💾 احفظ نسخة دلوقتي</button><p class='mu' style='font-size:12px'>علشان ترجّع منها: تحت في كارت النسخ الاحتياطي اضغط «اختيار ملف» واختار الملف من نفس الفولدر.</p></div>`+b0()};
+})()</script>
+<script id="drivebk">(function(){
+if(window.claude||/claude|claudeusercontent/.test(location.host))return;
+var K='bny_drv',KEEP=60;function st(){try{return JSON.parse(localStorage.getItem(K)||'{}')}catch(e){return{}}}function set(o){try{localStorage.setItem(K,JSON.stringify(o))}catch(e){}}
+function key(){var o=st();if(!o.k){o.k='bny-'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);set(o)}return o.k}
+function script(){return "// Bunyan Furnished — نسخة احتياطية على Google Drive\nvar KEY='"+key()+"', FOLDER='Bunyan-Backups', KEEP="+KEEP+";\nfunction doPost(e){\n  var d=JSON.parse(e.postData.contents);\n  if(d.k!==KEY) return out({ok:false,err:'key'});\n  var it=DriveApp.getFoldersByName(FOLDER), f=it.hasNext()?it.next():DriveApp.createFolder(FOLDER);\n  var ex=f.getFilesByName(d.n);\n  if(ex.hasNext()) ex.next().setContent(d.data); else f.createFile(d.n,d.data,'application/json');\n  var all=[], fi=f.getFiles(); while(fi.hasNext()){var x=fi.next(); if(/^bunyan-\\d{4}-\\d\\d-\\d\\d\\.json$/.test(x.getName())) all.push(x);}\n  all.sort(function(a,b){return a.getName()<b.getName()?-1:1});\n  for(var i=0;i<all.length-KEEP;i++) all[i].setTrashed(true);\n  return out({ok:true,n:d.n});\n}\nfunction doGet(){return out({ok:true,app:'bunyan'})}\nfunction out(o){return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON)}\n"}
+var busy=false,last='';
+function up(force){var o=st();if(!o.u||busy)return Promise.resolve(false);try{if(!S||!S.units||!S.units.length)return Promise.resolve(false)}catch(e){return Promise.resolve(false)}
+ var data=JSON.stringify(S),day=td();if(!force&&o.d===day&&(data===last||Date.now()-(o.t||0)<30*60*1000))return Promise.resolve(false);
+ busy=true;var n='bunyan-'+day+'.json';
+ return fetch(o.u,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({k:o.k,n:n,data:data})}).then(function(r){return r.json()}).then(function(j){if(!j||!j.ok)throw 0;last=data;var q=st();q.d=day;q.t=Date.now();q.n=n;q.err=0;set(q);if(force){toast('☁️ اترفعت على Google Drive: '+n);render()}return true})
+ .catch(function(){var q=st();q.err=Date.now();set(q);if(force)toast('تعذر الرفع على Drive — اتأكد من الرابط وإن النت شغال');return false}).then(function(v){busy=false;return v})}
+window.drvUp=function(){up(true)};
+window.drvSetup=function(){var o=st();var d=document.createElement('div');d.className='ov';d.id='drvdlg';
+ d.innerHTML='<div class="dlg"><button class="xcl" onclick="this.closest(\'.ov\').remove()">✕</button><h2>☁️ ربط Google Drive (مرة واحدة)</h2>'
+ +'<p><b>1)</b> اضغط «انسخ الكود».</p><button class="p" id="drvcp">📋 انسخ الكود</button><textarea id="drvsc" readonly dir="ltr" style="width:100%;height:90px;font-size:11px;margin-top:6px"></textarea>'
+ +'<p><b>2)</b> افتح <b dir="ltr">script.google.com</b> بحساب Gmail بتاعك ← <b>New project</b> ← امسح اللي مكتوب والصق الكود ← 💾 Save.</p>'
+ +'<p><b>3)</b> فوق على اليمين: <b>Deploy</b> ← <b>New deployment</b> ← من ⚙️ اختار <b>Web app</b> ← <b>Execute as: Me</b> و <b>Who has access: Anyone</b> ← <b>Deploy</b> ← وافق على الصلاحيات (Advanced ← Go to … ← Allow).</p>'
+ +'<p><b>4)</b> انسخ الـ <b>Web app URL</b> والصقه هنا:</p><input id="drvu" dir="ltr" placeholder="https://script.google.com/macros/s/…/exec" style="width:100%">'
+ +'<p class="mu" style="font-size:12px">الكود فيه مفتاح سري خاص بيك، محدش يقدر يرفع على الدرايف بتاعك غير البرنامج ده. الملفات بتتحفظ في فولدر <b>Bunyan-Backups</b> على الدرايف.</p>'
+ +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="p" id="drvok">✅ احفظ وجرّب</button>'+(o.u?'<button id="drvoff">إلغاء الربط</button>':'')+'</div></div>';
+ document.body.appendChild(d);var ta=document.getElementById('drvsc');ta.value=script();document.getElementById('drvu').value=o.u||'';
+ document.getElementById('drvcp').onclick=function(){var t=ta.value;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){toast('اتنسخ الكود ✅')},function(){ta.select();try{document.execCommand('copy');toast('اتنسخ الكود ✅')}catch(e){}})};
+ document.getElementById('drvok').onclick=function(){var u=document.getElementById('drvu').value.trim();if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(u)){toast('الصق رابط Web app اللي بيبدأ بـ https://script.google.com');return}var q=st();q.u=u;q.d='';set(q);up(true).then(function(ok){if(ok){d.remove()}})};
+ var off=document.getElementById('drvoff');if(off)off.onclick=function(){var q=st();delete q.u;set(q);d.remove();toast('اتلغى ربط Drive');render()}};
+setTimeout(function(){up(false)},12000);setInterval(function(){up(false)},20*60*1000);
+document.addEventListener('visibilitychange',function(){if(document.hidden)up(false)});
+try{var C=window.Capacitor;C&&C.Plugins&&C.Plugins.App&&C.Plugins.App.addListener('pause',function(){up(false)})}catch(e){}
+var b0=bkTab;bkTab=function(){var o=st();
+ return `<div class='card'><h2>☁️ نسخة احتياطية على Google Drive</h2>`+(o.u?`<p>✅ مربوط. كل يوم بيترفع ملف اليوم على الدرايف في فولدر <b>Bunyan-Backups</b> وبيتحدّث لحد آخر اليوم (كل ما تقفل البرنامج). بيفضل آخر ${KEEP} يوم.</p><p>${o.d?'آخر رفع: <b dir="ltr">'+esc(o.n||'')+'</b> — '+new Date(o.t).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}):'<span class="mu">لسه مفيش رفع</span>'}${o.err&&(!o.t||o.err>o.t)?' <span class="neg">⚠ آخر محاولة فشلت</span>':''}</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class='p' onclick='drvUp()'>☁️ ارفع دلوقتي</button><button onclick='drvSetup()'>⚙️ الإعداد</button></div>`
+ :`<p>اربط البرنامج بالـ Google Drive بتاعك مرة واحدة، وبعد كده نسخة كل يوم بتترفع لوحدها.</p><button class='p' onclick='drvSetup()'>☁️ اربط Google Drive</button>`)+`</div>`+b0()};
 })()</script>
 </body>
 </html>
