@@ -3943,7 +3943,8 @@ try{if(AUTH)render()}catch(e){}
 .hd{position:relative}#grpb{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;margin:0!important}
 #grpb button{display:inline-flex!important;align-items:center;gap:5px;padding:5px 9px!important;border:0!important;border-radius:999px!important;cursor:pointer;color:#fff!important;font-weight:800;font-size:12px!important;letter-spacing:-.1px;max-width:min(150px,36vw);background:linear-gradient(120deg,#0d8a74,#14b8a6 45%,#6d5dfc)!important;background-size:200% 100%!important;animation:gbShift 6s ease-in-out infinite;box-shadow:0 4px 12px rgba(20,184,166,.35),inset 0 1px 0 rgba(255,255,255,.25)!important;min-height:0!important;line-height:1.3}
 #grpb button i{width:7px;height:7px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 2px rgba(255,255,255,.85)}
-#grpb button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#grpb button em{font-style:normal;font-size:10px;opacity:.85}
+#grpb button em{font-style:normal;font-size:10px;opacity:.85}
+#grpb button .gmq{flex:1;min-width:0;overflow:hidden;white-space:nowrap;direction:ltr;text-align:left;display:block;-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}#grpb .gtr{display:inline-flex;direction:ltr;animation:gmq 9s linear infinite;will-change:transform}#grpb .gtr b{direction:rtl;unicode-bidi:isolate;padding:0 14px;font-weight:800;white-space:nowrap;min-width:var(--gw,110px);text-align:center;box-sizing:border-box}@keyframes gmq{from{transform:translateX(-50%)}to{transform:translateX(0)}}
 #grpd{position:fixed;z-index:100000;background:linear-gradient(165deg,#0f2233,#14384a 60%,#1b5a55);border-radius:18px;padding:10px;box-shadow:0 18px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:6px;animation:gdIn .16s ease-out}
 @keyframes gdIn{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:none}}
 #grpd .gdh{color:#bfe9e0;font-size:12px;font-weight:700;padding:2px 6px 4px}
@@ -3955,7 +3956,7 @@ try{if(AUTH)render()}catch(e){}
 #grpb button{position:relative;display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 12px;border:0;border-radius:999px;cursor:pointer;color:#fff;font-weight:800;font-size:13px;letter-spacing:.2px;background:linear-gradient(120deg,#0d8a74,#14b8a6 45%,#6d5dfc);background-size:200% 100%;animation:gbShift 6s ease-in-out infinite;box-shadow:0 6px 18px rgba(20,184,166,.35),inset 0 1px 0 rgba(255,255,255,.25);max-width:100%}
 #grpb button i{width:8px;height:8px;border-radius:50%;background:#bfffe9;box-shadow:0 0 0 0 rgba(191,255,233,.8);animation:gbDot 1.8s infinite;flex:0 0 auto}
 #grpb button small{font-weight:700;opacity:.85;font-size:11.5px}
-#grpb button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
 @keyframes gbShift{50%{background-position:100% 0}}@keyframes gbDot{70%{box-shadow:0 0 0 7px rgba(191,255,233,0)}100%{box-shadow:0 0 0 0 rgba(191,255,233,0)}}
 body.pv #grpb button small{display:none}
 </style>
@@ -3973,8 +3974,8 @@ window.grpbOpen=function(){if(document.getElementById('grpd')){close();return}va
  var w=Math.min(300,innerWidth-24);d.style.width=w+'px';d.style.top=(r.bottom+8)+'px';d.style.left=Math.max(12,Math.min(innerWidth-w-12,r.left+r.width/2-w/2))+'px';
  d.onclick=function(e){var x=e.target.closest('[data-g]');if(!x)return;close();setW(x.getAttribute('data-g'))};setTimeout(function(){document.addEventListener('click',out,true)},0)};
 var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH)return o;var hd=document.querySelector('.hd');if(!hd)return o;var d=document.getElementById('grpb');if(!d){d=document.createElement('div');d.id='grpb';hd.appendChild(d)}
- var t=info(),c=COL[Math.max(0,gl().findIndex(function(x){return x.id===WS}))%COL.length];if(d.getAttribute('data-t')!==t){d.setAttribute('data-t',t);d.innerHTML='<button type="button" title="تغيير المجموعة" onclick="grpbOpen()"><i style="background:'+c+'"></i><span>'+esc(t)+'</span></button>'}fit()}catch(e){}return o};
-function fit(){try{var hd=document.querySelector('.hd'),d=document.getElementById('grpb');if(!hd||!d)return;var H=hd.getBoundingClientRect(),L=H.left+8,Rr=H.right-8;[].slice.call(hd.children).forEach(function(c){if(c===d||c.id==='hmp'||getComputedStyle(c).position==='absolute'||getComputedStyle(c).position==='fixed')return;var r=c.getBoundingClientRect();if(!r.width)return;var mid=(r.left+r.right)/2;if(mid<H.left+H.width/2)L=Math.max(L,r.right+6);else Rr=Math.min(Rr,r.left-6)});var w=Math.max(60,Rr-L);d.style.left=(L-H.left+w/2)+'px';d.querySelector('button').style.maxWidth=w+'px'}catch(e){}}
+ var t=info(),c=COL[Math.max(0,gl().findIndex(function(x){return x.id===WS}))%COL.length];if(d.getAttribute('data-t')!==t){d.setAttribute('data-t',t);d.innerHTML='<button type="button" title="تغيير المجموعة" onclick="grpbOpen()"><i style="background:'+c+'"></i><span class="gmq"><span class="gtr"><b>'+esc(t)+'</b><b>'+esc(t)+'</b></span></span></button>'}fit()}catch(e){}return o};
+function fit(){try{var hd=document.querySelector('.hd'),d=document.getElementById('grpb');if(!hd||!d)return;var H=hd.getBoundingClientRect(),L=H.left+8,Rr=H.right-8;[].slice.call(hd.children).forEach(function(c){if(c===d||c.id==='hmp'||getComputedStyle(c).position==='absolute'||getComputedStyle(c).position==='fixed')return;var r=c.getBoundingClientRect();if(!r.width)return;var mid=(r.left+r.right)/2;if(mid<H.left+H.width/2)L=Math.max(L,r.right+6);else Rr=Math.min(Rr,r.left-6)});var w=Math.max(60,Rr-L);d.style.left=(L-H.left+w/2)+'px';var bt=d.querySelector('button');bt.style.maxWidth=w+'px';bt.style.width=Math.min(w,170)+'px';bt.style.setProperty('--gw',(Math.min(w,170)-30)+'px')}catch(e){}}
 addEventListener('resize',fit);
 try{if(AUTH)render()}catch(e){}
 })();
