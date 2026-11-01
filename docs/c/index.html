@@ -3173,8 +3173,8 @@ function card(){var B=bal().filter(function(x){return Math.abs(x.left)>0.004}),n
  h+="<div class='cm-note' onclick='cmNote()'>"+(note?"📝 "+E(note):"")+"</div>";
  if(mv.length){h+="<div class='fx-sec' style='margin-top:10px'>آخر الحركات</div>";mv.slice(0,5).forEach(function(x){h+="<div class='fx-r'><span>"+E(x.l)+"<small>"+fdt(x.t)+"</small></span><b class='"+(x.a<0?'neg':'pos')+"'>"+(x.a<0?'− ':'+ ')+$(Math.abs(x.a))+"</b>"+(x.id?"<button class='x' style='padding:2px 7px;min-height:0' onclick=\"cmDel('"+x.id+"')\">✕</button>":"")+"</div>"})}
  return h+"</div>"}
-var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.tab!=='home'||window.HBUILD)return o;var app=document.getElementById('app');if(!app||document.getElementById('cmv'))return o;
- var st=[].slice.call(app.querySelectorAll('.stat')).filter(function(s){return /الرصيد النقدي/.test(s.textContent)})[0],w=document.createElement('div');w.innerHTML=card();var c=w.firstChild;
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.tab!=='acc'||window.HBUILD)return o;var app=document.getElementById('app');if(!app||document.getElementById('cmv')||app.querySelector('.pvlock'))return o;
+ var st=app.querySelector('.stat'),w=document.createElement('div');w.innerHTML=card();var c=w.firstChild;
  var par=st&&st.parentElement;while(par&&par.parentElement&&par.parentElement!==app)par=par.parentElement;
  if(par&&par.parentElement===app)par.insertAdjacentElement('afterend',c);else app.appendChild(c)}catch(e){}return o};
 try{if(AUTH)render()}catch(e){}
