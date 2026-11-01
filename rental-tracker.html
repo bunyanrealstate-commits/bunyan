@@ -2332,8 +2332,14 @@ function handleCode(text){
   const p=catalog[text];
   if(p){addToCart(text,p.name,p.price);return}
   pendingCode=text; $("sheetCode").textContent="الكود: "+text; $("pName").value=""; $("pPrice").value="";
+  const st0=$("sheetTitle"),sim=similarOf(text);if(st0)st0.textContent="منتج جديد";
+  if(sim){$("pName").value=sim.p.name;if(st0)st0.textContent="🔁 كود شبه «"+sim.p.name+"» — اكتب السعر";$("sheetCode").textContent="الكود: "+text+"  •  شبه: "+sim.code+(sim.p.price!=null?" ("+fmt(+sim.p.price)+" "+CUR+")":"");SNAP=null;
+   $("sheet").hidden=false;setTimeout(()=>{$("pPrice").focus()},60);return}
   $("sheet").hidden=false; setTimeout(()=>$("pName").focus(),50); if(SNAP)ocrFill(text);
 }
+function similarOf(code){code=String(code||"").trim();if(!/^\d{6,}$/.test(code))return null;const strip=c=>c.length>=12?c.slice(0,-1):c,a=strip(code);let best=null;
+  for(const k in catalog){if(k===code||k.length!==code.length||!/^\d+$/.test(k))continue;const b=strip(k);let d=0,first=-1;for(let i=0;i<a.length;i++)if(a[i]!==b[i]){d++;if(first<0)first=i}
+   if(d>0&&d<=2&&first>=a.length-4&&(!best||d<best.d))best={code:k,p:catalog[k],d}}return best}
 $("prodForm").onsubmit=async e=>{
   e.preventDefault();
   const name=$("pName").value.trim(); const price=Number($("pPrice").value.replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(",","."));
