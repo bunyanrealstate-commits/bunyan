@@ -5040,5 +5040,39 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);try{var g=documen
 (window.monChecks=window.monChecks||[]).push(Object.assign(function(add){var n=window.__monMenuStuck||0;if(n)add('warn','الحركة','قايمة فضلت مفتوحة وإنت بتحرك الصفحة ('+n+' مرة)')},{n:'القوايم المفتوحة'}));
 setInterval(function(){try{var o=openMenus();if(!o.length){stuck=0;return}var el=document.querySelector('#hmp,#grpd');var r=el&&el.getBoundingClientRect();if(r&&(r.bottom<0||r.top>innerHeight)){stuck++;if(stuck>1){window.__monMenuStuck=(window.__monMenuStuck||0)+1;closeAll();stuck=0}}}catch(e){}},1500);
 })()</script>
+<style id="mnu2css">
+@media (max-width:860px){
+#hmp{min-width:0!important;width:192px!important;max-width:calc(100vw - 16px)!important}
+#hmp #hqr{display:none!important}
+#hmp>#setsub,#wsub{width:185px!important;max-width:calc(100vw - 16px)!important}
+#hmp #who{order:99!important}
+#hmp #who .um.open .ump{position:fixed!important;z-index:76;width:185px!important;min-width:0!important;max-width:calc(100vw - 16px)!important;margin:0!important;max-height:72vh;overflow:auto;box-shadow:0 12px 32px rgba(15,39,66,.25)!important;border-radius:14px!important;animation:wsin .16s ease-out}
+#hmp #who .ump button,#hmp>#setsub button,#wsub button{font-size:13.5px!important;padding:9px 10px!important;gap:8px!important}
+#hmp>#setsub #syq>span:not(.sd)::before{font-size:13.5px!important}
+#hmp #who .ump .who2{font-size:12px!important}
+}
+.ump .syb{display:none!important}
+</style>
+<script id="mnu2js">
+(function(){var mq=matchMedia('(max-width:860px)');
+function fly(sub,btn){try{var p=document.getElementById('hmp');if(!sub||!btn||!p)return;var pr=p.getBoundingClientRect(),r=btn.getBoundingClientRect(),vw=innerWidth,vh=innerHeight,left=pr.right+6,W=Math.min(185,vw-left-8);
+ if(W<140){W=Math.min(185,vw-16);left=vw-W-8}
+ sub.style.setProperty('width',W+'px','important');sub.style.setProperty('left',left+'px','important');sub.style.setProperty('right','auto','important');sub.style.top=Math.max(8,r.top)+'px';
+ var h=sub.offsetHeight;var t=Math.max(8,Math.min(r.top,vh-h-12));sub.style.top=t+'px';sub.style.maxHeight=(vh-t-12)+'px'}catch(e){}}
+function tidy(){try{document.querySelectorAll('.ump').forEach(function(m){if(m.closest('#lgm'))return;m.querySelectorAll('.syb').forEach(function(b){b.remove()});var d=m.querySelector('button.dg');if(d&&m.lastElementChild!==d)m.appendChild(d)});
+ var pn=document.getElementById('hmp'),w=document.getElementById('who');if(mq.matches&&pn&&w&&w.parentNode===pn&&pn.lastElementChild!==w)pn.appendChild(w)}catch(e){}}
+function placeAll(){if(!mq.matches)return;var s=document.getElementById('setsub');if(s&&s.classList.contains('on'))fly(s,document.getElementById('setmi'));var ws=document.getElementById('wsub');if(ws&&ws.classList.contains('on'))fly(ws,document.getElementById('wsmi'));var u=document.querySelector('#hmp #who .um.open');if(u){tidy();fly(u.querySelector('.ump'),u.querySelector('.umb'))}}
+function later(){setTimeout(placeAll,0);setTimeout(placeAll,60)}
+document.addEventListener('click',function(e){var t=e.target;if(!t.closest)return;
+ if(t.closest('#setmi,#wsmi')){var u=document.querySelector('#hmp #who .um.open');if(u)u.classList.remove('open')}
+ if(t.closest('#hmp #who .umb')){var s=document.getElementById('setsub'),m=document.getElementById('setmi'),ws=document.getElementById('wsub'),wm=document.getElementById('wsmi');if(s)s.classList.remove('on');if(m)m.classList.remove('op');if(ws)ws.classList.remove('on');if(wm)wm.classList.remove('op')}
+ later()},true);
+document.addEventListener('click',function(e){if(!e.target.closest||e.target.closest('#hmp #who .um'))return;var u=document.querySelector('#hmp #who .um.open');if(u)u.classList.remove('open')});
+addEventListener('resize',later);
+var r0=render;render=function(){var o=r0.apply(this,arguments);tidy();return o};
+var hd=document.querySelector('.hd');if(hd)new MutationObserver(function(){tidy();if(!hd.classList.contains('mopen')){var u=document.querySelector('#hmp #who .um.open');if(u)u.classList.remove('open')}}).observe(hd,{attributes:true,attributeFilter:['class']});
+setTimeout(tidy,0);setTimeout(tidy,800);
+})();
+</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
