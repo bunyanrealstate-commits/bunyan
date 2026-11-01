@@ -4676,5 +4676,14 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.t
  var g=document.getElementById('grpb');app.insertBefore(d,app.firstChild)}catch(x){}return o};
 setTimeout(poll,6000);setInterval(poll,2*60000);setInterval(check,60000);document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(poll,1500)});
 })()</script>
+<script id="rcvconf">(function(){
+function ask(title,body,ok,fn){var o=document.createElement('div');o.className='ov rcf';o.style.zIndex='100001';o.innerHTML='<div class="dlg" style="max-width:360px;text-align:center"><div style="font-size:40px;line-height:1">💵</div><h2 style="margin:6px 0 8px">'+title+'</h2><div style="font-size:15px;line-height:1.7">'+body+'</div><div class="bt" style="display:flex;gap:8px;margin-top:14px"><button class="p" style="flex:1">'+ok+'</button><button style="flex:1">إلغاء</button></div></div>';
+ document.body.appendChild(o);var b=o.querySelectorAll('button');b[0].onclick=function(){o.remove();fn()};b[1].onclick=function(){o.remove()};o.onclick=function(e){if(e.target===o)o.remove()}}
+window.rcvAsk=ask;
+var t0=togR;togR=function(id,k,i){try{var u=U(id),L=u.leases[k],on=(L.rcv||[]).indexOf(i)>=0,a=(L.rav&&L.rav[i]!=null)?L.rav[i]:la(L,i),d=iso(payD(L,i)),who=esc(L.tenant||'المستأجر');
+ if(on)ask('إلغاء الاستلام؟','هتلغي استلام <b>'+$(a)+'</b> من '+who+'<br>دفعة '+esc(d)+' — '+esc(u.name),'↩️ ألغِ الاستلام',function(){t0(id,k,i)});
+ else ask('تأكيد استلام الإيجار','استلمت <b style="font-size:20px;color:#1f9d55">'+$(a)+'</b><br>من '+who+' • دفعة '+esc(d)+'<br><span class="mu">'+esc(u.name)+'</span>','✅ أيوه استلمت',function(){t0(id,k,i)})}catch(e){t0(id,k,i)}};
+var p0=window.mPre;window.mPre=function(M,o){if(p0&&p0(M,o)===false)return false;if(M&&/^استلام مبلغ/.test(M.title||'')&&!window.__rcOK){var a=+o.a||0;if(a<=0)return true;var who=String(M.title).replace(/^استلام مبلغ — /,'');ask('تأكيد استلام مبلغ','استلمت <b style="font-size:20px;color:#1f9d55">'+$(a)+'</b><br>من '+esc(who),'✅ أيوه استلمت',function(){window.__rcOK=1;try{saveM()}finally{window.__rcOK=0}});return false}return true};
+})()</script>
 </body>
 </html>
