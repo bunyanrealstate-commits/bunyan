@@ -4419,5 +4419,17 @@ reg('الحركة',function(add){var rec=SH.filter(function(x){return Date.now()
 /* 5) errors written to the console by any part of the code */
 var ce=console.error;console.error=function(){try{var m=[].map.call(arguments,function(a){return a&&a.message||String(a)}).join(' ');if(!/net::|Failed to load resource|favicon/.test(m)&&window.__monPush)__monPush({m:'console: '+m.slice(0,180),l:''})}catch(e){}return ce.apply(console,arguments)};
 })()</script>
+<script id="menuclose">(function(){
+function openMenus(){var o=[];var hd=document.querySelector('.hd.mopen');if(hd)o.push('hd');if(document.getElementById('grpd'))o.push('grpd');document.querySelectorAll('.um.open').forEach(function(){o.push('um')});var ss=document.getElementById('setsub');if(ss&&ss.classList.contains('on'))o.push('set');return o}
+function closeAll(){var hd=document.querySelector('.hd.mopen');if(hd)hd.classList.remove('mopen');var g=document.getElementById('grpd');if(g)g.remove();document.querySelectorAll('.um.open').forEach(function(x){x.classList.remove('open')});var ss=document.getElementById('setsub');if(ss)ss.classList.remove('on');document.querySelectorAll('.op').forEach(function(x){if(x.closest('#hmp'))x.classList.remove('op')})}
+window.bnyCloseMenus=closeAll;var yP=scrollY,acc=0,stuck=0;
+addEventListener('scroll',function(){var d=scrollY-yP;yP=scrollY;if(!openMenus().length){acc=0;return}acc+=Math.abs(d);if(acc>24){acc=0;closeAll()}},{passive:true});
+addEventListener('touchstart',function(e){if(!openMenus().length)return;var t=e.target;if(t.closest&&(t.closest('#hmp')||t.closest('#hmb')||t.closest('#grpd')||t.closest('#grpb')||t.closest('.um')||t.closest('#setsub')||t.closest('.hd')))return;closeAll()},{passive:true,capture:true});
+addEventListener('popstate',closeAll);
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{var g=document.getElementById('grpd');if(g)g.remove()}catch(e){}return o};
+/* monitor: an open menu that stays on screen while the page moves is a UI bug */
+(window.monChecks=window.monChecks||[]).push(Object.assign(function(add){var n=window.__monMenuStuck||0;if(n)add('warn','الحركة','قايمة فضلت مفتوحة وإنت بتحرك الصفحة ('+n+' مرة)')},{n:'القوايم المفتوحة'}));
+setInterval(function(){try{var o=openMenus();if(!o.length){stuck=0;return}var el=document.querySelector('#hmp,#grpd');var r=el&&el.getBoundingClientRect();if(r&&(r.bottom<0||r.top>innerHeight)){stuck++;if(stuck>1){window.__monMenuStuck=(window.__monMenuStuck||0)+1;closeAll();stuck=0}}}catch(e){}},1500);
+})()</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
