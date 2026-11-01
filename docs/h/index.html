@@ -3032,6 +3032,20 @@ window.tnDocDel=function(id,k,j){confirmM('تحذف المستند ده؟',funct
 window.tnDoc=function(inp,id,k,kind){var f=inp.files&&inp.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var M=1100,w=im.width,h=im.height,s=Math.min(1,M/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.round(w*s);c.height=Math.round(h*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);var q=.62,d=c.toDataURL('image/jpeg',q);while(d.length>220000&&q>.3){q-=.08;d=c.toDataURL('image/jpeg',q)}
   var L=U(id).leases[k];L.docs=L.docs||[];if(L.docs.length>=6){toast('الحد 6 مستندات لكل عقد');return}L.docs.push({k:kind,d:d,t:Date.now()});persist('📎 '+(kind==='id'?'صورة هوية':'صورة عقد')+' للمستأجر '+(L.tenant||''));toast('اتحفظت الصورة');setTimeout(function(){tnFile(id,k)},60)};im.onerror=function(){toast('الصورة دي مش مدعومة')};im.src=r.result};r.readAsDataURL(f)};
 
+
+window.mExt=function(id,k){var u=U(id),L=u.leases[k],e=endOf(L);
+ openM('➕ تمديد عقد '+(L.tenant||'المستأجر'),[{k:'m',l:'شهور إضافية',t:'n',v:0},{k:'d',l:'أيام إضافية',t:'n',v:0}],function(o){var am=Math.max(0,Math.floor(+o.m||0)),ad=Math.max(0,Math.floor(+o.d||0));if(!am&&!ad){setTimeout(function(){toast('اكتب عدد الشهور أو الأيام')},30);return}
+  var add=am+ad/30,rent=+L.rent||0;
+  if(L.sch&&L.sch.length&&rent>0){var X=Math.round(rent*add),R=L.sch,last=R.length-1,p=(+L.day>=1&&+L.day<=31)?Math.round(+L.day):pd(L.start).getDate();
+   if((L.rcv||[]).indexOf(last)<0&&R[last].a<rent&&last>0){var t=Math.min(rent-R[last].a,X);R[last].a=Math.round(R[last].a+t);X-=t}
+   var d=pd(R[last].d),n=0;while(X>0.5&&n<120){var nx=new Date(d.getFullYear(),d.getMonth()+1,1),ld=new Date(nx.getFullYear(),nx.getMonth()+1,0).getDate();d=new Date(nx.getFullYear(),nx.getMonth(),Math.min(p,ld));var a=Math.min(rent,X);R.push({d:iso(d),a:Math.round(a)});X-=a;n++}
+   L.cmo=Math.round(((+L.cmo||L.months||0)+add)*1000)/1000;try{L.end=iso(window._lnb.endOf(pd(L.start),L.cmo))}catch(x){L.end=iso(new Date(e.getFullYear(),e.getMonth()+am,e.getDate()+ad))}
+   L.months=R.length;L.orig=R.length}
+  else{L.months=(L.months||0)+am;L.orig=(L.orig||0)+am;L.xd=(+L.xd||0)+ad;if(L.xd>=30){L.months+=Math.floor(L.xd/30);L.orig=L.months;L.xd=L.xd%30}}
+  try{if(window.chqList&&window.chqSync)chqSync(L)}catch(x){}
+  logEv('➕ تمديد عقد '+(L.tenant||'')+' — '+u.name+': '+(am?am+' شهر':'')+(am&&ad?' و ':'')+(ad?ad+' يوم':'')+' • ينتهي '+iso(endOf(L)));
+  setTimeout(function(){toast('اتمدّد العقد — بقى ينتهي '+fd(endOf(L)))},60)});
+ M.ok='تمديد';M.msg='العقد بيخلص '+fd(e)+'. الدفعات الجديدة هتتضاف لجدول الدفع بنفس الإيجار ويوم الدفع.';drawM()};
 /* ========== التقرير الشهري ========== */
 var RM=null;
 function mKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
@@ -3104,7 +3118,7 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH)retu
   var lg=lastEd();if(lg&&!document.getElementById('lgc')){var w2=document.createElement('div');w2.innerHTML=lg;var tr=[].slice.call(app.querySelectorAll('.card')).filter(function(c){return /نسخة تجريبية|نسخ احتياطي|النسخ الاحتياطي/.test((c.querySelector('h2')||{}).textContent||'')})[0];tr?app.insertBefore(w2.firstChild,tr):app.appendChild(w2.firstChild)}}
  if(S.tab==='acc'){if(!document.getElementById('mrb')){var b=document.createElement('div');b.id='mrb';b.className='fx-btns';b.style.margin='0 0 10px';b.innerHTML="<button class='p' onclick='monthRep()'>📊 التقرير الشهري</button>";var st=app.querySelector('.kp,.grid,.card');st?app.insertBefore(b,st):app.insertBefore(b,app.firstChild)}
   [].forEach.call(app.querySelectorAll('.card'),function(c){if(/ترتيب الاستديوهات بالربح/.test((c.querySelector('h2')||{}).textContent||''))c.remove()});if(!document.getElementById('cmpc')){var cc=compCard();if(cc){var w3=document.createElement('div');w3.innerHTML=cc;var c1=app.querySelector('.card:not(#cmpc)');c1&&c1.nextSibling?app.insertBefore(w3.firstChild,c1.nextSibling):app.appendChild(w3.firstChild)}}}
- [].forEach.call(app.querySelectorAll('.lsb'),function(sb){if(sb.querySelector('.tnb'))return;var e=sb.querySelector('button[onclick^="mLease("]');if(!e)return;var m=/mLease\('([^']+)',(\d+)\)/.exec(e.getAttribute('onclick'));if(!m)return;var bt=document.createElement('button');bt.className='tnb';bt.textContent='👤 ملف';bt.setAttribute('onclick',"tnFile('"+m[1]+"',"+m[2]+")");sb.insertBefore(bt,sb.firstChild)});
+ [].forEach.call(app.querySelectorAll('.lsb'),function(sb){if(sb.querySelector('.tnb'))return;var e=sb.querySelector('button[onclick^="mLease("]');if(!e)return;var m=/mLease\('([^']+)',(\d+)\)/.exec(e.getAttribute('onclick'));if(!m)return;var bt=document.createElement('button');bt.className='tnb';bt.textContent='👤 ملف';bt.setAttribute('onclick',"tnFile('"+m[1]+"',"+m[2]+")");sb.insertBefore(bt,sb.firstChild);if(!sb.querySelector('.xtb')&&sb.querySelector('button[onclick^="mStop("]')){var xb=document.createElement('button');xb.className='xtb';xb.textContent='➕ تمديد';xb.setAttribute('onclick',"mExt('"+m[1]+"',"+m[2]+")");bt.insertAdjacentElement('afterend',xb)}});
  autoRep()}catch(e){}return o};
 try{if(AUTH)render()}catch(e){}
 })();
