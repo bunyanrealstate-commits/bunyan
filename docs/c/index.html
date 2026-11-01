@@ -1402,8 +1402,8 @@ var r0=render;render=function(){r0.apply(this,arguments);try{if(!AUTH||!A||A.rol
  /* دخول بالبصمة من شاشة الدخول */
  var B=window.bnyBio,lu=null;try{lu=localStorage.getItem('bny_lastu')}catch(e){}
  if(!AUTH){}}catch(e){}};
-var r1=render;render=function(){r1.apply(this,arguments);try{var B=window.bnyBio,lu=null;try{lu=localStorage.getItem('bny_lastu')}catch(e){}
- if(!AUTH&&B&&B.on()&&B.P()&&lu&&US.some(function(x){return x.u===lu})){var bt=document.querySelector('#login .dlg .bt');if(bt&&!bt.querySelector('.bil')){var b=document.createElement('button');b.className='bil';b.textContent='🖐️ دخول بالبصمة ('+lu+')';b.onclick=async function(){if(await B.ask('تسجيل الدخول')){var f=US.find(function(x){return x.u===lu});if(f){A=f;S=ld(f.k);AUTH=true;try{logEv('تسجيل دخول بالبصمة')}catch(e){}render()}}};bt.appendChild(b)}}}catch(e){}};
+var r1=render;function addBil(){try{var B=window.bnyBio,lu=null;try{lu=localStorage.getItem('bny_lastu')}catch(e){}
+ if(!AUTH&&B&&B.on()&&B.P()&&lu&&US.some(function(x){return String(x.u).toLowerCase()===String(lu).toLowerCase()})){var bt=document.querySelector('#login .dlg .bt');if(bt&&!bt.querySelector('.bil')){var b=document.createElement('button');b.className='bil';b.textContent='🖐️ دخول بالبصمة ('+lu+')';b.onclick=async function(){if(await B.ask('تسجيل الدخول')){var f=US.find(function(x){return String(x.u).toLowerCase()===String(lu).toLowerCase()});if(f){A=f;S=ld(f.k);AUTH=true;try{logEv('تسجيل دخول بالبصمة')}catch(e){}render()}}};bt.appendChild(b)}}}catch(e){}}window.bnyAddBil=addBil;render=function(){r1.apply(this,arguments);addBil()};try{new MutationObserver(function(){if(!AUTH)addBil()}).observe(document.getElementById('login'),{childList:true})}catch(e){}setTimeout(addBil,0);
 var dl0=doLogin;doLogin=async function(){await dl0.apply(this,arguments);try{if(AUTH&&A)localStorage.setItem('bny_lastu',A.u)}catch(e){}};
 render()})();
 </script>
@@ -4316,7 +4316,7 @@ function add(){try{var d=document.querySelector('#login .ov.lg .dlg');if(d&&!d.q
  var b=document.querySelector('#bio .bcard');if(b&&!b.querySelector('#fpB')){var pb=b.querySelector('#bioPwBtn');(pb&&pb.parentNode?pb.parentNode:b).appendChild(link('fpB','lock'))}}catch(e){}}
 var L=document.getElementById('login');if(L)new MutationObserver(add).observe(L,{childList:true,subtree:true});add();setTimeout(add,700);
 })()</script>
-<script id="bootjs">(function(){var done=false;function go(){if(done)return;done=true;try{if(typeof render==='function'&&typeof AUTH!=='undefined'&&AUTH)render()}catch(e){}requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.add('bny-ready')})})}
+<script id="bootjs">(function(){var done=false;function go(){if(done)return;done=true;try{if(typeof render==='function'&&typeof AUTH!=='undefined'&&AUTH)render();else if(window.bnyAddBil)bnyAddBil()}catch(e){}requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.add('bny-ready')})})}
 if(document.readyState==='complete'||document.readyState==='interactive')setTimeout(go,0);else document.addEventListener('DOMContentLoaded',go);setTimeout(function(){document.documentElement.classList.add('bny-ready')},2500)})()</script>
 <script id="monjs">(function(){if(window.HBUILD)return;
 var KE='bny_mon_err',KR='bny_mon_rep',PERF={n:0,sum:0,max:0,slow:0},LT=0;
