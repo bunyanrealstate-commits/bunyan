@@ -20,7 +20,7 @@ jobs:
         with: { distribution: temurin, java-version: 17 }
       - run: npm install
       - name: Bundle the QR reader so the app works offline
-        run: cp node_modules/jsqr/dist/jsQR.js www/jsQR.js
+        run: cp node_modules/jsqr/dist/jsQR.js www/jsQR.js && cp node_modules/@zxing/library/umd/index.min.js www/zxing.min.js
       - run: npx cap add android
       - run: npx capacitor-assets generate --android --iconBackgroundColor '#0d6b57' --iconBackgroundColorDark '#0d6b57'
       - run: npx cap sync android
