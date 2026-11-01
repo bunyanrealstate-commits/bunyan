@@ -2761,7 +2761,8 @@ async function exp(){var c=cfg(),g=tg();if(!c||!c.token||!c.repo||!g||busy||navi
  try{var u='https://api.github.com/repos/'+c.repo+'/contents/hakim.json',H={'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
   var r=await fetch(u+'?t='+Date.now(),{headers:H,cache:'no-store'}),sha='';if(r.ok){sha=(await r.json()).sha}
   var b={message:'hakim '+new Date().toISOString(),content:enc(o)};if(sha)b.sha=sha;
-  var w=await fetch(u,{method:'PUT',headers:H,body:JSON.stringify(b)});if(w.ok)last=key}catch(e){}finally{busy=false}}
+  var w=await fetch(u,{method:'PUT',headers:H,body:JSON.stringify(b)});if(w.ok){last=key;hx({at:o.at,ok:1,err:0,okT:Date.now()})}else hx({err:w.status||'?'})}catch(e){hx({err:'net'})}finally{busy=false}}
+function hx(v){try{var x=JSON.parse(localStorage.getItem('bny_hkexp')||'{}');for(var k in v)x[k]=v[k];x.t=Date.now();localStorage.setItem('bny_hkexp',JSON.stringify(x))}catch(e){}}
 var f0=window.fetch;window.fetch=function(u,o){var p=f0.apply(this,arguments);try{if(o&&o.method==='PUT'&&/\/contents\/book\.json/.test(String(u))){p.then(function(r){if(r.ok){clearTimeout(tm);tm=setTimeout(exp,1500)}}).catch(function(){})}}catch(e){}return p};
 window.hakimExport=exp;setTimeout(exp,4000);setInterval(function(){if(!document.hidden)exp()},45000);addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(exp,1500)});
 })();
@@ -4162,6 +4163,27 @@ document.addEventListener('visibilitychange',function(){if(document.hidden)wr()}
 var r0=render;render=function(){if(AUTH&&!restored){restored=true;var n=rd();if(n&&Date.now()-n.t<14*864e5){try{if(n.ws&&n.ws!=='all'&&(n.ws==='-'||(S.groups||[]).some(function(g){return g.id===n.ws})))WS=n.ws;if(n.tab)S.tab=n.tab;if(typeof UV!=='undefined'&&n.open&&U(n.open))UV.open=n.open}catch(e){}
   var o=r0.apply(this,arguments);setTimeout(function(){scrollTo(0,n.y||0);if(n.dlg&&n.dlg.code){try{lastCode=n.dlg.code;lastT=Date.now();(new Function(n.dlg.code))();setTimeout(function(){var ov=ovs()[0];if(!ov)return;var es=[].slice.call(ov.querySelectorAll('input,select,textarea'));(n.dlg.v||[]).forEach(function(v,i){var e=es[i];if(!e||v==null)return;if(e.type==='checkbox'||e.type==='radio')e.checked=!!v;else if(e.type!=='file')e.value=v;try{e.dispatchEvent(new Event('input',{bubbles:true}))}catch(x){}});dlg={code:n.dlg.code,el:ov.id+ov.className,v:vals(ov)};toast('↩️ رجعتك لآخر حاجة كنت بتعملها')},350)}catch(e){}}},120);return o}}
  var o=r0.apply(this,arguments);if(AUTH)wr();return o};
+})()</script>
+<script id="hkmon">(function(){if(window.HBUILD)return;
+var ST=null,shown='';function ex(){try{return JSON.parse(localStorage.getItem('bny_hkexp')||'{}')}catch(e){return{}}}
+function cfg(){return window.hkCfg?hkCfg():null}
+function dec(b){return JSON.parse(decodeURIComponent(escape(atob(String(b).replace(/\s/g,'')))))}
+function tg(){return (S.groups||[]).filter(function(g){return /عبد\s*الحكيم|حكيم/.test(g.name||'')&&!/عمرو/.test(g.name||'')})[0]}
+function ago(t){var m=Math.round((Date.now()-t)/60000);return m<1?'دلوقتي':m<60?'من '+m+' دقيقة':m<1440?'من '+Math.round(m/60)+' ساعة':'من '+Math.round(m/1440)+' يوم'}
+async function poll(){var c=cfg();if(!c||!c.token||!AUTH||!tg()||document.hidden||navigator.onLine===false)return;try{var r=await fetch('https://api.github.com/repos/'+c.repo+'/contents/hakim-status.json?t='+Date.now(),{headers:{'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},cache:'no-store'});if(r.ok){ST=dec((await r.json()).content);check()}}catch(e){}}
+function problems(){var e=ex(),o=[];
+ if(e.err&&(!e.ok||e.t>((e.okT)||0)))o.push('رفع بيانات مجموعة عبد الحكيم من البرنامج الأساسي فشل'+(e.err==='net'?' (مفيش نت)':' (كود '+e.err+')'));
+ if(ST){if(ST.err)o.push('تطبيق حكيم مش قادر يسحب البيانات'+(ST.err==401||ST.err==403?' — المفتاح بتاعه غلط أو انتهى':ST.err==404?' — ملف البيانات مش موجود':' (كود '+ST.err+')')+' • '+ago(ST.seen));
+  else if(ST.mm)o.push('تطبيق حكيم سحب البيانات بس ما اتحدثتش عنده • '+ago(ST.seen));
+  else if(e.at&&ST.seen>e.at+3*60000&&(ST.got||0)<e.at)o.push('تطبيق حكيم مفتوح بس بياناته قديمة (آخر تحديث وصله '+(ST.got?ago(ST.got):'ولا مرة')+')')}
+ return o}
+function check(){var o=problems(),k=o.join('|');if(k&&k!==shown){shown=k;try{toast('⚠️ مشكلة في المزامنة مع حكيم — بص على الداشبورد');navigator.vibrate&&navigator.vibrate([120,60,120])}catch(x){}try{logEv('⚠️ مزامنة حكيم: '+o[0])}catch(x){}}if(!k)shown='';try{if(S.tab==='home')render()}catch(x){}}
+window.hkMonNow=function(){toast('⏳ بشيّك…');try{window.hakimExport&&hakimExport()}catch(e){}setTimeout(poll,2500)};
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.tab!=='home'||!tg())return o;var app=document.getElementById('app');if(!app)return o;var old=document.getElementById('hkm');if(old)old.remove();var P=problems(),e=ex();
+ if(!P.length)return o;var d=document.createElement('div');d.id='hkm';d.className='card';d.style.cssText='border:2px solid #e05252!important;border-top:6px solid #e05252!important;background:linear-gradient(135deg,#fff1f1,#fff8f8)!important;color:#5a1d1d';
+ d.innerHTML='<h2 style="color:#c0392b!important">⚠️ مشكلة في المزامنة مع تطبيق حكيم</h2>'+P.map(function(x){return '<p style="margin:6px 0">• '+esc(x)+'</p>'}).join('')+'<p class="mu" style="font-size:12.5px">آخر رفع من عندك: '+(e.at?ago(e.at):'—')+(ST?' • آخر مرة تطبيق حكيم اتفتح: '+ago(ST.seen)+' • آخر بيانات وصلته: '+(ST.got?ago(ST.got):'—'):'')+'</p><button class="p" style="background:#c0392b!important" onclick="hkMonNow()">🔄 شيّك تاني</button>';
+ var g=document.getElementById('grpb');app.insertBefore(d,app.firstChild)}catch(x){}return o};
+setTimeout(poll,6000);setInterval(poll,2*60000);setInterval(check,60000);document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(poll,1500)});
 })()</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
