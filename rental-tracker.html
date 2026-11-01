@@ -314,7 +314,7 @@ label{margin:8px 0 4px!important;font-size:12.5px!important}
 <div id="app"></div>
 </main>
 <div id="modal"></div><div id="login"></div><div id="toast"></div>
-<script>/* تسريع: تخزين مُنسِّقات التاريخ بدل إنشائها كل مرة */(function(){try{var o=Date.prototype.toLocaleDateString,C={};Date.prototype.toLocaleDateString=function(l,op){try{var k=String(l)+'|'+(op?JSON.stringify(op):'');var f=C[k]||(C[k]=new Intl.DateTimeFormat(l,op));return f.format(this)}catch(e){return o.apply(this,arguments)}}}catch(e){}})();</script>
+<script>(function(){var si=window.setInterval;window.setInterval=function(f,ms){if(typeof f!=='function')return si.apply(window,arguments);var a=[].slice.call(arguments,2);return si.call(window,function(){if(document.hidden&&ms>=1000)return;f.apply(this,a)},ms)}})()</script><script>/* تسريع: تخزين مُنسِّقات التاريخ بدل إنشائها كل مرة */(function(){try{var o=Date.prototype.toLocaleDateString,C={};Date.prototype.toLocaleDateString=function(l,op){try{var k=String(l)+'|'+(op?JSON.stringify(op):'');var f=C[k]||(C[k]=new Intl.DateTimeFormat(l,op));return f.format(this)}catch(e){return o.apply(this,arguments)}}}catch(e){}})();</script>
 <script>/* توفير البطارية: المؤقتات القصيرة تتوقف والتطبيق في الخلفية */(function(){var si=window.setInterval;window.setInterval=function(f,t){if(typeof f!=='function'||!(t<60000))return si.apply(this,arguments);return si.call(window,function(){if(!document.hidden)f()},t)}})()</script>
 <script>/* إعادة رسم أخيرة بعد تحميل كل الإضافات */document.addEventListener('DOMContentLoaded',function(){try{if(typeof AUTH!=='undefined'&&AUTH)render()}catch(e){}});</script>
 
@@ -1048,7 +1048,7 @@ function sim(){const s=S.sim;s.salv=s.salv||0;if(!s.fi){s.fi=8000;if(!s.furn)s.f
 
 render();
 </script>
-<script>(function(){try{var h=document.querySelector('.hd'),sp=h&&h.querySelector(':scope>span');if(!h||!sp)return;var c=document.createElement('div');c.id='clk';c.innerHTML='<b></b><small></small>';h.insertBefore(c,sp);var b=c.querySelector('b'),sm=c.querySelector('small');function loc(){try{return LOC()}catch(e){return 'ar-EG'}}function tick(){var d=new Date(),l=loc();try{b.textContent=d.toLocaleTimeString(l,{hour:'2-digit',minute:'2-digit'});sm.textContent=d.toLocaleDateString(l,{weekday:'long',day:'numeric',month:'long',year:'numeric'})}catch(e){b.textContent=d.toLocaleTimeString()}}tick();window._clkTick=tick;setInterval(tick,15000)}catch(e){}})()</script>
+<script>(function(){try{var h=document.querySelector('.hd'),sp=h&&h.querySelector(':scope>span');if(!h||!sp)return;var c=document.createElement('div');c.id='clk';c.innerHTML='<b></b><small></small>';h.insertBefore(c,sp);var b=c.querySelector('b'),sm=c.querySelector('small');function loc(){try{return LOC()}catch(e){return 'ar-EG'}}function tick(){var d=new Date(),l=loc();try{b.textContent=d.toLocaleTimeString(l,{hour:'2-digit',minute:'2-digit'});sm.textContent=d.toLocaleDateString(l,{weekday:'long',day:'numeric',month:'long',year:'numeric'})}catch(e){b.textContent=d.toLocaleTimeString()}}tick();window._clkTick=tick;(function nx(){setTimeout(function(){if(!document.hidden)tick();nx()},60500-Date.now()%60000)})();document.addEventListener('visibilitychange',function(){if(!document.hidden)tick()})}catch(e){}})()</script>
 <script>(function(){
 var RL={owner:'مالك',manager:'مدير',accountant:'محاسب',viewer:'مشاهد'},RD={manager:'تعديل كل البيانات بدون إدارة المستخدمين',accountant:'الدفعات والمصروفات والحسابات، بدون المجموعات وإضافة استديو والنسخ الاحتياطي',viewer:'عرض فقط بدون أي تعديل'};
 var role=function(){return (A&&A.role)||'owner'};
@@ -1330,10 +1330,14 @@ var r0=render;render=function(){r0.apply(this,arguments);try{if(!AUTH)return;
 var tm=0,asked=0;function sched(){var N=window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()&&Capacitor.Plugins&&Capacitor.Plugins.LocalNotifications;if(!N)return;clearTimeout(tm);tm=setTimeout(async function(){try{
  if(!asked){asked=1;var pm=await N.requestPermissions();if(pm.display!=='granted')return}
  var pe=await N.getPending();if(pe.notifications&&pe.notifications.length)await N.cancel({notifications:pe.notifications});
- var now=new Date(),ns=[];items().forEach(function(x){if(x.ty!=='rent')return;var n=dd(x.d);if(n<0||n>60)return;
+ try{if(N.createChannel)await N.createChannel({id:'bny_alerts',name:'تنبيهات بنيان',description:'مواعيد الإيجار ودفعات الشركات',importance:5,visibility:1,vibration:true,lights:true,lightColor:'#14b8a6'})}catch(e){}
+ var TT={rent:'💰 ميعاد إيجار',inst:'🏢 دفعة شركة',end:'📄 انتهاء عقد مستأجر',cend:'📄 انتهاء عقد الشركة',debt:'💸 دفعة مستحقة عليك',recv:'📥 مستحقات ليك',exp:'🧾 مصروف'};
+ var now=new Date(),ns=[];items().forEach(function(x){var n=dd(x.d);if(n<0||n>130)return;
   var h=0,s=x.id+x.d;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;h=Math.abs(h)%2000000000+1;
-  [[0,'ميعاد الإيجار جه النهارده'],[1,'ميعاد الإيجار بكرة']].forEach(function(o){var at=pd(x.d);at.setDate(at.getDate()-o[0]);at.setHours(9,0,0,0);if(at<=now)return;
-   ns.push({id:(h+o[0]*7)%2147483000+1,title:'🔔 '+o[1],body:x.label+' — '+$(x.amt),schedule:{at:at,allowWhileIdle:true}})})});
+  (x.offs||[0]).forEach(function(o){var at=pd(x.d);at.setDate(at.getDate()-o);at.setHours(9,0,0,0);if(at<=now)return;
+   var w=o===0?'النهارده':(o===1?'بكرة':'بعد '+o+' يوم');
+   ns.push({id:(h+o*7)%2147483000+1,title:'🔔 '+(TT[x.ty]||'تنبيه')+' — '+w,body:x.label+(x.amt?' — '+$(x.amt):''),channelId:'bny_alerts',sound:'default',schedule:{at:at,allowWhileIdle:true}})})});
+ ns.sort(function(a,b){return a.schedule.at-b.schedule.at});
  if(ns.length)await N.schedule({notifications:ns.slice(0,200)})}catch(e){}},3000)}
 render()})();
 </script>
@@ -1374,6 +1378,7 @@ document.addEventListener('pointerdown',function(){ctx()},{once:true,capture:tru
 document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('button,.chip,a.wab,#nav>*');if(t&&sOn())SND.tick()},true);
 var t0=toast;toast=function(m){try{var s=String(m||'');(/غير صح|خطأ|فشل|لم يتم|مقفول|⚠|لا يوجد|لا توجد|تعارض|منتهي|لا يمكن/.test(s)?SND.err:SND.ok)()}catch(e){}return t0.apply(this,arguments)};
 var n0=ntBar;ntBar=function(){n0.apply(this,arguments);try{if(!AUTH){prevAuth=false;lastN=-1;return}var n=alertsNow().length;if(!prevAuth){prevAuth=true;SND.login();if(n>0)setTimeout(SND.chime,500)}else if(lastN>=0&&n>lastN)SND.chime();lastN=n}catch(e){}};
+document.addEventListener('visibilitychange',function(){if(document.hidden||!AUTH)return;try{var n=alertsNow().length,k=td();if(n>0&&localStorage.getItem('bny_chd')!==k){localStorage.setItem('bny_chd',k);setTimeout(SND.chime,400)}}catch(e){}});
 window.mSnd=function(){try{localStorage.setItem('bny_snd',sOn()?'0':'1')}catch(e){}if(sOn())SND.ok();render()};
 /* اقتراح أسماء الشركات */
 function cos(){var a=[];(S.cos||[]).forEach(function(c){if(c&&a.indexOf(c)<0)a.push(c)});S.units.forEach(function(u){var c=(u.company||'').trim();if(c&&a.indexOf(c)<0)a.push(c)});return a}
@@ -3378,22 +3383,22 @@ var n0=window.natOpen;if(n0)window.natOpen=function(){lgClose();var sub=document
 </script>
 <style id="livebg">
 :root{--bg:#eaf6f3;--card:#ffffff;--bd:#cfe3de;--card2:#f6fbfa}
-html body{background:linear-gradient(160deg,#c8f1e1 0%,#d3e8ff 48%,#ffe2c4 100%) fixed!important}
+html body{background:transparent!important}html::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(160deg,#c8f1e1 0%,#d3e8ff 48%,#ffe2c4 100%)}html{background:#eaf6f3}
 html body main,html body #app{background:transparent!important}
 html body #app .card{background:var(--card)!important;border:1px solid #bfe5d8!important;border-top:4px solid #14b8a6!important;box-shadow:0 8px 22px rgba(13,138,116,.13)!important;border-radius:16px!important}
 html body #app .card>h2{color:#0d8a74!important}
 html body #app .stat{background:linear-gradient(160deg,#ffffff 0%,#e3f8f0 100%)!important;border:1px solid #b7e4d4!important;box-shadow:0 6px 16px rgba(13,138,116,.12)!important;border-radius:14px!important}html body #app .card .stat{background:linear-gradient(160deg,#ffffff 0%,#eaf4ff 100%)!important;border-color:#c5dcf5!important}
 html body #app .stat>span:first-child{color:#4d6b66!important}
-html body #nav{background:rgba(255,255,255,.85)!important;backdrop-filter:blur(6px)}
+html body #nav{background:rgba(255,255,255,.96)!important}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a1d;--card:#16252a;--bd:#24393f}
-:root:not([data-theme="light"]) body{background:linear-gradient(160deg,#0c1d1f 0%,#111a2b 55%,#1d1712 100%) fixed!important}
+:root:not([data-theme="light"]) body{background:transparent!important}:root:not([data-theme="light"])::before{background:linear-gradient(160deg,#0c1d1f 0%,#111a2b 55%,#1d1712 100%)!important}:root:not([data-theme="light"]){background:#0f1a1d}
 :root:not([data-theme="light"]) body #app .card{background:#16252a!important;border-color:#24393f!important;box-shadow:0 6px 18px rgba(0,0,0,.35)!important}
 :root:not([data-theme="light"]) body #app .card>h2{color:#5fd3bc!important}
 :root:not([data-theme="light"]) body #app .stat{background:linear-gradient(180deg,#1a2c31,#152429)!important;border-color:#27424a!important}
 :root:not([data-theme="light"]) body #app .stat>span:first-child{color:#9fc4bd!important}
 :root:not([data-theme="light"]) body #nav{background:rgba(18,30,34,.88)!important}}
 :root[data-theme="dark"]{--bg:#0f1a1d;--card:#16252a;--bd:#24393f}
-:root[data-theme="dark"] body{background:linear-gradient(160deg,#0c1d1f 0%,#111a2b 55%,#1d1712 100%) fixed!important}
+:root[data-theme="dark"] body{background:transparent!important}:root[data-theme="dark"]::before{background:linear-gradient(160deg,#0c1d1f 0%,#111a2b 55%,#1d1712 100%)!important}:root[data-theme="dark"]{background:#0f1a1d}
 :root[data-theme="dark"] body #app .card{background:#16252a!important;border-color:#24393f!important;box-shadow:0 6px 18px rgba(0,0,0,.35)!important}
 :root[data-theme="dark"] body #app .card>h2{color:#5fd3bc!important}
 :root[data-theme="dark"] body #app .stat{background:linear-gradient(180deg,#1a2c31,#152429)!important;border-color:#27424a!important}
@@ -3436,7 +3441,7 @@ var h0=home;home=function(){var o=h0.apply(this,arguments);try{var c=units(),add
 <style id="hero2css">
 #reh.hero2{position:relative;padding:0!important;overflow:hidden;border-radius:18px!important;border:0!important;box-shadow:0 8px 22px rgba(13,138,116,.18)!important;line-height:0}
 #reh.hero2 svg{display:block;width:100%;height:auto;min-height:120px}
-#reh.hero2 .hgr{position:absolute;top:10px;right:12px;line-height:1.4;text-align:right;color:#06303d;background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);padding:7px 12px;border-radius:12px;box-shadow:0 3px 10px rgba(6,48,61,.15)}
+#reh.hero2 .hgr{position:absolute;top:10px;right:12px;line-height:1.4;text-align:right;color:#06303d;background:rgba(255,255,255,.9);padding:7px 12px;border-radius:12px;box-shadow:0 3px 10px rgba(6,48,61,.15)}
 #reh.hero2 .hgr b{display:block;font-size:18px;font-weight:900;color:#0d6f5e}
 #reh.hero2 .hgr span{font-size:12.5px;font-weight:700;color:#2b4a55}
 </style>
