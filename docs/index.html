@@ -515,7 +515,7 @@ function drawM(){const e=gi('modal');if(!M){e.innerHTML='';return}
 function dlBackup(){logEv('تنزيل نسخة احتياطية');const b=new Blob([JSON.stringify(S)],{type:'application/json'});saveFile(b,'bunyan-backup-'+td()+'.json');try{localStorage.setItem('bunyan_bk',td())}catch(e){}toast('تم تنزيل نسخة احتياطية. إذا لم يعمل التنزيل عبر الرابط فاستخدم زر نسخ / لصق النص.');render()}
 function ldBackup(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.units)throw 0;confirmM('سيتم استبدال كل البيانات الحالية بهذه النسخة. هل تريد المتابعة؟',()=>{S=x;PREVL=null;logEv('استعادة نسخة احتياطية')})}catch(e){toast('الملف غير صالح')}};r.readAsText(f)}
 const bkAge=()=>{try{const d=localStorage.getItem('bunyan_bk');return d?Math.floor((today()-pd(d))/864e5):null}catch(e){return null}};
-setTimeout(()=>{if(AUTH&&S.units.length&&(bkAge()==null||bkAge()>=7))toast('⚠️ أنشئ نسخة احتياطية من تبويب النسخ الاحتياطي')},6000);
+setTimeout(()=>{let sy=false;try{const c=JSON.parse(localStorage.getItem('bny_sync'));sy=!!(c&&c.token&&c.repo)}catch(e){}if(AUTH&&!sy&&S.units.length&&(bkAge()==null||bkAge()>=7))toast('⚠️ أنشئ نسخة احتياطية من تبويب النسخ الاحتياطي')},6000);
 const mvO=(ot,mine)=>{const od=iso(new Date(ot)),t=today();let c=0;
  SU().forEach(u=>{const f=mine?shR(u.g):1;u.inst.forEach(i=>{if(i.p&&(i.at||0)>ot)c-=i.a*f});if(u.fp&&(u.fat||0)>ot)c-=(u.furn||0)*f;
   u.leases.forEach(L=>{L.rcv.forEach(i=>{if(((L.rat||{})[i]||0)>ot)c+=((L.rav||{})[i]??la(L,i))*f});if(L.penp&&(L.pat||0)>ot)c+=(L.pen||0)*f;if(L.adv&&(L.advat||0)>ot)c+=L.adv*f;(L.pp||[]).forEach(x=>{if((x.at||0)>ot)c+=(+x.a||0)*f});
@@ -3642,7 +3642,7 @@ function bal(){var b={};(S.adj||[]).forEach(function(a){if(!a.k||!inWS(a))return
 function grpField(){if(WS!=='all')return [];return [{k:'g',l:'المجموعة',t:'s',o:[['','بدون مجموعة']].concat((S.groups||[]).map(function(g){return [g.id,g.name]})),v:''}]}
 window.cmExp=function(){var st=[['','🏢 مصروف عام']].concat(SU().map(function(u){return [u.id,'🏠 '+u.name]}));
  openM('💸 مصروف جديد',[{k:'u',l:'المصروف على',t:'s',o:st,v:''},{k:'w',l:'البيان (صيانة، كهرباء، عمولة، مواصلات…)',v:''},{k:'a',l:'المبلغ',t:'n',v:''},{k:'d',l:'التاريخ',t:'d',v:td()},{k:'n',l:'يتكرر كام شهر؟ (1 = مرة واحدة)',t:'n',v:1}].concat(grpField()),function(o){var a=Math.abs(+o.a||0);if(!a){setTimeout(function(){toast('اكتب المبلغ')},30);return}S.exp=S.exp||[];var u=o.u&&U(o.u);
-  S.exp.push({id:uid(),u:o.u||'',g:u?'':(o.g!=null&&WS==='all'?o.g:gid()),w:o.w||(u?'مصروف استديو':'مصروف عام'),a:a,d:o.d||td(),n:Math.max(1,Math.round(+o.n||1))});
+  var cw=BNY&&BNY.nz?BNY.nz(o.w||''):String(o.w||''),cat=/كهربا/.test(cw)?'ك':/مياه|ميه/.test(cw)?'م':/صيان/.test(cw)?'ص':undefined;S.exp.push({id:uid(),u:o.u||'',g:u?'':(o.g!=null&&WS==='all'?o.g:gid()),w:o.w||(u?'مصروف استديو':'مصروف عام'),a:a,d:o.d||td(),n:Math.max(1,Math.round(+o.n||1)),cat:cat});
   setTimeout(function(){toast('اتسجل المصروف واتخصم من النقدي')},40)});M.msg='بيتخصم من الرصيد النقدي، وبيدخل في حساب الربح.';drawM()};
 window.cmDraw=function(who){var g=gid(),ps=people(g),opts=ps.map(function(p){return [p,pn(p)]});opts.push(['__other','شخص تاني…']);
  openM(who==='me'?'🙋 سحب لحاجاتي الشخصية':'🤝 سحب لشريك',[{k:'p',l:'مين اللي سحب؟',t:'s',o:opts,v:who==='me'?'__me':(ps[1]||'__other')},{k:'x',l:'لو "شخص تاني" اكتب اسمه',v:''},{k:'a',l:'المبلغ',t:'n',v:''},{k:'d',l:'التاريخ',t:'d',v:td()},{k:'w',l:'السبب / ملاحظة',v:''}].concat(grpField()),function(o){var a=Math.abs(+o.a||0);if(!a){setTimeout(function(){toast('اكتب المبلغ')},30);return}var p=o.p==='__other'?(String(o.x||'').trim()||'شخص'):o.p,gg=WS==='all'?(o.g||''):g;
@@ -4198,7 +4198,7 @@ window.bnyFlowInput=function(q){if(!FL)return null;var z=nz(q).trim(),d=FL.d;if(
  if(s==='k'){var m=String(q).split('|');if(m.length===2){d.u=m[0];d.k=+m[1]}else{var tn=BNY.findTenant(z);if(!tn)return {t:'اختار المستأجر من الأزرار.',flow:1};d.u=tn.u.id;d.k=tn.k}return next()}
  return next()};
 function exec(){var d=FL.d,t=FL.type,msg='';FL=null;try{
- if(t==='exp'){S.exp=S.exp||[];S.exp.push({id:uid(),u:d.u||'',g:d.u?'':gid(),w:d.w,a:d.a,d:td(),n:1});msg='✅ اتسجل مصروف '+F(d.a)+' — '+d.w+'. النقدي بقى '+F(cashNow())}
+ if(t==='exp'){S.exp=S.exp||[];var cw=nz(d.w||'');S.exp.push({id:uid(),u:d.u||'',g:d.u?'':gid(),w:d.w,a:d.a,d:td(),n:1,cat:/كهربا/.test(cw)?'ك':/مياه|ميه/.test(cw)?'م':/صيان/.test(cw)?'ص':undefined});msg='✅ اتسجل مصروف '+F(d.a)+' — '+d.w+'. النقدي بقى '+F(cashNow())}
  else if(t==='draw'){S.adj=S.adj||[];S.adj.push({id:uid(),at:Date.now(),a:-d.a,k:'draw',p:d.p,g:gid(),w:'سحب '+(d.p==='__me'?'شخصي ('+((A&&A.u)||'')+')':'لـ '+d.p)+(d.n&&d.n!=='-'?' — '+d.n:''),n:d.n&&d.n!=='-'?d.n:''});msg='✅ اتسجل السحب. النقدي بقى '+F(cashNow())}
  else if(t==='back'){S.adj=S.adj||[];S.adj.push({id:uid(),at:Date.now(),a:d.a,k:'back',p:d.p,g:gid(),w:'رجوع فلوس من '+(d.p==='__me'?((A&&A.u)||'أنا'):d.p),n:''});msg='✅ اترجع '+F(d.a)+' للنقدي. النقدي بقى '+F(cashNow())}
  else if(t==='rent'){var L=U(d.u).leases[d.k],r=window.payAmt?payAmt(L,d.a):'';msg='✅ '+(r||'اتسجل الاستلام')+'. النقدي بقى '+F(cashNow())}
@@ -4416,7 +4416,7 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.t
   if(uv.loc){var share='https://wa.me/?text='+encodeURIComponent('📍 '+uv.name+(uv.loc.addr?' — '+uv.loc.addr:'')+'\n'+gm(uv));w.innerHTML='<h2>📍 الموقع</h2>'+(uv.loc.addr?'<div>'+E(uv.loc.addr)+'</div>':'')+'<div class="mapmini" id="mapmini"></div><div class="mapbt"><a href="'+dir(uv)+'" target="_blank" rel="noopener">🧭 اتجاهات</a><a href="'+gm(uv)+'" target="_blank" rel="noopener">🗺 جوجل ماب</a><a href="'+share+'" target="_blank" rel="noopener">📤 ابعت الموقع</a><button onclick="locPick(\''+uv.id+'\')">✏️ تعديل</button></div>';
    setTimeout(function(){loadL().then(function(){var el=g('mapmini');if(!el||el._m)return;var m=L.map(el,{zoomControl:false,dragging:false,scrollWheelZoom:false,doubleClickZoom:false,touchZoom:false,attributionControl:false}).setView([uv.loc.lat,uv.loc.lng],16);el._m=m;tiles(m);var s=stOf(uv);L.marker([uv.loc.lat,uv.loc.lng],{icon:pin(s.c,'🏠')}).addTo(m);el.onclick=function(){mapAll()}}).catch(function(){var el=g('mapmini');if(el)el.innerHTML='<div style="padding:14px;font-size:13px">الخريطة محتاجة إنترنت — استخدم الأزرار تحت.</div>'})},50)}
   else w.innerHTML='<h2>📍 الموقع</h2><div class="mu">مفيش موقع متحدد للاستديو ده.</div><div class="mapbt" style="margin-top:8px"><button class="p" onclick="locPick(\''+uv.id+'\')">📍 حدد موقع الاستديو</button></div>';
-  first&&first.nextSibling?app.insertBefore(w,first.nextSibling):app.appendChild(w)}
+  var fcard=[].slice.call(app.querySelectorAll('.card')).filter(function(c){return /الأثاث/.test((c.querySelector('h2')||{}).textContent||'')})[0];if(fcard)fcard.insertAdjacentElement('afterend',w);else if(first&&first.nextSibling)app.insertBefore(w,first.nextSibling);else app.appendChild(w)}
  if(!uv&&!g('mapbtn')){var b0=g('obb')||[].slice.call(app.querySelectorAll('button')).filter(function(x){return /^\s*\+\s*استديو\s*$/.test(x.textContent)})[0];if(b0){var mb=document.createElement('button');mb.id='mapbtn';mb.type='button';mb.textContent='🗺 الخريطة';mb.style.cssText='margin-inline-start:6px';mb.onclick=mapAll;b0.insertAdjacentElement('afterend',mb)}}}catch(e){}return o};
 try{if(AUTH)render()}catch(e){}
 })();
@@ -4438,6 +4438,13 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH)retu
  var bk=app.querySelector('.bkb');bk?bk.insertAdjacentElement('afterend',d):app.insertBefore(d,app.firstChild)}catch(e){}return o};
 try{if(AUTH)render()}catch(e){}
 })();
+</script>
+<script id="acctidy">
+(function(){var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.tab!=='acc')return o;var app=document.getElementById('app');if(!app)return o;
+ [].forEach.call(app.querySelectorAll('.card'),function(c){var h=c.querySelector('h2'),t=h?h.textContent:'';
+  if(/^مصروفات إضافية/.test(t)){var rows=c.querySelectorAll('.li');if(!rows.length){c.style.display='none';return}h.textContent='🧾 المصاريف المسجلة';var b=[].slice.call(c.querySelectorAll('button')).filter(function(x){return /\+\s*مصروف/.test(x.textContent)})[0];if(b)b.remove()}
+  if(/كهرباء ومياه وصيانة/.test(t)){var hasTot=c.querySelector('.kp');if(!hasTot){c.style.display='none';return}var bt=c.querySelector('.bt');if(bt)bt.remove();var mu=c.querySelector('p.mu');if(mu)mu.textContent='ملخص اللي اتصرف من جيبك على الكهرباء والمياه والصيانة (المفروض على الشركة). سجّل أي مصروف من كارت «💼 النقدي» فوق.'}})}catch(e){}return o};
+try{if(AUTH)render()}catch(e){}})();
 </script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
