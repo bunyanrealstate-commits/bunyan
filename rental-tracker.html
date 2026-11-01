@@ -3691,5 +3691,24 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 window.bnyBack=back;
 })();
 </script>
+<style id="cocss">
+#app .card.coc{padding:10px 12px!important}
+#app .card.coc>h2{font-size:15.5px!important;margin-bottom:6px!important}
+#app .card.coc .kv{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important;margin:6px 0!important}
+#app .card.coc .kv>div{padding:5px 7px!important;min-width:0;border-radius:10px!important}
+#app .card.coc .kv small{font-size:10.5px!important}
+#app .card.coc .kv b{font-size:12.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+#app .card.coc .li{display:flex!important;align-items:center;gap:6px!important;padding:5px 0!important;font-size:12.5px;flex-wrap:nowrap!important}
+#app .card.coc .li>span{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#app .card.coc .li>b{font-size:13px}
+#app .card.coc .li button{padding:3px 8px!important;min-height:0!important;font-size:12px!important;border-radius:9px!important;flex:0 0 auto}
+#app .card.coc>button{padding:4px 10px!important;font-size:12.5px!important;margin-top:4px!important}
+</style>
+<script id="cocjs">
+(function(){function sh(t){return String(t).replace(/(\d{4})-(\d{2})-(\d{2})/g,function(m,y,mo,d){return (+d)+'/'+(+mo)+'/'+y.slice(2)})}var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.tab!=='units')return o;var app=document.getElementById('app');if(!app)return o;var cs=[].slice.call(app.querySelectorAll('.card')),h=function(c){return (c.querySelector('h2')||{}).textContent||''};
+ var co=cs.filter(function(c){return /عقد الشركة/.test(h(c))})[0],fu=cs.filter(function(c){return /الأثاث/.test(h(c))})[0],tn=cs.filter(function(c){return /عقود المستأجرين/.test(h(c))})[0];
+ if(co){co.classList.add('coc');[].forEach.call(co.querySelectorAll('.li'),function(li){var b=li.querySelector('button[onclick^="togI("]');if(b){b.textContent=b.classList.contains('p')?'✓ اتدفعت':'لسه'}var sp=li.querySelector('span');if(sp)sp.textContent=sh(sp.textContent.replace(/دفعة\s*(\d+)\s*•\s*/,'$1 • '))});[].forEach.call(co.querySelectorAll('.kv b'),function(x){x.textContent=sh(x.textContent)})}
+ if(fu&&tn&&fu.compareDocumentPosition(tn)&Node.DOCUMENT_POSITION_FOLLOWING)tn.insertAdjacentElement('afterend',fu)}catch(e){}return o};try{if(AUTH)render()}catch(e){}})();
+</script>
 </body>
 </html>
