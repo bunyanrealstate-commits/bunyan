@@ -306,6 +306,7 @@ label{margin:8px 0 4px!important;font-size:12.5px!important}
 #clk small{font-size:11px;color:var(--mu)}
 @media (max-width:700px){#clk small{display:none}#clk{padding:2px 8px}#clk b{font-size:13px}}
 </style>
+<style id="bootcss">html:not(.bny-ready) main{visibility:hidden}html.bny-ready main{animation:bnyIn .22s ease-out}@keyframes bnyIn{from{opacity:0}to{opacity:1}}</style>
 </head>
 <body>
 <main>
@@ -4918,5 +4919,7 @@ function add(){try{var d=document.querySelector('#login .ov.lg .dlg');if(d&&!d.q
  var b=document.querySelector('#bio .bcard');if(b&&!b.querySelector('#fpB')){var pb=b.querySelector('#bioPwBtn');(pb&&pb.parentNode?pb.parentNode:b).appendChild(link('fpB','lock'))}}catch(e){}}
 var L=document.getElementById('login');if(L)new MutationObserver(add).observe(L,{childList:true,subtree:true});add();setTimeout(add,700);
 })()</script>
+<script id="bootjs">(function(){var done=false;function go(){if(done)return;done=true;try{if(typeof render==='function'&&typeof AUTH!=='undefined'&&AUTH)render()}catch(e){}requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.add('bny-ready')})})}
+if(document.readyState==='complete'||document.readyState==='interactive')setTimeout(go,0);else document.addEventListener('DOMContentLoaded',go);setTimeout(function(){document.documentElement.classList.add('bny-ready')},2500)})()</script>
 </body>
 </html>
