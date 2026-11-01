@@ -607,7 +607,7 @@ function units(){const t=today();
 const dd=d=>Math.round((pd(d)-today())/864e5),whenTxt=n=>n===0?'اليوم':n===1?'غداً':n===2?'بعد يومين':n===7?'بعد أسبوع':n===14?'بعد أسبوعين':n===21?'بعد 3 أسابيع':n===30?'بعد شهر':'بعد '+n+' يوم';
 function items(){const t=today(),r=[],P=(ty,id,d,label,amt,offs)=>r.push({ty,id,d,label,amt,offs});
  SU().forEach(u=>{u.inst.forEach((i,k)=>{if(!i.p)P('inst',u.id+'i'+k,i.d,'دفعة '+(u.company||'الشركة')+' - '+u.name,i.a,[30,21,14,7,2,0])});
-  u.leases.forEach((L,k)=>{for(let i=0;i<L.months;i++)if(!L.rcv.includes(i))P('rent',u.id+'l'+k+'_'+i,iso(payD(L,i)),'إيجار '+(L.tenant||'مستأجر')+' - '+u.name,la(L,i),[1,0]);P('end',u.id+'e'+k,iso(lend(L)),'انتهاء عقد '+(L.tenant||'المستأجر')+' - '+u.name,0,[0])});
+  u.leases.forEach((L,k)=>{for(let i=0;i<L.months;i++)if(!L.rcv.includes(i))P('rent',u.id+'l'+k+'_'+i,iso(payD(L,i)),'إيجار '+(L.tenant||'مستأجر')+' - '+u.name,la(L,i),[1,0]);P('end',u.id+'e'+k,iso(lend(L)),'انتهاء عقد '+(L.tenant||'المستأجر')+' - '+u.name,0,[30,7,0])});
   P('cend',u.id+'c',iso(addM(pd(u.start),u.cm)),'انتهاء عقد الشركة - '+u.name,0,[0])});
  S.debts.forEach((x,k)=>P('debt','d'+k,x.d,'دفعة مستحقة عليّ: '+x.w,x.a,[0]));S.recv.forEach((x,k)=>P('recv','r'+k,x.d,'مستحقات لي: '+x.w,x.a,[0]));
  SE().forEach((x,k)=>{for(let i=0;i<(x.n||1);i++){const d=iso(addM(pd(x.d),i));if(pd(d)>=t)P('exp','x'+k+'_'+i,d,'مصروف: '+x.w,x.a,[0])}});return r}
@@ -1337,6 +1337,7 @@ var tm=0,asked=0;function sched(){var N=window.Capacitor&&Capacitor.isNativePlat
   (x.offs||[0]).forEach(function(o){var at=pd(x.d);at.setDate(at.getDate()-o);at.setHours(9,0,0,0);if(at<=now)return;
    var w=o===0?'النهارده':(o===1?'بكرة':'بعد '+o+' يوم');
    ns.push({id:(h+o*7)%2147483000+1,title:'🔔 '+(TT[x.ty]||'تنبيه')+' — '+w,body:x.label+(x.amt?' — '+$(x.amt):''),channelId:'bny_alerts',sound:'default',schedule:{at:at,allowWhileIdle:true}})})});
+ try{var nm=new Date(now.getFullYear(),now.getMonth()+1,1,9,0,0);ns.push({id:1999000000+nm.getMonth(),title:'📊 تقرير الشهر جاهز',body:'افتح البرنامج تشوف اللي اتقبض واللي اتدفع والربح والمتأخرات',channelId:'bny_alerts',sound:'default',schedule:{at:nm,allowWhileIdle:true}})}catch(e){}
  ns.sort(function(a,b){return a.schedule.at-b.schedule.at});
  if(ns.length)await N.schedule({notifications:ns.slice(0,200)})}catch(e){}},3000)}
 render()})();
@@ -2957,5 +2958,157 @@ var h0=home;home=function(){var o=h0.apply(this,arguments);try{var c=units(),add
 #reh.hero2 .hgr b{display:block;font-size:18px;font-weight:900;color:#0d6f5e}
 #reh.hero2 .hgr span{font-size:12.5px;font-weight:700;color:#2b4a55}
 </style>
+<style id="featcss">
+.fx-ov .dlg{max-width:560px;width:calc(100% - 24px);max-height:88vh;overflow:auto;padding-top:56px!important;position:relative}
+.fx-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+.fx-h h2{margin:0;flex:1 1 auto;font-size:18px}
+.fx-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:8px 0 12px}
+.fx-g>div{background:var(--card2,#f6fbfa);border:1px solid var(--bd,#dbe7e4);border-radius:12px;padding:8px 10px;min-width:0}
+.fx-g small{display:block;color:var(--mu,#5b6b70);font-size:12px}.fx-g b{font-size:16px}
+.fx-sec{font-weight:800;margin:14px 0 6px;color:#0d8a74}
+.fx-r{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-top:1px dashed var(--bd,#dbe7e4);font-size:14px}
+.fx-r>span{min-width:0}.fx-r small{display:block;color:var(--mu,#5b6b70);font-size:12px}
+.fx-ok{color:#16a34a;font-weight:700}.fx-late{color:#e5484d;font-weight:700}.fx-soon{color:#b7791f;font-weight:700}
+.fx-btns{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+.fx-btns button.p{background:var(--ac,#14b8a6)!important;color:#fff!important;border-color:transparent!important}
+.fx-btns a,.fx-btns button:not(.p),.fx-btns label{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;border:1.5px solid var(--bd,#cfe3de);background:var(--card,#fff);color:inherit;text-decoration:none;font-weight:700;font-size:13.5px;cursor:pointer}
+.fx-docs{display:flex;gap:8px;flex-wrap:wrap}
+.fx-doc{position:relative;width:92px;height:92px;border-radius:10px;overflow:hidden;border:1px solid var(--bd,#cfe3de);background:#eee}
+.fx-doc img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}
+.fx-doc span{position:absolute;bottom:0;inset-inline:0;background:rgba(0,0,0,.55);color:#fff;font-size:11px;text-align:center;padding:2px}
+.fx-doc button{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(229,72,77,.92);color:#fff;font-size:12px;line-height:22px;padding:0;cursor:pointer}
+.fx-note{width:100%;min-height:64px;border-radius:10px;border:1.5px solid var(--bd,#cfe3de);padding:8px;font:inherit;background:var(--card,#fff);color:inherit;box-sizing:border-box}
+.fx-img{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:12px}
+.fx-img img{max-width:100%;max-height:100%;border-radius:8px}
+.fx-card{border:1.5px solid #f0b429!important;border-top:4px solid #f0b429!important}
+.fx-card .fx-r{border-top:1px solid var(--bd,#e2e8f0)}
+.fx-tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.fx-tbl th,.fx-tbl td{padding:7px 6px;border-bottom:1px solid var(--bd,#e2e8f0);text-align:start;white-space:nowrap}
+.fx-tbl th{font-size:12px;color:var(--mu,#5b6b70);font-weight:700}
+.fx-tw{overflow-x:auto}
+.fx-bar{height:7px;border-radius:5px;background:var(--bd,#e2e8f0);overflow:hidden;min-width:60px}.fx-bar i{display:block;height:100%;background:#14b8a6}
+.fx-mn{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px}
+.fx-mn button{min-width:40px}
+.fx-tag{display:inline-block;font-size:11px;font-weight:800;padding:2px 7px;border-radius:999px;background:rgba(20,184,166,.15);color:#0d8a74;margin-inline-start:6px}
+.fx-tag.bad{background:rgba(229,72,77,.13);color:#c0392b}
+.fx-lg .fx-r{font-size:13.5px}
+</style>
+<script id="featjs">
+(function(){
+function E(x){return esc(x==null?'':String(x))}
+function fd(d){try{return (d instanceof Date?d:new Date(d)).toLocaleDateString(LOC(),{day:'numeric',month:'short',year:'numeric'})}catch(e){return ''}}
+function ov(id,h){var d=document.getElementById(id);if(d)d.remove();d=document.createElement('div');d.id=id;d.className='ov fx-ov';d.onclick=function(e){if(e.target===d)d.remove()};d.innerHTML="<div class='dlg'><button class='xcl' onclick=\"this.closest('.ov').remove()\">✕</button>"+h+"</div>";document.body.appendChild(d);return d}
+function amtOf(L,i){return (L.rav&&L.rav[i]!=null)?L.rav[i]:la(L,i)}
+function endOf(L){try{return lend(L)}catch(e){return addM(pd(L.start),L.months||0)}}
+function cEnd(u){return addM(pd(u.start),u.cm||12)}
+function persist(lbl){try{save();if(S.hist&&S.hist[0]&&/data:image/.test(S.hist[0].ch||'')){S.hist[0].ch='[]';S.hist[0].rev=true;S.hist[0].ev=true;S.hist[0].d=lbl}save()}catch(e){}}
+
+/* ========== ملف المستأجر ========== */
+window.tnFile=function(id,k){var u=U(id),L=u&&u.leases[k];if(!L)return;var t=today(),paid=0,left=0,late=0,lateN=0,rows='';
+ for(var i=0;i<L.months;i++){var d=payD(L,i),a=amtOf(L,i),got=(L.rcv||[]).indexOf(i)>=0,st,n=Math.round((d-t)/864e5);
+  if(got){paid+=a;var at=(L.rat||{})[i];st="<span class='fx-ok'>✅ اتدفع"+(at?" <small style='display:inline'>"+fd(at)+"</small>":"")+"</span>"}
+  else{left+=a;if(n<0&&!L.exit){late+=a;lateN++;st="<span class='fx-late'>🔴 متأخر "+(-n)+" يوم</span>"}else st=n===0?"<span class='fx-soon'>⏰ النهارده</span>":"<span class='mu'>⏳ بعد "+n+" يوم</span>"}
+  rows+="<div class='fx-r'><span>دفعة "+(i+1)+"<small>"+fd(d)+"</small></span><b>"+$(a)+"</b>"+st+"</div>"}
+ (L.pp||[]).forEach(function(x){paid+=+x.a||0});
+ var ph=String(L.phone||'').replace(/[^\d]/g,''),docs=(L.docs||[]);
+ var others=[];SU().forEach(function(v){v.leases.forEach(function(M,j){if(M!==L&&L.tenant&&(M.tenant||'').trim()===(L.tenant||'').trim())others.push("<div class='fx-r'><span>"+E(v.name)+"<small>"+fd(pd(M.start))+" ← "+fd(endOf(M))+"</small></span><button onclick=\"tnFile('"+v.id+"',"+j+")\">فتح</button></div>")})});
+ var dep=(window.depOf&&L.id&&depOf(L))||null;
+ var h="<div class='fx-h'><h2>👤 "+E(L.tenant||'مستأجر')+"</h2>"+(L.exit?"<span class='fx-tag bad'>غادر</span>":(endOf(L)<t?"<span class='fx-tag bad'>العقد انتهى</span>":"<span class='fx-tag'>ساري</span>"))+"</div>"
+ +"<div class='mu' style='margin-top:-6px'>🏠 "+E(u.name)+(u.company?" • "+E(u.company):"")+"</div>"
+ +"<div class='fx-btns'>"+(ph?"<a href='https://wa.me/"+ph+"' target='_blank' rel='noopener'>💬 واتساب</a><a href='tel:+"+ph+"'>📞 اتصال</a><span class='mu' style='align-self:center;direction:ltr'>+"+E(ph)+"</span>":"<button onclick=\"this.closest('.ov').remove();mLease('"+u.id+"',"+k+")\">➕ أضف رقم الموبايل</button>")+"</div>"
+ +"<div class='fx-g'><div><small>بداية العقد</small><b>"+fd(pd(L.start))+"</b></div><div><small>نهاية العقد</small><b>"+fd(L.exit?pd(L.exit):endOf(L))+"</b></div>"
+ +"<div><small>الإيجار الشهري</small><b>"+$(L.rent||0)+"</b></div><div><small>يوم الدفع</small><b>"+(L.day||pd(L.start).getDate())+"</b></div>"
+ +"<div><small>اتدفع</small><b class='pos'>"+$(paid)+"</b></div><div><small>"+(late?"متأخر ("+lateN+")":"باقي")+"</small><b class='"+(late?'neg':'')+"'>"+$(late||left)+"</b></div>"
+ +(dep?"<div><small>التأمين</small><b>"+(dep.mode==='chq'?'شيك ضمان ':'نقدي ')+$(dep.a)+"</b></div>":"")+"</div>"
+ +"<div class='fx-sec'>🪪 المستندات (الهوية والعقد)</div><div class='fx-docs'>"+docs.map(function(x,j){return "<div class='fx-doc'><img src='"+x.d+"' onclick=\"tnImg('"+u.id+"',"+k+","+j+")\"><span>"+(x.k==='id'?'الهوية':x.k==='ct'?'العقد':'مستند')+"</span><button title='حذف' onclick=\"tnDocDel('"+u.id+"',"+k+","+j+")\">✕</button></div>"}).join('')+(docs.length?"":"<span class='mu'>مفيش مستندات لسه.</span>")+"</div>"
+ +"<div class='fx-btns'><label>🪪 صورة الهوية<input type='file' accept='image/*' hidden onchange=\"tnDoc(this,'"+u.id+"',"+k+",'id')\"></label><label>📄 صورة العقد<input type='file' accept='image/*' hidden onchange=\"tnDoc(this,'"+u.id+"',"+k+",'ct')\"></label></div>"
+ +"<div class='fx-sec'>💵 تاريخ الدفع</div>"+rows
+ +"<div class='fx-sec'>📝 ملاحظات</div><textarea class='fx-note' placeholder='أي ملاحظة عن المستأجر…' onchange=\"tnNote('"+u.id+"',"+k+",this.value)\">"+E(L.note||'')+"</textarea>"
+ +(others.length?"<div class='fx-sec'>📁 عقود تانية لنفس المستأجر</div>"+others.join(''):"");
+ ov('tnx',h)};
+window.tnNote=function(id,k,v){var L=U(id).leases[k];L.note=String(v||'').slice(0,2000);persist('📝 ملاحظة على المستأجر '+(L.tenant||''));toast('اتحفظت الملاحظة')};
+window.tnImg=function(id,k,j){var x=(U(id).leases[k].docs||[])[j];if(!x)return;var d=document.createElement('div');d.className='fx-img';d.innerHTML="<img src='"+x.d+"'>";d.onclick=function(){d.remove()};document.body.appendChild(d)};
+window.tnDocDel=function(id,k,j){confirmM('تحذف المستند ده؟',function(){var L=U(id).leases[k];(L.docs||[]).splice(j,1);persist('🗑 حذف مستند للمستأجر '+(L.tenant||''));setTimeout(function(){tnFile(id,k)},60)})};
+window.tnDoc=function(inp,id,k,kind){var f=inp.files&&inp.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var M=1100,w=im.width,h=im.height,s=Math.min(1,M/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.round(w*s);c.height=Math.round(h*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);var q=.62,d=c.toDataURL('image/jpeg',q);while(d.length>220000&&q>.3){q-=.08;d=c.toDataURL('image/jpeg',q)}
+  var L=U(id).leases[k];L.docs=L.docs||[];if(L.docs.length>=6){toast('الحد 6 مستندات لكل عقد');return}L.docs.push({k:kind,d:d,t:Date.now()});persist('📎 '+(kind==='id'?'صورة هوية':'صورة عقد')+' للمستأجر '+(L.tenant||''));toast('اتحفظت الصورة');setTimeout(function(){tnFile(id,k)},60)};im.onerror=function(){toast('الصورة دي مش مدعومة')};im.src=r.result};r.readAsDataURL(f)};
+
+/* ========== التقرير الشهري ========== */
+var RM=null;
+function mKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+window.monthRep=function(y,m){var now=today();if(y==null){var p=new Date(now.getFullYear(),now.getMonth()-1,1);y=p.getFullYear();m=p.getMonth()}
+ RM={y:y,m:m};var a=new Date(y,m,1),b=new Date(y,m+1,1),A0=+a,B0=+b,inn=function(ms){return ms>=A0&&ms<B0};
+ var rin=0,oth=0,out=0,earn=0,cost=0,late=[],per={},list=[],up=[],occ=0,tot=0;
+ SU().forEach(function(u){var f=sh(u),cm=u.cm||12,T=(u.total||isumOf(u)),fu=+u.furn||0,mc=(T+fu)/cm,s0=pd(u.start),e0=cEnd(u),P=per[u.id]={n:u.name,r:0,p:0};
+  var act=s0<b&&e0>a;if(act){tot++;var fr=Math.max(0,Math.min(+e0,B0)-Math.max(+s0,A0))/(B0-A0);cost+=mc*fr*f;P.p-=mc*fr*f}
+  var leased=false;
+  u.inst.forEach(function(i,k){if(i.p&&inn(i.at||0)){out+=i.a*f;list.push([i.at,'🏢 دفعة '+(u.company||'الشركة')+' — '+u.name,-i.a*f])}if(!i.p&&inn(+pd(i.d)))up.push([+pd(i.d),'🏢 دفعة '+(u.company||'الشركة')+' — '+u.name,i.a*f,'pay'])});
+  if(u.fp&&inn(u.fat||0)){out+=(u.furn||0)*f;list.push([u.fat,'🛋 أثاث — '+u.name,-(u.furn||0)*f])}
+  u.leases.forEach(function(L){var tn=L.tenant||'مستأجر',ls=pd(L.start),le=L.exit?pd(L.exit):endOf(L);if(ls<b&&le>a)leased=true;
+   (L.rcv||[]).forEach(function(i){var at=(L.rat||{})[i]||0;if(inn(at)){var v=amtOf(L,i)*f;rin+=v;list.push([at,'💰 إيجار '+tn+' — '+u.name,v])}});
+   (L.pp||[]).forEach(function(x){if(inn(x.at||0)){rin+=(+x.a||0)*f;list.push([x.at,'💰 دفعة مقدمة '+tn,(+x.a||0)*f])}});
+   if(L.adv&&inn(L.advat||0)){oth+=L.adv*f;list.push([L.advat,'🧾 رسوم عقد '+tn,L.adv*f])}
+   for(var i=0;i<L.months;i++){var d=payD(L,i);if(d>=a&&d<b){var v=la(L,i)*f;earn+=v;P.r+=v;P.p+=v;var got=(L.rcv||[]).indexOf(i)>=0,at=(L.rat||{})[i]||0;if((!got||at>=B0)&&d<now&&!L.exit)late.push([+d,tn+' — '+u.name,v])}
+    if(!(L.rcv||[]).indexOf(i)>=0&&d>=b&&d<new Date(y,m+2,1))up.push([+d,'💰 إيجار '+tn+' — '+u.name,la(L,i)*f,'rent'])}});
+  if(act&&leased)occ++});
+ SE().forEach(function(x){var un=x.u&&U(x.u),f=un?sh(un):shg(x.g);for(var i=0;i<(x.n||1);i++){var d=addM(pd(x.d),i);if(d>=a&&d<b&&d<=now){out+=x.a*f;list.push([+d,'🧾 مصروف: '+(x.w||''),-x.a*f])}}});
+ list.sort(function(p,q){return p[0]-q[0]});up.sort(function(p,q){return p[0]-q[0]});
+ var prof=earn-cost,net=rin+oth-out,mn=a.toLocaleDateString(LOC(),{month:'long',year:'numeric'}),cur=mKey(a)===mKey(now);
+ var h="<div class='fx-mn'><button onclick='monthRep("+(m===0?y-1:y)+","+(m===0?11:m-1)+")'>›</button><h2 style='margin:0;font-size:18px;text-align:center'>📊 تقرير "+mn+(cur?" <small class='mu'>(لحد النهارده)</small>":"")+"</h2><button onclick='monthRep("+(m===11?y+1:y)+","+(m===11?0:m+1)+")'>‹</button></div>"
+ +"<div class='fx-g'><div><small>💰 اتقبض</small><b class='pos'>"+$(rin+oth)+"</b></div><div><small>💸 اتدفع</small><b class='neg'>"+$(out)+"</b></div>"
+ +"<div><small>صافي الفلوس</small><b class='"+(net<0?'neg':'pos')+"'>"+$(net)+"</b></div><div><small>📈 ربح الشهر</small><b class='"+(prof<0?'neg':'pos')+"'>"+$(prof)+"</b></div>"
+ +"<div><small>🔴 متأخرات</small><b class='"+(late.length?'neg':'')+"'>"+(late.length?$(late.reduce(function(s,x){return s+x[2]},0))+" ("+late.length+")":"مفيش")+"</b></div><div><small>🏠 الإشغال</small><b>"+occ+" من "+tot+"</b></div></div>"
+ +"<div class='mu' style='font-size:12.5px'>ربح الشهر = إيجار الشهر حسب العقود "+$(earn)+" − تكلفة الشهر (عقد الشركة + الفرش ÷ مدة العقد) "+$(cost)+"</div>";
+ var ps=Object.keys(per).map(function(k){return per[k]}).filter(function(x){return x.r||x.p});
+ if(ps.length>1){h+="<div class='fx-sec'>🏠 حسب الاستديو</div>";ps.sort(function(p,q){return q.p-p.p}).forEach(function(x){h+="<div class='fx-r'><span>"+E(x.n)+"<small>إيجار "+$(x.r)+"</small></span><b class='"+(x.p<0?'neg':'pos')+"'>"+$(x.p)+"</b></div>"})}
+ if(late.length){h+="<div class='fx-sec'>🔴 المتأخرات</div>";late.forEach(function(x){h+="<div class='fx-r'><span>"+E(x[1])+"<small>"+fd(x[0])+"</small></span><b class='neg'>"+$(x[2])+"</b></div>"})}
+ h+="<div class='fx-sec'>🧾 حركة الفلوس</div>"+(list.length?list.map(function(x){return "<div class='fx-r'><span>"+E(x[1])+"<small>"+fd(x[0])+"</small></span><b class='"+(x[2]<0?'neg':'pos')+"'>"+(x[2]<0?'− ':'+ ')+$(Math.abs(x[2]))+"</b></div>"}).join(''):"<p class='mu'>مفيش حركة في الشهر ده.</p>");
+ if(up.length){h+="<div class='fx-sec'>📅 الشهر الجاي</div>";up.slice(0,12).forEach(function(x){h+="<div class='fx-r'><span>"+E(x[1])+"<small>"+fd(x[0])+"</small></span><b class='"+(x[3]==='pay'?'neg':'pos')+"'>"+$(x[2])+"</b></div>"})}
+ ov('mrx',h)};
+function autoRep(){try{if(!AUTH||!S.units||!S.units.length||window.HBUILD)return;var k=mKey(today()),o=localStorage.getItem('bny_mr');if(o===k)return;localStorage.setItem('bny_mr',k);if(!o)return;setTimeout(function(){if(!document.querySelector('body>.ov'))monthRep()},1800)}catch(e){}}
+
+/* ========== تنبيه التجديد ========== */
+function snz(key){try{var v=+localStorage.getItem('bny_rn_'+key)||0;return v>Date.now()}catch(e){return false}}
+function renewList(){var r=[],t=today();SU().forEach(function(u){u.leases.forEach(function(L,k){if(L.exit||L.rn)return;var e=endOf(L),n=Math.round((e-t)/864e5);if(n<-3||n>45)return;
+  if(u.leases.some(function(M){return M!==L&&pd(M.start)>=addM(e,-1)&&!M.exit}))return;if(snz(u.id+'_'+k))return;r.push({u:u,L:L,k:k,n:n,e:e})})});return r.sort(function(a,b){return a.n-b.n})}
+function renewCard(){var R=renewList();if(!R.length)return '';
+ return "<div class='card fx-card' id='rnc'><h2>🔄 عقود قربت تخلص — هتجدد؟</h2>"+R.map(function(x){return "<div class='fx-r' style='flex-wrap:wrap'><span style='flex:1 1 180px'><b>"+E(x.L.tenant||'مستأجر')+"</b> — "+E(x.u.name)+"<small>"+(x.n>0?"بيخلص بعد "+x.n+" يوم":(x.n===0?"بيخلص النهارده":"خلص من "+(-x.n)+" يوم"))+" • "+fd(x.e)+"</small></span><span class='fx-btns' style='margin:0'><button class='p' onclick=\"rnRenew('"+x.u.id+"',"+x.k+")\">🔄 تجديد</button><button onclick=\"rnOffer('"+x.u.id+"',"+x.k+")\">📢 أعرض الاستديو</button><button onclick=\"rnLater('"+x.u.id+"',"+x.k+")\">بعدين</button></span></div>"}).join('')+"</div>"}
+window.rnLater=function(id,k){try{localStorage.setItem('bny_rn_'+id+'_'+k,String(Date.now()+3*864e5))}catch(e){}render()};
+window.rnOffer=function(id,k){var u=U(id),L=u.leases[k],e=endOf(L);L.rn='offer';u.offer=iso(e);save();render();
+ var txt='🏠 استديو مفروش للإيجار\n📍 '+u.name+'\n📅 متاح من '+fd(e)+'\n💰 '+$(L.rent||0)+' شهرياً\nللتواصل واتساب';try{navigator.clipboard.writeText(txt).then(function(){toast('اتعلم إنه معروض، ونسخت إعلان جاهز تبعته')},function(){toast('اتعلم إن الاستديو معروض للإيجار')})}catch(x){toast('اتعلم إن الاستديو معروض للإيجار')}};
+window.rnRenew=function(id,k){var u=U(id),L=u.leases[k],e=endOf(L);mLease(id);setTimeout(function(){try{if(!M||!M.fields)return;var set=function(key,v){var i=M.fields.findIndex(function(f){return f.k===key});var el=document.getElementById('f'+i);if(i>=0&&el){if(el.type==='checkbox')el.checked=!!v;else el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))}};
+  set('tenant',L.tenant||'');set('phone',L.phone||'');set('start',iso(e));set('rent',L.rent||0);if(L.day)set('day',L.day);set('months',L.orig||L.months||12);toast('عدّل اللي محتاجه واحفظ العقد الجديد')}catch(x){}},120)};
+
+/* ========== مقارنة الاستديوهات ========== */
+function compCard(){var t=today(),rows=[];SU().forEach(function(u){var f=sh(u),cm=u.cm||12,T=(u.total||isumOf(u)),fu=+u.furn||0,mc=(T+fu)/cm,s0=pd(u.start),e0=cEnd(u),end=e0<t?e0:t;if(s0>=t)return;
+  var span=Math.max(1,(end-s0)/864e5),occd=0,R=0,mo=0;
+  u.leases.forEach(function(L){var a=Math.max(+pd(L.start),+s0),b=Math.min(+(L.exit?pd(L.exit):endOf(L)),+end);if(b>a)occd+=(b-a)/864e5;
+   (L.rcv||[]).forEach(function(i){if(i>=L.months)return;R+=amtOf(L,i)+(window.ppA?ppA(L,i):0);mo+=lf(L,i)})});
+  occd=Math.min(occd,span);var el=span/30.4375,pr=(R-mc*mo)*f,ex=0;
+  SE().forEach(function(x){if(x.u!==u.id)return;for(var i=0;i<(x.n||1);i++)if(addM(pd(x.d),i)<=t)ex+=x.a*f});
+  rows.push({u:u,occ:occd/span*100,vac:Math.round(span-occd),pr:pr-ex,rent:(u.leases.filter(function(L){return !L.exit&&pd(L.start)<=t&&endOf(L)>t})[0]||{}).rent||0,pm:el>0?(pr-ex)/Math.max(1,el):0})});
+ if(!rows.length)return '';rows.sort(function(a,b){return b.pr-a.pr});
+ var best=rows[0],worst=rows.slice().sort(function(a,b){return b.vac-a.vac})[0];
+ var h="<div class='card' id='cmpc'><h2>🏆 مقارنة الاستديوهات</h2>";
+ if(rows.length>1)h+="<div class='fx-g'><div><small>🥇 الأكسب</small><b>"+E(best.u.name)+"</b><small>"+$(best.pr)+"</small></div><div><small>💤 قعد فاضي أكتر</small><b>"+E(worst.u.name)+"</b><small>"+worst.vac+" يوم فاضي</small></div></div>";
+ h+="<div class='fx-tw'><table class='fx-tbl'><tr><th>الاستديو</th><th>الربح</th><th>الإشغال</th><th>أيام فاضي</th><th>الإيجار</th></tr>"+rows.map(function(x,i){return "<tr><td>"+(i===0&&rows.length>1?'🥇 ':'')+E(x.u.name)+(x.u.offer?" <span class='fx-tag'>معروض</span>":"")+"</td><td class='"+(x.pr<0?'neg':'pos')+"'><b>"+$(x.pr)+"</b></td><td><div style='display:flex;align-items:center;gap:6px'><div class='fx-bar'><i style='width:"+Math.round(x.occ)+"%'></i></div>"+Math.round(x.occ)+"%</div></td><td"+(x.vac>0?" class='neg'":"")+">"+x.vac+"</td><td>"+(x.rent?$(x.rent):'—')+"</td></tr>"}).join('')+"</table></div>"
+ +"<p class='mu' style='font-size:12.5px;margin:8px 0 0'>الربح = الإيجار المقبوض − تكلفة نفس المدة (عقد الشركة + الفرش ÷ مدة العقد) − مصاريف الاستديو. الإشغال وأيام الفاضي من استلام الاستديو من الشركة لحد النهارده.</p></div>";return h}
+
+/* ========== آخر التعديلات (للشركاء) ========== */
+function lastEd(){var H=(S.hist||[]).filter(function(e){return !/تسجيل (دخول|خروج)|تنزيل|نسخة احتياطية/.test(e.d||'')}).slice(0,3);if(!H.length)return '';
+ return "<div class='card fx-lg' id='lgc'><h2>🕘 آخر التعديلات</h2>"+H.map(function(e){return "<div class='fx-r'><span>"+E(String(e.d||'').slice(0,90))+"<small>"+E(e.by||'')+" • "+tfx(e.t)+"</small></span></div>"}).join('')+"<div class='fx-btns'><button onclick=\"S.tab='log';render();scrollTo(0,0)\">📜 سجل التعديلات كله</button></div></div>"}
+function tfx(t){try{return new Date(t).toLocaleString(LOC(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})}catch(e){return ''}}
+
+/* ========== الربط بالواجهة ========== */
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH)return o;var app=document.getElementById('app');if(!app)return o;
+ if(S.tab==='home'){var rh=document.getElementById('reh'),rc=renewCard();[].forEach.call(app.querySelectorAll('.card'),function(c){var t=(c.querySelector('h2')||{}).textContent||'';if(/عقود مستأجرين بتخلص قريب/.test(t))c.remove()});if(rc&&!document.getElementById('rnc')){var w=document.createElement('div');w.innerHTML=rc;(rh?rh.insertAdjacentElement('afterend',w.firstChild):app.insertBefore(w.firstChild,app.firstChild))}
+  var lg=lastEd();if(lg&&!document.getElementById('lgc')){var w2=document.createElement('div');w2.innerHTML=lg;var tr=[].slice.call(app.querySelectorAll('.card')).filter(function(c){return /نسخة تجريبية|نسخ احتياطي|النسخ الاحتياطي/.test((c.querySelector('h2')||{}).textContent||'')})[0];tr?app.insertBefore(w2.firstChild,tr):app.appendChild(w2.firstChild)}}
+ if(S.tab==='acc'){if(!document.getElementById('mrb')){var b=document.createElement('div');b.id='mrb';b.className='fx-btns';b.style.margin='0 0 10px';b.innerHTML="<button class='p' onclick='monthRep()'>📊 التقرير الشهري</button>";var st=app.querySelector('.kp,.grid,.card');st?app.insertBefore(b,st):app.insertBefore(b,app.firstChild)}
+  [].forEach.call(app.querySelectorAll('.card'),function(c){if(/ترتيب الاستديوهات بالربح/.test((c.querySelector('h2')||{}).textContent||''))c.remove()});if(!document.getElementById('cmpc')){var cc=compCard();if(cc){var w3=document.createElement('div');w3.innerHTML=cc;var c1=app.querySelector('.card:not(#cmpc)');c1&&c1.nextSibling?app.insertBefore(w3.firstChild,c1.nextSibling):app.appendChild(w3.firstChild)}}}
+ [].forEach.call(app.querySelectorAll('.lsb'),function(sb){if(sb.querySelector('.tnb'))return;var e=sb.querySelector('button[onclick^="mLease("]');if(!e)return;var m=/mLease\('([^']+)',(\d+)\)/.exec(e.getAttribute('onclick'));if(!m)return;var bt=document.createElement('button');bt.className='tnb';bt.textContent='👤 ملف';bt.setAttribute('onclick',"tnFile('"+m[1]+"',"+m[2]+")");sb.insertBefore(bt,sb.firstChild)});
+ autoRep()}catch(e){}return o};
+try{if(AUTH)render()}catch(e){}
+})();
+</script>
+
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
