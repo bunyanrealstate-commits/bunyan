@@ -4099,6 +4099,74 @@ window.bnyThink=function(q){return ask(q).t};
 #aix .snd3{background:rgba(255,255,255,.12)}
 #aix .live3{text-align:center;font-size:13px;opacity:.8;min-height:18px}
 </style>
+<script id="flowjs">(function(){
+function nz(s){return BNY.nz(s)}function F(n){return BNY.F(n)}
+function num(q){var z=nz(q).replace(/,/g,'');var m=z.match(/\d+(\.\d+)?/);if(m)return +m[0];try{if(typeof VC!=='undefined'&&VC.num){var n=VC.num(VC.nm(q));if(n&&n.v>0)return n.v}}catch(e){}return 0}
+function gid(){return (WS==='all'||WS==='-')?'':WS}
+function partnersList(){var g=(S.groups||[]).filter(function(x){return x.id===WS})[0],n=g?String(g.name||'').replace(/^\s*مع\s+/,''):'';return n?n.split(/\s+و(?=\S)/).map(function(x){return x.trim()}).filter(Boolean):[]}
+function leasesAct(){var r=[],t=today();SU().forEach(function(u){u.leases.forEach(function(L,k){if(!L.exit)r.push({u:u,L:L,k:k})})});return r}
+function isCancel(q){return /^(الغي|إلغاء|الغاء|لا|لأ|بلاش|خلاص|cancel|no|سيبك)\s*$/.test(nz(q).trim())}
+var FL=null;
+window.bnyFlow={active:function(){return !!FL},cancel:function(){FL=null}};
+/* بداية فلو من السؤال */
+window.bnyFlowStart=function(q){var z=nz(q);if(/ازاي|ازاى|طريقه|فين|ليه|امتي|امتى|يعني|كام|كم /.test(z)&&!/عايز|عاوز|محتاج/.test(z))return null;
+ var want=/(اسجل|سجل|سجلي|اضيف|ضيف|اضف|اعمل|عايز|عاوز|محتاج|جديد|عاوزه|ابغي|حابب)/.test(z);if(!want)return null;
+ if(/مصروف|مصاريف|صرفت|صرف/.test(z))return start('exp',q);
+ if(/رجع|رجوع|رجّع|يرجع/.test(z)&&/فلوس|سحب|مبلغ/.test(z))return start('back',q);
+ if(/سحب|اسحب|سلفه|سلف/.test(z))return start('draw',q);
+ if(/قسط|دفعه الشركه|دفعة الشركة|للشركه/.test(z))return start('inst',q);
+ if(/تمديد|امد|مد العقد|يمد/.test(z))return start('ext',q);
+ if(/(استلم|استلام|قبضت|ايجار|تحصيل)/.test(z)&&!/عقد/.test(z))return start('rent',q);
+ if(/عقد/.test(z)&&/مستاجر|جديد|ايجار/.test(z))return start('lease',q);
+ if(/استديو|وحده/.test(z))return start('unit',q);
+ return null};
+function start(type,q){FL={type:type,d:{}};var a=num(q);if(a&&type!=='ext')FL.d.a=a;
+ var st=BNY.findStudio(nz(q)),tn=BNY.findTenant(nz(q));if(st)FL.d.u=st.id;if(tn){FL.d.u=tn.u.id;FL.d.k=tn.k}
+ if(type==='exp'){var w=nz(q).replace(/(عايز|عاوز|محتاج|اسجل|سجل|سجلي|اضيف|ضيف|اضف|مصروف|مصاريف|جديد|صرفت|صرف|ب|على|علي|في|\d+(\.\d+)?|جنيه|درهم|يا بنيان)/g,' ').replace(/\s+/g,' ').trim();if(w&&w.length>=3&&!st)FL.d.w=w}
+ if(type==='draw'){if(/ليا|لي |شخصي|لنفسي|انا/.test(nz(q)))FL.d.p='__me';partnersList().forEach(function(p){if(nz(q).indexOf(nz(p))>=0)FL.d.p=p})}
+ return next()}
+function opt(l,v){return {l:l,v:String(v)}}
+function next(){var d=FL.d,t=FL.type;
+ if(t==='exp'){if(!d.a)return ask('a','💸 تمام، هنسجل مصروف. **المبلغ كام؟**');if(!d.w)return ask('w','على إيه؟ اكتب البيان (مثلاً: صيانة تكييف، كهرباء، عمولة…)',['صيانة','كهرباء','مياه','إنترنت','عمولة','نظافة'].map(function(x){return opt(x,x)}));
+  if(d.u==null)return ask('u','المصروف ده على استديو معين ولا عام؟',[opt('🏢 عام','')].concat(SU().map(function(u){return opt('🏠 '+u.name,u.id)})));
+  return confirm('📝 **مصروف '+F(d.a)+'** — '+d.w+' — '+(d.u?U(d.u).name:'عام')+'، بتاريخ النهارده.\nده هيقلل النقدي والربح بـ '+F(d.a)+'. أسجّله؟')}
+ if(t==='draw'){if(!d.p)return ask('p','🙋 مين اللي هيسحب؟',[opt('أنا','__me')].concat(partnersList().map(function(p){return opt(p,p)})));if(!d.a)return ask('a','المبلغ كام؟');if(d.n==null)return ask('n','السبب؟ (أو اضغط «بدون»)',[opt('بدون','-')]);
+  return confirm('📝 **سحب '+F(d.a)+'** لـ '+(d.p==='__me'?'إنت':d.p)+(d.n&&d.n!=='-'?' — '+d.n:'')+'.\nالنقدي هيقل '+F(d.a)+' والربح مش هيتأثر، وهيتسجل عليه لحد ما يرجّعه. أسجّله؟')}
+ if(t==='back'){var B=bal();if(!B.length){FL=null;return {t:'مفيش حد عليه فلوس مسحوبة دلوقتي ✅'}}if(!d.p)return ask('p','↩️ مين اللي بيرجّع؟',B.map(function(x){return opt((x.p==='__me'?'أنا':x.p)+' — عليه '+F(x.left),x.p)}));var cur=B.filter(function(x){return x.p===d.p})[0];if(!d.a)return ask('a','بيرجّع كام؟'+(cur?' (عليه '+F(cur.left)+')':''),cur?[opt('الكل '+F(cur.left),cur.left)]:null);
+  return confirm('📝 **رجوع '+F(d.a)+'** من '+(d.p==='__me'?'إنت':d.p)+' للنقدي. أسجّله؟')}
+ if(t==='rent'){var L=leasesAct();if(!L.length){FL=null;return {t:'مفيش عقود مستأجرين سارية.'}}if(d.k==null){if(L.length===1){d.u=L[0].u.id;d.k=L[0].k}else return ask('k','💵 مين المستأجر اللي دفع؟',L.map(function(x){return opt(x.L.tenant+' — '+x.u.name,x.u.id+'|'+x.k)}))}
+  var LL=U(d.u).leases[d.k],i0=-1;for(var i=0;i<LL.months;i++)if((LL.rcv||[]).indexOf(i)<0){i0=i;break}if(i0<0){FL=null;return {t:'كل دفعات '+LL.tenant+' متسجلة مستلمة ✅'}}var due=la(LL,i0);
+  if(!d.a)return ask('a','💵 '+LL.tenant+' — الدفعة الجاية رقم '+(i0+1)+' بـ '+F(due)+' (ميعادها '+iso(payD(LL,i0))+'). **استلمت كام؟**',[opt(F(due)+' (الدفعة كاملة)',due),opt('شهر ونص '+F(Math.round((LL.rent||0)*1.5)),Math.round((LL.rent||0)*1.5))]);
+  return confirm('📝 **استلام '+F(d.a)+'** من '+LL.tenant+' — '+U(d.u).name+'.\nالنقدي هيزيد '+F(d.a)+' والدفعة هتتعلّم مستلمة. أسجّله؟')}
+ if(t==='inst'){var us=SU().filter(function(u){return u.inst.some(function(i){return !i.p})});if(!us.length){FL=null;return {t:'كل دفعات الشركات مدفوعة ✅'}}if(!d.u){if(us.length===1)d.u=us[0].id;else return ask('u','🏢 دفعة أنهي استديو؟',us.map(function(u){return opt(u.name,u.id)}))}
+  var uu=U(d.u),k=uu.inst.findIndex(function(i){return !i.p}),ins=uu.inst[k];d.ik=k;return confirm('📝 هسجّل **دفعة '+(k+1)+' للشركة '+(uu.company||'')+' بـ '+F(ins.a)+'** (ميعادها '+ins.d+') إنها اتدفعت — '+uu.name+'. أسجّلها؟')}
+ if(t==='ext'){var L2=leasesAct();if(d.k==null){if(L2.length===1){d.u=L2[0].u.id;d.k=L2[0].k}else return ask('k','➕ تمديد عقد مين؟',L2.map(function(x){return opt(x.L.tenant+' — '+x.u.name,x.u.id+'|'+x.k)}))}FL=null;close();setTimeout(function(){S.tab='units';UV.open=d.u;render();mExt(d.u,d.k)},250);return {t:'فتحتلك شاشة التمديد ✅'}}
+ if(t==='lease'){if(!d.u){if(SU().length===1)d.u=SU()[0].id;else return ask('u','📄 عقد جديد لأنهي استديو؟',SU().map(function(u){return opt(u.name,u.id)}))}FL=null;close();setTimeout(function(){S.tab='units';UV.open=d.u;render();mLease(d.u)},250);return {t:'فتحتلك شاشة عقد المستأجر الجديد ✅'}}
+ if(t==='unit'){FL=null;close();setTimeout(function(){S.tab='units';try{UV.open=null}catch(e){}render();mUnit()},250);return {t:'فتحتلك شاشة إضافة استديو ✅'}}
+ FL=null;return null}
+function close(){var x=document.getElementById('aix');if(x)x.remove()}
+function bal(){var b={};(S.adj||[]).forEach(function(a){if(!a.k||(a.g||'')!==gid())return;b[a.p]=b[a.p]||{p:a.p,left:0};b[a.p].left+=-a.a});return Object.keys(b).map(function(k){return b[k]}).filter(function(x){return x.left>0.004})}
+function ask(slot,txt,opts){FL.slot=slot;return {t:txt,opts:opts||null,flow:1}}
+function confirm(txt){FL.slot='ok';return {t:txt,opts:[opt('✅ سجّل','yes'),opt('✏️ عدّل المبلغ','edit'),opt('إلغاء','no')],flow:1}}
+window.bnyFlowInput=function(q){if(!FL)return null;var z=nz(q).trim(),d=FL.d;if(isCancel(q)||z==='no'){FL=null;return {t:'تمام، اتلغى 👍'}}
+ var s=FL.slot;
+ if(s==='ok'){if(z==='edit'){d.a=0;return next()}if(z==='yes'||/^(اه|ايوه|تمام|سجل|نفذ|ماشي|اوك|ok|yes|موافق|اكيد)/.test(z))return exec();return {t:'اضغط «✅ سجّل» أو «إلغاء».',opts:[opt('✅ سجّل','yes'),opt('إلغاء','no')],flow:1}}
+ if(s==='a'){var n=num(q);if(!(n>0))return {t:'اكتب المبلغ بالأرقام لو سمحت (مثلاً 300).',flow:1};d.a=n;return next()}
+ if(s==='w'){d.w=String(q).trim().slice(0,80);return next()}
+ if(s==='u'){if(q===''||z===''||/عام/.test(z)){d.u='';return next()}var u=U(q)||BNY.findStudio(z);if(!u)return {t:'اختار من الأزرار.',flow:1};d.u=u.id;return next()}
+ if(s==='p'){var p=q==='__me'||/^(انا|ليا|انا نفسي)$/.test(z)?'__me':(partnersList().filter(function(x){return nz(x)===z||z.indexOf(nz(x))>=0})[0]||String(q).trim());d.p=p;return next()}
+ if(s==='n'){d.n=q==='-'||/^بدون$/.test(z)?'-':String(q).trim().slice(0,80);return next()}
+ if(s==='k'){var m=String(q).split('|');if(m.length===2){d.u=m[0];d.k=+m[1]}else{var tn=BNY.findTenant(z);if(!tn)return {t:'اختار المستأجر من الأزرار.',flow:1};d.u=tn.u.id;d.k=tn.k}return next()}
+ return next()};
+function exec(){var d=FL.d,t=FL.type,msg='';FL=null;try{
+ if(t==='exp'){S.exp=S.exp||[];S.exp.push({id:uid(),u:d.u||'',g:d.u?'':gid(),w:d.w,a:d.a,d:td(),n:1});msg='✅ اتسجل مصروف '+F(d.a)+' — '+d.w+'. النقدي بقى '+F(cashNow())}
+ else if(t==='draw'){S.adj=S.adj||[];S.adj.push({id:uid(),at:Date.now(),a:-d.a,k:'draw',p:d.p,g:gid(),w:'سحب '+(d.p==='__me'?'شخصي ('+((A&&A.u)||'')+')':'لـ '+d.p)+(d.n&&d.n!=='-'?' — '+d.n:''),n:d.n&&d.n!=='-'?d.n:''});msg='✅ اتسجل السحب. النقدي بقى '+F(cashNow())}
+ else if(t==='back'){S.adj=S.adj||[];S.adj.push({id:uid(),at:Date.now(),a:d.a,k:'back',p:d.p,g:gid(),w:'رجوع فلوس من '+(d.p==='__me'?((A&&A.u)||'أنا'):d.p),n:''});msg='✅ اترجع '+F(d.a)+' للنقدي. النقدي بقى '+F(cashNow())}
+ else if(t==='rent'){var L=U(d.u).leases[d.k],r=window.payAmt?payAmt(L,d.a):'';msg='✅ '+(r||'اتسجل الاستلام')+'. النقدي بقى '+F(cashNow())}
+ else if(t==='inst'){var i=U(d.u).inst[d.ik];i.p=true;i.at=0;msg='✅ اتسجلت دفعة الشركة مدفوعة'}
+ save();render();try{logEv&&0}catch(e){}}catch(e){msg='⚠️ معرفتش أسجّل: '+(e&&e.message)}return {t:msg}}
+})();
+</script>
 <script id="aijs3">
 (function(){
 var H=[],busy=false,REC=false,VO=(function(){try{return localStorage.getItem('bny_ai_voice')==='1'}catch(e){return false}})(),fromVoice=false;
@@ -4113,10 +4181,11 @@ function draw(scroll){var d=document.getElementById('aix');if(!d)return;var L=d.
  if(!H.length)h+="<div class='hello'><div class='orb big'></div><h3>"+greet()+(nm()?' يا '+E(nm()):'')+" 👋</h3><p>أنا بنيان، مساعدك الشخصي. أقدر أساعدك في إيه النهارده؟</p></div><div class='sg'>"+SG.map(function(s){return "<button onclick=\"aiAsk('"+s[3].replace(/'/g,"\\'")+"')\"><i>"+s[0]+"</i><b>"+s[1]+"</b><small>"+s[2]+"</small></button>"}).join('')+"</div>";
  H.forEach(function(m,ix){if(m.role==='user'){h+="<div class='mu3'>"+E(m.content)+"</div>";return}
   h+="<div class='ma3'><div class='orb'></div><div class='card3'>"+md(m.content);
+  if(m.opts&&!m.used)h+="<div class='chips3'>"+m.opts.map(function(o){return "<button onclick=\"aiOpt("+ix+",'"+E(o.v).replace(/'/g,"&#39;")+"')\">"+E(o.l)+"</button>"}).join('')+"</div>";
   if(m.cmd&&!m.done)h+="<div class='act3'><button class='do' onclick='aiDo("+ix+")'>✅ نفّذ</button><button onclick='aiNo("+ix+")'>إلغاء</button></div>";
   if(m.ask)h+="<div class='chips3'>"+m.ask.map(function(it){return "<button onclick=\"aiPick("+ix+",'"+it.id+"')\">"+E(it.l)+"</button>"}).join('')+"</div>";
   if(m.fb==='pick')h+="<div class='chips3'><span style='width:100%;font-size:12.5px;opacity:.7'>كان قصدك إيه؟ اختار وأنا هتعلم:</span>"+bnyIntents.map(function(it){return "<button onclick=\"aiPick("+ix+",'"+it.id+"')\">"+E(it.l)+"</button>"}).join('')+"</div>";
-  if(m.q&&!m.ask&&!m.cmd)h+="<div class='act3'><button onclick='aiSay("+ix+")'>🔊</button>"+(m.fb?'':"<button onclick='aiFb("+ix+",1)'>👍</button><button onclick='aiFb("+ix+",0)'>👎</button>")+"</div>";
+  if(m.q&&!m.ask&&!m.cmd&&!m.flow)h+="<div class='act3'><button onclick='aiSay("+ix+")'>🔊</button>"+(m.fb?'':"<button onclick='aiFb("+ix+",1)'>👍</button><button onclick='aiFb("+ix+",0)'>👎</button>")+"</div>";
   h+="</div></div>"});
  if(busy)h+="<div class='ma3'><div class='orb'></div><div class='think3'><i></i><i></i><i></i></div></div>";
  L.innerHTML=h;if(scroll!==false)L.scrollTop=L.scrollHeight}
@@ -4125,12 +4194,15 @@ window.aiOpen=function(){var d=document.getElementById('aix');if(d)d.remove();d=
  document.body.appendChild(d);draw()};
 window.aiVoice=function(b){VO=!VO;try{localStorage.setItem('bny_ai_voice',VO?'1':'0')}catch(e){}b.textContent=VO?'🔊':'🔈';toast(VO?'هقرالك الإجابات بالصوت':'القراءة بالصوت اتقفلت');if(!VO)try{speechSynthesis.cancel()}catch(e){}};
 window.aiSay=function(ix){var m=H[ix];if(!m)return;var o=VO;VO=true;speak(m.content);VO=o};
-window.aiClear=function(){H=[];aiOpen()};
+window.aiClear=function(){H=[];try{bnyFlow.cancel()}catch(e){}aiOpen()};
 function cmdOf(q){try{if(typeof VC==='undefined'||!VC.parse)return null;var t=VC.nm(q);if(!/^(استلمت|قبضت|اتقبض|سجل|ضيف|اضف|دفعت|سددت|صرفت|افتح|روح|وديني|خدني)/.test(t))return null;var p=VC.parse(q);if(!p||p.kind==='err'||p.kind==='cash'||p.kind==='late')return p&&p.kind==='err'?{err:p.txt}:null;return p}catch(e){return null}}
 window.aiAsk=async function(q){var i=document.getElementById('aiin');q=String(q||(i&&i.value)||'').trim();if(!q||busy)return;if(i)i.value='';var v=fromVoice;fromVoice=false;H.push({role:'user',content:q});
- var c=cmdOf(q);if(c){if(c.err){H.push({role:'assistant',content:'⚠️ '+c.err});draw();return}if(c.kind==='nav'){VC.run(c);H.push({role:'assistant',content:'تمام، فتحتلك الصفحة 👌'});draw();setTimeout(function(){var d=document.getElementById('aix');d&&d.remove()},500);return}H.push({role:'assistant',content:'📝 '+c.txt+'\nأنفّذ؟',cmd:c});draw();if(v)speak(c.txt+'. أنفّذ؟');return}
+ if(bnyFlow.active()){var fr=bnyFlowInput(q);if(fr){H.push({role:'assistant',content:fr.t,opts:fr.opts,flow:fr.flow});draw();if(v)speak(fr.t);return}}
+ var c=cmdOf(q);if(!c||c.err){var fs=bnyFlowStart(q);if(fs){H.push({role:'assistant',content:fs.t,opts:fs.opts,flow:fs.flow});draw();if(v)speak(fs.t);return}}
+ if(c){if(c.err){H.push({role:'assistant',content:'⚠️ '+c.err});draw();return}if(c.kind==='nav'){VC.run(c);H.push({role:'assistant',content:'تمام، فتحتلك الصفحة 👌'});draw();setTimeout(function(){var d=document.getElementById('aix');d&&d.remove()},500);return}H.push({role:'assistant',content:'📝 '+c.txt+'\nأنفّذ؟',cmd:c});draw();if(v)speak(c.txt+'. أنفّذ؟');return}
  busy=true;draw();await new Promise(function(r){setTimeout(r,220)});var r;try{r=bnyAsk(q);if(r&&r.then)r=await r;if(r&&r.t&&r.t.then)r.t=await r.t}catch(e){r={t:'حصل خطأ وأنا بحسب: '+(e&&e.message)}}
  busy=false;H.push({role:'assistant',content:r.t,ask:r.ask||null,q:q,i:r.i});draw();if(v||VO)speak(r.t)};
+window.aiOpt=function(ix,v){var m=H[ix];if(m)m.used=1;var lab=(m&&m.opts||[]).filter(function(o){return o.v===v})[0];H.push({role:'user',content:lab?lab.l:v});var fr=bnyFlowInput(v);if(fr){H.push({role:'assistant',content:fr.t,opts:fr.opts,flow:fr.flow})}draw()};
 window.aiDo=function(ix){var m=H[ix];if(!m||!m.cmd)return;var res='';try{res=VC.run(m.cmd)}catch(e){res='معرفتش أنفّذ: '+(e&&e.message)}m.done=1;H.push({role:'assistant',content:'✅ '+(res||'اتنفّذ')});draw()};
 window.aiNo=function(ix){var m=H[ix];if(m)m.done=1;H.push({role:'assistant',content:'تمام، اتلغى.'});draw()};
 window.aiPick=function(ix,id){var m=H[ix];if(!m)return;aiLearn(m.q,id);var t=bnyRun(id,m.q);m.ask=null;m.fb='ok';H.push({role:'assistant',content:(t||'…')+'\n\n✅ اتعلمت: المرة الجاية هجاوبك على طول.',q:m.q,i:id,fb:'ok'});draw()};
