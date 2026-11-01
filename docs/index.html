@@ -369,7 +369,7 @@ function render(){if(!AUTH){drawLogin();return}if(S&&(S.tab==='ac'||S.tab==='q'|
 }
 function openM(title,fields,fn){M={title,fields,fn};drawM()}
 function closeM(){M=null;drawM()}
-function saveM(){const o={};M.fields.forEach((f,i)=>{const e=document.getElementById('f'+i),v=e.value;o[f.k]=f.t=='c'?e.checked:f.t=='n'?(+v||0):v});const fn=M.fn;M=null;drawM();fn(o);save();render()}
+function saveM(){const o={};M.fields.forEach((f,i)=>{const e=document.getElementById('f'+i),v=e.value;o[f.k]=f.t=='c'?e.checked:f.t=='n'?(+v||0):v});if(window.mPre&&mPre(M,o)===false)return;const fn=M.fn;M=null;drawM();fn(o);save();render()}
 const td=()=>iso(today());
 function mInst(id,k){const u=U(id),i=k==null?{}:u.inst[k];openM('دفعة للشركة',[{k:'d',l:'تاريخ الدفعة',t:'d',v:i.d||td()},{k:'a',l:'المبلغ (إجمالي الاستديو)',t:'n',v:i.a||0},{k:'p',l:'تم سداد هذه الدفعة',t:'c',v:i.p}],o=>{if(k==null)u.inst.push({...o,at:o.p?Date.now():0});else{const wp=i.p;Object.assign(i,o);i.at=i.p?(wp?(i.at||0):Date.now()):0}syncTot(u)})}
 const AK='rent_auth_v2',gi=i=>document.getElementById(i);let AUTH=false,A=null,US=[],NEW=false;
@@ -795,7 +795,8 @@ const grps=()=>S.groups||[],inW=u=>WS==='all'||(WS==='-'?!u.g:(u.g||'')===WS),SU
  wname=()=>WS==='all'?'كل حساباتي (مجمّع)':WS==='-'?'بدون مجموعة':((grps().find(g=>g.id===WS)||{}).name||'مجموعة');
 function setW(v){if(v==='__m'){S.tab='grp';render();return}WS=v;try{localStorage.setItem('bny_ws',v)}catch(e){}render()}
 function wsBar(){const e=gi('ws');if(!e)return;if(!AUTH){e.style.display='none';return}e.style.display='';if(WS!=='all'&&WS!=='-'&&!grps().some(g=>g.id===WS))WS='all';
- e.innerHTML=[['all','📂 كل حساباتي (مجمّع)'],...grps().map(g=>[g.id,'📂 '+g.name]),...(S.units.some(u=>!u.g)?[['-','📂 بدون مجموعة']]:[]),['__m','⚙ إدارة المجموعات']].map(([v,l])=>`<option value="${esc(v)}" ${v===WS?'selected':''}>${esc(l)}</option>`).join('')}
+ if(WS==='all'){const gs=grps().slice().sort((x,y)=>S.units.filter(u=>u.g===y.id).length-S.units.filter(u=>u.g===x.id).length);WS=gs.length?gs[0].id:'-';try{localStorage.setItem('bny_ws',WS)}catch(x){}}
+ e.innerHTML=[...grps().map(g=>[g.id,'📂 '+g.name]),...(S.units.some(u=>!u.g)?[['-','📂 بدون مجموعة']]:[]),['__m','⚙ إدارة المجموعات']].map(([v,l])=>`<option value="${esc(v)}" ${v===WS?'selected':''}>${esc(l)}</option>`).join('')}
 function setCash(v){if(WS==='all'){toast('اختر مجموعة أولاً من القائمة أعلاه، ثم اكتب رصيدها النقدي');render();return}const t=(+v||0)-mvO(0);if(WS==='-')S.cash=t;else{S.gc=S.gc||{};S.gc[WS]=t}save();render()}
 function grpTab(){let h=`<div class='card'><h2>🧮 طريقة حساب الأرقام</h2><p class='mu'>${S.pmode==='me'?'الأرباح والتوقعات محسوبة بحصتي الشخصية بس.':'الأرباح والتوقعات محسوبة للمجموعة كاملة (كل الشركاء).'}</p><button class='${S.pmode!=='me'?'p':''}' onclick="S.pmode='grp';save();render()">👥 للمجموعة كاملة</button> <button class='${S.pmode==='me'?'p':''}' onclick="S.pmode='me';save();render()">👤 حصتي بس</button></div><div class='card'><h2>📂 المجموعات (الشراكات)</h2><p class='mu'>لكل مجموعة استديوهات وحسابات ورصيد نقدي منفصل. اختر المجموعة من القائمة أعلاه، وتتغير جميع الصفحات بحسب المجموعة المختارة.</p>`;
  grps().forEach(g=>{const n=S.units.filter(u=>u.g===g.id).length;h+=`<div class='li'><span><b>${esc(g.name)}</b><br><span class='mu'>${n} استديو • حصتي ${g.share||100}% ${(g.n||0)>1?'(من '+g.n+' شركاء'+(g.custom?'، نسبة مخصصة':', بالتساوي')+')':(g.n===1?'(وحدك)':'')} • الرصيد الافتتاحي ${$((S.gc||{})[g.id]||0)}</span></span><button onclick="setW('${g.id}')">فتح</button><button onclick="mGroup('${g.id}')">✎</button><button class='x' onclick="delG('${g.id}')">🗑</button></div>`});
@@ -4571,5 +4572,63 @@ var b0=bkTab;bkTab=function(){var o=st();
  :`<p>اربط البرنامج بالـ Google Drive بتاعك مرة واحدة، وبعد كده نسخة كل يوم بتترفع لوحدها.</p><button class='p' onclick='drvSetup()'>☁️ اربط Google Drive</button>`)+`</div>`+b0()};
 })()</script>
 <script id="nosalv">(function(){var r0=render;render=function(){try{var ch=0;(S.units||[]).forEach(function(u){if(+u.salv){u.salv=0;ch=1}});if(ch){try{logEv('شيل القيمة المستردة للأثاث — الفرش بيترد من الإيجار')}catch(e){}save()}}catch(e){}return r0.apply(this,arguments)};try{if(AUTH)render()}catch(e){}})()</script>
+<script id="grpsep">(function(){
+function nz(x){return String(x||'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/[\s\-_.]+/g,' ').trim().toLowerCase()}
+function gname(g){return g?((S.groups||[]).find(function(x){return x.id===g})||{}).name||'مجموعة':'بدون مجموعة'}
+window.mPre=function(M,o){if(!M||!/استديو/.test(M.title||'')||o.name==null)return true;var id=(typeof UV!=='undefined'&&M.title==='تعديل استديو')?UV.open:null,n=nz(o.name);if(!n)return true;
+ var d=S.units.find(function(u){return u.id!==id&&nz(u.name)===n&&(u.g||'')!==(o.g||'')});
+ if(d){toast('⛔ «'+o.name+'» متسجل بالفعل في مجموعة «'+gname(d.g)+'» — الاستديو ميتكررش في مجموعتين');return false}return true};
+var r0=render;render=function(){try{if(AUTH&&WS==='all'&&!window.__wsTmp){var gs=(S.groups||[]).slice().sort(function(x,y){return S.units.filter(function(u){return u.g===y.id}).length-S.units.filter(function(u){return u.g===x.id}).length});WS=gs.length?gs[0].id:'-';try{localStorage.setItem('bny_ws',WS)}catch(x){}}}catch(e){}return r0.apply(this,arguments)};
+})()</script>
+<script id="docsjs">(function(){
+var DB=null;function db(){return DB||(DB=new Promise(function(res,rej){var r=indexedDB.open('bny_docs',1);r.onupgradeneeded=function(){r.result.createObjectStore('f')};r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error)}}))}
+function idb(m,k,v){return db().then(function(d){return new Promise(function(res,rej){var t=d.transaction('f',m==='get'?'readonly':'readwrite'),st=t.objectStore('f'),q=m==='get'?st.get(k):m==='del'?st.delete(k):st.put(v,k);q.onsuccess=function(){res(q.result)};q.onerror=function(){rej(q.error)}})})}
+function cfg(){try{var c=JSON.parse(localStorage.getItem('bny_sync'));return c&&c.repo&&c.token?c:null}catch(e){return null}}
+function gh(c,path,m,body,acc){return fetch('https://api.github.com/repos/'+c.repo+'/contents/'+path+(m==='GET'?'?t='+Date.now():''),{method:m,cache:'no-store',headers:{'Authorization':'Bearer '+c.token,'Accept':acc||'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},body:body?JSON.stringify(body):undefined})}
+function b64(blob){return new Promise(function(res){var r=new FileReader();r.onload=function(){res(String(r.result).split(',')[1])};r.readAsDataURL(blob)})}
+function shrink(file,max,q){return new Promise(function(res,rej){var u=URL.createObjectURL(file),im=new Image();im.onload=function(){var w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,max/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(function(b){res({b:b,c:c})},'image/jpeg',q)};im.onerror=function(){URL.revokeObjectURL(u);rej()};im.src=u})}
+function findDoc(id){var r=null;S.units.forEach(function(u){(u.docs||[]).forEach(function(d){if(d.id===id)r={u:u,d:d}})});return r}
+var upBusy={};
+function upload(id){var c=cfg(),f=findDoc(id);if(!c||!f||f.d.up||upBusy[id])return Promise.resolve();upBusy[id]=1;
+ return idb('get',id).then(function(b){if(!b)throw 0;return b64(b)}).then(function(x){return gh(c,'files/'+id+'.jpg','PUT',{message:'صورة عقد '+f.u.name,content:x})})
+ .then(function(r){if(r.ok||r.status===422){var g=findDoc(id);if(g){g.d.up=1;save()}}}).catch(function(){}).then(function(){delete upBusy[id]})}
+function pending(){S.units.forEach(function(u){(u.docs||[]).forEach(function(d){if(!d.up)upload(d.id)})})}
+function getBlob(id){return idb('get',id).then(function(b){if(b)return b;var c=cfg();if(!c)throw 0;return gh(c,'files/'+id+'.jpg','GET',null,'application/vnd.github.raw').then(function(r){if(!r.ok)throw 0;return r.blob()}).then(function(b){idb('put',id,b);return b})})}
+window.docAdd=function(uid,inp){var fs=[].slice.call(inp.files||[]);inp.value='';if(!fs.length)return;var u=U(uid);if(!u)return;u.docs=u.docs||[];toast('⏳ بحفظ الصورة…');
+ fs.reduce(function(p,f){return p.then(function(){return shrink(f,1800,0.78).then(function(big){return shrink(f,200,0.6).then(function(sm){var id='d'+uid+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  return idb('put',id,big.b).then(function(){u.docs.push({id:id,d:td(),th:sm.c.toDataURL('image/jpeg',0.6),sz:big.b.size,up:0});try{logEv('📄 صورة عقد الشركة — '+u.name)}catch(e){}save();render();upload(id)})})})})},Promise.resolve())
+ .then(function(){toast('✅ اتحفظت صورة العقد')},function(){toast('تعذر قراءة الصورة')})};
+window.docView=function(id){var f=findDoc(id);if(!f)return;var o=document.createElement('div');o.className='ov';o.id='docv';o.style.cssText='background:rgba(0,0,0,.92);z-index:9999';
+ o.innerHTML='<div style="position:absolute;inset:0;display:flex;flex-direction:column"><div style="display:flex;gap:8px;padding:10px;justify-content:space-between;align-items:center;color:#fff"><button class="xcl" style="position:static;background:rgba(255,255,255,.2);color:#fff" onclick="this.closest(\'.ov\').remove()">✕</button><span>'+esc(f.u.name)+' • '+esc(f.d.d)+'</span><span style="display:flex;gap:6px"><button id="dvsh" style="background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:10px;padding:8px 12px">⬇ حفظ</button><button id="dvdl" style="background:rgba(220,60,60,.3);color:#fff;border:0;border-radius:10px;padding:8px 12px">🗑</button></span></div><div style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;touch-action:pinch-zoom"><img id="dvim" src="'+f.d.th+'" style="max-width:100%;max-height:100%;object-fit:contain"></div></div>';
+ document.body.appendChild(o);
+ getBlob(id).then(function(b){var u=URL.createObjectURL(b),im=document.getElementById('dvim');if(im)im.src=u;var sh=document.getElementById('dvsh');if(sh)sh.onclick=function(){window.saveFile?saveFile(b,'عقد-'+f.u.name+'-'+f.d.d+'.jpg'):0}}).catch(function(){toast('الصورة الكاملة مش متاحة على الجهاز ده (اعمل مزامنة)')});
+ document.getElementById('dvdl').onclick=function(){confirmM('تمسح صورة العقد دي؟',function(){var g=findDoc(id);if(!g)return;g.u.docs=g.u.docs.filter(function(x){return x.id!==id});idb('del',id).catch(function(){});var c=cfg();if(c&&g.d.up){gh(c,'files/'+id+'.jpg','GET').then(function(r){return r.json()}).then(function(j){if(j&&j.sha)gh(c,'files/'+id+'.jpg','DELETE',{message:'حذف صورة عقد',sha:j.sha})}).catch(function(){})}var v=document.getElementById('docv');v&&v.remove();save();render()},'امسح')}};
+function card(u){var ds=u.docs||[],h='<div class="card" id="docc"><h2>📸 صور عقد الشركة</h2>';
+ h+=ds.length?'<div class="dgrid">'+ds.map(function(d){return '<button type="button" class="dth" onclick="docView(\''+d.id+'\')"><img src="'+d.th+'" alt=""><small>'+esc(d.d)+(d.up?'':' ⏳')+'</small></button>'}).join('')+'</div>':'<p class="mu">صوّر عقد الشركة أو ضيفه من الصور عشان يبقى معاك دايماً جوه البرنامج.</p>';
+ h+='<div class="dbt"><label class="p">📷 صوّر العقد<input type="file" accept="image/*" capture="environment" hidden onchange="docAdd(\''+u.id+'\',this)"></label><label>🖼 من الصور<input type="file" accept="image/*" multiple hidden onchange="docAdd(\''+u.id+'\',this)"></label></div>';
+ if(ds.some(function(d){return !d.up})&&!cfg())h+='<p class="mu" style="font-size:12px">الصور محفوظة على الجهاز ده بس — فعّل المزامنة عشان تتنقل لباقي الأجهزة.</p>';
+ return h+'</div>'}
+var st=document.createElement('style');st.textContent='#docc .dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;margin-bottom:10px}#docc .dth{padding:0;border-radius:12px;overflow:hidden;border:1px solid var(--bd,#dde);background:#fff;display:flex;flex-direction:column}#docc .dth img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}#docc .dth small{font-size:11px;padding:3px;color:#555}#docc .dbt{display:flex;gap:8px;flex-wrap:wrap}#docc .dbt label{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:12px;border:1.5px solid var(--bd,#cfe3de);font-weight:700;cursor:pointer;background:var(--card,#fff)}#docc .dbt label.p{background:linear-gradient(135deg,#1b6a8a,#2a9d6b)!important;color:#fff!important;border:0!important}';document.head.appendChild(st);
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.tab!=='units'||typeof UV==='undefined'||!UV.open||document.getElementById('docc'))return o;var u=U(UV.open);if(!u)return o;var app=document.getElementById('app');
+ var co=[].slice.call(app.querySelectorAll('.card')).filter(function(c){return /عقد الشركة/.test((c.querySelector('h2')||{}).textContent||'')})[0];if(co)co.insertAdjacentHTML('afterend',card(u))}catch(e){}return o};
+setTimeout(pending,15000);setInterval(pending,10*60*1000);
+})()</script>
+<script id="resumejs">(function(){
+var K='bny_nav',restored=false,lastCode='',lastT=0,dlg=null,tmr=0;
+function rd(){try{return JSON.parse(localStorage.getItem(K)||'null')}catch(e){return null}}
+function wr(){clearTimeout(tmr);tmr=setTimeout(function(){try{if(!AUTH)return;localStorage.setItem(K,JSON.stringify({t:Date.now(),tab:S.tab,open:(typeof UV!=='undefined'?UV.open:null)||null,ws:WS,y:Math.round(scrollY),dlg:dlg}))}catch(e){}},250)}
+function ovs(){return [].slice.call(document.querySelectorAll('.ov')).filter(function(o){return o.getClientRects().length>0&&!o.classList.contains('lg')&&o.id!=='bio'&&o.id!=='docv'&&!o.querySelector('input[type=password]')})}
+function vals(o){return [].slice.call(o.querySelectorAll('input,select,textarea')).map(function(e){return e.type==='checkbox'||e.type==='radio'?(e.checked?1:0):e.type==='file'?null:e.value})}
+document.addEventListener('click',function(e){var el=e.target.closest&&e.target.closest('[onclick]');if(el){lastCode=el.getAttribute('onclick')||'';lastT=Date.now()}},true);
+function track(){var o=ovs()[0];if(!o){if(dlg){dlg=null;wr()}return}if(!dlg||dlg.el!==o.id+o.className){if(lastCode&&Date.now()-lastT<2500&&!/this|\bdel|remove|confirm|logout|reset/i.test(lastCode)){dlg={code:lastCode,el:o.id+o.className,v:vals(o)};wr()}}}
+new MutationObserver(function(){track()}).observe(document.body,{childList:true,subtree:true});
+document.addEventListener('input',function(e){var o=ovs()[0];if(dlg&&o&&o.contains(e.target)){dlg.v=vals(o);wr()}},true);
+document.addEventListener('change',function(e){var o=ovs()[0];if(dlg&&o&&o.contains(e.target)){dlg.v=vals(o);wr()}},true);
+addEventListener('scroll',function(){if(restored)wr()},{passive:true});
+document.addEventListener('visibilitychange',function(){if(document.hidden)wr()});
+var r0=render;render=function(){if(AUTH&&!restored){restored=true;var n=rd();if(n&&Date.now()-n.t<14*864e5){try{if(n.ws&&n.ws!=='all'&&(n.ws==='-'||(S.groups||[]).some(function(g){return g.id===n.ws})))WS=n.ws;if(n.tab)S.tab=n.tab;if(typeof UV!=='undefined'&&n.open&&U(n.open))UV.open=n.open}catch(e){}
+  var o=r0.apply(this,arguments);setTimeout(function(){scrollTo(0,n.y||0);if(n.dlg&&n.dlg.code){try{lastCode=n.dlg.code;lastT=Date.now();(new Function(n.dlg.code))();setTimeout(function(){var ov=ovs()[0];if(!ov)return;var es=[].slice.call(ov.querySelectorAll('input,select,textarea'));(n.dlg.v||[]).forEach(function(v,i){var e=es[i];if(!e||v==null)return;if(e.type==='checkbox'||e.type==='radio')e.checked=!!v;else if(e.type!=='file')e.value=v;try{e.dispatchEvent(new Event('input',{bubbles:true}))}catch(x){}});dlg={code:n.dlg.code,el:ov.id+ov.className,v:vals(ov)};toast('↩️ رجعتك لآخر حاجة كنت بتعملها')},350)}catch(e){}}},120);return o}}
+ var o=r0.apply(this,arguments);if(AUTH)wr();return o};
+})()</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
