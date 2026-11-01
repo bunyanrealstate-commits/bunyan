@@ -3533,7 +3533,7 @@ window.mExt=function(id,k){var u=U(id),L=u.leases[k],e=endOf(L);
    L.cmo=Math.round(((+L.cmo||L.months||0)+add)*1000)/1000;try{L.end=iso(window._lnb.endOf(pd(L.start),L.cmo))}catch(x){L.end=iso(new Date(e.getFullYear(),e.getMonth()+am,e.getDate()+ad))}
    L.months=R.length;L.orig=R.length}
   else{L.months=(L.months||0)+am;L.orig=(L.orig||0)+am;L.xd=(+L.xd||0)+ad;if(L.xd>=30){L.months+=Math.floor(L.xd/30);L.orig=L.months;L.xd=L.xd%30}}
-  try{if(window.chqList&&window.chqSync)chqSync(L)}catch(x){}
+  try{if(Array.isArray(L.chq)&&L.chq.length&&L.sch){var C=L.chq,lastD=C.reduce(function(m,c){return c.d>m?c.d:m},'');L.sch.forEach(function(r,i){var c=C.filter(function(c){return c.d===r.d})[0];if(c)c.a=r.a;else if(r.d>lastD&&(L.rcv||[]).indexOf(i)<0)C.push({no:'',d:r.d,a:r.a})});C.sort(function(x,y){return x.d.localeCompare(y.d)})}}catch(x){}
   logEv('➕ تمديد عقد '+(L.tenant||'')+' — '+u.name+': '+(am?am+' شهر':'')+(am&&ad?' و ':'')+(ad?ad+' يوم':'')+' • ينتهي '+iso(endOf(L)));
   setTimeout(function(){toast('اتمدّد العقد — بقى ينتهي '+fd(endOf(L)))},60)});
  M.ok='تمديد';M.msg='العقد بيخلص '+fd(e)+'. الدفعات الجديدة هتتضاف لجدول الدفع بنفس الإيجار ويوم الدفع.';drawM()};
