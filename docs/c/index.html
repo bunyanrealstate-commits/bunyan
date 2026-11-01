@@ -3937,7 +3937,20 @@ try{if(AUTH)render()}catch(e){}
 })();
 </script>
 <style id="grpbcss">
-#grpb{display:flex;justify-content:center;position:relative;z-index:2}#app>#grpb{margin:-34px 0 -4px!important}
+
+
+.hd{position:relative}#grpb{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;margin:0!important}
+#grpb button{display:inline-flex!important;align-items:center;gap:5px;padding:5px 9px!important;border:0!important;border-radius:999px!important;cursor:pointer;color:#fff!important;font-weight:800;font-size:12px!important;letter-spacing:-.1px;max-width:min(150px,36vw);background:linear-gradient(120deg,#0d8a74,#14b8a6 45%,#6d5dfc)!important;background-size:200% 100%!important;animation:gbShift 6s ease-in-out infinite;box-shadow:0 4px 12px rgba(20,184,166,.35),inset 0 1px 0 rgba(255,255,255,.25)!important;min-height:0!important;line-height:1.3}
+#grpb button i{width:7px;height:7px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 2px rgba(255,255,255,.85)}
+#grpb button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#grpb button em{font-style:normal;font-size:10px;opacity:.85}
+#grpd{position:fixed;z-index:100000;background:linear-gradient(165deg,#0f2233,#14384a 60%,#1b5a55);border-radius:18px;padding:10px;box-shadow:0 18px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:6px;animation:gdIn .16s ease-out}
+@keyframes gdIn{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:none}}
+#grpd .gdh{color:#bfe9e0;font-size:12px;font-weight:700;padding:2px 6px 4px}
+#grpd .gdi{display:flex;align-items:center;gap:10px;width:100%;text-align:start;padding:11px 12px;border-radius:13px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.06);color:#fff;font-weight:700;font-size:14.5px;cursor:pointer}
+#grpd .gdi i{width:11px;height:11px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c);flex:0 0 auto}
+#grpd .gdi span{flex:1}#grpd .gdi small{font-size:11.5px;opacity:.7;font-weight:600}#grpd .gdi b{color:#bfffe9}
+#grpd .gdi.on{background:linear-gradient(120deg,var(--c),#6d5dfc);border-color:transparent;box-shadow:0 6px 16px rgba(0,0,0,.25)}#grpd .gdi.on small{opacity:.9}
+#grpd .gdm{margin-top:4px;padding:10px;border-radius:12px;border:1px dashed rgba(255,255,255,.3);background:transparent;color:#d6efe9;font-weight:700;font-size:13px;cursor:pointer}
 #grpb button{position:relative;display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 12px;border:0;border-radius:999px;cursor:pointer;color:#fff;font-weight:800;font-size:13px;letter-spacing:.2px;background:linear-gradient(120deg,#0d8a74,#14b8a6 45%,#6d5dfc);background-size:200% 100%;animation:gbShift 6s ease-in-out infinite;box-shadow:0 6px 18px rgba(20,184,166,.35),inset 0 1px 0 rgba(255,255,255,.25);max-width:100%}
 #grpb button i{width:8px;height:8px;border-radius:50%;background:#bfffe9;box-shadow:0 0 0 0 rgba(191,255,233,.8);animation:gbDot 1.8s infinite;flex:0 0 auto}
 #grpb button small{font-weight:700;opacity:.85;font-size:11.5px}
@@ -3947,10 +3960,21 @@ body.pv #grpb button small{display:none}
 </style>
 <script id="grpbjs">
 (function(){if(window.HBUILD)return;
-function info(){if(WS==='all')return ['كل المجموعات','🌐',''];if(WS==='-'||!WS)return ['بدون مجموعة','👤',''];var g=(S.groups||[]).filter(function(x){return x.id===WS})[0];if(!g)return ['مجموعة','👥',''];var n=g.n||2;return [g.name,'👥',n+' شركاء • '+(Math.round(10000/n)/100)+'%']}
-window.grpbOpen=function(){try{var hb=document.getElementById('hmb'),hd=document.querySelector('.hd');if(hb&&getComputedStyle(hb).display!=='none'){if(!hd.classList.contains('mopen'))hb.click();setTimeout(function(){var w=document.getElementById('wsmi');w&&w.click()},120);return}var ws=document.getElementById('ws');if(ws){ws.focus();ws.click&&ws.click()}}catch(e){}};
-var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH)return o;var app=document.getElementById('app');if(!app||document.getElementById('grpb'))return o;var x=info(),d=document.createElement('div');d.id='grpb';d.innerHTML='<button type="button" title="تغيير المجموعة" onclick="grpbOpen()"><i></i><span>'+x[1]+' '+esc(x[0])+'</span>'+(x[2]?'<small>'+x[2]+'</small>':'')+'</button>';
- app.insertBefore(d,app.firstChild)}catch(e){}return o};
+var COL=['#14b8a6','#6d5dfc','#f59e0b','#ec4899','#22c55e','#0ea5e9','#ef4444'];
+function gl(){return S.groups||[]}
+function info(){if(WS==='-'||!WS)return 'بدون مجموعة';var g=gl().filter(function(x){return x.id===WS})[0];return g?g.name:'مجموعة'}
+function close(){var d=document.getElementById('grpd');if(d)d.remove();document.removeEventListener('click',out,true)}
+function out(e){var d=document.getElementById('grpd'),b=document.getElementById('grpb');if(d&&!d.contains(e.target)&&!(b&&b.contains(e.target)))close()}
+window.grpbOpen=function(){if(document.getElementById('grpd')){close();return}var b=document.getElementById('grpb');if(!b)return;var r=b.getBoundingClientRect(),d=document.createElement('div');d.id='grpd';
+ var h='<div class="gdh">📂 اختار المجموعة</div>';gl().forEach(function(g,i){var c=COL[i%COL.length],n=S.units.filter(function(u){return u.g===g.id}).length;h+='<button type="button" class="gdi'+(g.id===WS?' on':'')+'" data-g="'+esc(g.id)+'" style="--c:'+c+'"><i></i><span>'+esc(g.name)+'</span><small>'+n+' استديو</small>'+(g.id===WS?'<b>✓</b>':'')+'</button>'});
+ if(S.units.some(function(u){return !u.g}))h+='<button type="button" class="gdi'+(WS==='-'?' on':'')+'" data-g="-" style="--c:#94a3b8"><i></i><span>بدون مجموعة</span></button>';
+ h+='<button type="button" class="gdm" data-g="__m">⚙️ إدارة المجموعات</button>';d.innerHTML=h;document.body.appendChild(d);
+ var w=Math.min(300,innerWidth-24);d.style.width=w+'px';d.style.top=(r.bottom+8)+'px';d.style.left=Math.max(12,Math.min(innerWidth-w-12,r.left+r.width/2-w/2))+'px';
+ d.onclick=function(e){var x=e.target.closest('[data-g]');if(!x)return;close();setW(x.getAttribute('data-g'))};setTimeout(function(){document.addEventListener('click',out,true)},0)};
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH)return o;var hd=document.querySelector('.hd');if(!hd)return o;var d=document.getElementById('grpb');if(!d){d=document.createElement('div');d.id='grpb';hd.appendChild(d)}
+ var t=info(),c=COL[Math.max(0,gl().findIndex(function(x){return x.id===WS}))%COL.length];if(d.getAttribute('data-t')!==t){d.setAttribute('data-t',t);d.innerHTML='<button type="button" title="تغيير المجموعة" onclick="grpbOpen()"><i style="background:'+c+'"></i><span>'+esc(t)+'</span></button>'}fit()}catch(e){}return o};
+function fit(){try{var hd=document.querySelector('.hd'),d=document.getElementById('grpb');if(!hd||!d)return;var H=hd.getBoundingClientRect(),L=H.left+8,Rr=H.right-8;[].slice.call(hd.children).forEach(function(c){if(c===d||c.id==='hmp'||getComputedStyle(c).position==='absolute'||getComputedStyle(c).position==='fixed')return;var r=c.getBoundingClientRect();if(!r.width)return;var mid=(r.left+r.right)/2;if(mid<H.left+H.width/2)L=Math.max(L,r.right+6);else Rr=Math.min(Rr,r.left-6)});var w=Math.max(60,Rr-L);d.style.left=(L-H.left+w/2)+'px';d.querySelector('button').style.maxWidth=w+'px'}catch(e){}}
+addEventListener('resize',fit);
 try{if(AUTH)render()}catch(e){}
 })();
 </script>
