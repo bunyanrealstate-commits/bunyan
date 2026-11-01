@@ -607,7 +607,7 @@ function units(){const t=today();
 const dd=d=>Math.round((pd(d)-today())/864e5),whenTxt=n=>n===0?'اليوم':n===1?'غداً':n===2?'بعد يومين':n===7?'بعد أسبوع':n===14?'بعد أسبوعين':n===21?'بعد 3 أسابيع':n===30?'بعد شهر':'بعد '+n+' يوم';
 function items(){const t=today(),r=[],P=(ty,id,d,label,amt,offs)=>r.push({ty,id,d,label,amt,offs});
  SU().forEach(u=>{u.inst.forEach((i,k)=>{if(!i.p)P('inst',u.id+'i'+k,i.d,'دفعة '+(u.company||'الشركة')+' - '+u.name,i.a,[30,21,14,7,2,0])});
-  u.leases.forEach((L,k)=>{for(let i=0;i<L.months;i++)if(!L.rcv.includes(i))P('rent',u.id+'l'+k+'_'+i,iso(payD(L,i)),'إيجار '+(L.tenant||'مستأجر')+' - '+u.name,la(L,i),[1,0]);P('end',u.id+'e'+k,iso(lend(L)),'انتهاء عقد '+(L.tenant||'المستأجر')+' - '+u.name,0,[30,7,0])});
+  u.leases.forEach((L,k)=>{for(let i=0;i<L.months;i++)if(!L.rcv.includes(i))P('rent',u.id+'l'+k+'_'+i,iso(payD(L,i)),'إيجار '+(L.tenant||'مستأجر')+' - '+u.name,la(L,i),[1,0]);P('end',u.id+'e'+k,iso(lend(L)),'انتهاء عقد '+(L.tenant||'المستأجر')+' - '+u.name,0,(function(){var dl=(lend(L)-pd(L.start))/864e5;return dl<45?[3,1,0]:dl<100?[10,3,0]:[30,7,0]})())});
   P('cend',u.id+'c',iso(addM(pd(u.start),u.cm)),'انتهاء عقد الشركة - '+u.name,0,[0])});
  S.debts.forEach((x,k)=>P('debt','d'+k,x.d,'دفعة مستحقة عليّ: '+x.w,x.a,[0]));S.recv.forEach((x,k)=>P('recv','r'+k,x.d,'مستحقات لي: '+x.w,x.a,[0]));
  SE().forEach((x,k)=>{for(let i=0;i<(x.n||1);i++){const d=iso(addM(pd(x.d),i));if(pd(d)>=t)P('exp','x'+k+'_'+i,d,'مصروف: '+x.w,x.a,[0])}});return r}
@@ -1960,7 +1960,7 @@ function depUI(){var d=g('ln_dx');if(!d)return;d.style.display=LN.f.dk?'':'none'
 function draw(){var f=LN.f,edit=LN.k!=null,h='<div class="dlg ln"><h2>📄 '+(edit?'تعديل عقد المستأجر':'عقد مستأجر جديد')+'</h2>';
  h+='<div class="gr">'+field('اسم المستأجر','ln_t','text',f.tenant,"lnF('tenant',this.value)")+field('واتساب المستأجر (مع كود الدولة)','ln_p','tel',f.phone,"lnF('phone',this.value)",'dir="ltr" placeholder="9715xxxxxxxx"')+'</div>';
  h+='<h3>مدة العقد والإيجار</h3><div class="gr">'+field('بداية العقد','ln_s','date',f.start,"lnF('start',this.value)",LN.locked?'disabled':'')
-  +field('مدة العقد (بالشهور)','ln_c','number',f.cmo,"lnF('cmo',this.value)",'step="0.5" min="0.5" inputmode="decimal"')
+  +field('مدة العقد (بالشهور)','ln_c','number',f.cmo,"lnF('cmo',this.value);try{localStorage.setItem('bny_last_cmo',this.value)}catch(e){}",'step="0.5" min="0.5" inputmode="decimal"')+'<div class="cmoq" style="grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 4px">'+[[1,'شهر'],[2,'شهرين'],[3,'3 شهور'],[6,'6 شهور'],[12,'سنة']].map(function(x){return '<button type="button" style="padding:4px 10px;border-radius:999px;font-size:12.5px" onclick="var c=document.getElementById(\'ln_c\');c.value='+x[0]+';c.dispatchEvent(new Event(\'input\',{bubbles:true}))">'+x[1]+'</button>'}).join('')+'</div>'
   +field('الإيجار الشهري','ln_r','number',f.rent,"lnF('rent',this.value)",'step="any" inputmode="decimal"')
   +field('يوم الدفع كل شهر (فارغ = نفس يوم البداية)','ln_d','number',f.day,"lnF('day',this.value)",'min="1" max="31" inputmode="numeric" placeholder="مثال: 15"')
   +field('الدفعة الأولى تغطي كم شهراً؟','ln_m','number',f.m0,"lnF('m0',this.value)",'step="0.25" min="0.25" inputmode="decimal"')+'</div>';
@@ -1995,7 +1995,7 @@ window.lnAdd=function(){var R=LN.rows,l=R[R.length-1],d=l?pd(l.d):pd(LN.f.start|
 window.lnRebuild=function(){LN.man=false;rebuild()};
 window.mLeaseN=function(id,k){var u=U(id);if(!u)return;var L=k==null?null:u.leases[k];
  if(L&&L.exit){toast(L2('العقد موقوف — استأنفه من بطاقة العقد أولاً ثم عدّل الجدول','The contract is stopped — resume it first, then edit the schedule'));return}
- M=null;var edit=!!L,dp=edit&&window.depOf?depOf(L):null,s0=edit?L.start:td(),cmo=edit?(+L.cmo||Math.max(1,Math.round(lm(L)*100)/100)):6,rent=edit?(L.rent||''):'';
+ M=null;var edit=!!L,dp=edit&&window.depOf?depOf(L):null,s0=edit?L.start:td(),cmo=edit?(+L.cmo||Math.max(1,Math.round(lm(L)*100)/100)):(function(){try{return +localStorage.getItem('bny_last_cmo')||6}catch(e){return 6}})(),rent=edit?(L.rent||''):'';
  LN={uid:id,k:k,man:edit,m0Auto:!edit,firstPaid:!edit,canBuild:true,locked:false,rows:[],
   f:{tenant:edit?(L.tenant||''):'',phone:edit?(L.phone||''):'',start:s0,cmo:cmo,rent:rent,day:edit?(L.day||''):'',m0:1,fee:edit&&L.fee?L.adv:0,pm0:edit?(L.pm0||'cash'):'cash',chqOn:!edit,cno:edit?(L.cno||''):'',dk:dp?(dp.mode||'cash'):'',da:dp?dp.a:'',dno:dp?(dp.no||''):''}};
  var f=LN.f;
@@ -3576,7 +3576,7 @@ function autoRep(){try{if(!AUTH||!S.units||!S.units.length||window.HBUILD)return
 
 /* ========== تنبيه التجديد ========== */
 function snz(key){try{var v=+localStorage.getItem('bny_rn_'+key)||0;return v>Date.now()}catch(e){return false}}
-function renewList(){var r=[],t=today();SU().forEach(function(u){u.leases.forEach(function(L,k){if(L.exit||L.rn)return;var e=endOf(L),n=Math.round((e-t)/864e5);if(n<-3||n>45)return;
+function renewList(){var r=[],t=today();SU().forEach(function(u){u.leases.forEach(function(L,k){if(L.exit||L.rn)return;var e=endOf(L),n=Math.round((e-t)/864e5);var span=(e-pd(L.start))/864e5,win=Math.max(5,Math.min(45,Math.round(span*0.25)));if(n<-3||n>win)return;
   if(u.leases.some(function(M){return M!==L&&pd(M.start)>=addM(e,-1)&&!M.exit}))return;if(snz(u.id+'_'+k))return;r.push({u:u,L:L,k:k,n:n,e:e})})});return r.sort(function(a,b){return a.n-b.n})}
 function renewCard(){var R=renewList();if(!R.length)return '';
  return "<div class='card fx-card' id='rnc'><h2>🔄 عقود قربت تخلص — هتجدد؟</h2>"+R.map(function(x){return "<div class='fx-r' style='flex-wrap:wrap'><span style='flex:1 1 180px'><b>"+E(x.L.tenant||'مستأجر')+"</b> — "+E(x.u.name)+"<small>"+(x.n>0?"بيخلص بعد "+x.n+" يوم":(x.n===0?"بيخلص النهارده":"خلص من "+(-x.n)+" يوم"))+" • "+fd(x.e)+"</small></span><span class='fx-btns' style='margin:0'><button class='p' onclick=\"rnRenew('"+x.u.id+"',"+x.k+")\">🔄 تجديد</button><button onclick=\"rnOffer('"+x.u.id+"',"+x.k+")\">📢 أعرض الاستديو</button><button onclick=\"rnLater('"+x.u.id+"',"+x.k+")\">بعدين</button></span></div>"}).join('')+"</div>"}
@@ -3794,7 +3794,7 @@ function aExp(){var E0=SE();if(!E0.length)return 'مفيش مصاريف متسج
 function aDraw(){var b={};(S.adj||[]).forEach(function(a){if(!a.k)return;if(!(WS==='all'||(a.g||'')===((WS==='-')?'':WS)))return;var k=a.p;b[k]=b[k]||{d:0,r:0};a.k==='draw'?b[k].d+=-a.a:b[k].r+=a.a});var ks=Object.keys(b);if(!ks.length)return 'مفيش سحب متسجل. السحب بيتعمل من الحسابات ← كارت النقدي.';
  var h='**🙋 السحب والرجوع:**\n';ks.forEach(function(k){var x=b[k],l=x.d-x.r,nm=k==='__me'?'إنت':k;h+='• '+nm+': سحب '+F(x.d)+(x.r?'، رجّع '+F(x.r):'')+' → '+(l>0.004?'عليه '+F(l):l<-0.004?'رجّع زيادة '+F(-l):'خالص ✅')+'\n'});return h+'\n(السحب بيقلل النقدي بس، ومش بيقلل الربح.)'}
 function aEnds(){var t=today(),r=allLeases().filter(function(x){return !x.L.exit&&leaseEnd(x.L)>=addM(t,-1)}).sort(function(a,b){return leaseEnd(a.L)-leaseEnd(b.L)});if(!r.length)return 'مفيش عقود مستأجرين سارية.';var h='**📄 نهاية عقود المستأجرين:**\n';r.forEach(function(x){var e=leaseEnd(x.L);h+='• '+(x.L.tenant||'')+' — '+x.u.name+': بيخلص '+fd(e)+' ('+when(days(e))+'، فاضل '+rem(e)+')\n'});
- h+='\n**🏢 نهاية عقود الشركات:**\n';SU().forEach(function(u){var e=addM(pd(u.start),u.cm||12);h+='• '+u.name+': '+fd(e)+' ('+when(days(e))+'، فاضل '+rem(e)+')\n'});return h+'\nقبل نهاية عقد المستأجر بـ 45 يوم بيظهرلك في الداشبورد: تجدد ولا تعرض الاستديو. وتقدر تمدّ العقد من زرار ➕ تمديد.'}
+ h+='\n**🏢 نهاية عقود الشركات:**\n';SU().forEach(function(u){var e=addM(pd(u.start),u.cm||12);h+='• '+u.name+': '+fd(e)+' ('+when(days(e))+'، فاضل '+rem(e)+')\n'});return h+'\nقبل نهاية عقد المستأجر بيظهرلك في الداشبورد: تجدد ولا تعرض الاستديو (العقد الشهر قبلها بأسبوع تقريباً، والسنة قبلها بـ 45 يوم). وتقدر تمدّ العقد من زرار ➕ تمديد.'}
 function rem(e){var n=days(e);if(n<=0)return 'خلص';var t=today(),m=0;while(addM(t,m+1)<=e)m++;var dd2=Math.round((e-addM(t,m))/864e5);return (m?m+' شهر':'')+(m&&dd2?' و':'')+(dd2?dd2+' يوم':'')}
 function aOcc(){var t=today(),a=0,o=0,h='**🏠 الإشغال دلوقتي:**\n';SU().forEach(function(u){var L=u.leases.filter(function(L){return pd(L.start)<=t&&t<leaseEnd(L)})[0];a++;if(L)o++;h+='• '+u.name+': '+(L?'🟢 مؤجر لـ '+(L.tenant||''):'⚪ شاغر')+'\n'});return h+'= '+o+' من '+a+' مؤجر'+(a?' ('+Math.round(o/a*100)+'%)':'')}
 function aWhatIf(q){var nums=(q.match(/\d+(\.\d+)?/g)||[]).map(Number),rent=nums.filter(function(n){return n>=300})[0];if(!rent)return null;var mo=(q.match(/(\d+)\s*(شهر|شهور)/)||[])[1];mo=mo?+mo:null;
@@ -3939,7 +3939,7 @@ var MAP=[
  ['عقد العميل|طباعه العقد','تبويب «عقد العميل».'],
  ['الوضع الليلي|الدارك','☰ ← الوضع الليلي / النهاري.'],
  ['المساعد|الروبوت','الزرار الأخضر 🤖 تحت على الشمال.'],
- ['تجديد','الداشبورد ← كارت «🔄 عقود قربت تخلص» (بيظهر قبل النهاية بـ 45 يوم).'],
+ ['تجديد','الداشبورد ← كارت «🔄 عقود قربت تخلص» (بيظهر قبل النهاية — حسب مدة العقد).'],
  ['الخريطه|الماب|لوكيشن|الموقع|العنوان','الاستديوهات ← «🗺 الخريطة» لكل الاستديوهات. ولتحديد موقع استديو: افتحه ← كارت «📍 الموقع» ← حدد الموقع.']];
 function aWhere(q){var z=nz(q),best=null,bl=0;MAP.forEach(function(m){m[0].split('|').forEach(function(k){if(z.indexOf(k)>=0&&k.length>bl){bl=k.length;best=m}})});if(!best){var T=toks(q);MAP.forEach(function(m){m[0].split('|').forEach(function(k){if(k.length>=4&&hasW(T,k)&&k.length>bl){bl=k.length;best=m}})})}
  return best?'📍 **'+best[0].split('|')[0]+'**: '+best[1]:null}
