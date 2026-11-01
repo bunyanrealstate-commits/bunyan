@@ -1710,16 +1710,19 @@ body.pv #pvb{background:rgba(229,72,77,.12);border-color:#e5484d}
 <script>
 (function(){var KEY='bny_pv',on=false,busy=false,raf=0;
 try{on=localStorage.getItem(KEY)==='1'}catch(e){}
-var NUM=/^[\s\-+−−,.\d%٠-٩٫٬\/]+$/,DATE=/\d{4}-\d{2}-\d{2}|\d{1,2}:\d{2}/,TOK=/[+\-−]?(?:\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d{4,}(?:\.\d+)?|\d+(?:\.\d+)?%)/g;
+var NUM=/^[\s\-+−−,.\d%٠-٩٫٬\/]+$/,DATE=/\d{4}-\d{2}-\d{2}|\d{1,2}:\d{2}/,TOK=/[+\-−]?\d+(?:[.,]\d+)*%?/g,NMR=null,NMK='';
+function nmRe(){var a=[];try{(S.units||[]).forEach(function(u){var n=(u.name||'').trim();if(n.length>1&&a.indexOf(n)<0)a.push(n)})}catch(e){}a.sort(function(x,y){return y.length-x.length});var k=a.join('|');if(k!==NMK){NMK=k;NMR=a.length?new RegExp(a.map(function(x){return x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}).join('|'),'g'):null}return NMR}
+function names(root){var R=nmRe();if(!R)return;var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),list=[],n;while(n=w.nextNode())list.push(n);
+ list.forEach(function(n){if(skip(n))return;var s=n.nodeValue;R.lastIndex=0;if(!R.test(s))return;R.lastIndex=0;var f=document.createDocumentFragment(),last=0,m;while(m=R.exec(s)){f.appendChild(document.createTextNode(s.slice(last,m.index)));var sp=document.createElement('span');sp.className='bq';sp.textContent=m[0];f.appendChild(sp);last=m.index+m[0].length}if(last){f.appendChild(document.createTextNode(s.slice(last)));n.parentNode.replaceChild(f,n)}})}
 function skip(n){var e=n.parentElement;return !e||e.closest('.bq,script,style,textarea,#pvb,#syq,#clk,#bio,.nav')}
-function scan(root){if(!on||!root)return;busy=true;try{var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),list=[],n;while(n=w.nextNode())list.push(n);
+function scan(root){if(!on||!root)return;busy=true;try{names(root)}catch(e){}try{var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),list=[],n;while(n=w.nextNode())list.push(n);
  list.forEach(function(n){if(skip(n))return;var s=n.nodeValue;if(!/\d/.test(s))return;var p=n.parentElement;
   if(NUM.test(s)&&!DATE.test(s)&&p.childNodes.length===1){p.classList.add('bq');return}
   if(DATE.test(s)&&NUM.test(s))return;
   if(!TOK.test(s)){TOK.lastIndex=0;return}TOK.lastIndex=0;
   var f=document.createDocumentFragment(),last=0,m;while(m=TOK.exec(s)){var idx=m.index;if(DATE.test(s.slice(Math.max(0,idx-5),idx+m[0].length+6)))continue;f.appendChild(document.createTextNode(s.slice(last,idx)));var sp=document.createElement('span');sp.className='bq';sp.textContent=m[0];f.appendChild(sp);last=idx+m[0].length}
   TOK.lastIndex=0;if(last){f.appendChild(document.createTextNode(s.slice(last)));p.replaceChild(f,n)}})}catch(e){}busy=false}
-function all(){['app','ntb','modal','login'].forEach(function(id){scan(document.getElementById(id))})}
+function all(){['app','ntb','modal','login'].forEach(function(id){scan(document.getElementById(id))});[].forEach.call(document.querySelectorAll('body>.ov'),scan)}
 function sched(){if(!on||busy||raf)return;raf=requestAnimationFrame(function(){raf=0;all()})}
 new MutationObserver(function(){sched()}).observe(document.body,{childList:true,subtree:true,characterData:true});
 function paint(){document.body.classList.toggle('pv',on);var b=document.getElementById('pvb');if(b){b.textContent=on?'🙈':'👁';b.title=on?'وضع الخصوصية مفعّل — اضغط لإظهار الأرقام':'إخفاء الأرقام والحسابات الخاصة'}}
