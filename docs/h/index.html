@@ -531,24 +531,24 @@ function fpos(){const t=today(),r={cash:cashNow(),rcv:0,accU:0,preCo:0,preI:0,fu
  SU().forEach(u=>{const f=sh(u),b=pd(u.start),e=addM(b,u.cm),fe=Math.max(0,Math.min(1,(t-b)/((e-b)||1))),C=(u.total||isumOf(u))*fe;let P=0,D=0,AM=0;
   u.inst.forEach(i=>{const a=+i.a||0;if(i.p)P+=a;else if(pd(i.d)<=t)D+=a;else r.fut+=a*f});
   const x=P+D-C;r.due+=D*f;if(x>=0)r.preCo+=x*f;else r.accCo-=x*f;
-  if(+u.furn){r.fur+=(+u.furn)*(1-fe)*f;if(!u.fp)r.furPay+=u.furn*f}
+  if(+u.furn){r.fur+=Math.max(0,(+u.furn)-(+u.furn)/(u.cm||1)*furMo(u))*f;if(!u.fp)r.furPay+=u.furn*f}
   u.leases.forEach(L=>{let E=0,R=0,B=0,Ip=0,Ia=0,m=0;const rv=i=>(L.rav&&L.rav[i]!=null)?L.rav[i]:la(L,i);
    for(let i=0;i<L.months;i++){const d0=payD(L,i);if(d0>t)continue;const d1=i<L.months-1?payD(L,i+1):lend(L),fr=Math.max(0,Math.min(1,(t-d0)/Math.max(1,d1-d0)));
     E+=(rv(i)+(L.advp===i?(L.advA||0):0)+ppA(L,i))*fr;if(!L.rcv.includes(i))B+=la(L,i);Ip+=(L.icost||0)*lf(L,i);Ia+=(L.icost||0)*lf(L,i)*fr;m+=lf(L,i)*fr}
    if(pd(L.start)<=t){E+=(L.advA===undefined&&L.stubA===undefined)?(L.adv||0):(L.stubA||0);if(L.rme&&L.router)Ip+=+L.router||0}
    Ia+=m*(L.rme?(L.router||0)/(lm(L)||1):0);
    let AR=0;L.rcv.forEach(i=>{R+=rv(i);if(i<L.months){const d0=payD(L,i),d1=i<L.months-1?payD(L,i+1):lend(L);if(d1>t){const s0=d0>t?d0:t,ff=Math.max(0,Math.min(1,(d1-s0)/Math.max(1,d1-d0)));AR+=rv(i)*ff;AM+=(d1-s0)/(864e5*30.4375)}}});R+=(L.adv||0)+ppT(L);if(L.penp&&L.pen){R+=L.pen;if(L.exit&&pd(L.exit)<=t)E+=L.pen}
-   const y=R+B-E;r.rcv+=B*f;if(y>=0)r.unr+=Math.max(0,y-AR)*f;else r.accU-=y*f;r.preI+=(Ip-Ia)*f});if(AM>0){const cm=u.cm||1;r.preCo-=(u.total||isumOf(u))/cm*AM*f;if(+u.furn)r.fur-=(+u.furn)/cm*AM*f}});if(r.preCo<0){r.accCo-=r.preCo;r.preCo=0}
+   const y=R+B-E;r.rcv+=B*f;if(y>=0)r.unr+=Math.max(0,y-AR)*f;else r.accU-=y*f;r.preI+=(Ip-Ia)*f});if(AM>0){const cm=u.cm||1;r.preCo-=(u.total||isumOf(u))/cm*AM*f;}});if(r.preCo<0){r.accCo-=r.preCo;r.preCo=0}
  if(WS==='all'||WS==='-')(S.dep||[]).forEach(x=>{if(x.r||x.mode==='chq')return;if(x.k==='t')r.depH+=+x.a||0;else r.depP+=+x.a||0});
  r.ptn=0;r.gpm=0;try{if(S.pmode==='me')r.ptn=mvO(0)-mvO(0,1);(S.groups||[]).forEach(g=>{if(WS==='all'||WS===g.id)r.gpm+=window.gpMine?gpMine(g):0})}catch(e){}
  r.A=r.cash+r.rcv+r.accU+r.preCo+r.preI+r.fur+r.depP+r.gpm;r.L=r.due+r.accCo+r.unr+r.furPay+r.depH+r.ptn;r.eq=r.A-r.L;return r}
 function fpTbl(){const F=fpos(),row=(l,v,c)=>`<tr><td>${l}</td><td class='${c==null?'':cls(c)}'>${$(v)}</td></tr>`,rw=(l,v)=>Math.abs(v)>=0.5?row(l,v):'';
- return tbl(['البند','المبلغ'],row('الرصيد النقدي',F.cash)+rw('مستحقاتي لدى المستأجرين (إيجارات حل موعدها ولم تُحصَّل)',F.rcv)+rw('إيجار عن أيام مضت لم يحل موعد دفعه',F.accU)+rw('إيجار شركة مدفوع مقدماً (لأيام لم تأتِ بعد)',F.preCo)+rw('إنترنت وراوتر مدفوع مقدماً',F.preI)+rw('رأس مال الفرش اللي لسه ما اتردش (بيترد كل شهر من عقد الشركة)',F.fur)+rw('تأمينات دفعتها للشركات',F.depP)+rw('حصتي من فلوس الشراكة المتبقية',F.gpm)+row('<b>إجمالي ما أملكه</b>',F.A)
+ return tbl(['البند','المبلغ'],row('الرصيد النقدي',F.cash)+rw('مستحقاتي لدى المستأجرين (إيجارات حل موعدها ولم تُحصَّل)',F.rcv)+rw('إيجار عن أيام مضت لم يحل موعد دفعه',F.accU)+rw('إيجار شركة مدفوع مقدماً (لأيام لم تأتِ بعد)',F.preCo)+rw('إنترنت وراوتر مدفوع مقدماً',F.preI)+rw('رأس مال الفرش اللي لسه ما اتردش (بيترد مع كل شهر إيجار بتقبضه)',F.fur)+rw('تأمينات دفعتها للشركات',F.depP)+rw('حصتي من فلوس الشراكة المتبقية',F.gpm)+row('<b>إجمالي ما أملكه</b>',F.A)
   +rw('يجب أن أدفعه الآن (دفعات شركة تجاوزت موعدها)',-F.due)+rw('إيجار شركة مستحق عن أيام مضت (لم يحل موعد دفعه)',-F.accCo)+rw('إيجارات مقبوضة أو مستحقة عن أيام لم تأتِ بعد (التزام حتى تنقضي)',-F.unr)+rw('أثاث لم يُدفع ثمنه بعد',-F.furPay)+rw('تأمينات المستأجرين عندي (تُرد لهم)',-F.depH)+rw('حصة الشركاء من النقدي اللي معايا',-F.ptn)+row('<b>صافي رصيدي</b>',F.eq,F.eq))
   +`<p class='mu'>دفعات شركة مستحقة عليّ (لم يحل موعدها بعد): ${$(F.fut)}</p><p class='mu'>صافي رصيدي يتغير بنفس مقدار ربحي المحاسبي، مضافاً إليه أي أموال أضيفها أو أسحبها.</p>`}
 function stm(){const t=today(),lg=ledger(),sm=c=>lg.filter(x=>x.c===c).reduce((s,x)=>s+x.a,0),rn=sm('rn'),pn=sm('pn'),co=-sm('co'),fu=-sm('fu'),is=-sm('is'),ex=-sm('ex'),R=rn+pn,E=co+fu+is+ex,AC=accr(),adv=SU().reduce((s,u)=>s+u.leases.reduce((x,L)=>x+L.rcv.filter(i=>payD(L,i)>t).reduce((y,i)=>y+((L.rav||{})[i]??la(L,i)),0),0)*sh(u),0),
  rcvbl=SU().reduce((s,u)=>s+u.leases.reduce((x,L)=>{let m=0;for(let i=0;i<L.months;i++)if(!L.rcv.includes(i)&&payD(L,i)<=t)m+=la(L,i);return x+m*sh(u)},0),0)+S.recv.reduce((s,x)=>s+x.a,0),
- furA=SU().reduce((s,u)=>{if(!u.fp||!u.furn)return s;const b=pd(u.start),e=addM(b,u.cm),r=Math.max(0,Math.min(1,(e-t)/((e-b)||1)));return s+u.furn*r*sh(u)},0),
+ furA=SU().reduce((s,u)=>{if(!u.fp||!u.furn)return s;return s+Math.max(0,u.furn-u.furn/(u.cm||1)*furMo(u))*sh(u)},0),
  due=SU().reduce((s,u)=>s+u.inst.filter(i=>!i.p&&pd(i.d)<=t).reduce((x,i)=>x+i.a,0)*sh(u),0)+S.debts.reduce((s,x)=>s+x.a,0),
  fut=SU().reduce((s,u)=>s+u.inst.filter(i=>!i.p&&pd(i.d)>t).reduce((x,i)=>x+i.a,0)*sh(u),0),
  cash=cashNow(),A=cash+rcvbl+furA,eq=A-due-adv,row=(l,v,c)=>`<tr><td>${l}</td><td class='${c==null?'':cls(c)}'>${$(v)}</td></tr>`;
