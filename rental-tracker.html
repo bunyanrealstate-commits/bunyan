@@ -3525,18 +3525,19 @@ window.tnDoc=function(inp,id,k,kind){var f=inp.files&&inp.files[0];if(!f)return;
 
 
 window.mExt=function(id,k){var u=U(id),L=u.leases[k],e=endOf(L);
- openM('➕ تمديد عقد '+(L.tenant||'المستأجر'),[{k:'m',l:'شهور إضافية',t:'n',v:0},{k:'d',l:'أيام إضافية',t:'n',v:0}],function(o){var am=Math.max(0,Math.floor(+o.m||0)),ad=Math.max(0,Math.floor(+o.d||0));if(!am&&!ad){setTimeout(function(){toast('اكتب عدد الشهور أو الأيام')},30);return}
-  var add=am+ad/30,rent=+L.rent||0;
+ openM('➕ تمديد عقد '+(L.tenant||'المستأجر'),[{k:'m',l:'شهور إضافية',t:'n',v:0},{k:'d',l:'أيام إضافية',t:'n',v:0},{k:'r',l:'الإيجار الشهري في مدة التمديد (غيّره لو اتفقتوا على سعر جديد)',t:'n',v:L.rent||0}],function(o){var am=Math.max(0,Math.floor(+o.m||0)),ad=Math.max(0,Math.floor(+o.d||0));if(!am&&!ad){setTimeout(function(){toast('اكتب عدد الشهور أو الأيام')},30);return}
+  var add=am+ad/30,old=+L.rent||0,rent=(+o.r>0?+o.r:old);
   if(L.sch&&L.sch.length&&rent>0){var X=Math.round(rent*add),R=L.sch,last=R.length-1,p=(+L.day>=1&&+L.day<=31)?Math.round(+L.day):pd(L.start).getDate();
-   if((L.rcv||[]).indexOf(last)<0&&R[last].a<rent&&last>0){var t=Math.min(rent-R[last].a,X);R[last].a=Math.round(R[last].a+t);X-=t}
+   if((L.rcv||[]).indexOf(last)<0&&old>0&&R[last].a<old&&last>0){var fr=(old-R[last].a)/old,t=Math.min(fr*rent,X);R[last].a=Math.round(R[last].a+t);X-=t}
    var d=pd(R[last].d),n=0;while(X>0.5&&n<120){var nx=new Date(d.getFullYear(),d.getMonth()+1,1),ld=new Date(nx.getFullYear(),nx.getMonth()+1,0).getDate();d=new Date(nx.getFullYear(),nx.getMonth(),Math.min(p,ld));var a=Math.min(rent,X);R.push({d:iso(d),a:Math.round(a)});X-=a;n++}
    L.cmo=Math.round(((+L.cmo||L.months||0)+add)*1000)/1000;try{L.end=iso(window._lnb.endOf(pd(L.start),L.cmo))}catch(x){L.end=iso(new Date(e.getFullYear(),e.getMonth()+am,e.getDate()+ad))}
    L.months=R.length;L.orig=R.length}
   else{L.months=(L.months||0)+am;L.orig=(L.orig||0)+am;L.xd=(+L.xd||0)+ad;if(L.xd>=30){L.months+=Math.floor(L.xd/30);L.orig=L.months;L.xd=L.xd%30}}
   try{if(Array.isArray(L.chq)&&L.chq.length&&L.sch){var C=L.chq,lastD=C.reduce(function(m,c){return c.d>m?c.d:m},'');L.sch.forEach(function(r,i){var c=C.filter(function(c){return c.d===r.d})[0];if(c)c.a=r.a;else if(r.d>lastD&&(L.rcv||[]).indexOf(i)<0)C.push({no:'',d:r.d,a:r.a})});C.sort(function(x,y){return x.d.localeCompare(y.d)})}}catch(x){}
-  logEv('➕ تمديد عقد '+(L.tenant||'')+' — '+u.name+': '+(am?am+' شهر':'')+(am&&ad?' و ':'')+(ad?ad+' يوم':'')+' • ينتهي '+iso(endOf(L)));
+  if(rent!==old){L.xr=L.xr||[];L.xr.push({from:iso(e),r:rent,old:old})}
+  logEv('➕ تمديد عقد '+(L.tenant||'')+' — '+u.name+': '+(am?am+' شهر':'')+(am&&ad?' و ':'')+(ad?ad+' يوم':'')+(rent!==old?' بإيجار '+rent+' بدل '+old:'')+' • ينتهي '+iso(endOf(L)));
   setTimeout(function(){toast('اتمدّد العقد — بقى ينتهي '+fd(endOf(L)))},60)});
- M.ok='تمديد';M.msg='العقد بيخلص '+fd(e)+'. الدفعات الجديدة هتتضاف لجدول الدفع بنفس الإيجار ويوم الدفع.';drawM()};
+ M.ok='تمديد';M.msg='العقد بيخلص '+fd(e)+'. الدفعات الجديدة هتتضاف لجدول الدفع بنفس يوم الدفع، وبالإيجار اللي تكتبه هنا لمدة التمديد بس.';drawM()};
 /* ========== التقرير الشهري ========== */
 var RM=null;
 function mKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
