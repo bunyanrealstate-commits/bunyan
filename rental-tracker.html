@@ -2274,8 +2274,8 @@ function save(){if(!isExample)ls.set("qrc_cart",cart);draw()}
 function addToCart(code,name,price){
   if(isExample){cart=[];isExample=false}
   const ex=cart.find(c=>c.code===code);
-  if(ex)ex.qty++;else cart.push({code,name,price,qty:1});
-  save(); toast("أُضيف: "+name+" — "+fmt(price)+" "+CUR); beep();
+  let ln=ex;if(ex)ex.qty++;else{ln={code,name,price,qty:1};cart.push(ln)}
+  save(); toast((ln.qty>1?"➕ ":"✅ ")+name+" × "+ln.qty+" = "+fmt(ln.price*ln.qty)+" "+CUR); beep(); try{vfHit(ln)}catch(e){}
   if(navigator.vibrate)try{navigator.vibrate(60)}catch(e){}
 }
 $("clearBtn").onclick=()=>{
@@ -2340,7 +2340,11 @@ $("fileIn").onchange=async e=>{
 };
 
 // ---------- live scanning (works where the browser allows camera) ----------
-let stream=null,raf=0,last="",seenAt=0;
+let stream=null,raf=0,last="",seenAt=0,holdUntil=0,hitT=0;
+function vfHit(ln){const vf=document.getElementById("vf");if(!vf||vf.hidden)return;let o=document.getElementById("vfHit");
+  if(!o){const st=document.createElement("style");st.textContent="#vfHit{position:absolute;left:10px;right:10px;bottom:10px;background:rgba(13,107,87,.92);color:#fff;border-radius:14px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:700;font-size:16px;box-shadow:0 6px 18px rgba(0,0,0,.35);transform:translateY(130%);transition:transform .18s ease-out;direction:rtl}#vfHit.on{transform:none}#vfHit .q{background:#fff;color:#0d6b57;border-radius:99px;padding:2px 10px;font-size:15px;white-space:nowrap}#vfHit .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#vf.flash{box-shadow:0 0 0 4px #2ecc71 inset}#vf{transition:box-shadow .2s}";document.head.appendChild(st);o=document.createElement("div");o.id="vfHit";vf.appendChild(o)}
+  o.innerHTML="";const n=document.createElement("span");n.className="n";n.textContent=(ln.qty>1?"➕ ":"✅ ")+ln.name;const q=document.createElement("span");q.className="q";q.textContent="× "+ln.qty+" = "+fmt(ln.price*ln.qty);o.append(n,q);
+  o.classList.add("on");vf.classList.add("flash");clearTimeout(hitT);hitT=setTimeout(()=>{o.classList.remove("on");vf.classList.remove("flash")},1600)}
 function camError(e){
   const n=e&&e.name;
   if(n==="NotAllowedError"||n==="SecurityError")setStatus("الكاميرا ممنوعة. اسمح للتطبيق (أو للموقع) بالكاميرا من إعدادات الموبايل، وبعدها جرّب تاني. وتقدر تستخدم «تصوير صورة».",true);
@@ -2376,7 +2380,7 @@ async function startLive(){
         if(r&&r.data){
           // add once; add again only after the code left the frame for over 1.2 s
           const gap=now-seenAt,same=r.data===last;seenAt=now;
-          if(!same||gap>1200){last=r.data;handleCode(r.data)}
+          if(now>=holdUntil&&(!same||gap>450)){last=r.data;holdUntil=now+900;handleCode(r.data)}
         }
       }
     }
