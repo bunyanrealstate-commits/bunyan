@@ -2318,7 +2318,7 @@ function parseLabel(t,code){const L=String(t||"").split(/\n/).map(x=>x.replace(/
 async function ocrFill(code){const c=SNAP;SNAP=null;if(!c||ocrBusy)return;ocrBusy=true;const st=$("sheetTitle"),t0=st?st.textContent:"";
  try{if(st)st.textContent="⏳ بقرأ الاسم والسعر من الملصق…";const w=await getOcr();if($("sheet").hidden||pendingCode!==code)return;
   const r=await w.recognize(prep(c));if($("sheet").hidden||pendingCode!==code)return;const o=parseLabel(r&&r.data&&r.data.text,code);
-  if(o.name&&!$("pName").value)$("pName").value=o.name;if(o.price!=null&&!$("pPrice").value)$("pPrice").value=String(o.price);
+  if(o.name&&!$("pName").value)$("pName").value=(typeof toAr==="function"&&toAr(o.name))||o.name;if(o.price!=null&&!$("pPrice").value)$("pPrice").value=String(o.price);
   if(o.price!=null){if(!$("pName").value)$("pName").value="منتج "+code;if(st)st.textContent="✅ اتقرأ من الملصق";toast("📷 اتقرأ: "+$("pName").value+" — "+fmt(o.price)+" "+CUR);
    setTimeout(()=>{if(!$("sheet").hidden&&pendingCode===code){const f=$("prodForm");f.requestSubmit?f.requestSubmit():f.dispatchEvent(new Event("submit",{cancelable:true}))}},900)}
   else{if(st)st.textContent="منتج جديد — ما قدرتش أقرأ السعر، اكتبه";$("pPrice").focus()}
@@ -2434,6 +2434,58 @@ $("scanBtn").onclick=()=>stream?stopLive():startLive();
 // ---------- manual item ----------
 const num=s=>{s=String(s).trim();if(!s)return NaN;return Number(s.replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[,٫،]/g,"."))};
 $("addManualBtn").onclick=()=>{$("mName").value="";$("mPrice").value="";$("mQty").value="1";$("mSheet").hidden=false;setTimeout(()=>$("mName").focus(),50)};
+// ---------- English → Arabic product names (offline dictionary) ----------
+const AR_PH=[["TRASH CAN","سلة زبالة"],["GARBAGE BIN","سلة زبالة"],["WASTE BIN","سلة زبالة"],["COMFORTER SET","طقم لحاف"],["DUVET COVER","غطاء لحاف"],["BED SHEET","ملاية سرير"],["FITTED SHEET","ملاية سرير بأستك"],["PILLOW CASE","كيس مخدة"],["PILLOW COVER","كيس مخدة"],["CUSHION COVER","كيس خدادية"],["CURTAIN ROD","ماسورة ستارة"],["WINDOW CURTAIN","ستارة شباك"],["SHOWER CURTAIN","ستارة دش"],["REED DIFFUSER","معطّر أعواد"],["AIR FRESHENER","معطّر جو"],["BOX GIFT","صندوق هدايا"],["GIFT BOX","صندوق هدايا"],["DOOR MAT","دواسة باب"],["BATH MAT","دواسة حمام"],["BATH TOWEL","فوطة حمام"],["HAND TOWEL","فوطة إيد"],["FACE TOWEL","فوطة وش"],["TABLE CLOTH","مفرش سفرة"],["DINNER SET","طقم سفرة"],["TEA SET","طقم شاي"],["COFFEE TABLE","ترابيزة قهوة"],["SIDE TABLE","ترابيزة جانبية"],["DINING TABLE","ترابيزة سفرة"],["WALL CLOCK","ساعة حيطة"],["TABLE LAMP","أباجورة"],["FLOOR LAMP","لمبة أرضية"],["LED BULB","لمبة ليد"],["LIGHT BULB","لمبة"],["PHOTO FRAME","برواز صور"],["HANGER","شماعة"],["CLOTHES HANGER","شماعة هدوم"],["LAUNDRY BASKET","سلة غسيل"],["STORAGE BOX","صندوق تخزين"],["SHOE RACK","جزامة"],["IRONING BOARD","طاولة كوي"],["FRYING PAN","طاسة"],["COOKING POT","حلّة"],["CUTTING BOARD","لوح تقطيع"],["KITCHEN TOWEL","فوطة مطبخ"],["SOAP DISPENSER","موزّع صابون"],["TISSUE BOX","علبة مناديل"],["WATER BOTTLE","زجاجة مية"],["EXTENSION CORD","وصلة كهربا"],["MULTI PLUG","مشترك كهربا"]];
+const AR_N={PILLOW:"مخدة",CUSHION:"خدادية",COMFORTER:"لحاف",DUVET:"لحاف",BLANKET:"بطانية",QUILT:"لحاف",SHEET:"ملاية",MATTRESS:"مرتبة",TOPPER:"وش مرتبة",CARPET:"سجادة",RUG:"سجادة",DOORMAT:"دواسة باب",MAT:"دواسة",CURTAIN:"ستارة",CURTAINS:"ستاير",ROD:"ماسورة",FRAME:"برواز",MIRROR:"مراية",CLOCK:"ساعة",LAMP:"أباجورة",BULB:"لمبة",LIGHT:"إضاءة",LIGHTS:"إضاءة",DIFFUSER:"معطّر",CANDLE:"شمعة",CANDLES:"شمع",VASE:"فازة",FLOWER:"ورد",FLOWERS:"ورد",PLANT:"زرعة",BOX:"صندوق",BASKET:"سلة",BIN:"سلة",BUCKET:"جردل",TOWEL:"فوطة",TOWELS:"فوط",ROBE:"روب",HANGER:"شماعة",HANGERS:"شماعات",HOOK:"شماعة حيطة",SHELF:"رف",RACK:"رف",STAND:"ستاند",TABLE:"ترابيزة",CHAIR:"كرسي",STOOL:"كرسي صغير",SOFA:"كنبة",BED:"سرير",WARDROBE:"دولاب",DRAWER:"درج",CABINET:"دولاب",DESK:"مكتب",PLATE:"طبق",PLATES:"أطباق",BOWL:"زبدية",CUP:"كوباية",CUPS:"كوبايات",MUG:"مج",GLASS:"كوباية إزاز",GLASSES:"كوبايات إزاز",SPOON:"معلقة",SPOONS:"معالق",FORK:"شوكة",KNIFE:"سكينة",POT:"حلّة",PAN:"طاسة",KETTLE:"غلاية",TRAY:"صينية",JAR:"برطمان",BOTTLE:"زجاجة",CONTAINER:"علبة حفظ",DISPENSER:"موزّع",SOAP:"صابون",SHAMPOO:"شامبو",DETERGENT:"منظف",CLEANER:"منظف",SPONGE:"سفنجة",MOP:"مساحة",BROOM:"مقشة",BRUSH:"فرشاة",TISSUE:"مناديل",TISSUES:"مناديل",WIPES:"مناديل مبللة",PEANUT:"فول سوداني",PEANUTS:"فول سوداني",NUTS:"مكسرات",COFFEE:"قهوة",TEA:"شاي",SUGAR:"سكر",RICE:"رز",WATER:"مية",JUICE:"عصير",MILK:"لبن",BREAD:"عيش",OIL:"زيت",SALT:"ملح",CHOCOLATE:"شوكولاتة",BISCUIT:"بسكوت",CABLE:"سلك",CHARGER:"شاحن",PLUG:"فيشة",ADAPTER:"محوّل",BATTERY:"بطارية",BATTERIES:"بطاريات",FAN:"مروحة",HEATER:"دفاية",IRON:"مكوة",UMBRELLA:"شمسية",BAG:"شنطة",SLIPPERS:"شبشب",SET:"طقم",GIFT:"هدية",DECOR:"ديكور",ORNAMENT:"تحفة",STATUE:"تمثال",PAINTING:"لوحة",CANVAS:"لوحة",STICKER:"ستيكر",WALLPAPER:"ورق حيطة",TAPE:"شريط لاصق",GLUE:"غرا",SCISSORS:"مقص",PEN:"قلم",NOTEBOOK:"كشكول",FILE:"ملف",LOCK:"قفل",KEY:"مفتاح",TOOL:"عدة",DRILL:"شنيور",SCREW:"مسمار قلاووظ",NAIL:"مسمار",HAMMER:"شاكوش",LADDER:"سلم",CAN:"علبة"};
+const AR_M={PLASTIC:"بلاستيك",WOODEN:"خشب",WOOD:"خشب",METAL:"معدن",STEEL:"ستانلس",STAINLESS:"ستانلس",GLASS:"إزاز",CERAMIC:"سيراميك",COTTON:"قطن",SILK:"حرير",VELVET:"قطيفة",LEATHER:"جلد",KING:"كينج",QUEEN:"كوين",SINGLE:"سنجل",DOUBLE:"دبل",SMALL:"صغير",MEDIUM:"وسط",LARGE:"كبير",BIG:"كبير",MINI:"ميني",NEW:"",ROUND:"مدوّر",SQUARE:"مربع",WHITE:"أبيض",BLACK:"أسود",RED:"أحمر",BLUE:"أزرق",GREEN:"أخضر",GREY:"رمادي",GRAY:"رمادي",BEIGE:"بيج",BROWN:"بني",GOLD:"دهبي",GOLDEN:"دهبي",SILVER:"فضي",PINK:"بمبي",YELLOW:"أصفر",ROAST:"محمص",ROASTED:"محمص",WINDOW:"شباك",DOOR:"باب",WALL:"حيطة",KITCHEN:"مطبخ",BATH:"حمام",BATHROOM:"حمام",BEDROOM:"أوضة نوم",KIDS:"أطفال",BABY:"أطفال",OPEN:"",FOLDING:"قابل للطي",ELECTRIC:"كهربا",LED:"ليد",WATERPROOF:"ضد المية",SOFT:"ناعم",HEAVY:"تقيل",PCS:"قطع",PC:"قطعة",PIECES:"قطع"};
+function toAr(en){const raw=String(en||"").toUpperCase().replace(/[^A-Z0-9؀-ۿ.\-\/ ]/g," ").replace(/\s+/g," ").trim();if(!raw)return "";if(/[؀-ۿ]/.test(en)&&!/[A-Za-z]{3}/.test(en))return String(en).trim();
+ let t=" "+raw+" ";const nouns=[],mods=[],sizes=[];
+ AR_PH.forEach(([e,a])=>{const re=new RegExp(" "+e.replace(/ /g," ")+"S? ","g");if(re.test(t)){nouns.push(a);t=t.replace(re," ")}});
+ t.trim().split(" ").forEach(w=>{if(!w)return;let m;
+  if((m=w.match(/^(\d+(?:\.\d+)?)X(\d+(?:\.\d+)?)(?:X(\d+(?:\.\d+)?))?(CM|M)?$/)))sizes.push(m[1]+"×"+m[2]+(m[3]?"×"+m[3]:"")+(m[4]==="CM"?" سم":""));
+  else if((m=w.match(/^(\d+(?:\.\d+)?)(ML|L|LTR|KG|G|GM|CM|MM|M|PCS|PC|W)$/))){const u={ML:"مل",L:"لتر",LTR:"لتر",KG:"كيلو",G:"جرام",GM:"جرام",CM:"سم",MM:"مم",M:"متر",PCS:"قطع",PC:"قطعة",W:"وات"}[m[2]];(m[2]==="PCS"||m[2]==="PC"?mods:sizes).push(m[1]+" "+u)}
+  else if(AR_N[w]){if(!nouns.includes(AR_N[w]))nouns.push(AR_N[w])}
+  else if(AR_N[w.replace(/S$/,"")]){const a=AR_N[w.replace(/S$/,"")];if(!nouns.includes(a))nouns.push(a)}
+  else if(AR_M[w]!=null){if(AR_M[w])mods.push(AR_M[w])}});
+ if(!nouns.length)return "";return [nouns.join(" "),mods.join(" "),sizes.join(" ")].filter(Boolean).join(" ").replace(/\s+/g," ").trim()}
+window.qrcToAr=toAr;
+
+// ---------- one-time: products from the Three Star Gifts invoice (01/11/2026) ----------
+(function(){if(ls.get("qrc_seed_tsg1",0))return;const L=[
+ ["1000000662313","مخدة ألاسكا",18,"PILLOW NEW ALASKA OPEN"],["1000004475759","طقم لحاف كينج 6 قطع 260×240",89,"KING 6PCS COMFORTER SET 260X240 CSK6"],["8680902514212","معطّر أعواد إيفل 120 مل",13.95,"EYFEL REED DIFFUSER 120ML MELEK ANGEL"],["9911025","فول سوداني محمص (الكيلو)",19.99,"China Peanut Roast Red Zahra"],["1000002939666","سلة زبالة بلاستيك",17.5,"PLASTIC TRASH CAN NA-70626"],["1000004217106","سجادة 160×230",169,"STALG CARPET 160X230"],["1000003957379","دواسة باب",25,"DOORMAT 511-58 AB"],["1000002964606","ستارة شباك",39,"WINDOW CURTAIN 24T5-19-18 TO 112"],["3000003423742","ماسورة ستارة 3 متر",24,"CURTAIN ROD 3M 25T2-8-9/10/10"],["3000003703608","برواز صور",22,"FRAME AB-1093"],["1000002670101","صندوق هدايا بإضاءة ورد 20×15",16.5,"BOX GIFT AX FLOWER LIGHT 20X15 G3AXL"]];
+ L.forEach(([c,n,p,e])=>{catalog[c]={name:n,price:p,en:e,src:"Three Star Gifts"}});ls.set("qrc_catalog",catalog);ls.set("qrc_seed_tsg1",1);updCount()})();
+
+// ---------- add products from a shop invoice photo ----------
+function parseInvoice(t){const L=String(t||"").split(/\n/).map(x=>x.replace(/[|_~`'"“”]/g," ").replace(/\s+/g," ").trim()).filter(Boolean),out=[],num=x=>parseFloat(String(x).replace(/,/g,""));
+ const isCode=l=>/^\d{7,14}$/.test(l.replace(/\s/g,""))&&!/[A-Za-z]/.test(l);
+ for(let i=0;i<L.length;i++){if(!isCode(L[i]))continue;const code=L[i].replace(/\s/g,"");
+  let j=i-1,ar="",en="";while(j>=0&&!en){const l=L[j];if(/VAT|TOTAL|DISCOUNT|Inv#|Cashier|Counter|Price|Qty|Amount/i.test(l))break;if(/[A-Za-z]{2}/.test(l))en=l.replace(/^\d{1,3}\s+/,"");else if(/[؀-ۿ]{3}/.test(l)&&!ar)ar=l;j--}
+  let price=null,qty=1;for(let k=i+1;k<=Math.min(i+2,L.length-1);k++){const ns=(L[k].match(/\d+(?:[.,]\d+)?/g)||[]).map(num);if(ns.length>=3){const [p,q,a]=ns.slice(-3);if(p>0&&q>0&&Math.abs(p*q-a)<=Math.max(0.06,a*0.03)){price=p;qty=q;break}if(/VAT/i.test(L[k])&&ns.length>=3){price=ns[ns.length-3];qty=ns[ns.length-2];break}}}
+  if(!en&&!ar)continue;out.push({code,en:en,name:ar||toAr(en)||en,price,qty})}
+ return out}
+window.qrcParseInv=t=>parseInvoice(t);let invRows=[];
+function invSheet(){let d=ovl.getElementById("iSheet");if(d)return d;d=document.createElement("div");d.className="sheet";d.id="iSheet";d.hidden=true;
+ d.innerHTML='<div class="panel"><div class="ph" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0">📄 منتجات من فاتورة</h2><button class="secondary" style="flex:0 0 auto;padding:8px 14px" id="iClose" type="button">إغلاق</button></div><div id="iMsg" style="color:var(--muted);font-size:14px"></div><div id="iList" style="overflow-y:auto;display:flex;flex-direction:column;gap:10px;flex:1"></div><button class="primary" id="iSave" type="button" hidden>💾 احفظ المنتجات</button></div>';
+ ovl.appendChild(d);ovl.getElementById("iClose").onclick=()=>{d.hidden=true};ovl.getElementById("iSave").onclick=invSave;return d}
+function invDraw(){const box=ovl.getElementById("iList");box.textContent="";invRows.forEach((r,i)=>{const w=document.createElement("div");w.style.cssText="border:1px solid var(--line);border-radius:12px;padding:10px;display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center";
+  const cb=document.createElement("input");cb.type="checkbox";cb.checked=r.on!==false;cb.onchange=()=>{r.on=cb.checked};cb.style.cssText="width:22px;height:22px";
+  const nm=document.createElement("input");nm.value=r.name||"";nm.oninput=()=>{r.name=nm.value};nm.placeholder="اسم المنتج بالعربي";
+  const sub=document.createElement("div");sub.style.cssText="grid-column:2;font-size:12px;color:var(--muted);direction:ltr;text-align:right";sub.textContent=(r.en||"")+" • "+r.code+(catalog[r.code]?" • (متسجل)":"");
+  const pr=document.createElement("input");pr.inputMode="decimal";pr.value=r.price!=null?r.price:"";pr.placeholder="السعر";pr.oninput=()=>{r.price=num(pr.value)};pr.style.cssText="grid-column:2;max-width:140px";
+  w.append(cb,nm,document.createElement("span"),sub,document.createElement("span"),pr);box.append(w)});
+ ovl.getElementById("iSave").hidden=!invRows.length}
+function invSave(){let n=0;invRows.forEach(r=>{if(r.on===false)return;const p=+r.price;if(!r.code||!r.name||!isFinite(p)||p<0)return;catalog[r.code]={name:String(r.name).trim(),price:p,en:r.en||"",src:"فاتورة"};n++});ls.set("qrc_catalog",catalog);updCount();ovl.getElementById("iSheet").hidden=true;toast("✅ اتحفظ "+n+" منتج — لما تمسحهم بعد كده هيتضافوا على طول")}
+async function invRead(file){const d=invSheet();d.hidden=false;invRows=[];invDraw();const msg=ovl.getElementById("iMsg");msg.textContent="⏳ بقرأ الفاتورة… (أول مرة ممكن تاخد شوية)";
+ try{if(typeof stopLive==="function")try{stopLive()}catch(e){}
+  const img=await new Promise((ok,no)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>ok(im);im.onerror=no;im.src=u});
+  const k=Math.min(1,2200/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*k);c.height=Math.round(img.naturalHeight*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+  const w=await getOcr();try{await w.setParameters({tessedit_pageseg_mode:"4"})}catch(e){}let r;try{r=await w.recognize(prep(c))}finally{try{await w.setParameters({tessedit_pageseg_mode:"11"})}catch(e){}}
+  invRows=parseInvoice(r&&r.data&&r.data.text);invDraw();
+  msg.textContent=invRows.length?("لقيت "+invRows.length+" منتج — راجع الاسم والسعر وشيل علامة الصح من اللي مش عايزه، وبعدين احفظ"):"ما قدرتش أطلع منتجات من الصورة. صوّر الفاتورة كلها مفرودة وقريبة ومنورة وجرّب تاني"}
+ catch(e){msg.textContent="تعذر قراءة الفاتورة"+(navigator.onLine===false?" — محتاج نت أول مرة عشان أداة القراءة":"")}}
+(function(){const b=$("addManualBtn");if(!b||$("invBtn"))return;const x=document.createElement("button");x.type="button";x.id="invBtn";x.className=b.className;x.textContent="📄 من فاتورة";b.insertAdjacentElement("afterend",x);
+ const f=document.createElement("input");f.type="file";f.accept="image/*";f.hidden=true;x.after(f);x.onclick=()=>f.click();f.onchange=()=>{const fl=f.files&&f.files[0];f.value="";if(fl)invRead(fl)}})();
+
 $("mCancel").onclick=()=>{$("mSheet").hidden=true};
 $("mForm").onsubmit=e=>{
   e.preventDefault();
