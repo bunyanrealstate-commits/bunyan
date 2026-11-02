@@ -3665,7 +3665,7 @@ var I=[
  {id:'compif',l:'لو سعر الشركة اتغير',k:{'لو الشركه':6,'لو العقد بقي':5,'لو الشركه غلت':6},f:aCompanyIf},
  {id:'date',l:'تاريخ النهارده',k:{'النهارده كام':6,'التاريخ':4,تاريخ:4,'الساعه كام':6,'النهارده ايه':5},f:aDate},
  {id:'summary',l:'ملخص الوضع',k:{ملخص:5,لخص:5,لخصلي:6,وضع:3,'عامل ايه':4,اخبار:4,'نظره عامه':5},f:function(){return B.think1('ملخص الوضع')}},
- {id:'fx',l:'تحويل عملة',k:{درهم:3,جنيه:2,مصري:2,دولار:3,يورو:3,ريال:3,'سعر الصرف':6,'سعر الدولار':6,'بكام مصري':6,'بالمصري':5,عمله:4,حول:3,تحويل:2},f:function(q){return aFx(q)}},
+ {id:'fx',l:'تحويل عملة',k:{درهم:3,جنيه:2,مصري:2,دولار:3,يورو:3,ريال:3,'سعر الصرف':6,'سعر الدولار':6,'بكام مصري':6,'بالمصري':5,'عمله صعبه':6},f:function(q){if(!/(درهم|جنيه|مصري|دولار|يورو|ريال|دينار|استرليني|صرف|عمل[هة]|usd|eur|aed|egp|sar)/i.test(q))return 'لو عايز تحوّل عملة قولّي المبلغ والعملة، زي: «1000 درهم بكام مصري».';return aFx(q)}},
  {id:'who',l:'إنت مين',k:{'انت مين':8,'اسمك':6,'مين عملك':8},f:function(){return aWho()}},
  {id:'me',l:'أنا مين',k:{'انا مين':8,'تعرفني':6},f:function(){return aMe()}},
  {id:'help',l:'بتعرف تجاوب على إيه',k:{مساعده:4,'بتعرف ايه':5,'اسالك ايه':5,اسالك:4,'تعمل ايه':4,تقدر:2,اقتراحات:4,'تجاوب علي ايه':6,'تعرف تجاوب':6,'تقدر تعمل ايه':6},f:function(){return help2()}}];
@@ -4574,8 +4574,8 @@ function ctx0(){var o=[];try{o.push('تاريخ النهارده: '+new Date().t
  try{if(window.bnyThink){var u=bnyThink('الدفعات الجاية');if(u)o.push('— الدفعات الجاية —\n'+u)}}catch(e){}
  try{if(window.bnyThink){var l=bnyThink('مين متأخر');if(l)o.push('— المتأخرين —\n'+l)}}catch(e){}
  return o.join('\n\n').replace(/\*\*/g,'').slice(0,6000)}
-function sys(){var nm='';try{nm=(S&&S.user&&S.user.name)||''}catch(e){}
- return 'إنت "بنيان"، المساعد الذكي جوّه برنامج Bunyan Furnished لإدارة تأجير الاستديوهات المفروشة (بنأجر من شركات وبنفرش ونأجر شهري للمستأجرين، ومعانا شركاء). رد بالعامية المصرية، باختصار شديد (غالبًا من 2 لـ 6 سطور إلا لو طلب رسالة أو تفصيل) ووضوح، ومن غير عناوين كبيرة. استخدم **عريض** للأرقام المهمة وسطور قصيرة أو نقاط بـ •. لو السؤال عن أرقام البرنامج اعتمد على البيانات اللي تحت بس، ولو المعلومة مش موجودة قول كده ومتألفش أرقام. لو سؤال عام (فلوس، عقود، قانون، كتابة رسالة، نصيحة) جاوب من معرفتك ونبّه لو محتاج متخصص. العملة الأساسية في البرنامج هي اللي ظاهرة في الأرقام.\n\n=== بيانات البرنامج دلوقتي ===\n'+ctx()}
+function sys(){var nm='';try{nm=(typeof A!=='undefined'&&A&&A.u)||''}catch(e){}
+ return 'إنت "بنيان"، المساعد الذكي جوّه برنامج Bunyan Furnished لإدارة تأجير الاستديوهات المفروشة (بنأجر من شركات وبنفرش ونأجر شهري للمستأجرين، ومعانا شركاء). اسم المستخدم اللي بيكلمك: '+(nm||'صاحب البرنامج')+'. اتكلم معاه كصاحب ودود ومحترم، ومتعرّفش بنفسك ولا تعدّد إنت بتعمل إيه غير لو سألك. لو كلام ودّي أو سلام رد بجملة أو اتنين طبيعيين. رد بالعامية المصرية، باختصار شديد (غالبًا من 2 لـ 6 سطور إلا لو طلب رسالة أو تفصيل) ووضوح، ومن غير عناوين كبيرة. استخدم **عريض** للأرقام المهمة وسطور قصيرة أو نقاط بـ •. لو السؤال عن أرقام البرنامج اعتمد على البيانات اللي تحت بس، ولو المعلومة مش موجودة قول كده ومتألفش أرقام. لو سؤال عام (فلوس، عقود، قانون، كتابة رسالة، نصيحة) جاوب من معرفتك ونبّه لو محتاج متخصص. العملة الأساسية في البرنامج هي اللي ظاهرة في الأرقام.\n\n=== بيانات البرنامج دلوقتي ===\n'+ctx()}
 async function gem(q,local,onT,quick){var c=cfg();var models=(c.models&&c.models.length?c.models:FALL);var cont=GH.slice(-6).concat([{role:'user',parts:[{text:q+(local?'\n\n(رد المساعد المحلي على نفس السؤال كان: '+String(local).replace(/\*\*/g,'').slice(0,1200)+')':'')}]}]);
  var body={systemInstruction:{parts:[{text:sys()}]},contents:cont,generationConfig:{temperature:0.6,maxOutputTokens:quick?250:900}};
  var lite=models.filter(function(m){return /lite/.test(m)})[0]||'gemini-flash-lite-latest',m0=models[0];
@@ -4602,7 +4602,7 @@ var o=window.bnyAsk;
 window.bnyAsk=function(q){var force=FORCE.test(q),q2=String(q).replace(FORCE,'').trim()||q;
  if(!force&&isChat(q)){if(!on())return {t:canned(q),i:'chat'};return gem(q2,'',live,true).then(function(t){skipType();return {t:'✨ '+t,i:'chat'}}).catch(function(){return {t:canned(q),i:'chat'}})}
  var r=force?null:o(q);
- var unknown=!r||(r.ask&&!r.i)||r.i==='autofact'&&/[؟?]/.test(q);var deep=!force&&r&&!unknown&&DEEP.test(q)&&!/^(custom|fact)$/.test(r.i||'');
+ var bad=r&&typeof r.t==='string'&&/\[object (Promise|Object)\]|undefined|NaN/.test(r.t);if(r&&r.i==='fx'&&!/(درهم|جنيه|مصري|دولار|يورو|ريال|دينار|استرليني|صرف|usd|eur|aed|egp|sar)/i.test(q))bad=true;var unknown=!r||bad||(r.ask&&!r.i)||r.i==='autofact'&&/[؟?]/.test(q);var deep=!force&&r&&!unknown&&DEEP.test(q)&&!/^(custom|fact)$/.test(r.i||'');
  if(!force&&!unknown&&!deep)return r;
  if(!on()){if(force)return {t:'✨ عشان أستعين بالذكاء الاصطناعي لازم تربطني بـ Gemini (مجاني) الأول — اضغط زرار ✨ فوق.',i:'gemoff'};
   if(unknown&&r&&r.t&&!window.__gemHint){window.__gemHint=1;r.t+='\n\n💡 لو عايزني أجاوب على أي سؤال (حتى لو مش في البرنامج)، اربطني بـ **Gemini المجاني** من زرار ✨ فوق.'}return r}
@@ -4630,6 +4630,8 @@ function inject(){var top=document.querySelector('#aix .a3top');if(!top||documen
 var ao=window.aiOpen;if(ao)window.aiOpen=function(){var x=ao.apply(this,arguments);try{inject()}catch(e){}return x};
 new MutationObserver(function(){if(document.getElementById('aix')&&!document.getElementById('gemb'))inject()}).observe(document.body,{childList:true});
 window.bnyGem={on:on,cfg:cfg,ask:gem};
+function trimAI(){document.querySelectorAll('#aix .a3body .card3').forEach(function(c){if(c.__ai)return;var t=c.querySelector('.tx');if(!t||!/^\s*✨/.test(t.textContent))return;c.__ai=1;c.classList.add('aiG');c.querySelectorAll('.act3 button').forEach(function(b){if(!/🔊/.test(b.textContent))b.remove()});c.querySelectorAll('.chips3').forEach(function(x){if(x.querySelector('.tch3'))x.remove()})})}
+new MutationObserver(function(){if(document.getElementById('aix'))trimAI()}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
 <style id="hdbig">
