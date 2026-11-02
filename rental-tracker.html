@@ -5162,25 +5162,28 @@ function pickModels(list){var ok=list.filter(function(m){var n=m.name.replace('m
  ok.sort(function(a,b){var la=/lite/.test(a),lb=/lite/.test(b);if(la!==lb)return la?1:-1;var pa=/preview/.test(a),pb=/preview/.test(b);if(pa!==pb)return pa?1:-1;var ta=/latest/.test(a),tb=/latest/.test(b);if(ta!==tb)return ta?-1:1;return vnum(b)-vnum(a)});
  return ok.concat(FALL.filter(function(f){return ok.indexOf(f)<0})).slice(0,8)}
 async function listModels(key){var r=await fetch(BASE+'models?pageSize=200',{headers:{'x-goog-api-key':key}});var j=await r.json().catch(function(){return {}});if(!r.ok)throw new Error((j.error&&j.error.message)||('HTTP '+r.status));return pickModels(j.models||[])}
-async function call(model,key,body){var r=await fetch(BASE+'models/'+model+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});var j=await r.json().catch(function(){return {}});
+function think(model){return /gemini-3|flash-latest|lite-latest/.test(model)?{thinkingLevel:'minimal'}:/2\.5/.test(model)?{thinkingBudget:0}:null}
+async function call(model,key,body,noT){var b2=JSON.parse(JSON.stringify(body)),tc=noT?null:think(model);if(tc)b2.generationConfig.thinkingConfig=tc;var ac=typeof AbortController!=='undefined'?new AbortController():null,to=setTimeout(function(){try{ac&&ac.abort()}catch(e){}},25000);var r;try{r=await fetch(BASE+'models/'+model+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(b2),signal:ac?ac.signal:undefined})}finally{clearTimeout(to)}
+ if(!r.ok&&r.status===400&&tc&&!noT){var tx=await r.clone().text().catch(function(){return ''});if(/think/i.test(tx))return call(model,key,body,true)}var j=await r.json().catch(function(){return {}});
  if(!r.ok){var e=new Error((j.error&&j.error.message)||('HTTP '+r.status));e.code=r.status;throw e}
  var c=j.candidates&&j.candidates[0];var t=c&&c.content&&c.content.parts?c.content.parts.filter(function(p){return p.text&&!p.thought}).map(function(p){return p.text}).join(''):'';if(!t){var e2=new Error(c&&c.finishReason==='SAFETY'?'الرد اتمنع من جوجل':'مفيش رد');e2.code=0;throw e2}return t}
 var GH=[];
-function ctx(){var o=[];try{o.push('تاريخ النهارده: '+new Date().toLocaleDateString('ar-EG',{weekday:'long',year:'numeric',month:'long',day:'numeric'}))}catch(e){}
+var CX={t:0,v:''};function ctx(){if(Date.now()-CX.t<120000&&CX.v)return CX.v;var v=ctx0();CX={t:Date.now(),v:v};return v}
+function ctx0(){var o=[];try{o.push('تاريخ النهارده: '+new Date().toLocaleDateString('ar-EG',{weekday:'long',year:'numeric',month:'long',day:'numeric'}))}catch(e){}
  try{if(window.bnyThink){o.push('— ملخص الوضع من البرنامج —\n'+bnyThink('ملخص الوضع'))}}catch(e){}
  try{if(window.bnyThink){var u=bnyThink('الدفعات الجاية');if(u)o.push('— الدفعات الجاية —\n'+u)}}catch(e){}
  try{if(window.bnyThink){var l=bnyThink('مين متأخر');if(l)o.push('— المتأخرين —\n'+l)}}catch(e){}
  return o.join('\n\n').replace(/\*\*/g,'').slice(0,6000)}
 function sys(){var nm='';try{nm=(S&&S.user&&S.user.name)||''}catch(e){}
- return 'إنت "بنيان"، المساعد الذكي جوّه برنامج Bunyan Furnished لإدارة تأجير الاستديوهات المفروشة (بنأجر من شركات وبنفرش ونأجر شهري للمستأجرين، ومعانا شركاء). رد بالعامية المصرية، باختصار ووضوح، ومن غير عناوين كبيرة. استخدم **عريض** للأرقام المهمة وسطور قصيرة أو نقاط بـ •. لو السؤال عن أرقام البرنامج اعتمد على البيانات اللي تحت بس، ولو المعلومة مش موجودة قول كده ومتألفش أرقام. لو سؤال عام (فلوس، عقود، قانون، كتابة رسالة، نصيحة) جاوب من معرفتك ونبّه لو محتاج متخصص. العملة الأساسية في البرنامج هي اللي ظاهرة في الأرقام.\n\n=== بيانات البرنامج دلوقتي ===\n'+ctx()}
+ return 'إنت "بنيان"، المساعد الذكي جوّه برنامج Bunyan Furnished لإدارة تأجير الاستديوهات المفروشة (بنأجر من شركات وبنفرش ونأجر شهري للمستأجرين، ومعانا شركاء). رد بالعامية المصرية، باختصار شديد (غالبًا من 2 لـ 6 سطور إلا لو طلب رسالة أو تفصيل) ووضوح، ومن غير عناوين كبيرة. استخدم **عريض** للأرقام المهمة وسطور قصيرة أو نقاط بـ •. لو السؤال عن أرقام البرنامج اعتمد على البيانات اللي تحت بس، ولو المعلومة مش موجودة قول كده ومتألفش أرقام. لو سؤال عام (فلوس، عقود، قانون، كتابة رسالة، نصيحة) جاوب من معرفتك ونبّه لو محتاج متخصص. العملة الأساسية في البرنامج هي اللي ظاهرة في الأرقام.\n\n=== بيانات البرنامج دلوقتي ===\n'+ctx()}
 async function gem(q,local){var c=cfg();var models=(c.models&&c.models.length?c.models:FALL);var cont=GH.slice(-6).concat([{role:'user',parts:[{text:q+(local?'\n\n(رد المساعد المحلي على نفس السؤال كان: '+String(local).replace(/\*\*/g,'').slice(0,1200)+')':'')}]}]);
- var body={systemInstruction:{parts:[{text:sys()}]},contents:cont,generationConfig:{temperature:0.6,maxOutputTokens:2048}};var last=null;
+ var body={systemInstruction:{parts:[{text:sys()}]},contents:cont,generationConfig:{temperature:0.6,maxOutputTokens:900}};var last=null;
  for(var i=0;i<models.length;i++){try{var t=await call(models[i],c.key,body);if(i>0){c.models=models.slice(i).concat(models.slice(0,i));setCfg(c)}GH.push({role:'user',parts:[{text:q}]},{role:'model',parts:[{text:t}]});GH=GH.slice(-10);return tidy(t)}catch(e){last=e;if(e.code===400&&/API key|API_KEY/i.test(e.message))break;if(e.code===403)break;if(e.code&&e.code!==404&&e.code!==429&&e.code!==503&&e.code!==500)break}}
  throw last||new Error('فشل')}
 function tidy(t){return String(t).replace(/^#{1,6}\s*/gm,'').replace(/^\s*[\*\-]\s+/gm,'• ').replace(/\n{3,}/g,'\n\n').trim()}
 function errMsg(e){var m=String(e&&e.message||e);if(/Failed to fetch|NetworkError|Load failed/i.test(m))return 'مفيش نت، أو الصفحة دي مش سامحة بالاتصال (جرّب من التطبيق).';if(/API key not valid|API_KEY_INVALID/i.test(m))return 'المفتاح غلط — اعمل نسخ ولصق تاني.';if(e&&e.code===429)return 'خلصت الحد المجاني للدقيقة/اليوم — استنى شوية وجرب تاني.';return m}
 var FORCE=/^\s*(✨|اسال جيميني|اسأل جيميني|جيميني|gemini|ذكاء|اسأل الذكاء|اسال الذكاء)[\s:،,]*/i;
-var DEEP=/(رايك|رأيك|انصحني|نصيحه|نصيحة|حلل|تحليل|اقترح|اقتراح|اكتبلي|اكتب لي|صيغ|صياغه|صياغة|رساله|رسالة|ازاي ازود|ازاي اقلل|خطه|خطة|استراتيجي|قانون|قانوني|عقد ايجار|عقد إيجار|فسرلي|اشرحلي|اشرح لي|ترجم|ليه)/;
+var DEEP=/(رايك|رأيك|انصحني|نصيحه|نصيحة|حلل|تحليل|اقترح|اقتراح|اكتبلي|اكتب لي|صيغلي|صياغه|صياغة|ازاي ازود|ازاي اقلل|استراتيجي|ترجم)/;
 var o=window.bnyAsk;
 window.bnyAsk=function(q){var force=FORCE.test(q),q2=String(q).replace(FORCE,'').trim()||q;var r=force?null:o(q);
  var unknown=!r||(r.ask&&!r.i)||r.i==='autofact'&&/[؟?]/.test(q);var deep=!force&&r&&!unknown&&DEEP.test(q)&&!/^(custom|fact)$/.test(r.i||'');
