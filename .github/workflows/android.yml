@@ -74,6 +74,12 @@ jobs:
               }
               try { Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url)); i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); getContext().startActivity(i); call.resolve(); } catch (Exception e) { call.reject("no whatsapp"); }
             }
+            @PluginMethod
+            public void resetZoom(PluginCall call) {
+              final android.webkit.WebView wv = getBridge().getWebView();
+              wv.post(new Runnable() { public void run() { int n = 0; while (n < 40 && wv.zoomOut()) { n++; } } });
+              call.resolve();
+            }
           }
           JEOF
           sed -i 's/^          //' "$D/WaBizPlugin.java"

@@ -4778,6 +4778,17 @@ window.bnyOpenWa=function(u){var p=P();if(!p)return false;p.open({url:norm(u),bu
 var wo=window.open;window.open=function(u){try{if(isWa(u)&&bnyOpenWa(u))return null}catch(e){}return wo.apply(window,arguments)};
 document.addEventListener('click',function(e){try{var a=e.target.closest&&e.target.closest('a[href]');if(!a)return;var h=a.getAttribute('href');if(isWa(h)&&P()){e.preventDefault();e.stopPropagation();bnyOpenWa(h)}}catch(x){}},true);
 })();</script>
+<script id="dtzoom">(function(){
+var VV=window.visualViewport;if(!VV)return;var last=0,lx=0,ly=0,moved=false,sx=0,sy=0;
+function meta(){return document.querySelector('meta[name=viewport]')}
+function reset(){try{var C=window.Capacitor,P=C&&C.Plugins&&C.Plugins.WaBiz;if(P&&P.resetZoom){P.resetZoom().catch(function(){});}}catch(e){}var m=meta();if(!m)return;var c=m.getAttribute('content');m.setAttribute('content','width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');setTimeout(function(){m.setAttribute('content',c)},350)}
+window.bnyZoomReset=reset;
+addEventListener('touchstart',function(e){if(e.touches.length!==1){last=0;return}var t=e.touches[0];sx=t.clientX;sy=t.clientY;moved=false},{passive:true});
+addEventListener('touchmove',function(e){var t=e.touches[0];if(t&&(Math.abs(t.clientX-sx)>10||Math.abs(t.clientY-sy)>10))moved=true},{passive:true});
+addEventListener('touchend',function(e){if(moved||e.touches.length){last=0;return}var now=Date.now(),t=e.changedTouches[0];if(!t)return;
+ if(VV.scale>1.05&&now-last<320&&Math.abs(t.clientX-lx)<40&&Math.abs(t.clientY-ly)<40){last=0;if(e.cancelable)e.preventDefault();reset();return}
+ last=now;lx=t.clientX;ly=t.clientY},{passive:false});
+})();</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script><script id="hguard">(function(){
 var D=["units","exp","dep","gp","gc","adj"];window._ug=0;["pointerdown","keydown","touchstart"].forEach(function(e){addEventListener(e,function(){window._ug=Date.now()},{capture:true,passive:true})});
 function pk(o){var r={};D.forEach(function(k){if(o&&o[k]!=null)r[k]=o[k]});return JSON.stringify(r)}
