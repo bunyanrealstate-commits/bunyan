@@ -4642,11 +4642,11 @@ async function gem(q,local,onT,quick,noHist){var c=cfg();var models=(c.models&&c
   catch(e){last=e;if(e.code===401||e.code===403||(e.code===400&&/API key|API_KEY/i.test(e.message)))break}}
  try{var c3=cfg();c3.lastErr=String(last&&last.message||'');c3.lastMs=Date.now()-t0;setCfg(c3)}catch(x){}
  throw last||new Error('فشل')}
-function tidy(t){return String(t).replace(/^#{1,6}\s*/gm,'').replace(/^\s*[\*\-]\s+/gm,'• ').replace(/\n{3,}/g,'\n\n').trim()}
+function tidy(t){return String(t).replace(/\s*\[حفظ\]\s*/g,' ').replace(/^#{1,6}\s*/gm,'').replace(/^\s*[\*\-]\s+/gm,'• ').replace(/\n{3,}/g,'\n\n').trim()}
 function errMsg(e){var m=String(e&&e.message||e);if(e&&e.code==='timeout')return 'جوجل اتأخرت في الرد (النت بطيء أو الخدمة مضغوطة) — جرّب تاني.';if(e&&e.code==='net'||/Failed to fetch|NetworkError|Load failed/i.test(m))return 'مفيش نت أو جوجل مش بترد دلوقتي.';if(/API key not valid|API_KEY_INVALID/i.test(m)||e&&(e.code===401||e.code===403))return 'المفتاح مش شغال — افتح ✨ واربط تاني.';if(e&&e.code===429)return 'خلص الحد المجاني دلوقتي — استنى دقيقة وجرّب.';return m}
 var FORCE=/^\s*(✨|اسال جيميني|اسأل جيميني|جيميني|gemini|ذكاء|اسأل الذكاء|اسال الذكاء)[\s:،,]*/i;
 var DEEP=/(رايك|رأيك|انصحني|نصيحه|نصيحة|حلل|تحليل|اقترح|اقتراح|اكتبلي|اكتب لي|صيغلي|صياغه|صياغة|ازاي ازود|ازاي اقلل|استراتيجي|ترجم)/;
-var CHAT=/^\s*(يا ?رب|ربنا|الحمد ?لله|الحمدلله|شكرا|شكراً|متشكر|تسلم|تسلمي|ميرسي|thanks|thank you|السلام عليكم|سلام عليكم|وعليكم السلام|اهلا|أهلا|هلا|مرحبا|هاي|هالو|hi|hello|صباح|مساء|تصبح على خير|انت كويس|إنت كويس|انتي كويسه|عامل ايه يا|انت عامل ايه|إنت عامل ايه|ازيك|إزيك|ازاي حالك|اخبارك|أخبارك|كيفك|كيف حالك|حبيبي|يا حبيبي|يا مساعدي|يا بنيان|انت مين|إنت مين|بحبك|برافو|جميل|حلو|تمام|ماشي|اوك|ok|okay|good|طيب)([\s!.،,؟?…😊🙏❤️🤍👍]|$)/i;
+var CHAT=/^\s*(دمت|دمتم|دام|الله يسلمك|الله يخليك|ربنا يخليك|ربنا يكرمك|الله يكرمك|بارك الله|جزاك الله|جزاكم الله|الله يعطيك|يعطيك العافيه|يعطيك العافية|حياك|حياكم|منور|نورت|أخوي|اخوي|خي|يا غالي|يا باشا|يا معلم|عاش|تمام التمام|مشكور|يسلمو|يسلموا|كل سنه|كل سنة|عيد|رمضان كريم|جمعه مباركه|جمعة مباركة|يا رب|ربنا|الحمد ?لله|الحمدلله|شكرا|شكراً|متشكر|تسلم|تسلمي|ميرسي|thanks|thank you|السلام عليكم|سلام عليكم|وعليكم السلام|اهلا|أهلا|هلا|مرحبا|هاي|هالو|hi|hello|صباح|مساء|تصبح على خير|انت كويس|إنت كويس|انتي كويسه|عامل ايه يا|انت عامل ايه|إنت عامل ايه|ازيك|إزيك|ازاي حالك|اخبارك|أخبارك|كيفك|كيف حالك|حبيبي|يا حبيبي|يا مساعدي|يا بنيان|انت مين|إنت مين|بحبك|برافو|جميل|حلو|تمام|ماشي|اوك|ok|okay|good|طيب)([\s!.،,؟?…😊🙏❤️🤍👍]|$)/i;
 function isChat(q){var z=String(q).trim();return z.length<=60&&CHAT.test(z)&&!/(كام|فلوس|نقدي|ربح|دفع|ايجار|إيجار|متأخر|عقد|استديو|مستأجر|مصروف|سجل|سجّل|ضيف|احسب)/.test(z)}
 function canned(q){var z=String(q);if(/يا ?رب|ربنا/.test(z))return 'يا رب وإنت كمان تكون بخير وفي أحسن حال 🤍\nأقدر أساعدك في حاجة في البرنامج؟';
  if(/شكر|تسلم|متشكر|ميرسي|thank/i.test(z))return 'العفو 🙏 أنا موجود في أي وقت.';if(/السلام عليكم|سلام عليكم/.test(z))return 'وعليكم السلام ورحمة الله وبركاته 👋\nتحب أساعدك في إيه؟';
@@ -4666,6 +4666,8 @@ var o=window.bnyAsk;
 window.bnyAsk=function(q){var force=FORCE.test(q),q2=String(q).replace(FORCE,'').trim()||q;
  if(!force&&isChat(q)){if(!on())return {t:canned(q),i:'chat'};return gem(q2,'',live,true).then(function(t){skipType();return {t:'✨ '+t,i:'chat'}}).catch(function(){return {t:canned(q),i:'chat'}})}
  var r=force?null:o(q);
+ if(r&&r.i==='autofact'&&on()){var tq=String(q).trim().slice(0,300);var drop=function(){try{var Fs=BNYMEM.facts();for(var fi=Fs.length-1;fi>=0;fi--){if(String(Fs[fi].t).trim()===tq){BNYMEM.delFact(fi);break}}}catch(x){}};
+  return gem(q2+'\n\n(تعليمات: لو الكلام ده معلومة مفيدة عن الشغل أو الاستديوهات أو الناس تستاهل تتحفظ، رد بجملة قصيرة وحط في آخر الرد [حفظ]. لو ده كلام ودّي أو دعاء أو سلام، رد رد طبيعي قصير ومتحطش [حفظ].)','',function(t){live(String(t).replace(/\[حفظ\]/g,''))},true).then(function(t){skipType();var keep=/\[حفظ\]/.test(t);t=t.replace(/\s*\[حفظ\]\s*/g,' ').trim();if(!keep)drop();return {t:'✨ '+t+(keep?'\n🧠 حفظتها عندي.':''),i:keep?'autofact':'chat'}}).catch(function(){return r})}
  var bad=r&&typeof r.t==='string'&&/\[object (Promise|Object)\]|undefined|NaN/.test(r.t);if(r&&r.i==='fx'&&!/(درهم|جنيه|مصري|دولار|يورو|ريال|دينار|استرليني|صرف|usd|eur|aed|egp|sar)/i.test(q))bad=true;var unknown=!r||bad||(r.ask&&!r.i)||r.i==='autofact'&&/[؟?]/.test(q);var deep=!force&&r&&!unknown&&DEEP.test(q)&&!/^(custom|fact)$/.test(r.i||'');
  if(!force&&!unknown&&!deep){if(on()&&cfg().assist!==false&&r&&!r.ask&&r.i&&!SKIP.test(r.i)&&!(r.t&&r.t.then)&&String(r.t||'').length>15)return assist(q,r,false);return r}
  if(!on()){if(force)return {t:'✨ عشان أستعين بالذكاء الاصطناعي لازم تربطني بـ Gemini (مجاني) الأول — اضغط زرار ✨ فوق.',i:'gemoff'};
@@ -4755,6 +4757,7 @@ window.waSetup=function(){var o=st(),d=document.createElement('div');d.className
 var b0=bkTab;bkTab=function(){var o=st();var c=`<div class='card'><h2>💬 الواتساب لاسترجاع كلمة السر</h2>`+(o.k&&o.p?`<p>✅ مربوط على <b dir="ltr">+${esc(o.p)}</b> — لو نسيت كلمة السر تقدر تختار الكود يوصلك واتساب.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button onclick='waSetup()'>⚙️ الإعداد</button><button onclick='bnyWa.send("000000","تجربة").then(function(){toast("اتبعتت رسالة تجربة")})'>📨 ابعت تجربة</button></div>`:`<p>اربط رقم الواتساب بتاعك عشان لو نسيت كلمة السر يوصلك الكود رسالة واتساب (تقدر تختار بينه وبين الإيميل).</p><button class='p' onclick='waSetup()'>💬 اربط الواتساب</button>`)+`</div>`;return c+b0()};
 })();</script>
 <style id="ctzcss">#ctzb{display:flex;gap:6px;justify-content:center;margin:0 0 8px;position:sticky;top:124px;z-index:5}#ctzb button{min-height:36px!important;padding:6px 14px!important;border-radius:999px!important;font-size:14px!important;font-weight:800!important;background:#fff!important;border:1.5px solid #cfe0e6!important;color:#1b4764!important;box-shadow:0 3px 10px rgba(15,39,66,.12)!important}#ctzb #ctzl{min-width:96px}</style>
+<style id="nofb">#aix button[onclick^="aiFb("]{display:none!important}</style>
 <style id="onefp">
 #login .lor,#bio .lor{display:none!important}
 #login .lfp small,#bio .lfp small{display:none!important}
