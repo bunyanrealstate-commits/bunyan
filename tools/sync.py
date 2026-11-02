@@ -60,7 +60,7 @@ pre=r'<script>/* نسخة عبد الحكيم: تخزين منفصل + مزام�
 hb=cust.index('<script>')
 cust_h=cust[:hb]+pre+cust[hb:]
 k=cust_h.rindex('</body>');hk=cust_h[:k]+seed+cust_h[k:]
-hk=hk.replace('<title>Bunyan Furnished</title>','<title>Bunyan Furnished — عبد الحكيم</title>',1)
+hk=hk.replace('<title>Bunyan Furnished</title>','<title>Bunyan Furnished — حكيم</title>',1)
 hd=os.path.join(os.path.dirname(d),'h');os.makedirs(hd,exist_ok=True)
 open(os.path.join(hd,'index.html'),'w',encoding='utf-8').write(hk)
 for f in ('sw.js','icon-192.png','icon-512.png','icon-maskable-512.png'):
@@ -70,7 +70,7 @@ for f in ('icon-192.png','icon-512.png','icon-maskable-512.png'):
     if os.path.exists(os.path.join(ha,f)):shutil.copy(os.path.join(ha,f),os.path.join(hd,f))
 import json
 mf=json.load(open(os.path.join(os.path.dirname(d),'manifest.webmanifest'),encoding='utf-8'))
-mf.update({'name':'Bunyan — عبد الحكيم','short_name':'بنيان حكيم','id':'./?app=hakim','start_url':'./index.html','scope':'./','theme_color':'#2a9d5c'})
+mf.update({'name':'Bunyan — حكيم','short_name':'بنيان حكيم','id':'./?app=hakim','start_url':'./index.html','scope':'./','theme_color':'#2a9d5c'})
 json.dump(mf,open(os.path.join(hd,'manifest.webmanifest'),'w',encoding='utf-8'),ensure_ascii=False,indent=1)
 hk=hk.replace('content="#1473e6"','content="#2a9d5c"',1).replace('<link rel="apple-touch-icon" href="icon-192.png">','<link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-title" content="بنيان حكيم">',1)
 open(os.path.join(hd,'index.html'),'w',encoding='utf-8').write(hk)
