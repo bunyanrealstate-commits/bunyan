@@ -4982,7 +4982,7 @@ function card(full){var r=rd(KR,null);if(!r)return '';var I=r.issues||[],E=I.fil
 var hm=home;home=function(){return card(false)+hm()};
 var bk=bkTab;bkTab=function(){return card(true)+bk()};
 var sv=0,lastSig='';var rr=render;render=function(){var o=rr.apply(this,arguments);clearTimeout(sv);sv=setTimeout(function(){try{if(!AUTH)return;var sig=JSON.stringify([S.units,S.exp,S.adj,S.gp]).length+':'+(S.hist&&S.hist.length);if(sig===lastSig)return;lastSig=sig;audit()}catch(e){}},4000);return o};
-setTimeout(function(){try{if(AUTH){audit();if(S.tab==='home')render()}}catch(e){}},5000);setInterval(function(){try{if(AUTH&&!document.hidden)audit()}catch(e){}},15*60*1000);
+setTimeout(function(){try{if(AUTH){var had=!!document.getElementById('moncard');var r=audit();var need=(r.issues||[]).some(function(x){return x.sev==='err'});if(S.tab==='home'&&had!==need)render()}}catch(e){}},5000);setInterval(function(){try{if(AUTH&&!document.hidden)audit()}catch(e){}},15*60*1000);
 })()</script>
 <script id="monjs2">(function(){if(window.HBUILD)return;
 var C=window.monChecks=window.monChecks||[];function reg(n,f){f.n=n;C.push(f)}
@@ -5021,7 +5021,8 @@ var LAY=[];function layScan(){var out=[],W=innerWidth,app=document.getElementByI
 reg('التنسيق',function(add){LAY.forEach(function(x){add(x.sev,'التنسيق',x.msg)})});
 var lq=0;var r0=render;render=function(){var o=r0.apply(this,arguments);clearTimeout(lq);lq=setTimeout(function(){try{if(AUTH&&!document.hidden)layScan()}catch(e){}},1500);return o};
 /* 4) motion: layout jumps (CLS) and janky frames */
-var SH=[],JK=[];try{new PerformanceObserver(function(l){l.getEntries().forEach(function(e){if(e.hadRecentInput||e.value<0.05)return;var src=(e.sources||[]).map(function(x){return sel(x.node)}).filter(Boolean).slice(0,2).join('، ');SH.push({v:e.value,t:Date.now(),tab:tabName(),src:src});SH=SH.slice(-20)})}).observe({type:'layout-shift',buffered:true})}catch(e){}
+var SH=[],JK=[],LR={t:0,who:''};var rq=render;render=function(){try{var st=(new Error().stack||'').split('\n').slice(2,6).map(function(l){var m=l.match(/at (?:Object\.|window\.)?([\w$.]+)/);return m?m[1]:''}).filter(function(n){return n&&!/^(render|r0|r1|rr|rq|Function|HTMLDocument|eval)$/.test(n)})[0]||'';LR={t:Date.now(),who:st}}catch(e){}return rq.apply(this,arguments)};
+try{new PerformanceObserver(function(l){l.getEntries().forEach(function(e){if(e.hadRecentInput||e.value<0.05)return;var src=(e.sources||[]).map(function(x){var d=x.currentRect&&x.previousRect?Math.round(x.currentRect.y-x.previousRect.y):0;return sel(x.node)+(d?' ('+(d>0?'نزل ':'طلع ')+Math.abs(d)+'px)':'')}).filter(Boolean).slice(0,2).join('، ');var why=Date.now()-LR.t<900&&LR.who?' بعد تحديث تلقائي من «'+LR.who+'»':'';SH.push({v:e.value,t:Date.now(),tab:tabName(),src:src+why});SH=SH.slice(-20)})}).observe({type:'layout-shift',buffered:true})}catch(e){}
 try{new PerformanceObserver(function(l){l.getEntries().forEach(function(e){if(e.duration>250){JK.push({d:e.duration,t:Date.now(),tab:tabName()});JK=JK.slice(-20)}})}).observe({type:'long-animation-frame',buffered:true})}catch(e){}
 reg('الحركة',function(add){var rec=SH.filter(function(x){return Date.now()-x.t<864e5});if(rec.length){var big=rec.sort(function(a,b){return b.v-a.v})[0];add(big.v>0.25?'err':'warn','الحركة','الشاشة اتهزت/اتنطّت '+rec.length+' مرة'+(big.tab?' (أكبرها في '+big.tab+')':'')+(big.src?' — بسبب: '+big.src:''))}
  var j=JK.filter(function(x){return Date.now()-x.t<864e5});if(j.length>3)add('warn','الحركة','حصل تقطيع في الحركة '+j.length+' مرة (أبطأ إطار '+Math.round(Math.max.apply(null,j.map(function(x){return x.d})))+' مللي ثانية)')});
