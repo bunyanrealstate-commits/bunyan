@@ -30,7 +30,7 @@ pass
 print('customer',len(cust))
 
 # Abdelhakim build: customer build preset to the group "مع عبد الحكيم" (2 partners, 50/50)
-seed=r"""<script id="hguard">(function(){
+seed=r"""<style id="hlogo">.hd h1.brand{display:inline-flex!important;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 30% 20%,#3cc47c 0%,#2a9d5c 50%,#16653b 100%)!important;border-radius:12px!important;padding:4px 8px 4px!important;box-shadow:0 3px 10px rgba(22,101,59,.3);line-height:1;width:auto!important}.hd h1.brand svg{height:24px!important;width:auto!important}.hd h1.brand svg *{fill:#fff!important;stroke:none}.hd h1.brand::after{content:"حكيم";display:block;margin-top:2px;background:#fff;color:#16653b;font-size:9px;font-weight:800;line-height:1;padding:2px 8px 3px;border-radius:999px;letter-spacing:0}</style><script id="hguard">(function(){
 var D=["units","exp","dep","gp","gc","adj"];window._ug=0;["pointerdown","keydown","touchstart"].forEach(function(e){addEventListener(e,function(){window._ug=Date.now()},{capture:true,passive:true})});
 function pk(o){var r={};D.forEach(function(k){if(o&&o[k]!=null)r[k]=o[k]});return JSON.stringify(r)}
 function dec(b){return JSON.parse(decodeURIComponent(escape(atob(String(b).replace(/\s/g,"")))))}
