@@ -35,6 +35,11 @@ jobs:
         if: matrix.variant == 'hakim'
         run: cp assets/hakim/icon-only.png assets/hakim/icon-foreground.png assets/hakim/icon-background.png assets/
       - run: npx capacitor-assets generate --android --iconBackgroundColor '${{ matrix.variant == 'hakim' && '#2a9d5c' || '#ffffff' }}' --iconBackgroundColorDark '${{ matrix.variant == 'hakim' && '#2a9d5c' || '#ffffff' }}'
+      - name: Big readable launcher icon (logo fills the visible circle)
+        run: |
+          V=main; if [ "${{ matrix.variant }}" = "hakim" ]; then V=hakim; fi
+          cp -r assets/launcher/$V/* android/app/src/main/res/
+          ls android/app/src/main/res/mipmap-anydpi-v26/ && cat android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
       - run: npx cap sync android
       - name: No launch image (plain white start, the app shows its own splash)
         run: |
