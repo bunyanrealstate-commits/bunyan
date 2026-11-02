@@ -5353,5 +5353,13 @@ window.waSetup=function(){var o=st(),d=document.createElement('div');d.className
  var off=d.querySelector('#waOff');if(off)off.onclick=function(){set({});d.remove();toast('اتلغى ربط الواتساب');try{render()}catch(e){}}};
 var b0=bkTab;bkTab=function(){var o=st();var c=`<div class='card'><h2>💬 الواتساب لاسترجاع كلمة السر</h2>`+(o.k&&o.p?`<p>✅ مربوط على <b dir="ltr">+${esc(o.p)}</b> — لو نسيت كلمة السر تقدر تختار الكود يوصلك واتساب.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button onclick='waSetup()'>⚙️ الإعداد</button><button onclick='bnyWa.send("000000","تجربة").then(function(){toast("اتبعتت رسالة تجربة")})'>📨 ابعت تجربة</button></div>`:`<p>اربط رقم الواتساب بتاعك عشان لو نسيت كلمة السر يوصلك الكود رسالة واتساب (تقدر تختار بينه وبين الإيميل).</p><button class='p' onclick='waSetup()'>💬 اربط الواتساب</button>`)+`</div>`;return c+b0()};
 })();</script>
+<style id="onefp">
+#login .lor,#bio .lor{display:none!important}
+#login .lfp small,#bio .lfp small{display:none!important}
+#login .lfp,#bio .lfp{margin-top:10px}
+#login .lfp button,#bio .lfp button,#bio button.biofp{width:auto!important;height:auto!important;min-height:0!important;border-radius:999px!important;padding:6px 14px!important;background:transparent!important;border:0!important;box-shadow:none!important;color:#1b6a8a!important;font-size:13px!important;font-weight:700!important;text-decoration:underline}
+#login .lfp button svg,#bio .lfp button svg,#bio button.biofp svg{display:none!important}
+#login .lfp button::after,#bio .lfp button::after,#bio button.biofp::after{content:"افتح البصمة تاني";font-size:13px}
+</style>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
