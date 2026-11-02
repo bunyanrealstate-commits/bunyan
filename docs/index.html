@@ -5163,12 +5163,16 @@ function pickModels(list){var ok=list.filter(function(m){var n=m.name.replace('m
  return ok.concat(FALL.filter(function(f){return ok.indexOf(f)<0})).slice(0,8)}
 async function listModels(key){var r=await fetch(BASE+'models?pageSize=200',{headers:{'x-goog-api-key':key}});var j=await r.json().catch(function(){return {}});if(!r.ok)throw new Error((j.error&&j.error.message)||('HTTP '+r.status));return pickModels(j.models||[])}
 function think(model){return /gemini-3|flash-latest|lite-latest/.test(model)?{thinkingLevel:'minimal'}:/2\.5/.test(model)?{thinkingBudget:0}:null}
-async function call(model,key,body,noT,onT){var b2=JSON.parse(JSON.stringify(body)),tc=noT?null:think(model);if(tc)b2.generationConfig.thinkingConfig=tc;var ac=typeof AbortController!=='undefined'?new AbortController():null,to=setTimeout(function(){try{ac&&ac.abort()}catch(e){}},25000);
- try{var r=await fetch(BASE+'models/'+model+':streamGenerateContent?alt=sse',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(b2),signal:ac?ac.signal:undefined});
- if(!r.ok){var tx=await r.text().catch(function(){return ''});if(r.status===400&&tc&&!noT&&/think/i.test(tx)){clearTimeout(to);return call(model,key,body,true,onT)}var j0={};try{j0=JSON.parse(tx)}catch(x){}var e=new Error((j0.error&&j0.error.message)||('HTTP '+r.status));e.code=r.status;throw e}
- var out='',why='',buf='';function eat(chunk){buf+=chunk;var ls=buf.split('\n');buf=ls.pop();ls.forEach(function(l){l=l.trim();if(l.indexOf('data:')!==0)return;try{var j=JSON.parse(l.slice(5));var c=j.candidates&&j.candidates[0];if(c&&c.finishReason)why=c.finishReason;if(c&&c.content&&c.content.parts)c.content.parts.forEach(function(p){if(p.text&&!p.thought)out+=p.text});}catch(x){}});if(onT&&out)onT(out)}
- if(r.body&&r.body.getReader){var rd=r.body.getReader(),dc=new TextDecoder();while(true){var x=await rd.read();if(x.done)break;eat(dc.decode(x.value,{stream:true}))}eat('\n')}else{eat((await r.text())+'\n')}
- if(!out){var e2=new Error(why==='SAFETY'?'الرد اتمنع من جوجل':'مفيش رد');e2.code=0;throw e2}return out}finally{clearTimeout(to)}}
+async function call(model,key,body,o){o=o||{};var b2=JSON.parse(JSON.stringify(body)),tc=o.noT?null:think(model);if(tc)b2.generationConfig.thinkingConfig=tc;
+ var ac=typeof AbortController!=='undefined'?new AbortController():null,timed=false,to=setTimeout(function(){timed=true;try{ac&&ac.abort()}catch(e){}},o.ms||12000);
+ function tErr(){var e=new Error('timeout');e.code='timeout';return e}
+ try{var r;try{r=await fetch(BASE+'models/'+model+(o.stream?':streamGenerateContent?alt=sse':':generateContent'),{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(b2),signal:ac?ac.signal:undefined})}catch(x){if(timed)throw tErr();var ne=new Error(String(x&&x.message||x));ne.code='net';throw ne}
+ if(!r.ok){var tx=await r.text().catch(function(){return ''});if(r.status===400&&tc&&/think/i.test(tx)){clearTimeout(to);o.noT=true;return call(model,key,body,o)}var j0={};try{j0=JSON.parse(tx)}catch(x){}var e=new Error((j0.error&&j0.error.message)||('HTTP '+r.status));e.code=r.status;throw e}
+ var out='',why='';function take(j){var c=j&&j.candidates&&j.candidates[0];if(c&&c.finishReason)why=c.finishReason;if(c&&c.content&&c.content.parts)c.content.parts.forEach(function(p){if(p.text&&!p.thought)out+=p.text})}
+ try{if(o.stream){var buf='';var got=false;var eat=function(chunk){if(!got&&chunk.trim()){got=true;clearTimeout(to);to=setTimeout(function(){timed=true;try{ac&&ac.abort()}catch(e){}},25000)}buf+=chunk;var ls=buf.split('\n');buf=ls.pop();ls.forEach(function(l){l=l.trim();if(l.indexOf('data:')!==0)return;try{take(JSON.parse(l.slice(5)))}catch(x){}});if(o.onT&&out)o.onT(out)};
+   if(r.body&&r.body.getReader){var rd=r.body.getReader(),dc=new TextDecoder();while(true){var x=await rd.read();if(x.done)break;eat(dc.decode(x.value,{stream:true}))}eat('\n')}else eat((await r.text())+'\n')}
+  else{take(await r.json());if(o.onT&&out)o.onT(out)}}catch(x){if(timed){if(out)return out;throw tErr()}throw x}
+ if(!out){var e2=new Error(why==='SAFETY'?'الرد اتمنع من جوجل':'مفيش رد');e2.code='empty';throw e2}return out}finally{clearTimeout(to)}}
 function live(t){try{var L=document.querySelector('#aix .a3body');if(!L)return;var th=L.querySelector('.think3');var bx=L.querySelector('#gemlive');if(th&&!bx){var w=document.createElement('div');w.className='card3';w.id='gemlive';w.innerHTML="<div class='tx'></div>";th.replaceWith(w);bx=w}if(!bx)return;var tx=bx.querySelector('.tx');tx.innerHTML=E('✨ '+tidy(t)).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>')+"<span class='cur'></span>";L.scrollTop=L.scrollHeight}catch(e){}}
 function skipType(){setTimeout(function(){try{var c=document.querySelector('#aix .a3body [data-anim] .tx, #aix .a3body .cur');var tx=c&&(c.classList.contains('tx')?c:c.closest('.tx'));if(tx)tx.dispatchEvent(new Event('click'))}catch(e){}},0)}
 var GH=[];
@@ -5180,28 +5184,44 @@ function ctx0(){var o=[];try{o.push('تاريخ النهارده: '+new Date().t
  return o.join('\n\n').replace(/\*\*/g,'').slice(0,6000)}
 function sys(){var nm='';try{nm=(S&&S.user&&S.user.name)||''}catch(e){}
  return 'إنت "بنيان"، المساعد الذكي جوّه برنامج Bunyan Furnished لإدارة تأجير الاستديوهات المفروشة (بنأجر من شركات وبنفرش ونأجر شهري للمستأجرين، ومعانا شركاء). رد بالعامية المصرية، باختصار شديد (غالبًا من 2 لـ 6 سطور إلا لو طلب رسالة أو تفصيل) ووضوح، ومن غير عناوين كبيرة. استخدم **عريض** للأرقام المهمة وسطور قصيرة أو نقاط بـ •. لو السؤال عن أرقام البرنامج اعتمد على البيانات اللي تحت بس، ولو المعلومة مش موجودة قول كده ومتألفش أرقام. لو سؤال عام (فلوس، عقود، قانون، كتابة رسالة، نصيحة) جاوب من معرفتك ونبّه لو محتاج متخصص. العملة الأساسية في البرنامج هي اللي ظاهرة في الأرقام.\n\n=== بيانات البرنامج دلوقتي ===\n'+ctx()}
-async function gem(q,local,onT){var c=cfg();var models=(c.models&&c.models.length?c.models:FALL);var cont=GH.slice(-6).concat([{role:'user',parts:[{text:q+(local?'\n\n(رد المساعد المحلي على نفس السؤال كان: '+String(local).replace(/\*\*/g,'').slice(0,1200)+')':'')}]}]);
- var body={systemInstruction:{parts:[{text:sys()}]},contents:cont,generationConfig:{temperature:0.6,maxOutputTokens:900}};var last=null;
- for(var i=0;i<models.length;i++){try{var t=await call(models[i],c.key,body,false,onT);if(i>0){c.models=models.slice(i).concat(models.slice(0,i));setCfg(c)}GH.push({role:'user',parts:[{text:q}]},{role:'model',parts:[{text:t}]});GH=GH.slice(-10);return tidy(t)}catch(e){last=e;if(e.code===400&&/API key|API_KEY/i.test(e.message))break;if(e.code===403)break;if(e.code&&e.code!==404&&e.code!==429&&e.code!==503&&e.code!==500)break}}
+async function gem(q,local,onT,quick){var c=cfg();var models=(c.models&&c.models.length?c.models:FALL);var cont=GH.slice(-6).concat([{role:'user',parts:[{text:q+(local?'\n\n(رد المساعد المحلي على نفس السؤال كان: '+String(local).replace(/\*\*/g,'').slice(0,1200)+')':'')}]}]);
+ var body={systemInstruction:{parts:[{text:sys()}]},contents:cont,generationConfig:{temperature:0.6,maxOutputTokens:quick?250:900}};
+ var lite=models.filter(function(m){return /lite/.test(m)})[0]||'gemini-flash-lite-latest',m0=models[0];
+ var plan=c.mode==='plain'?[{m:m0,stream:false,ms:quick?8000:14000},{m:lite,stream:false,ms:10000}]:[{m:m0,stream:true,ms:quick?7000:10000},{m:m0,stream:false,ms:quick?7000:12000},{m:lite,stream:false,ms:10000}];
+ var last=null,t0=Date.now();
+ for(var i=0;i<plan.length;i++){var P=plan[i];if(i>0&&plan[i-1].m===P.m&&last&&last.code===429)continue;
+  try{var t=await call(P.m,c.key,body,{stream:P.stream,ms:P.ms,onT:onT});var c2=cfg();c2.lastMs=Date.now()-t0;c2.lastModel=P.m;c2.lastErr='';if(!P.stream&&i>0&&P.m===m0)c2.mode='plain';if(P.m!==m0&&c2.models){c2.models=[P.m].concat(c2.models.filter(function(x){return x!==P.m}))}setCfg(c2);
+   GH.push({role:'user',parts:[{text:q}]},{role:'model',parts:[{text:t}]});GH=GH.slice(-10);return tidy(t)}
+  catch(e){last=e;if(e.code===401||e.code===403||(e.code===400&&/API key|API_KEY/i.test(e.message)))break}}
+ try{var c3=cfg();c3.lastErr=String(last&&last.message||'');c3.lastMs=Date.now()-t0;setCfg(c3)}catch(x){}
  throw last||new Error('فشل')}
 function tidy(t){return String(t).replace(/^#{1,6}\s*/gm,'').replace(/^\s*[\*\-]\s+/gm,'• ').replace(/\n{3,}/g,'\n\n').trim()}
-function errMsg(e){var m=String(e&&e.message||e);if(/Failed to fetch|NetworkError|Load failed/i.test(m))return 'مفيش نت، أو الصفحة دي مش سامحة بالاتصال (جرّب من التطبيق).';if(/API key not valid|API_KEY_INVALID/i.test(m))return 'المفتاح غلط — اعمل نسخ ولصق تاني.';if(e&&e.code===429)return 'خلصت الحد المجاني للدقيقة/اليوم — استنى شوية وجرب تاني.';return m}
+function errMsg(e){var m=String(e&&e.message||e);if(e&&e.code==='timeout')return 'جوجل اتأخرت في الرد (النت بطيء أو الخدمة مضغوطة) — جرّب تاني.';if(e&&e.code==='net'||/Failed to fetch|NetworkError|Load failed/i.test(m))return 'مفيش نت أو جوجل مش بترد دلوقتي.';if(/API key not valid|API_KEY_INVALID/i.test(m)||e&&(e.code===401||e.code===403))return 'المفتاح مش شغال — افتح ✨ واربط تاني.';if(e&&e.code===429)return 'خلص الحد المجاني دلوقتي — استنى دقيقة وجرّب.';return m}
 var FORCE=/^\s*(✨|اسال جيميني|اسأل جيميني|جيميني|gemini|ذكاء|اسأل الذكاء|اسال الذكاء)[\s:،,]*/i;
 var DEEP=/(رايك|رأيك|انصحني|نصيحه|نصيحة|حلل|تحليل|اقترح|اقتراح|اكتبلي|اكتب لي|صيغلي|صياغه|صياغة|ازاي ازود|ازاي اقلل|استراتيجي|ترجم)/;
+var CHAT=/^\s*(يا ?رب|ربنا|الحمد ?لله|الحمدلله|شكرا|شكراً|متشكر|تسلم|تسلمي|ميرسي|thanks|thank you|السلام عليكم|سلام عليكم|وعليكم السلام|اهلا|أهلا|هلا|مرحبا|هاي|هالو|hi|hello|صباح|مساء|تصبح على خير|انت كويس|إنت كويس|انتي كويسه|عامل ايه يا|انت عامل ايه|إنت عامل ايه|ازيك|إزيك|ازاي حالك|اخبارك|أخبارك|كيفك|كيف حالك|حبيبي|يا حبيبي|يا مساعدي|يا بنيان|انت مين|إنت مين|بحبك|برافو|جميل|حلو|تمام|ماشي|اوك|ok|okay|good|طيب)([\s!.،,؟?…😊🙏❤️🤍👍]|$)/i;
+function isChat(q){var z=String(q).trim();return z.length<=60&&CHAT.test(z)&&!/(كام|فلوس|نقدي|ربح|دفع|ايجار|إيجار|متأخر|عقد|استديو|مستأجر|مصروف|سجل|سجّل|ضيف|احسب)/.test(z)}
+function canned(q){var z=String(q);if(/يا ?رب|ربنا/.test(z))return 'يا رب وإنت كمان تكون بخير وفي أحسن حال 🤍\nأقدر أساعدك في حاجة في البرنامج؟';
+ if(/شكر|تسلم|متشكر|ميرسي|thank/i.test(z))return 'العفو 🙏 أنا موجود في أي وقت.';if(/السلام عليكم|سلام عليكم/.test(z))return 'وعليكم السلام ورحمة الله وبركاته 👋\nتحب أساعدك في إيه؟';
+ if(/صباح/.test(z))return 'صباح النور ☀️ يومك جميل إن شاء الله. تحب أبدألك بملخص الوضع؟';if(/مساء/.test(z))return 'مساء النور 🌙 تحب أساعدك في إيه؟';if(/تصبح/.test(z))return 'وإنت من أهله 🌙';
+ if(/انت مين|إنت مين/.test(z))return 'أنا بنيان، مساعدك في البرنامج 🤖 بعرف أرقامك ومواعيدك وبساعدك تسجّل وتحسب.';
+ if(/كويس|عامل|ازيك|إزيك|حالك|اخبار|أخبار|كيف/.test(z))return 'الحمد لله تمام 😊 وإنت عامل إيه؟\nأقدر أساعدك في إيه النهارده؟';return 'تحت أمرك 😊 تحب أساعدك في إيه؟'}
 var o=window.bnyAsk;
-window.bnyAsk=function(q){var force=FORCE.test(q),q2=String(q).replace(FORCE,'').trim()||q;var r=force?null:o(q);
+window.bnyAsk=function(q){var force=FORCE.test(q),q2=String(q).replace(FORCE,'').trim()||q;
+ if(!force&&isChat(q)){if(!on())return {t:canned(q),i:'chat'};return gem(q2,'',live,true).then(function(t){skipType();return {t:'✨ '+t,i:'chat'}}).catch(function(){return {t:canned(q),i:'chat'}})}
+ var r=force?null:o(q);
  var unknown=!r||(r.ask&&!r.i)||r.i==='autofact'&&/[؟?]/.test(q);var deep=!force&&r&&!unknown&&DEEP.test(q)&&!/^(custom|fact)$/.test(r.i||'');
  if(!force&&!unknown&&!deep)return r;
  if(!on()){if(force)return {t:'✨ عشان أستعين بالذكاء الاصطناعي لازم تربطني بـ Gemini (مجاني) الأول — اضغط زرار ✨ فوق.',i:'gemoff'};
   if(unknown&&r&&r.t&&!window.__gemHint){window.__gemHint=1;r.t+='\n\n💡 لو عايزني أجاوب على أي سؤال (حتى لو مش في البرنامج)، اربطني بـ **Gemini المجاني** من زرار ✨ فوق.'}return r}
  if(r&&r.then)return r;
  var local=r&&!unknown?r.t:'';
- return gem(q2,local,live).then(function(t){skipType();return {t:(deep&&local?local+'\n\n———\n✨ **رأي الذكاء الاصطناعي:**\n':'✨ ')+t,i:deep?r.i:'gemini'}}).catch(function(e){if(r&&!unknown)return r;var m='⚠️ مقدرتش أوصل لـ Gemini: '+errMsg(e);return r?{t:m+'\n\n'+r.t,ask:r.ask,i:r.i}:{t:m,i:'gemerr'}})};
+ return gem(q2,local,live).then(function(t){skipType();return {t:(deep&&local?local+'\n\n———\n✨ **رأي الذكاء الاصطناعي:**\n':'✨ ')+t,i:deep?r.i:'gemini'}}).catch(function(e){skipType();if(r&&!unknown)return r;var m='⚠️ '+errMsg(e);return r?{t:m+'\n\n'+r.t,ask:r.ask,i:r.i}:{t:m,i:'gemerr'}})};
 function E(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function openLink(u){try{window.open(u,'_blank')}catch(e){location.href=u}}
 window.gemSetup=function(){var c=cfg(),d=document.getElementById('gemx');if(d)d.remove();d=document.createElement('div');d.id='gemx';
  d.innerHTML="<div class='gb'><h3>✨ ربط المساعد بـ Gemini <small style='font-size:11px;background:#e8f6ee;color:#13734b;border-radius:8px;padding:2px 7px'>مجاني</small></h3><p class='gs'>المساعد هيفضل يرد على أسئلة البرنامج بنفسه، ولما تسأله سؤال مش عارفه أو محتاج رأي/تحليل/كتابة رسالة هيستعين بذكاء جوجل الاصطناعي.<br>🔒 المفتاح بيتحفظ على الجهاز ده بس، وبيتبعت لجوجل ملخص أرقامك مع السؤال.</p>"+
- (c.key?"<div class='sw'><span>مربوط ✅ <small style='opacity:.7'>"+E((c.models||[])[0]||'')+"</small></span><label><input type='checkbox' id='gmon' "+(c.on!==false?'checked':'')+" style='width:auto'> شغّال</label></div>":"<ol><li>افتح <a href='#' id='gml'>aistudio.google.com/apikey</a> وادخل بالـ Gmail بتاعك.</li><li>اضغط <b>Create API key</b> (لو طلب مشروع اختار أي واحد أو اعمل جديد).</li><li>انسخ المفتاح من زرار النسخ 📋 اللي <b>جنب API Key</b> (بيبدأ بـ AQ. أو AIza) والصقه هنا — مش «Copy cURL».</li></ol>")+
+ (c.key?"<div class='sw'><span>مربوط ✅ <small style='opacity:.7'>"+E((c.models||[])[0]||'')+(c.lastMs?' · آخر رد '+(c.lastMs/1000).toFixed(1)+' ث':'')+(c.lastErr?' · آخر خطأ: '+E(c.lastErr.slice(0,60)):'')+"</small></span><label><input type='checkbox' id='gmon' "+(c.on!==false?'checked':'')+" style='width:auto'> شغّال</label></div>":"<ol><li>افتح <a href='#' id='gml'>aistudio.google.com/apikey</a> وادخل بالـ Gmail بتاعك.</li><li>اضغط <b>Create API key</b> (لو طلب مشروع اختار أي واحد أو اعمل جديد).</li><li>انسخ المفتاح من زرار النسخ 📋 اللي <b>جنب API Key</b> (بيبدأ بـ AQ. أو AIza) والصقه هنا — مش «Copy cURL».</li></ol>")+
  "<input id='gmk' placeholder='AQ.… أو AIza…' autocomplete='off' spellcheck='false' value='"+E(c.key?c.key.slice(0,6)+'••••••••'+c.key.slice(-4):'')+"'><div class='gr'><button class='p' id='gms'>"+(c.key?'🔄 جرّب الاتصال':'🔗 جرّب واربط')+"</button>"+(c.key?"<button id='gmd'>🗑 فك الربط</button>":"")+"<button id='gmc'>إغلاق</button></div><div class='st' id='gmt'></div></div>";
  document.body.appendChild(d);var $=function(id){return d.querySelector('#'+id)},st=$('gmt');
  function say(t,k){st.className='st on '+(k||'');st.textContent=t}
