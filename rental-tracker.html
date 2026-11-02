@@ -5236,7 +5236,9 @@ function ctx0(){var o=[];try{o.push('تاريخ النهارده: '+new Date().t
  try{var gn=(S.gp&&S.gp[WS]&&(S.gp[WS].n||S.gp[WS].name))||'';if(gn)o.push('المجموعة المفتوحة دلوقتي: '+gn)}catch(e){}
  var ids=[['summary','ملخص الوضع'],['cash','الرصيد النقدي وجه منين'],['profit','الربح لحد النهارده بالتفصيل'],['proj','الربح المتوقع'],['totals','الإجماليات'],['upcoming','الدفعات الجاية'],['late','المتأخرين'],['company','دفعات الشركة'],['forecast','هل النقدي هيكفي'],['fund','فلوس الشراكة'],['shares','نصيب كل شريك'],['exp','المصاريف'],['draw','السحب'],['ends','نهاية العقود'],['occ','الإشغال'],['furn','الأثاث'],['dep','التأمين والشيكات'],['ratios','هامش الربح والعائد'],['best','أكسب استديو'],['count','الأعداد']];
  ids.forEach(function(x){try{var t=window.bnyRun?bnyRun(x[0],x[1]):'';if(t&&typeof t==='string'&&t.length>5&&!/^مش متأكد/.test(t))o.push('— '+x[1]+' —\n'+t)}catch(e){}});
- return o.join('\n\n').replace(/\*\*/g,'').slice(0,12000)}
+ try{var M=(S&&S.aiMem)||{},F=(M.f||[]).filter(function(f){return f&&f.t&&!CHAT.test(f.t)}).slice(-30).map(function(f){return '• '+f.t}),A=(M.a||[]).slice(-30).map(function(x){return '• س: '+x.q+' ← ج: '+String(x.t).replace(/^✨\s*/,'').slice(0,200)});
+  if(F.length)o.push('— معلومات قالها المستخدم للمساعد (اعتبرها صحيحة) —\n'+F.join('\n'));if(A.length)o.push('— إجابات علّمها المستخدم للمساعد (التزم بيها لو اتسأل نفس السؤال) —\n'+A.join('\n'))}catch(e){}
+ return o.join('\n\n').replace(/\*\*/g,'').slice(0,14000)}
 function sys(){var nm='';try{nm=(typeof A!=='undefined'&&A&&A.u)||''}catch(e){}
  return 'إنت "بنيان"، المساعد الذكي جوّه برنامج Bunyan Furnished لإدارة تأجير الاستديوهات المفروشة (بنأجر من شركات وبنفرش ونأجر شهري للمستأجرين، ومعانا شركاء). اسم المستخدم اللي بيكلمك: '+(nm||'صاحب البرنامج')+'. اتكلم معاه كصاحب ودود ومحترم، ومتعرّفش بنفسك ولا تعدّد إنت بتعمل إيه غير لو سألك. لو كلام ودّي أو سلام رد بجملة أو اتنين طبيعيين. رد بالعامية المصرية، باختصار شديد (غالبًا من 2 لـ 6 سطور إلا لو طلب رسالة أو تفصيل) ووضوح، ومن غير عناوين كبيرة. استخدم **عريض** للأرقام المهمة وسطور قصيرة أو نقاط بـ •. لو السؤال عن أرقام البرنامج اعتمد على البيانات اللي تحت بس (دي محسوبة بدقة من البرنامج)، واحسب منها لو محتاج (جمع/طرح/نسب/أيام/سيناريوهات) ووضّح الحسبة في سطر. لو المعلومة مش موجودة قول كده ومتألفش أرقام. لو سؤال عام (فلوس، عقود، قانون، كتابة رسالة، نصيحة) جاوب من معرفتك ونبّه لو محتاج متخصص. العملة الأساسية في البرنامج هي اللي ظاهرة في الأرقام.\n\n=== بيانات البرنامج دلوقتي ===\n'+ctx()}
 async function gem(q,local,onT,quick,noHist){var c=cfg();var models=(c.models&&c.models.length?c.models:FALL);var cont=GH.slice(-6).concat([{role:'user',parts:[{text:q+(local?'\n\n(رد المساعد المحلي على نفس السؤال كان: '+String(local).replace(/\*\*/g,'').slice(0,1200)+')':'')}]}]);
@@ -5246,11 +5248,11 @@ async function gem(q,local,onT,quick,noHist){var c=cfg();var models=(c.models&&c
  var last=null,t0=Date.now();
  for(var i=0;i<plan.length;i++){var P=plan[i];if(i>0&&plan[i-1].m===P.m&&last&&last.code===429)continue;
   try{var t=await call(P.m,c.key,body,{stream:P.stream,ms:P.ms,onT:onT});var c2=cfg();c2.lastMs=Date.now()-t0;c2.lastModel=P.m;c2.lastErr='';if(!P.stream&&i>0&&P.m===m0)c2.mode='plain';if(P.m!==m0&&c2.models){c2.models=[P.m].concat(c2.models.filter(function(x){return x!==P.m}))}setCfg(c2);
-   if(!noHist){GH.push({role:'user',parts:[{text:q}]},{role:'model',parts:[{text:t}]});GH=GH.slice(-10)}return tidy(t)}
+   window.__gemRaw=t;if(!noHist){GH.push({role:'user',parts:[{text:q}]},{role:'model',parts:[{text:t}]});GH=GH.slice(-10)}return tidy(t)}
   catch(e){last=e;if(e.code===401||e.code===403||(e.code===400&&/API key|API_KEY/i.test(e.message)))break}}
  try{var c3=cfg();c3.lastErr=String(last&&last.message||'');c3.lastMs=Date.now()-t0;setCfg(c3)}catch(x){}
  throw last||new Error('فشل')}
-function tidy(t){return String(t).replace(/\s*\[حفظ\]\s*/g,' ').replace(/^#{1,6}\s*/gm,'').replace(/^\s*[\*\-]\s+/gm,'• ').replace(/\n{3,}/g,'\n\n').trim()}
+function tidy(t){return String(t).replace(/\s*\[(حفظ|ثابت)\]\s*/g,' ').replace(/^#{1,6}\s*/gm,'').replace(/^\s*[\*\-]\s+/gm,'• ').replace(/\n{3,}/g,'\n\n').trim()}
 function errMsg(e){var m=String(e&&e.message||e);if(e&&e.code==='timeout')return 'جوجل اتأخرت في الرد (النت بطيء أو الخدمة مضغوطة) — جرّب تاني.';if(e&&e.code==='net'||/Failed to fetch|NetworkError|Load failed/i.test(m))return 'مفيش نت أو جوجل مش بترد دلوقتي.';if(/API key not valid|API_KEY_INVALID/i.test(m)||e&&(e.code===401||e.code===403))return 'المفتاح مش شغال — افتح ✨ واربط تاني.';if(e&&e.code===429)return 'خلص الحد المجاني دلوقتي — استنى دقيقة وجرّب.';return m}
 var FORCE=/^\s*(✨|اسال جيميني|اسأل جيميني|جيميني|gemini|ذكاء|اسأل الذكاء|اسال الذكاء)[\s:،,]*/i;
 var DEEP=/(رايك|رأيك|انصحني|نصيحه|نصيحة|حلل|تحليل|اقترح|اقتراح|اكتبلي|اكتب لي|صيغلي|صياغه|صياغة|ازاي ازود|ازاي اقلل|استراتيجي|ترجم)/;
@@ -5272,18 +5274,19 @@ function assist(q,r,deep){var local=String(r.t);liveRaw(local,'');
  return gem(ask,'',function(t){liveRaw(local,t)},!deep,true).then(function(t){skipType();return {t:'✨ '+keep(local,t),i:r.i}}).catch(function(){skipType();return r})}
 var o=window.bnyAsk;
 window.bnyAsk=function(q){var force=FORCE.test(q),q2=String(q).replace(FORCE,'').trim()||q;
- if(!force&&isChat(q)){if(!on())return {t:canned(q),i:'chat'};return gem(q2,'',live,true).then(function(t){skipType();return {t:'✨ '+t,i:'chat'}}).catch(function(){return {t:canned(q),i:'chat'}})}
+ if(!force&&isChat(q)){try{var la=BNYMEM.findAns(q);if(la&&/^✨/.test(la.t))return {t:la.t,i:'custom'}}catch(x){}if(!on())return {t:canned(q),i:'chat'};return gem(q2,'',live,true).then(function(t){skipType();return {t:'✨ '+t,i:'chat'}}).catch(function(){return {t:canned(q),i:'chat'}})}
  var r=force?null:o(q);
+ if(r&&r.i==='custom'&&typeof r.t==='string'&&/الإجابة اللي علمتهالي:\*\*\n✨/.test(r.t))r.t=r.t.replace(/📝 \*\*الإجابة اللي علمتهالي:\*\*\n/,'');
  if(r&&r.i==='autofact'&&on()){var tq=String(q).trim().slice(0,300);var drop=function(){try{var Fs=BNYMEM.facts();for(var fi=Fs.length-1;fi>=0;fi--){if(String(Fs[fi].t).trim()===tq){BNYMEM.delFact(fi);break}}}catch(x){}};
-  return gem(q2+'\n\n(تعليمات: لو الكلام ده معلومة مفيدة عن الشغل أو الاستديوهات أو الناس تستاهل تتحفظ، رد بجملة قصيرة وحط في آخر الرد [حفظ]. لو ده كلام ودّي أو دعاء أو سلام، رد رد طبيعي قصير ومتحطش [حفظ].)','',function(t){live(String(t).replace(/\[حفظ\]/g,''))},true).then(function(t){skipType();var keep=/\[حفظ\]/.test(t);t=t.replace(/\s*\[حفظ\]\s*/g,' ').trim();if(!keep)drop();return {t:'✨ '+t+(keep?'\n🧠 حفظتها عندي.':''),i:keep?'autofact':'chat'}}).catch(function(){return r})}
+  return gem(q2+'\n\n(تعليمات: لو الكلام ده معلومة مفيدة عن الشغل أو الاستديوهات أو الناس تستاهل تتحفظ، رد بجملة قصيرة وحط في آخر الرد [حفظ]. لو ده كلام ودّي أو دعاء أو سلام، رد رد طبيعي قصير ومتحطش [حفظ].)','',function(t){live(String(t).replace(/\[حفظ\]/g,''))},true).then(function(t){skipType();var keep=/\[حفظ\]/.test(String(window.__gemRaw||t));t=t.replace(/\s*\[حفظ\]\s*/g,' ').trim();if(!keep)drop();return {t:'✨ '+t+(keep?'\n🧠 حفظتها عندي.':''),i:keep?'autofact':'chat'}}).catch(function(){return r})}
  var bad=r&&typeof r.t==='string'&&/\[object (Promise|Object)\]|undefined|NaN/.test(r.t);if(r&&r.i==='fx'&&!/(درهم|جنيه|مصري|دولار|يورو|ريال|دينار|استرليني|صرف|usd|eur|aed|egp|sar)/i.test(q))bad=true;var unknown=!r||bad||(r.ask&&!r.i)||r.i==='autofact'&&/[؟?]/.test(q);var deep=!force&&r&&!unknown&&DEEP.test(q)&&!/^(custom|fact)$/.test(r.i||'');
  if(!force&&!unknown&&!deep){if(on()&&cfg().assist!==false&&r&&!r.ask&&r.i&&!SKIP.test(r.i)&&!(r.t&&r.t.then)&&String(r.t||'').length>15)return assist(q,r,false);return r}
  if(!on()){if(force)return {t:'✨ عشان أستعين بالذكاء الاصطناعي لازم تربطني بـ Gemini (مجاني) الأول — اضغط زرار ✨ فوق.',i:'gemoff'};
   if(unknown&&r&&r.t&&!window.__gemHint){window.__gemHint=1;r.t+='\n\n💡 لو عايزني أجاوب على أي سؤال (حتى لو مش في البرنامج)، اربطني بـ **Gemini المجاني** من زرار ✨ فوق.'}return r}
  if(r&&r.then)return r;
  if(deep&&r&&!(r.t&&r.t.then))return assist(q,r,true);
- var local=r&&!unknown?r.t:'';
- return gem(q2,local,live).then(function(t){skipType();return {t:(deep&&local?local+'\n\n———\n✨ **رأي الذكاء الاصطناعي:**\n':'✨ ')+t,i:deep?r.i:'gemini'}}).catch(function(e){skipType();if(r&&!unknown)return r;var m='⚠️ '+errMsg(e);return r?{t:m+'\n\n'+r.t,ask:r.ask,i:r.i}:{t:m,i:'gemerr'}})};
+ var local=r&&!unknown?r.t:'';var learnQ=unknown&&!deep&&!force?q2:'';
+ return gem(learnQ?q2+'\n\n(لو إجابتك معلومة عامة ثابتة مش هتتغير ومش معتمدة على أرقام البرنامج أو تاريخ النهارده، حط في آخرها [ثابت].)':q2,local,function(t){live(t)}).then(function(t){skipType();if(learnQ&&/\[ثابت\]/.test(String(window.__gemRaw||''))){t=t.replace(/\s*\[ثابت\]\s*/g,' ').trim();try{BNYMEM.setAns(learnQ,'✨ '+t)}catch(x){}}t=t.replace(/\s*\[ثابت\]\s*/g,' ').trim();return {t:(deep&&local?local+'\n\n———\n✨ **رأي الذكاء الاصطناعي:**\n':'✨ ')+t,i:deep?r.i:'gemini'}}).catch(function(e){skipType();if(r&&!unknown)return r;var m='⚠️ '+errMsg(e);return r?{t:m+'\n\n'+r.t,ask:r.ask,i:r.i}:{t:m,i:'gemerr'}})};
 function E(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function openLink(u){try{window.open(u,'_blank')}catch(e){location.href=u}}
 window.gemSetup=function(){var c=cfg(),d=document.getElementById('gemx');if(d)d.remove();d=document.createElement('div');d.id='gemx';
@@ -5306,6 +5309,7 @@ function inject(){var top=document.querySelector('#aix .a3top');if(!top||documen
 var ao=window.aiOpen;if(ao)window.aiOpen=function(){var x=ao.apply(this,arguments);try{inject()}catch(e){}return x};
 new MutationObserver(function(){if(document.getElementById('aix')&&!document.getElementById('gemb'))inject()}).observe(document.body,{childList:true});
 window.bnyGem={on:on,cfg:cfg,ask:gem};
+setTimeout(function(){try{if(!AUTH||!S.aiMem||!S.aiMem.f)return;var n0=S.aiMem.f.length;S.aiMem.f=S.aiMem.f.filter(function(f){return !(f&&f.t&&CHAT.test(String(f.t).trim()))});if(S.aiMem.f.length!==n0)save()}catch(e){}},5000);
 function trimAI(){document.querySelectorAll('#aix .a3body .card3').forEach(function(c){if(c.__ai)return;var t=c.querySelector('.tx');if(!t||!/^\s*✨/.test(t.textContent))return;c.__ai=1;c.classList.add('aiG');c.querySelectorAll('.act3 button').forEach(function(b){if(!/🔊/.test(b.textContent))b.remove()});c.querySelectorAll('.chips3').forEach(function(x){if(x.querySelector('.tch3'))x.remove()})})}
 new MutationObserver(function(){if(document.getElementById('aix'))trimAI()}).observe(document.body,{childList:true,subtree:true});
 })();
