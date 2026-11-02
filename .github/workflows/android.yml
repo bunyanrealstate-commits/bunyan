@@ -86,6 +86,7 @@ jobs:
             public void onCreate(Bundle savedInstanceState) {
               registerPlugin(WaBizPlugin.class);
               super.onCreate(savedInstanceState);
+              try { android.webkit.WebSettings ws = getBridge().getWebView().getSettings(); ws.setSupportZoom(true); ws.setBuiltInZoomControls(true); ws.setDisplayZoomControls(false); ws.setUseWideViewPort(true); } catch (Exception e) { }
             }
           }
           JEOF
