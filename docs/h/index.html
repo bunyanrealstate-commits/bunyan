@@ -4523,6 +4523,87 @@ var fb0=window.aiFb;window.aiFb=function(ix,ok){try{var H0=window.__aiH&&window.
 })();
 </script>
 
+<style id="gemcss">
+#gemx{position:fixed;inset:0;z-index:470;background:rgba(8,18,32,.6);display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px)}
+#gemx .gb{background:#fff;color:#0f2742;width:min(520px,100%);max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px rgba(0,0,0,.3);animation:gmu .22s ease-out}
+@keyframes gmu{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+#gemx h3{margin:0 0 4px;font-size:18px;display:flex;align-items:center;gap:8px}
+#gemx .gs{font-size:12.5px;color:#5b6b80;margin:0 0 12px;line-height:1.7}
+#gemx ol{margin:0 0 12px;padding-inline-start:20px;font-size:13.5px;line-height:1.9}
+#gemx a{color:#1a73e8;font-weight:700}
+#gemx input{width:100%;box-sizing:border-box;border:1.5px solid #d6dee8;border-radius:12px;padding:11px 12px;font-size:14px;direction:ltr;font-family:monospace}
+#gemx .gr{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+#gemx .gr button{flex:1;min-width:120px;border:0;border-radius:12px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;background:#eef2f7;color:#0f2742}
+#gemx .gr .p{background:linear-gradient(135deg,#4285f4,#9b72cb,#d96570);color:#fff}
+#gemx .st{margin-top:10px;font-size:13px;padding:9px 11px;border-radius:10px;background:#f4f7fb;display:none;line-height:1.7}
+#gemx .st.on{display:block}#gemx .st.ok{background:#e8f6ee;color:#13734b}#gemx .st.er{background:#fdecec;color:#b42318}
+#gemx .sw{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#f4f7fb;border-radius:12px;padding:10px 12px;margin-top:10px;font-size:13.5px}
+.a3x.gem{background:linear-gradient(135deg,#4285f4,#9b72cb,#d96570)!important}
+.a3x.gem.off{background:rgba(255,255,255,.1)!important;filter:grayscale(1)}
+@media (prefers-color-scheme:dark){#gemx .gb{background:#14202f;color:#e8eef6}#gemx .gs{color:#9fb0c4}#gemx input{background:#0e1825;color:#e8eef6;border-color:#2a3a50}#gemx .gr button{background:#1f2e42;color:#e8eef6}#gemx .st,#gemx .sw{background:#1b2a3c}}
+</style>
+<script id="gemjs">
+(function(){
+var K='bny_gem',BASE='https://generativelanguage.googleapis.com/v1beta/';
+function cfg(){try{return JSON.parse(localStorage.getItem(K)||'null')||{}}catch(e){return {}}}
+function setCfg(c){try{localStorage.setItem(K,JSON.stringify(c))}catch(e){}}
+function on(){var c=cfg();return !!(c.key&&c.on!==false)}
+var FALL=['gemini-flash-latest','gemini-2.5-flash','gemini-2.0-flash','gemini-flash-lite-latest','gemini-2.5-flash-lite','gemini-2.0-flash-lite'];
+function vnum(n){var m=n.match(/(\d+(?:\.\d+)?)/);return m?parseFloat(m[1]):0}
+function pickModels(list){var ok=list.filter(function(m){var n=m.name.replace('models/','');return (m.supportedGenerationMethods||[]).indexOf('generateContent')>=0&&/flash/.test(n)&&!/image|tts|audio|live|embed|vision|exp|8b|thinking|robotics|computer/.test(n)}).map(function(m){return m.name.replace('models/','')});
+ ok.sort(function(a,b){var la=/lite/.test(a),lb=/lite/.test(b);if(la!==lb)return la?1:-1;var pa=/preview/.test(a),pb=/preview/.test(b);if(pa!==pb)return pa?1:-1;var ta=/latest/.test(a),tb=/latest/.test(b);if(ta!==tb)return ta?-1:1;return vnum(b)-vnum(a)});
+ return ok.concat(FALL.filter(function(f){return ok.indexOf(f)<0})).slice(0,8)}
+async function listModels(key){var r=await fetch(BASE+'models?pageSize=200',{headers:{'x-goog-api-key':key}});var j=await r.json().catch(function(){return {}});if(!r.ok)throw new Error((j.error&&j.error.message)||('HTTP '+r.status));return pickModels(j.models||[])}
+async function call(model,key,body){var r=await fetch(BASE+'models/'+model+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});var j=await r.json().catch(function(){return {}});
+ if(!r.ok){var e=new Error((j.error&&j.error.message)||('HTTP '+r.status));e.code=r.status;throw e}
+ var c=j.candidates&&j.candidates[0];var t=c&&c.content&&c.content.parts?c.content.parts.filter(function(p){return p.text&&!p.thought}).map(function(p){return p.text}).join(''):'';if(!t){var e2=new Error(c&&c.finishReason==='SAFETY'?'الرد اتمنع من جوجل':'مفيش رد');e2.code=0;throw e2}return t}
+var GH=[];
+function ctx(){var o=[];try{o.push('تاريخ النهارده: '+new Date().toLocaleDateString('ar-EG',{weekday:'long',year:'numeric',month:'long',day:'numeric'}))}catch(e){}
+ try{if(window.bnyThink){o.push('— ملخص الوضع من البرنامج —\n'+bnyThink('ملخص الوضع'))}}catch(e){}
+ try{if(window.bnyThink){var u=bnyThink('الدفعات الجاية');if(u)o.push('— الدفعات الجاية —\n'+u)}}catch(e){}
+ try{if(window.bnyThink){var l=bnyThink('مين متأخر');if(l)o.push('— المتأخرين —\n'+l)}}catch(e){}
+ return o.join('\n\n').replace(/\*\*/g,'').slice(0,6000)}
+function sys(){var nm='';try{nm=(S&&S.user&&S.user.name)||''}catch(e){}
+ return 'إنت "بنيان"، المساعد الذكي جوّه برنامج Bunyan Furnished لإدارة تأجير الاستديوهات المفروشة (بنأجر من شركات وبنفرش ونأجر شهري للمستأجرين، ومعانا شركاء). رد بالعامية المصرية، باختصار ووضوح، ومن غير عناوين كبيرة. استخدم **عريض** للأرقام المهمة وسطور قصيرة أو نقاط بـ •. لو السؤال عن أرقام البرنامج اعتمد على البيانات اللي تحت بس، ولو المعلومة مش موجودة قول كده ومتألفش أرقام. لو سؤال عام (فلوس، عقود، قانون، كتابة رسالة، نصيحة) جاوب من معرفتك ونبّه لو محتاج متخصص. العملة الأساسية في البرنامج هي اللي ظاهرة في الأرقام.\n\n=== بيانات البرنامج دلوقتي ===\n'+ctx()}
+async function gem(q,local){var c=cfg();var models=(c.models&&c.models.length?c.models:FALL);var cont=GH.slice(-6).concat([{role:'user',parts:[{text:q+(local?'\n\n(رد المساعد المحلي على نفس السؤال كان: '+String(local).replace(/\*\*/g,'').slice(0,1200)+')':'')}]}]);
+ var body={systemInstruction:{parts:[{text:sys()}]},contents:cont,generationConfig:{temperature:0.6,maxOutputTokens:2048}};var last=null;
+ for(var i=0;i<models.length;i++){try{var t=await call(models[i],c.key,body);if(i>0){c.models=models.slice(i).concat(models.slice(0,i));setCfg(c)}GH.push({role:'user',parts:[{text:q}]},{role:'model',parts:[{text:t}]});GH=GH.slice(-10);return tidy(t)}catch(e){last=e;if(e.code===400&&/API key|API_KEY/i.test(e.message))break;if(e.code===403)break;if(e.code&&e.code!==404&&e.code!==429&&e.code!==503&&e.code!==500)break}}
+ throw last||new Error('فشل')}
+function tidy(t){return String(t).replace(/^#{1,6}\s*/gm,'').replace(/^\s*[\*\-]\s+/gm,'• ').replace(/\n{3,}/g,'\n\n').trim()}
+function errMsg(e){var m=String(e&&e.message||e);if(/Failed to fetch|NetworkError|Load failed/i.test(m))return 'مفيش نت، أو الصفحة دي مش سامحة بالاتصال (جرّب من التطبيق).';if(/API key not valid|API_KEY_INVALID/i.test(m))return 'المفتاح غلط — اعمل نسخ ولصق تاني.';if(e&&e.code===429)return 'خلصت الحد المجاني للدقيقة/اليوم — استنى شوية وجرب تاني.';return m}
+var FORCE=/^\s*(✨|اسال جيميني|اسأل جيميني|جيميني|gemini|ذكاء|اسأل الذكاء|اسال الذكاء)[\s:،,]*/i;
+var DEEP=/(رايك|رأيك|انصحني|نصيحه|نصيحة|حلل|تحليل|اقترح|اقتراح|اكتبلي|اكتب لي|صيغ|صياغه|صياغة|رساله|رسالة|ازاي ازود|ازاي اقلل|خطه|خطة|استراتيجي|قانون|قانوني|عقد ايجار|عقد إيجار|فسرلي|اشرحلي|اشرح لي|ترجم|ليه)/;
+var o=window.bnyAsk;
+window.bnyAsk=function(q){var force=FORCE.test(q),q2=String(q).replace(FORCE,'').trim()||q;var r=force?null:o(q);
+ var unknown=!r||(r.ask&&!r.i)||r.i==='autofact'&&/[؟?]/.test(q);var deep=!force&&r&&!unknown&&DEEP.test(q)&&!/^(custom|fact)$/.test(r.i||'');
+ if(!force&&!unknown&&!deep)return r;
+ if(!on()){if(force)return {t:'✨ عشان أستعين بالذكاء الاصطناعي لازم تربطني بـ Gemini (مجاني) الأول — اضغط زرار ✨ فوق.',i:'gemoff'};
+  if(unknown&&r&&r.t&&!window.__gemHint){window.__gemHint=1;r.t+='\n\n💡 لو عايزني أجاوب على أي سؤال (حتى لو مش في البرنامج)، اربطني بـ **Gemini المجاني** من زرار ✨ فوق.'}return r}
+ if(r&&r.then)return r;
+ var local=r&&!unknown?r.t:'';
+ return gem(q2,local).then(function(t){return {t:(deep&&local?local+'\n\n———\n✨ **رأي الذكاء الاصطناعي:**\n':'✨ ')+t,i:deep?r.i:'gemini'}}).catch(function(e){if(r&&!unknown)return r;var m='⚠️ مقدرتش أوصل لـ Gemini: '+errMsg(e);return r?{t:m+'\n\n'+r.t,ask:r.ask,i:r.i}:{t:m,i:'gemerr'}})};
+function E(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function openLink(u){try{window.open(u,'_blank')}catch(e){location.href=u}}
+window.gemSetup=function(){var c=cfg(),d=document.getElementById('gemx');if(d)d.remove();d=document.createElement('div');d.id='gemx';
+ d.innerHTML="<div class='gb'><h3>✨ ربط المساعد بـ Gemini <small style='font-size:11px;background:#e8f6ee;color:#13734b;border-radius:8px;padding:2px 7px'>مجاني</small></h3><p class='gs'>المساعد هيفضل يرد على أسئلة البرنامج بنفسه، ولما تسأله سؤال مش عارفه أو محتاج رأي/تحليل/كتابة رسالة هيستعين بذكاء جوجل الاصطناعي.<br>🔒 المفتاح بيتحفظ على الجهاز ده بس، وبيتبعت لجوجل ملخص أرقامك مع السؤال.</p>"+
+ (c.key?"<div class='sw'><span>مربوط ✅ <small style='opacity:.7'>"+E((c.models||[])[0]||'')+"</small></span><label><input type='checkbox' id='gmon' "+(c.on!==false?'checked':'')+" style='width:auto'> شغّال</label></div>":"<ol><li>افتح <a href='#' id='gml'>aistudio.google.com/apikey</a> وادخل بالـ Gmail بتاعك.</li><li>اضغط <b>Create API key</b> (لو طلب مشروع اختار أي واحد أو اعمل جديد).</li><li>انسخ المفتاح (بيبدأ بـ AIza…) والصقه هنا.</li></ol>")+
+ "<input id='gmk' placeholder='AIza…' autocomplete='off' spellcheck='false' value='"+E(c.key?c.key.slice(0,6)+'••••••••'+c.key.slice(-4):'')+"'><div class='gr'><button class='p' id='gms'>"+(c.key?'🔄 جرّب الاتصال':'🔗 جرّب واربط')+"</button>"+(c.key?"<button id='gmd'>🗑 فك الربط</button>":"")+"<button id='gmc'>إغلاق</button></div><div class='st' id='gmt'></div></div>";
+ document.body.appendChild(d);var $=function(id){return d.querySelector('#'+id)},st=$('gmt');
+ function say(t,k){st.className='st on '+(k||'');st.textContent=t}
+ d.addEventListener('click',function(e){if(e.target===d)d.remove()});$('gmc').onclick=function(){d.remove()};
+ if($('gml'))$('gml').onclick=function(e){e.preventDefault();openLink('https://aistudio.google.com/apikey')};
+ var inp=$('gmk');inp.onfocus=function(){if(/•/.test(inp.value))inp.value=''};
+ if($('gmon'))$('gmon').onchange=function(){var c2=cfg();c2.on=this.checked;setCfg(c2);upd()};
+ if($('gmd'))$('gmd').onclick=function(){setCfg({});upd();d.remove();try{toast('اتفك الربط مع Gemini')}catch(e){}};
+ $('gms').onclick=async function(){var k=inp.value.trim();if(/•/.test(k)||!k)k=cfg().key||'';if(!/^AIza[\w-]{20,}$/.test(k)){say('المفتاح شكله مش صح — لازم يبدأ بـ AIza','er');return}
+  say('⏳ بجرب الاتصال…');try{var ms=await listModels(k);var c3={key:k,on:true,models:ms};setCfg(c3);var t=await gem('قول "تمام، أنا متوصل" في جملة واحدة قصيرة.');say('✅ اتربط! النموذج: '+ms[0]+'\nالرد: '+t,'ok');upd()}catch(e){if(!cfg().key||cfg().key!==k)setCfg({});say('❌ '+errMsg(e),'er')}}};
+function upd(){var b=document.getElementById('gemb');if(b){b.classList.toggle('off',!on());b.title=on()?'Gemini شغّال':'اربط بـ Gemini (مجاني)'}}
+function inject(){var top=document.querySelector('#aix .a3top');if(!top||document.getElementById('gemb'))return;var b=document.createElement('button');b.id='gemb';b.className='a3x gem';b.textContent='✨';b.onclick=function(){gemSetup()};var br=top.querySelector('.a3x');if(br)top.insertBefore(b,br);else top.appendChild(b);upd()}
+var ao=window.aiOpen;if(ao)window.aiOpen=function(){var x=ao.apply(this,arguments);try{inject()}catch(e){}return x};
+new MutationObserver(function(){if(document.getElementById('aix')&&!document.getElementById('gemb'))inject()}).observe(document.body,{childList:true});
+window.bnyGem={on:on,cfg:cfg,ask:gem};
+})();
+</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script><script id="hguard">(function(){
 var D=["units","exp","dep","gp","gc","adj"];window._ug=0;["pointerdown","keydown","touchstart"].forEach(function(e){addEventListener(e,function(){window._ug=Date.now()},{capture:true,passive:true})});
 function pk(o){var r={};D.forEach(function(k){if(o&&o[k]!=null)r[k]=o[k]});return JSON.stringify(r)}
