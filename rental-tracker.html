@@ -2289,7 +2289,12 @@ function paper(f){var r=function(en,k,ar,x){return '<tr><td class="en">'+en+'</t
  '<div><ul><li>السكن عائلي فقط.</li><li>العقد شامل المياه والكهرباء والصيانة.</li><li>في حالة إلغاء العقد قبل انتهاء مدته من قبل المستأجر يتم خصم شهر عليه بقيمة '+sp('cx',f)+' درهم.</li><li>يجب على المستأجر إخطار المؤجر في حالة عدم التجديد قبل نهاية العقد بشهر.</li><li>يسترد المستأجر شيك التأمين في حالة تسليم السكن في حالة جيدة.</li><li>في حالة وجود أي تلفيات في الفرش أو الأجهزة أو ترك المكان بدون تنظيف تام كما تم تسليمه للعميل، تقدّر التلفيات ويخصم من شيك التأمين أو يدفع كاش في وقت الخروج من المكان.</li><li>في حالة إخلاء الشقة يتعهد المستأجر بالإخلاء في نفس يوم تاريخ الانتهاء، وفي حالة تأخر الإخلاء عن الموعد المحدد يتحمل المستأجر 300 درهم عن كل يوم غرامة تأخير.</li></ul></div></div>'+
  '<div class="sg"><div>Witness<small>الشاهد</small></div><div>Witness<small>الشاهد</small></div><div>Tenant<small>المستأجر</small></div><div>Landlord Signature<small>توقيع المؤجر</small></div></div></div>'}
 function endOf(st,mo){var d=pd(st),m=Math.round(+mo||0);if(!m)return '';var e=new Date(d.getFullYear(),d.getMonth()+m,d.getDate());e.setDate(e.getDate()-1);return iso(e)}
-function fit(){var v=document.getElementById('ctview'),p=document.getElementById('ctpaper');if(!v||!p)return;var w=v.clientWidth||794,k=Math.min(1,w/794);p.style.transform=k<1?'scale('+k+')':'none';p.style.transformOrigin='top right';v.style.height=k<1?Math.ceil(p.offsetHeight*k)+'px':'auto'}
+function fit(){var v=document.getElementById('ctview'),p=document.getElementById('ctpaper');if(!v||!p)return;var Z=window.ctZ||1,w=v.clientWidth||794,k=Math.min(1,w/794)*Z;
+ if(Z>1&&('zoom' in p.style)){p.style.transform='none';p.style.zoom=k;v.style.height='auto';v.style.maxHeight='78vh';v.style.overflow='auto';v.style.overscrollBehavior='contain'}
+ else{p.style.zoom='';v.style.maxHeight='';v.style.overflow='';k=Math.min(1,w/794);p.style.transform=k<1?'scale('+k+')':'none';p.style.transformOrigin='top right';v.style.height=k<1?Math.ceil(p.offsetHeight*k)+'px':'auto'}
+ var zl=document.getElementById('ctzl');if(zl)zl.textContent=Z>1?Math.round(Z*100)+'%':'ملء العرض'}
+window.ctZoom=function(d){var Z=window.ctZ||1;Z=d===0?1:Math.max(1,Math.min(3,Math.round((Z+d)*2)/2));window.ctZ=Z;fit();var v=document.getElementById('ctview');if(v&&Z>1&&d>0){v.scrollLeft=v.scrollWidth}}
+function zbar(){var v=document.getElementById('ctview');if(!v||document.getElementById('ctzb'))return;var b=document.createElement('div');b.id='ctzb';b.innerHTML='<button type="button" onclick="ctZoom(-0.5)" title="تصغير">🔍−</button><button type="button" id="ctzl" onclick="ctZoom(0)">ملء العرض</button><button type="button" onclick="ctZoom(0.5)" title="تكبير">🔍+</button>';v.parentNode.insertBefore(b,v)}
 function upd(k){var f=F(),el=document.getElementById('ct_'+k);if(!el)return;f[k]=el.value;
  if((k==='st'||k==='mo')&&f.st&&f.mo){f.en=endOf(f.st,f.mo);var e=document.getElementById('ct_en');if(e)e.value=f.en;if(!f.chq||/^\d+ شيكات شامل/.test(f.chq)){f.chq=Math.round(+f.mo)+' شيكات شامل شيك تأمين بقيمة شهر';var q=document.getElementById('ct_chq');if(q)q.value=f.chq}}
  if(k==='rent'&&!f.cx){f.cx=f.rent;var c=document.getElementById('ct_cx');if(c)c.value=f.cx}
@@ -2303,7 +2308,7 @@ window.ctFill=function(v){if(v==='')return;var q=v.split('|'),u=S.units[+q[0]],L
  S.ct.html='';save();render()};
 window.ctNew=function(){var f=F(),ll=f.ll;S.ct={f:{ll:ll,nat:'',tn:'',tid:'',ph:'',sub:'',st:'',en:'',due:'',rent:'',mo:'',chq:'',cx:''},html:''};save();render()};
 window.ctReset=function(){S.ct.html='';save();render()};
-function rdy(cb){var done=function(){var v=document.getElementById('ctview'),p=document.getElementById('ctpaper');if(!p)return;var t=p.style.transform,h=v.style.height;p.style.transform='none';v.style.height='auto';var fin=function(){p.style.transform=t;v.style.height=h;fit()};cb(p,fin)};done()}
+function rdy(cb){var done=function(){var v=document.getElementById('ctview'),p=document.getElementById('ctpaper');if(!p)return;var t=p.style.transform,h=v.style.height,z=p.style.zoom,mh=v.style.maxHeight,ov=v.style.overflow;p.style.transform='none';p.style.zoom='';v.style.height='auto';v.style.maxHeight='';v.style.overflow='hidden';var fin=function(){p.style.transform=t;p.style.zoom=z;v.style.height=h;v.style.maxHeight=mh;v.style.overflow=ov;fit()};cb(p,fin)};done()}
 window.ctPdf=function(){window.ctSave();rdy(function(p,fin){var nm=(F().tn||'').trim().replace(/\s+/g,'-')||'contract',done=function(){window._sc=0;window._bg='';fin()};window._sc=innerWidth<700?2.4:3;window._bg='#fff';exportPdf(p,'contract-'+nm).then(done,done)})};
 window.ctPrint=function(){window.ctSave();var nat=false;try{nat=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform())}catch(e){}
  if(nat){toast('سيتم إنشاء ملف PDF — افتحه من الجهاز واطبعه');return ctPdf()}
@@ -2311,7 +2316,7 @@ window.ctPrint=function(){window.ctSave();var nat=false;try{nat=!!(window.Capaci
 window.ctTab=function(){var f=F(),ops='<option value="">— تعبئة من عقد مستأجر قائم (اختياري) —</option>';
  (S.units||[]).forEach(function(u,i){(u.leases||[]).forEach(function(L,j){ops+='<option value="'+i+'|'+j+'">'+esc((u.name||'')+' — '+(L.tenant||'مستأجر'))+'</option>'})});
  var inp=function(k,t,c){return '<div'+(c?' class="'+c+'"':'')+'><label>'+LB[k]+'</label><input id="ct_'+k+'" '+(t?'type="'+t+'" ':'')+'value="'+esc(f[k]==null?'':f[k])+'" oninput="ctUpd(\''+k+'\')"></div>'};
- setTimeout(function(){var v=document.getElementById('ctview');if(v)fit()},30);
+ setTimeout(function(){var v=document.getElementById('ctview');if(v){zbar();fit()}},30);
  return '<div id="ctwrap"><div class="card"><h2>📝 عقد إيجار للعميل</h2><p class="mu" style="margin:0 0 10px">املأ بيانات العميل، أو اضغط على العقد مباشرة وعدّل أي كلمة فيه. التعديلات تتحفظ تلقائياً.</p><select onchange="ctFill(this.value);this.value=\'\'" style="width:100%;margin-bottom:10px">'+ops+'</select><div class="ctf">'+
  inp('ll','','w2')+inp('tn','','w2')+inp('tid')+inp('nat')+inp('ph')+inp('sub','','w2')+inp('st','date')+inp('mo','number')+inp('en','date')+inp('due','number')+inp('rent','number')+inp('cx','number')+inp('chq','','w2')+
  '</div><div class="ctb"><button class="p" onclick="ctPdf()">📄 تنزيل PDF</button><button onclick="ctPrint()">🖨 طباعة</button><button onclick="ctNew()">➕ عقد جديد (مسح بيانات العميل)</button><button onclick="confirmM(\'استرجاع نص العقد الأصلي؟ سيُمسح أي تعديل يدوي على النص.\',ctReset)">↺ استرجاع النموذج الأصلي</button></div></div>'+
@@ -5357,6 +5362,7 @@ window.waSetup=function(){var o=st(),d=document.createElement('div');d.className
  var off=d.querySelector('#waOff');if(off)off.onclick=function(){set({});d.remove();toast('اتلغى ربط الواتساب');try{render()}catch(e){}}};
 var b0=bkTab;bkTab=function(){var o=st();var c=`<div class='card'><h2>💬 الواتساب لاسترجاع كلمة السر</h2>`+(o.k&&o.p?`<p>✅ مربوط على <b dir="ltr">+${esc(o.p)}</b> — لو نسيت كلمة السر تقدر تختار الكود يوصلك واتساب.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button onclick='waSetup()'>⚙️ الإعداد</button><button onclick='bnyWa.send("000000","تجربة").then(function(){toast("اتبعتت رسالة تجربة")})'>📨 ابعت تجربة</button></div>`:`<p>اربط رقم الواتساب بتاعك عشان لو نسيت كلمة السر يوصلك الكود رسالة واتساب (تقدر تختار بينه وبين الإيميل).</p><button class='p' onclick='waSetup()'>💬 اربط الواتساب</button>`)+`</div>`;return c+b0()};
 })();</script>
+<style id="ctzcss">#ctzb{display:flex;gap:6px;justify-content:center;margin:0 0 8px;position:sticky;top:124px;z-index:5}#ctzb button{min-height:36px!important;padding:6px 14px!important;border-radius:999px!important;font-size:14px!important;font-weight:800!important;background:#fff!important;border:1.5px solid #cfe0e6!important;color:#1b4764!important;box-shadow:0 3px 10px rgba(15,39,66,.12)!important}#ctzb #ctzl{min-width:96px}</style>
 <style id="onefp">
 #login .lor,#bio .lor{display:none!important}
 #login .lfp small,#bio .lfp small{display:none!important}
