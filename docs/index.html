@@ -779,7 +779,7 @@ function drawLic(msg){gi('nav').innerHTML='';gi('app').innerHTML='';gi('who').in
  if(LIC===null){gi('app').innerHTML='<p class="mu">جاري التحقق من الترخيص…</p>';return}
  gi('login').innerHTML=`<div class="ov lg"><div class="dlg"><h2>🔑 تفعيل البرنامج</h2><p class="mu">أرسل كود الجهاز إلى صاحب البرنامج وسيرسل لك كود التفعيل الخاص بهذا الجهاز فقط.</p><label>كود الجهاز</label><input id="ld" readonly value="${esc(LICDEV)}" onclick="this.select()"><div class="bt"><button onclick="cpy(gi('ld').value,this)">📋 نسخ</button><button class="p" onclick="shareDev()">📲 إرسال الكود واتساب</button></div><label>كود التفعيل</label><input id="lc" autocomplete="off" placeholder="الصق كود التفعيل هنا" oninput="actTry()"><div class="bt"><button onclick="pasteAct()">📥 لصق وتفعيل</button></div>${ACT_URL?`<label>أو مفتاح الترخيص (تفعيل أونلاين)</label><input id="lk" autocomplete="off" placeholder="BNYK-XXXX-XXXX-XXXX"><div class="bt"><button onclick="actOnline()">تفعيل أونلاين</button></div>`:''}<p id="le" class="neg">${msg||''}</p><div class="bt"><button class="p" onclick="actLic()">تفعيل</button></div></div></div>`}
 function actX(s){const m=String(s||'').match(/(LIFETIME|\d{4}-\d{2}-\d{2})(?:~\d{1,5})?\.[A-Za-z0-9_-]{20,}/);return m?m[0]:String(s||'').trim()}
-function shareDev(){const m=LICDEV,u='https://wa.me/971523501023?text='+encodeURIComponent(m);const w=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Share;if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App&&Capacitor.Plugins.App.openUrl)Capacitor.Plugins.App.openUrl({url:u}).catch(()=>{location.href=u});else window.open(u,'_blank')}
+function shareDev(){const m=LICDEV,u='https://wa.me/971523501023?text='+encodeURIComponent(m);if(window.bnyOpenWa&&bnyOpenWa(u))return;const w=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Share;if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App&&Capacitor.Plugins.App.openUrl)Capacitor.Plugins.App.openUrl({url:u}).catch(()=>{location.href=u});else window.open(u,'_blank')}
 async function pasteAct(){try{const s=await navigator.clipboard.readText();gi('lc').value=actX(s);actTry()}catch(e){gi('le').textContent='اضغط مطولاً على خانة كود التفعيل والصق الكود'}}
 async function actTry(){const c=actX(gi('lc').value);if(c.length>30&&(await licVerify(c,LICDEV))===1){gi('lc').value=c;actLic()}}
 async function actLic(){const c=actX(gi('lc').value),r=await licVerify(c,LICDEV);if(r===1){try{localStorage.setItem('bny_lic',c)}catch(e){}LIC=true;gi('login').innerHTML='';render()}else gi('le').textContent=r==='expired'?'هذا الكود منتهي الصلاحية':'الكود غير صحيح أو غير خاص بهذا الجهاز'}
@@ -5361,5 +5361,13 @@ var b0=bkTab;bkTab=function(){var o=st();var c=`<div class='card'><h2>💬 ال�
 #login .lfp button svg,#bio .lfp button svg,#bio button.biofp svg{display:none!important}
 #login .lfp button::after,#bio .lfp button::after,#bio button.biofp::after{content:"افتح البصمة تاني";font-size:13px}
 </style>
+<script id="wabiz">(function(){
+function isWa(u){return /^(https?:\/\/)?(wa\.me|api\.whatsapp\.com|chat\.whatsapp\.com)\//i.test(String(u||''))||/^whatsapp:/i.test(String(u||''))}
+function P(){try{var C=window.Capacitor;return C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.WaBiz}catch(e){return null}}
+function norm(u){u=String(u);var m=u.match(/wa\.me\/(\d*)\/?\??(.*)$/i);if(m){var q=m[2]||'';return 'https://api.whatsapp.com/send?'+(m[1]?'phone='+m[1]+(q?'&':''):'')+q}return u}
+window.bnyOpenWa=function(u){var p=P();if(!p)return false;p.open({url:norm(u),business:true}).catch(function(){location.href=u});return true};
+var wo=window.open;window.open=function(u){try{if(isWa(u)&&bnyOpenWa(u))return null}catch(e){}return wo.apply(window,arguments)};
+document.addEventListener('click',function(e){try{var a=e.target.closest&&e.target.closest('a[href]');if(!a)return;var h=a.getAttribute('href');if(isWa(h)&&P()){e.preventDefault();e.stopPropagation();bnyOpenWa(h)}}catch(x){}},true);
+})();</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>

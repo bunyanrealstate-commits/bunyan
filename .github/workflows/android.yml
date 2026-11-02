@@ -50,6 +50,47 @@ jobs:
           const nw='<style name=\"AppTheme.NoActionBarLaunch\" parent=\"Theme.SplashScreen\"><item name=\"windowSplashScreenBackground\">#FFFFFF</item><item name=\"windowSplashScreenAnimatedIcon\">@drawable/bny_blank</item><item name=\"windowSplashScreenAnimationDuration\">0</item><item name=\"postSplashScreenTheme\">@style/AppTheme.NoActionBar</item><item name=\"android:background\">#FFFFFF</item><item name=\"android:windowBackground\">@android:color/white</item></style>';
           const s2=s.replace(/<style name=\"AppTheme\.NoActionBarLaunch\"[^>]*>[\s\S]*?<\/style>/,nw);
           if(s2===s){console.error('launch theme not found');process.exit(1)}fs.writeFileSync(p,s2);console.log(s2)"
+      - name: WhatsApp Business first (native helper)
+        run: |
+          MA=$(find android/app/src/main/java -name MainActivity.java | head -1); D=$(dirname "$MA"); PK=$(grep -m1 '^package' "$MA" | sed 's/package \(.*\);/\1/')
+          cat > "$D/WaBizPlugin.java" <<JEOF
+          package $PK;
+          import android.content.Intent;
+          import android.net.Uri;
+          import com.getcapacitor.JSObject;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+          @CapacitorPlugin(name = "WaBiz")
+          public class WaBizPlugin extends Plugin {
+            @PluginMethod
+            public void open(PluginCall call) {
+              String url = call.getString("url");
+              boolean biz = call.getBoolean("business", true);
+              String[] order = biz ? new String[]{"com.whatsapp.w4b", "com.whatsapp"} : new String[]{"com.whatsapp", "com.whatsapp.w4b"};
+              for (String p : order) {
+                try { Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url)); i.setPackage(p); i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); getContext().startActivity(i); JSObject r = new JSObject(); r.put("app", p); call.resolve(r); return; } catch (Exception e) { }
+              }
+              try { Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url)); i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); getContext().startActivity(i); call.resolve(); } catch (Exception e) { call.reject("no whatsapp"); }
+            }
+          }
+          JEOF
+          sed -i 's/^          //' "$D/WaBizPlugin.java"
+          cat > "$MA" <<JEOF
+          package $PK;
+          import android.os.Bundle;
+          import com.getcapacitor.BridgeActivity;
+          public class MainActivity extends BridgeActivity {
+            @Override
+            public void onCreate(Bundle savedInstanceState) {
+              registerPlugin(WaBizPlugin.class);
+              super.onCreate(savedInstanceState);
+            }
+          }
+          JEOF
+          sed -i 's/^          //' "$MA"
+          cat "$MA" "$D/WaBizPlugin.java"
       - name: Microphone permission
         run: sed -i 's#<application#<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-feature android:name="android.hardware.camera" android:required="false" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <application#' android/app/src/main/AndroidManifest.xml
       - name: Increase versionCode on every build (so each APK installs over the previous one)
