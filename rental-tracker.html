@@ -5132,6 +5132,7 @@ var fb0=window.aiFb;window.aiFb=function(ix,ok){try{var H0=window.__aiH&&window.
 </script>
 
 <style id="gemcss">
+.card3 .gai{margin-top:10px;padding-top:9px;border-top:1px dashed rgba(255,255,255,.22)}.card3 .gdot{opacity:.7;animation:gdp 1.2s ease-in-out infinite}@keyframes gdp{50%{opacity:.35}}
 #gemx{position:fixed;inset:0;z-index:470;background:rgba(8,18,32,.6);display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px)}
 #gemx .gb{background:#fff;color:#0f2742;width:min(520px,100%);max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px rgba(0,0,0,.3);animation:gmu .22s ease-out}
 @keyframes gmu{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
@@ -5178,20 +5179,20 @@ function skipType(){setTimeout(function(){try{var c=document.querySelector('#aix
 var GH=[];
 var CX={t:0,v:''};function ctx(){if(Date.now()-CX.t<120000&&CX.v)return CX.v;var v=ctx0();CX={t:Date.now(),v:v};return v}
 function ctx0(){var o=[];try{o.push('تاريخ النهارده: '+new Date().toLocaleDateString('ar-EG',{weekday:'long',year:'numeric',month:'long',day:'numeric'}))}catch(e){}
- try{if(window.bnyThink){o.push('— ملخص الوضع من البرنامج —\n'+bnyThink('ملخص الوضع'))}}catch(e){}
- try{if(window.bnyThink){var u=bnyThink('الدفعات الجاية');if(u)o.push('— الدفعات الجاية —\n'+u)}}catch(e){}
- try{if(window.bnyThink){var l=bnyThink('مين متأخر');if(l)o.push('— المتأخرين —\n'+l)}}catch(e){}
- return o.join('\n\n').replace(/\*\*/g,'').slice(0,6000)}
+ try{var gn=(S.gp&&S.gp[WS]&&(S.gp[WS].n||S.gp[WS].name))||'';if(gn)o.push('المجموعة المفتوحة دلوقتي: '+gn)}catch(e){}
+ var ids=[['summary','ملخص الوضع'],['cash','الرصيد النقدي وجه منين'],['profit','الربح لحد النهارده بالتفصيل'],['proj','الربح المتوقع'],['totals','الإجماليات'],['upcoming','الدفعات الجاية'],['late','المتأخرين'],['company','دفعات الشركة'],['forecast','هل النقدي هيكفي'],['fund','فلوس الشراكة'],['shares','نصيب كل شريك'],['exp','المصاريف'],['draw','السحب'],['ends','نهاية العقود'],['occ','الإشغال'],['furn','الأثاث'],['dep','التأمين والشيكات'],['ratios','هامش الربح والعائد'],['best','أكسب استديو'],['count','الأعداد']];
+ ids.forEach(function(x){try{var t=window.bnyRun?bnyRun(x[0],x[1]):'';if(t&&typeof t==='string'&&t.length>5&&!/^مش متأكد/.test(t))o.push('— '+x[1]+' —\n'+t)}catch(e){}});
+ return o.join('\n\n').replace(/\*\*/g,'').slice(0,12000)}
 function sys(){var nm='';try{nm=(typeof A!=='undefined'&&A&&A.u)||''}catch(e){}
- return 'إنت "بنيان"، المساعد الذكي جوّه برنامج Bunyan Furnished لإدارة تأجير الاستديوهات المفروشة (بنأجر من شركات وبنفرش ونأجر شهري للمستأجرين، ومعانا شركاء). اسم المستخدم اللي بيكلمك: '+(nm||'صاحب البرنامج')+'. اتكلم معاه كصاحب ودود ومحترم، ومتعرّفش بنفسك ولا تعدّد إنت بتعمل إيه غير لو سألك. لو كلام ودّي أو سلام رد بجملة أو اتنين طبيعيين. رد بالعامية المصرية، باختصار شديد (غالبًا من 2 لـ 6 سطور إلا لو طلب رسالة أو تفصيل) ووضوح، ومن غير عناوين كبيرة. استخدم **عريض** للأرقام المهمة وسطور قصيرة أو نقاط بـ •. لو السؤال عن أرقام البرنامج اعتمد على البيانات اللي تحت بس، ولو المعلومة مش موجودة قول كده ومتألفش أرقام. لو سؤال عام (فلوس، عقود، قانون، كتابة رسالة، نصيحة) جاوب من معرفتك ونبّه لو محتاج متخصص. العملة الأساسية في البرنامج هي اللي ظاهرة في الأرقام.\n\n=== بيانات البرنامج دلوقتي ===\n'+ctx()}
-async function gem(q,local,onT,quick){var c=cfg();var models=(c.models&&c.models.length?c.models:FALL);var cont=GH.slice(-6).concat([{role:'user',parts:[{text:q+(local?'\n\n(رد المساعد المحلي على نفس السؤال كان: '+String(local).replace(/\*\*/g,'').slice(0,1200)+')':'')}]}]);
- var body={systemInstruction:{parts:[{text:sys()}]},contents:cont,generationConfig:{temperature:0.6,maxOutputTokens:quick?250:900}};
+ return 'إنت "بنيان"، المساعد الذكي جوّه برنامج Bunyan Furnished لإدارة تأجير الاستديوهات المفروشة (بنأجر من شركات وبنفرش ونأجر شهري للمستأجرين، ومعانا شركاء). اسم المستخدم اللي بيكلمك: '+(nm||'صاحب البرنامج')+'. اتكلم معاه كصاحب ودود ومحترم، ومتعرّفش بنفسك ولا تعدّد إنت بتعمل إيه غير لو سألك. لو كلام ودّي أو سلام رد بجملة أو اتنين طبيعيين. رد بالعامية المصرية، باختصار شديد (غالبًا من 2 لـ 6 سطور إلا لو طلب رسالة أو تفصيل) ووضوح، ومن غير عناوين كبيرة. استخدم **عريض** للأرقام المهمة وسطور قصيرة أو نقاط بـ •. لو السؤال عن أرقام البرنامج اعتمد على البيانات اللي تحت بس (دي محسوبة بدقة من البرنامج)، واحسب منها لو محتاج (جمع/طرح/نسب/أيام/سيناريوهات) ووضّح الحسبة في سطر. لو المعلومة مش موجودة قول كده ومتألفش أرقام. لو سؤال عام (فلوس، عقود، قانون، كتابة رسالة، نصيحة) جاوب من معرفتك ونبّه لو محتاج متخصص. العملة الأساسية في البرنامج هي اللي ظاهرة في الأرقام.\n\n=== بيانات البرنامج دلوقتي ===\n'+ctx()}
+async function gem(q,local,onT,quick,noHist){var c=cfg();var models=(c.models&&c.models.length?c.models:FALL);var cont=GH.slice(-6).concat([{role:'user',parts:[{text:q+(local?'\n\n(رد المساعد المحلي على نفس السؤال كان: '+String(local).replace(/\*\*/g,'').slice(0,1200)+')':'')}]}]);
+ var body={systemInstruction:{parts:[{text:sys()}]},contents:cont,generationConfig:{temperature:0.6,maxOutputTokens:quick?350:900}};
  var lite=models.filter(function(m){return /lite/.test(m)})[0]||'gemini-flash-lite-latest',m0=models[0];
  var plan=c.mode==='plain'?[{m:m0,stream:false,ms:quick?8000:14000},{m:lite,stream:false,ms:10000}]:[{m:m0,stream:true,ms:quick?7000:10000},{m:m0,stream:false,ms:quick?7000:12000},{m:lite,stream:false,ms:10000}];
  var last=null,t0=Date.now();
  for(var i=0;i<plan.length;i++){var P=plan[i];if(i>0&&plan[i-1].m===P.m&&last&&last.code===429)continue;
   try{var t=await call(P.m,c.key,body,{stream:P.stream,ms:P.ms,onT:onT});var c2=cfg();c2.lastMs=Date.now()-t0;c2.lastModel=P.m;c2.lastErr='';if(!P.stream&&i>0&&P.m===m0)c2.mode='plain';if(P.m!==m0&&c2.models){c2.models=[P.m].concat(c2.models.filter(function(x){return x!==P.m}))}setCfg(c2);
-   GH.push({role:'user',parts:[{text:q}]},{role:'model',parts:[{text:t}]});GH=GH.slice(-10);return tidy(t)}
+   if(!noHist){GH.push({role:'user',parts:[{text:q}]},{role:'model',parts:[{text:t}]});GH=GH.slice(-10)}return tidy(t)}
   catch(e){last=e;if(e.code===401||e.code===403||(e.code===400&&/API key|API_KEY/i.test(e.message)))break}}
  try{var c3=cfg();c3.lastErr=String(last&&last.message||'');c3.lastMs=Date.now()-t0;setCfg(c3)}catch(x){}
  throw last||new Error('فشل')}
@@ -5206,12 +5207,18 @@ function canned(q){var z=String(q);if(/يا ?رب|ربنا/.test(z))return 'يا
  if(/صباح/.test(z))return 'صباح النور ☀️ يومك جميل إن شاء الله. تحب أبدألك بملخص الوضع؟';if(/مساء/.test(z))return 'مساء النور 🌙 تحب أساعدك في إيه؟';if(/تصبح/.test(z))return 'وإنت من أهله 🌙';
  if(/انت مين|إنت مين/.test(z))return 'أنا بنيان، مساعدك في البرنامج 🤖 بعرف أرقامك ومواعيدك وبساعدك تسجّل وتحسب.';
  if(/كويس|عامل|ازيك|إزيك|حالك|اخبار|أخبار|كيف/.test(z))return 'الحمد لله تمام 😊 وإنت عامل إيه؟\nأقدر أساعدك في إيه النهارده؟';return 'تحت أمرك 😊 تحب أساعدك في إيه؟'}
+var SKIP=/^(custom|fact|autofact|facts|teach|who|me|help|date|chat|where|how|define|gemini|gemerr|gemoff|nav)$/;
+function liveRaw(local,ai){try{var L=document.querySelector('#aix .a3body');if(!L)return;var th=L.querySelector('.think3');var bx=L.querySelector('#gemlive');if(th&&!bx){var w=document.createElement('div');w.className='card3';w.id='gemlive';w.innerHTML="<div class='tx'></div>";th.replaceWith(w);bx=w}if(!bx)return;
+ var f=function(t){return E(t).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>')};bx.querySelector('.tx').innerHTML=f(local)+"<div class='gai'>"+(ai?f('✨ '+tidy(ai)):"<span class='gdot'>✨ Gemini بيراجع…</span>")+"<span class='cur'></span></div>";L.scrollTop=L.scrollHeight}catch(e){}}
+function assist(q,r){var local=String(r.t);liveRaw(local,'');
+ var ask='السؤال: '+q+'\n\nالمساعد المحلي رد بالأرقام دي (دقيقة من البرنامج، متغيرهاش ومتكررهاش):\n'+local.replace(/\*\*/g,'').slice(0,1500)+'\n\nالمطلوب منك: ضيف من 1 لـ 3 سطور مفيدة بس: تفسير بسيط أو ملاحظة مهمة أو تنبيه أو اقتراح عملي أو حسبة إضافية من البيانات. لو الرد المحلي مش مطابق للسؤال، جاوب السؤال صح من بيانات البرنامج. متبدأش بتحية.';
+ return gem(ask,'',function(t){liveRaw(local,t)},true,true).then(function(t){skipType();return {t:local+'\n\n———\n✨ '+t,i:r.i,ask:r.ask}}).catch(function(){skipType();return r})}
 var o=window.bnyAsk;
 window.bnyAsk=function(q){var force=FORCE.test(q),q2=String(q).replace(FORCE,'').trim()||q;
  if(!force&&isChat(q)){if(!on())return {t:canned(q),i:'chat'};return gem(q2,'',live,true).then(function(t){skipType();return {t:'✨ '+t,i:'chat'}}).catch(function(){return {t:canned(q),i:'chat'}})}
  var r=force?null:o(q);
  var bad=r&&typeof r.t==='string'&&/\[object (Promise|Object)\]|undefined|NaN/.test(r.t);if(r&&r.i==='fx'&&!/(درهم|جنيه|مصري|دولار|يورو|ريال|دينار|استرليني|صرف|usd|eur|aed|egp|sar)/i.test(q))bad=true;var unknown=!r||bad||(r.ask&&!r.i)||r.i==='autofact'&&/[؟?]/.test(q);var deep=!force&&r&&!unknown&&DEEP.test(q)&&!/^(custom|fact)$/.test(r.i||'');
- if(!force&&!unknown&&!deep)return r;
+ if(!force&&!unknown&&!deep){if(on()&&cfg().assist!==false&&r&&!r.ask&&r.i&&!SKIP.test(r.i)&&!(r.t&&r.t.then)&&String(r.t||'').length>15)return assist(q,r);return r}
  if(!on()){if(force)return {t:'✨ عشان أستعين بالذكاء الاصطناعي لازم تربطني بـ Gemini (مجاني) الأول — اضغط زرار ✨ فوق.',i:'gemoff'};
   if(unknown&&r&&r.t&&!window.__gemHint){window.__gemHint=1;r.t+='\n\n💡 لو عايزني أجاوب على أي سؤال (حتى لو مش في البرنامج)، اربطني بـ **Gemini المجاني** من زرار ✨ فوق.'}return r}
  if(r&&r.then)return r;
@@ -5221,13 +5228,14 @@ function E(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return 
 function openLink(u){try{window.open(u,'_blank')}catch(e){location.href=u}}
 window.gemSetup=function(){var c=cfg(),d=document.getElementById('gemx');if(d)d.remove();d=document.createElement('div');d.id='gemx';
  d.innerHTML="<div class='gb'><h3>✨ ربط المساعد بـ Gemini <small style='font-size:11px;background:#e8f6ee;color:#13734b;border-radius:8px;padding:2px 7px'>مجاني</small></h3><p class='gs'>المساعد هيفضل يرد على أسئلة البرنامج بنفسه، ولما تسأله سؤال مش عارفه أو محتاج رأي/تحليل/كتابة رسالة هيستعين بذكاء جوجل الاصطناعي.<br>🔒 المفتاح بيتحفظ على الجهاز ده بس، وبيتبعت لجوجل ملخص أرقامك مع السؤال.</p>"+
- (c.key?"<div class='sw'><span>مربوط ✅ <small style='opacity:.7'>"+E((c.models||[])[0]||'')+(c.lastMs?' · آخر رد '+(c.lastMs/1000).toFixed(1)+' ث':'')+(c.lastErr?' · آخر خطأ: '+E(c.lastErr.slice(0,60)):'')+"</small></span><label><input type='checkbox' id='gmon' "+(c.on!==false?'checked':'')+" style='width:auto'> شغّال</label></div>":"<ol><li>افتح <a href='#' id='gml'>aistudio.google.com/apikey</a> وادخل بالـ Gmail بتاعك.</li><li>اضغط <b>Create API key</b> (لو طلب مشروع اختار أي واحد أو اعمل جديد).</li><li>انسخ المفتاح من زرار النسخ 📋 اللي <b>جنب API Key</b> (بيبدأ بـ AQ. أو AIza) والصقه هنا — مش «Copy cURL».</li></ol>")+
+ (c.key?"<div class='sw'><span>مربوط ✅ <small style='opacity:.7'>"+E((c.models||[])[0]||'')+(c.lastMs?' · آخر رد '+(c.lastMs/1000).toFixed(1)+' ث':'')+(c.lastErr?' · آخر خطأ: '+E(c.lastErr.slice(0,60)):'')+"</small></span><label><input type='checkbox' id='gmon' "+(c.on!==false?'checked':'')+" style='width:auto'> شغّال</label></div><div class='sw'><span>✨ يساعد في الحسابات<br><small style='opacity:.7'>بعد كل رد بالأرقام يضيف تعليق/تنبيه/حسبة</small></span><label><input type='checkbox' id='gmas' "+(c.assist!==false?'checked':'')+" style='width:auto'> شغّال</label></div>":"<ol><li>افتح <a href='#' id='gml'>aistudio.google.com/apikey</a> وادخل بالـ Gmail بتاعك.</li><li>اضغط <b>Create API key</b> (لو طلب مشروع اختار أي واحد أو اعمل جديد).</li><li>انسخ المفتاح من زرار النسخ 📋 اللي <b>جنب API Key</b> (بيبدأ بـ AQ. أو AIza) والصقه هنا — مش «Copy cURL».</li></ol>")+
  "<input id='gmk' placeholder='AQ.… أو AIza…' autocomplete='off' spellcheck='false' value='"+E(c.key?c.key.slice(0,6)+'••••••••'+c.key.slice(-4):'')+"'><div class='gr'><button class='p' id='gms'>"+(c.key?'🔄 جرّب الاتصال':'🔗 جرّب واربط')+"</button>"+(c.key?"<button id='gmd'>🗑 فك الربط</button>":"")+"<button id='gmc'>إغلاق</button></div><div class='st' id='gmt'></div></div>";
  document.body.appendChild(d);var $=function(id){return d.querySelector('#'+id)},st=$('gmt');
  function say(t,k){st.className='st on '+(k||'');st.textContent=t}
  d.addEventListener('click',function(e){if(e.target===d)d.remove()});$('gmc').onclick=function(){d.remove()};
  if($('gml'))$('gml').onclick=function(e){e.preventDefault();openLink('https://aistudio.google.com/apikey')};
  var inp=$('gmk');inp.onfocus=function(){if(/•/.test(inp.value))inp.value=''};
+ if($('gmas'))$('gmas').onchange=function(){var c2=cfg();c2.assist=this.checked;setCfg(c2)};
  if($('gmon'))$('gmon').onchange=function(){var c2=cfg();c2.on=this.checked;setCfg(c2);upd()};
  if($('gmd'))$('gmd').onclick=function(){setCfg({});upd();d.remove();try{toast('اتفك الربط مع Gemini')}catch(e){}};
  $('gms').onclick=async function(){var k=inp.value.trim();if(/•/.test(k)||!k)k=cfg().key||'';k=gemKeyOf(k);if(!k){say('المفتاح شكله مش صح — انسخه بزرار النسخ اللي جنب API Key والصقه هنا','er');return}inp.value=k.slice(0,6)+'••••••••'+k.slice(-4);
