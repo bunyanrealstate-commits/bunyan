@@ -4299,7 +4299,7 @@ function cfg(){return window.hkCfg?hkCfg():null}
 function dec(b){return JSON.parse(decodeURIComponent(escape(atob(String(b).replace(/\s/g,'')))))}
 function tg(){return (S.groups||[]).filter(function(g){return /عبد\s*الحكيم|حكيم/.test(g.name||'')&&!/عمرو/.test(g.name||'')})[0]}
 function ago(t){var m=Math.round((Date.now()-t)/60000);return m<1?'دلوقتي':m<60?'من '+m+' دقيقة':m<1440?'من '+Math.round(m/60)+' ساعة':'من '+Math.round(m/1440)+' يوم'}
-async function poll(){var c=cfg();if(!c||!c.token||!AUTH||!tg()||document.hidden||navigator.onLine===false)return;try{var hh={'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};if(window._hsET)hh['If-None-Match']=window._hsET;var r=await fetch('https://api.github.com/repos/'+c.repo+'/contents/hakim-status.json',{headers:hh,cache:'no-store'});if(r.status===304){check();return}if(r.ok){window._hsET=r.headers.get('ETag')||'';ST=dec((await r.json()).content);check()}}catch(e){}}
+async function poll(){var c=cfg();if(!c||!c.token||!AUTH||!tg()||document.hidden||navigator.onLine===false)return;try{var hh={'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};if(window._hsET)hh['If-None-Match']=window._hsET;var r=await fetch('https://api.github.com/repos/'+c.repo+'/contents/hakim-status.json',{headers:hh,cache:'no-store'});if(r.status===304){check();return}if(r.ok){window._hsET=r.headers.get('ETag')||'';ST=dec((await r.json()).content);window.hkST=ST;check()}}catch(e){}}
 function problems(){var e=ex(),o=[];
  if(e.err&&(!e.ok||e.t>((e.okT)||0)))o.push('رفع بيانات مجموعة عبد الحكيم من البرنامج الأساسي فشل'+(e.err==='net'?' (مفيش نت)':' (كود '+e.err+')'));
  if(ST){if(ST.err)o.push('تطبيق حكيم مش قادر يسحب البيانات'+(ST.err==401||ST.err==403?' — المفتاح بتاعه غلط أو انتهى':ST.err==404?' — ملف البيانات مش موجود':' (كود '+ST.err+')')+' • '+ago(ST.seen));
@@ -4407,6 +4407,15 @@ var bk=bkTab;bkTab=function(){return card(true)+bk()};
 var sv=0,lastSig='';var rr=render;render=function(){var o=rr.apply(this,arguments);clearTimeout(sv);sv=setTimeout(function(){try{if(!AUTH)return;var sig=JSON.stringify([S.units,S.exp,S.adj,S.gp]).length+':'+(S.hist&&S.hist.length);if(sig===lastSig)return;lastSig=sig;audit()}catch(e){}},4000);return o};
 setTimeout(function(){try{if(AUTH){var had=!!document.getElementById('moncard');var r=audit();var need=(r.issues||[]).some(function(x){return x.sev==='err'});if(S.tab==='home'&&had!==need)render()}}catch(e){}},5000);setInterval(function(){try{if(AUTH&&!document.hidden)audit()}catch(e){}},15*60*1000);
 })()</script>
+<script id="uicheck">(function(){
+function vis(e){if(!e)return false;var cs=getComputedStyle(e);if(cs.display==='none'||cs.visibility==='hidden'||+cs.opacity===0)return false;var r=e.getBoundingClientRect();return r.width>2&&r.height>2}
+function nm(e){var t={pvb:'زرار العين',grpb:'اسم المجموعة',clk2:'الساعة',bell:'الجرس',hmb:'القايمة'};if(e.id&&t[e.id])return t[e.id];if(e.matches&&e.matches('h1.brand'))return 'اللوجو';if(e.querySelector&&e.querySelector('#bell'))return 'الجرس والقايمة';return e.id?('#'+e.id):(e.tagName||'').toLowerCase()}
+window.bnyUiCheck=function(){var out=[];try{var hd=document.querySelector('.hd');if(hd&&vis(hd)){var items=[].slice.call(hd.children).filter(function(c){return c.id!=='hmp'&&c.id!=='setsub'&&c.id!=='wsub'&&vis(c)});
+  for(var i=0;i<items.length;i++)for(var j=i+1;j<items.length;j++){var a=items[i].getBoundingClientRect(),b=items[j].getBoundingClientRect(),ox=Math.min(a.right,b.right)-Math.max(a.left,b.left),oy=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);if(ox>4&&oy>4)out.push('الهيدر: «'+nm(items[i])+'» راكب على «'+nm(items[j])+'»')}
+  var H=hd.getBoundingClientRect();items.forEach(function(c){var r=c.getBoundingClientRect();if(r.left<H.left-3||r.right>H.right+3)out.push('الهيدر: «'+nm(c)+'» طالع برّه الهيدر')})}
+ if(document.documentElement.scrollWidth>innerWidth+2)out.push('الصفحة أعرض من الشاشة');
+ var app=document.getElementById('app'),tx=app?app.innerText:'';['undefined','NaN','[object'].forEach(function(k){if(tx.indexOf(k)>=0)out.push('كلمة «'+k+'» ظاهرة في الصفحة')})}catch(e){}return out};
+})();</script>
 <script id="monjs2">(function(){if(window.HBUILD)return;
 var C=window.monChecks=window.monChecks||[];function reg(n,f){f.n=n;C.push(f)}
 var fin=function(v){return typeof v==='number'&&isFinite(v)},TABN={home:'الداشبورد',units:'الاستديوهات',acc:'الحسابات',grp:'المجموعات',ct:'عقد العميل',log:'سجل النشاط',bk:'النسخ الاحتياطي',qrc:'الكاشير'};
@@ -4441,7 +4450,8 @@ var LAY=[];function layScan(){var out=[],W=innerWidth,app=document.getElementByI
   if(e.tagName==='IMG'&&e.complete&&!e.naturalWidth&&e.src&&!/^data:/.test(e.src)){out.push(['warn','صورة مش ظاهرة: '+sel(e)]);n++}});
  app.querySelectorAll('.card').forEach(function(c){var t=(c.innerText||'').replace(/\s+/g,'');var h=c.querySelector('h2');if(h&&t.length<=h.innerText.replace(/\s+/g,'').length+1)out.push(['warn','كارت فاضي: «'+h.innerText.trim().slice(0,30)+'»'])});
  var tn=tabName();out.forEach(function(o){var k=tn+'|'+o[1];if(!LAY.some(function(x){return x.k===k}))LAY.push({k:k,sev:o[0],msg:o[1]+' — في '+tn,t:Date.now()})});LAY=LAY.slice(-25)}
-reg('التنسيق',function(add){LAY.forEach(function(x){add(x.sev,'التنسيق',x.msg)})});
+reg('التنسيق',function(add){LAY.forEach(function(x){add(x.sev,'التنسيق',x.msg)});try{(window.bnyUiCheck?bnyUiCheck():[]).filter(function(m){return /الهيدر/.test(m)}).forEach(function(m){add('err','التنسيق',m+' — في '+tabName())})}catch(e){}});
+reg('نسخة حكيم',function(add){try{var st=window.hkST;if(st&&st.mon&&st.mon.length){st.mon.slice(0,6).forEach(function(m){add('warn','نسخة حكيم',m)})}if(st&&st.errs)add('warn','نسخة حكيم','حصل '+st.errs+' خطأ برمجي في تطبيق حكيم'+(st.lastErr?' — آخرهم: '+String(st.lastErr).slice(0,80):''))}catch(e){}});
 var lq=0;var r0=render;render=function(){var o=r0.apply(this,arguments);clearTimeout(lq);lq=setTimeout(function(){try{if(AUTH&&!document.hidden)layScan()}catch(e){}},1500);return o};
 /* 4) motion: layout jumps (CLS) and janky frames */
 var SH=[],JK=[],LR={t:0,who:''};var rq=render;render=function(){try{var st=(new Error().stack||'').split('\n').slice(2,6).map(function(l){var m=l.match(/at (?:Object\.|window\.)?([\w$.]+)/);return m?m[1]:''}).filter(function(n){return n&&!/^(render|r0|r1|rr|rq|Function|HTMLDocument|eval)$/.test(n)})[0]||'';LR={t:Date.now(),who:st}}catch(e){}return rq.apply(this,arguments)};
