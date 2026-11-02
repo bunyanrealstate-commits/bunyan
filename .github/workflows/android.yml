@@ -31,7 +31,10 @@ jobs:
           cat capacitor.config.json
       - run: npm install
       - run: npx cap add android
-      - run: npx capacitor-assets generate --android --iconBackgroundColor '#ffffff' --iconBackgroundColorDark '#ffffff'
+      - name: Hakim icon (green with a "حكيم" badge)
+        if: matrix.variant == 'hakim'
+        run: cp assets/hakim/icon-only.png assets/hakim/icon-foreground.png assets/hakim/icon-background.png assets/
+      - run: npx capacitor-assets generate --android --iconBackgroundColor '${{ matrix.variant == 'hakim' && '#2a9d5c' || '#ffffff' }}' --iconBackgroundColorDark '${{ matrix.variant == 'hakim' && '#2a9d5c' || '#ffffff' }}'
       - run: npx cap sync android
       - name: No launch image (plain white start, the app shows its own splash)
         run: |

@@ -30,7 +30,7 @@ pass
 print('customer',len(cust))
 
 # Abdelhakim build: customer build preset to the group "مع عبد الحكيم" (2 partners, 50/50)
-seed=r"""<script id="hguard">(function(){
+seed=r"""<style id="hbadge">.hd h1.brand{display:inline-flex!important;align-items:center;gap:6px;width:auto!important}.hd h1.brand::after{content:"حكيم";background:#2a9d5c;color:#fff;font-size:11px;font-weight:800;line-height:1;padding:4px 8px 5px;border-radius:999px;box-shadow:0 2px 6px rgba(42,157,92,.35);white-space:nowrap;letter-spacing:0}</style><script id="hguard">(function(){
 var D=["units","exp","dep","gp","gc","adj"];window._ug=0;["pointerdown","keydown","touchstart"].forEach(function(e){addEventListener(e,function(){window._ug=Date.now()},{capture:true,passive:true})});
 function pk(o){var r={};D.forEach(function(k){if(o&&o[k]!=null)r[k]=o[k]});return JSON.stringify(r)}
 function dec(b){return JSON.parse(decodeURIComponent(escape(atob(String(b).replace(/\s/g,"")))))}
@@ -65,6 +65,9 @@ hd=os.path.join(os.path.dirname(d),'h');os.makedirs(hd,exist_ok=True)
 open(os.path.join(hd,'index.html'),'w',encoding='utf-8').write(hk)
 for f in ('sw.js','icon-192.png','icon-512.png','icon-maskable-512.png'):
     shutil.copy(os.path.join(os.path.dirname(d),f),os.path.join(hd,f))
+ha=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','assets','hakim')
+for f in ('icon-192.png','icon-512.png','icon-maskable-512.png'):
+    if os.path.exists(os.path.join(ha,f)):shutil.copy(os.path.join(ha,f),os.path.join(hd,f))
 import json
 mf=json.load(open(os.path.join(os.path.dirname(d),'manifest.webmanifest'),encoding='utf-8'))
 mf.update({'name':'Bunyan — عبد الحكيم','short_name':'بنيان حكيم','id':'./?app=hakim','start_url':'./index.html','scope':'./','theme_color':'#2a9d5c'})
