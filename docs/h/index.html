@@ -2850,14 +2850,16 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.t
 function cfg(){try{var m=JSON.parse(localStorage.getItem('bny_sync'))||null,h=JSON.parse(localStorage.getItem('bny_hk')||'null');if(h&&h.repo)return{repo:h.repo,token:h.token||(m&&m.token)};return m}catch(e){return null}}
 window.hkCfg=cfg;
 function enc(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
-function tg(){return (S&&S.groups||[]).filter(function(g){return /عبد\s*الحكيم|حكيم/.test(g.name||'')&&!/عمرو/.test(g.name||'')})[0]}
-function pack(g){var U=(S.units||[]).filter(function(u){return u.g===g.id}),ids={};U.forEach(function(u){ids[u.id]=1});
- var o={units:U,groups:[g],exp:(S.exp||[]).filter(function(x){return x.u?ids[x.u]:x.g===g.id}),dep:(S.dep||[]).filter(function(x){return ids[x.uid]}),gp:{},gc:{},cash:0,res:S.res||0,tp:S.tp,pmode:S.pmode,debts:[],recv:[],tx:[],adj:(S.adj||[]).filter(function(a){return a.g===g.id}),
+function tgs(){return (S&&S.groups||[]).filter(function(g){return /عبد\s*الحكيم|حكيم/.test(g.name||'')})}
+window.hkGroups=tgs;
+function tg(){var a=tgs();return a.length?{id:a.map(function(g){return g.id}).join('+'),name:a.map(function(g){return g.name}).join(' + '),all:a}:null}
+function pack(G){var gs=G.all,gid={};gs.forEach(function(g){gid[g.id]=1});var U=(S.units||[]).filter(function(u){return gid[u.g]}),ids={};U.forEach(function(u){ids[u.id]=1});
+ var o={units:U,groups:gs,exp:(S.exp||[]).filter(function(x){return x.u?ids[x.u]:gid[x.g]}),dep:(S.dep||[]).filter(function(x){return ids[x.uid]}),gp:{},gc:{},cos:S.cos||[],cash:0,res:S.res||0,tp:S.tp,pmode:S.pmode,debts:[],recv:[],tx:[],adj:(S.adj||[]).filter(function(a){return gid[a.g]}),
   hist:[{id:'exp'+Date.now(),t:Date.now(),by:'owner',d:'تحديث من برنامج المالك',ch:'[]',rev:false,ev:false}],from:'owner',at:Date.now()};
- o.gp[g.id]=(S.gp||{})[g.id]||[];o.gc[g.id]=(S.gc||{})[g.id]||0;return o}
+ gs.forEach(function(g){o.gp[g.id]=(S.gp||{})[g.id]||[];o.gc[g.id]=(S.gc||{})[g.id]||0});return o}
 var busy=false,last='',tm=null;
 function dec(b){return JSON.parse(decodeURIComponent(escape(atob(String(b).replace(/\s/g,'')))))}
-function kOf(o,gid){return hsh(JSON.stringify([o.units||[],(o.gp||{})[gid]||[],o.exp||[],o.dep||[],o.adj||[],(o.groups||[]).map(function(x){return [x.id,x.name]}),(o.gc||{})[gid]||0]))}
+function kOf(o,gid){return hsh(JSON.stringify([o.units||[],o.gp||{},o.exp||[],o.dep||[],o.adj||[],(o.groups||[]).map(function(x){return [x.id,x.name,x.n,x.share]}),o.gc||{},o.cos||[]]))}
 function hsh(t){var h=5381;for(var i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return t.length+':'+(h>>>0).toString(36)}
 function lastK(){try{return (JSON.parse(localStorage.getItem('bny_hkexp')||'{}').key)||''}catch(e){return ''}}
 async function exp(){var c=cfg(),g=tg();if(!c||!c.token||!c.repo||!g||busy||navigator.onLine===false)return;var o=pack(g),key=kOf(o,g.id);if(key===last||key===lastK()){last=key;return}busy=true;
@@ -2880,16 +2882,22 @@ function H(c){return{'Authorization':'Bearer '+c.token,'Accept':'application/vnd
 function url(c){return 'https://api.github.com/repos/'+c.repo+'/contents/hakim-req.json'}
 var ET='';async function poll(){var c=cfg();if(!c||!c.token||!AUTH||busy||document.hidden||navigator.onLine===false)return;busy=true;try{var hh=H(c);if(ET)hh['If-None-Match']=ET;var r=await fetch(url(c),{headers:hh,cache:'no-store'});if(r.status===304)return;if(r.ok){ET=r.headers.get('ETag')||'';var j=await r.json();SHA=j.sha;var L=[];try{L=dec(j.content)||[]}catch(e){}var ch=JSON.stringify(L.map(function(x){return x.id}))!==JSON.stringify(REQ.map(function(x){return x.id}));REQ=L;if(ch)render()}else if(r.status===404){if(REQ.length){REQ=[];render()}SHA=''}}catch(e){}finally{busy=false}}
 async function setL(L){var c=cfg();if(!c)return false;var b={message:'req '+new Date().toISOString(),content:enc(L)};if(SHA)b.sha=SHA;var w=await fetch(url(c),{method:'PUT',headers:H(c),body:JSON.stringify(b)});if(w.ok){SHA=(await w.json()).content.sha;REQ=L;return true}await poll();return false}
-function tg(){return (S.groups||[]).filter(function(g){return /عبد\s*الحكيم|حكيم/.test(g.name||'')&&!/عمرو/.test(g.name||'')})[0]}
+function tgs(){return (S.groups||[]).filter(function(g){return /عبد\s*الحكيم|حكيم/.test(g.name||'')})}
+function tg(){var a=tgs();return a.length?{id:a[0].id,all:a}:null}
+function gName(id){var g=(S.groups||[]).filter(function(x){return x.id===id})[0];return g?g.name:''}
 function cnt(d,g){var U=(d.units||[]).filter(function(u){return !g||u.g===g}),L=0,R=0;U.forEach(function(u){(u.leases||[]).forEach(function(l){L++;R+=(l.rcv||[]).length})});return{u:U.length,l:L,r:R,e:(d.exp||[]).length}}
-function diff(x){var g=tg();if(!g)return '';var a=cnt(S,g.id),b=cnt(x.data,null),o=[];if(a.u!==b.u)o.push('استديوهات '+a.u+' ← '+b.u);if(a.l!==b.l)o.push('عقود '+a.l+' ← '+b.l);if(a.r!==b.r)o.push('دفعات مستلمة '+a.r+' ← '+b.r);if(a.e!==b.e)o.push('مصروفات '+a.e+' ← '+b.e);return o.join(' • ')}
-window.hreqOk=async function(id){var x=REQ.filter(function(r){return r.id===id})[0],g=tg();if(!x||!g){toast('مجموعة عبد الحكيم مش موجودة');return}var d=x.data||{},ids={};if(!(d.units||[]).length&&(S.units||[]).some(function(u){return u.g===g.id})){if(!window._hz||window._hz!==id){window._hz=id;toast('⚠️ الطلب ده هيمسح كل استديوهات المجموعة — دوس موافقة تاني للتأكيد');return}}
- S.units=(S.units||[]).filter(function(u){return u.g!==g.id});(d.units||[]).forEach(function(u){u.g=g.id;ids[u.id]=1;S.units.push(u)});
- var old={};(S.units||[]).forEach(function(u){if(u.g===g.id)old[u.id]=1});
- S.exp=(S.exp||[]).filter(function(e){return !(e.u?old[e.u]||ids[e.u]:e.g===g.id)}).concat((d.exp||[]).filter(function(e){return e.u?ids[e.u]:true}).map(function(e){if(!e.u)e.g=g.id;return e}));
- S.dep=(S.dep||[]).filter(function(e){return !ids[e.uid]}).concat((d.dep||[]).filter(function(e){return ids[e.uid]}));
- S.gp=S.gp||{};if(d.gp&&d.gp[g.id])S.gp[g.id]=d.gp[g.id];S.gc=S.gc||{};if(d.gc&&d.gc[g.id]!=null)S.gc[g.id]=d.gc[g.id];
- S.adj=(S.adj||[]).filter(function(a){return a.g!==g.id}).concat((d.adj||[]).filter(function(a){return a.g===g.id}));
+function diff(x){var G=tg();if(!G)return '';var out=[];G.all.forEach(function(g){var a=cnt(S,g.id),b=cnt(x.data||{},g.id),o=[];if(a.u!==b.u)o.push('استديوهات '+a.u+' ← '+b.u);if(a.l!==b.l)o.push('عقود '+a.l+' ← '+b.l);if(a.r!==b.r)o.push('دفعات مستلمة '+a.r+' ← '+b.r);
+ var ea=(S.exp||[]).filter(function(e){return e.g===g.id||(S.units||[]).some(function(u){return u.id===e.u&&u.g===g.id})}).length,eb=((x.data||{}).exp||[]).filter(function(e){return e.g===g.id||((x.data||{}).units||[]).some(function(u){return u.id===e.u&&u.g===g.id})}).length;if(ea!==eb)o.push('مصروفات '+ea+' ← '+eb);
+ if(JSON.stringify((S.gp||{})[g.id]||[])!==JSON.stringify(((x.data||{}).gp||{})[g.id]||[]))o.push('فلوس الشراكة اتغيرت');if(o.length)out.push('【'+g.name+'】 '+o.join('، '))});return out.join(' • ')}
+window.hreqOk=async function(id){var x=REQ.filter(function(r){return r.id===id})[0],G=tg();if(!x||!G){toast('مجموعات عبد الحكيم مش موجودة');return}var d=x.data||{},gid={};G.all.forEach(function(g){gid[g.id]=1});var def=G.all.filter(function(g){return !/عمرو/.test(g.name)})[0]||G.all[0];
+ (d.units||[]).forEach(function(u){if(!gid[u.g])u.g=def.id});
+ if(!(d.units||[]).length&&(S.units||[]).some(function(u){return gid[u.g]})){if(!window._hz||window._hz!==id){window._hz=id;toast('⚠️ الطلب ده هيمسح كل استديوهات مجموعات عبد الحكيم — دوس موافقة تاني للتأكيد');return}}
+ var old={},ids={};(S.units||[]).forEach(function(u){if(gid[u.g])old[u.id]=1});(d.units||[]).forEach(function(u){ids[u.id]=1});
+ S.units=(S.units||[]).filter(function(u){return !gid[u.g]}).concat(d.units||[]);
+ S.exp=(S.exp||[]).filter(function(e){return !(e.u?(old[e.u]||ids[e.u]):gid[e.g])}).concat((d.exp||[]).filter(function(e){return e.u?ids[e.u]:true}).map(function(e){if(!e.u&&!gid[e.g])e.g=def.id;return e}));
+ S.dep=(S.dep||[]).filter(function(e){return !(old[e.uid]||ids[e.uid])}).concat((d.dep||[]).filter(function(e){return ids[e.uid]}));
+ S.gp=S.gp||{};S.gc=S.gc||{};G.all.forEach(function(g){if(d.gp&&d.gp[g.id])S.gp[g.id]=d.gp[g.id];if(d.gc&&d.gc[g.id]!=null)S.gc[g.id]=d.gc[g.id]});
+ S.adj=(S.adj||[]).filter(function(a){return !gid[a.g]}).concat((d.adj||[]).filter(function(a){return gid[a.g]}));
  try{logEv('موافقة على طلب من بنيان حكيم: '+(x.desc||''))}catch(e){}save();render();
  await setL(REQ.filter(function(r){return r.id!==id}));render();toast('✅ اتوافق على التعديل واتبعت لبنيان حكيم')};
 window.hreqNo=async function(id){await setL(REQ.filter(function(r){return r.id!==id}));render();toast('اترفض الطلب')};
@@ -4082,7 +4090,7 @@ try{if(AUTH)render()}catch(e){}
 body.pv #grpb button small{display:none}
 </style>
 <script id="grpbjs">
-(function(){if(window.HBUILD)return;
+(function(){var HB=!!window.HBUILD;
 var COL=['#14b8a6','#6d5dfc','#f59e0b','#ec4899','#22c55e','#0ea5e9','#ef4444'];
 function gl(){return S.groups||[]}
 function info(){if(WS==='-'||!WS)return 'بدون مجموعة';var g=gl().filter(function(x){return x.id===WS})[0];return g?g.name:'مجموعة'}
@@ -4091,10 +4099,10 @@ function out(e){var d=document.getElementById('grpd'),b=document.getElementById(
 window.grpbOpen=function(){if(document.getElementById('grpd')){close();return}var b=document.getElementById('grpb');if(!b)return;var r=b.getBoundingClientRect(),d=document.createElement('div');d.id='grpd';
  var h='<div class="gdh">📂 اختار المجموعة</div>';gl().forEach(function(g,i){var c=COL[i%COL.length],n=S.units.filter(function(u){return u.g===g.id}).length;h+='<button type="button" class="gdi'+(g.id===WS?' on':'')+'" data-g="'+esc(g.id)+'" style="--c:'+c+'"><i></i><span>'+esc(g.name)+'</span><small>'+n+' استديو</small>'+(g.id===WS?'<b>✓</b>':'')+'</button>'});
  if(S.units.some(function(u){return !u.g}))h+='<button type="button" class="gdi'+(WS==='-'?' on':'')+'" data-g="-" style="--c:#94a3b8"><i></i><span>بدون مجموعة</span></button>';
- h+='<button type="button" class="gdm" data-g="__m">⚙️ إدارة المجموعات</button>';d.innerHTML=h;document.body.appendChild(d);
+ if(!HB)h+='<button type="button" class="gdm" data-g="__m">⚙️ إدارة المجموعات</button>';d.innerHTML=h;document.body.appendChild(d);
  var w=Math.min(300,innerWidth-24);d.style.width=w+'px';d.style.top=(r.bottom+8)+'px';d.style.left=Math.max(12,Math.min(innerWidth-w-12,r.left+r.width/2-w/2))+'px';
  d.onclick=function(e){var x=e.target.closest('[data-g]');if(!x)return;close();setW(x.getAttribute('data-g'))};setTimeout(function(){document.addEventListener('click',out,true)},0)};
-var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH)return o;var hd=document.querySelector('.hd');if(!hd)return o;var d=document.getElementById('grpb');if(!d){d=document.createElement('div');d.id='grpb';hd.appendChild(d)}
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH)return o;var hd=document.querySelector('.hd');if(!hd)return o;var d=document.getElementById('grpb');if(HB&&gl().length<2){if(d)d.remove();return o}if(!d){d=document.createElement('div');d.id='grpb';hd.appendChild(d)}
  var t=info(),c=COL[Math.max(0,gl().findIndex(function(x){return x.id===WS}))%COL.length];if(d.getAttribute('data-t')!==t){d.setAttribute('data-t',t);d.innerHTML='<button type="button" title="تغيير المجموعة" onclick="grpbOpen()"><i style="background:'+c+'"></i><span class="gmq"><span class="gtr"><b>'+esc(t)+'</b><b>'+esc(t)+'</b></span></span></button>'}if(!window.__fitQ)window.__fitQ=requestAnimationFrame(function(){window.__fitQ=0;fit()})}catch(e){}return o};
 function fit(){try{var hd=document.querySelector('.hd'),d=document.getElementById('grpb');if(!hd||!d)return;var H=hd.getBoundingClientRect(),L=H.left+8,Rr=H.right-8;[].slice.call(hd.children).forEach(function(c){if(c===d||c.id==='hmp'||getComputedStyle(c).position==='absolute'||getComputedStyle(c).position==='fixed')return;var r=c.getBoundingClientRect();if(!r.width)return;var mid=(r.left+r.right)/2;if(mid<H.left+H.width/2)L=Math.max(L,r.right+6);else Rr=Math.min(Rr,r.left-6)});var w=Math.max(60,Rr-L);d.style.left=(L-H.left+w/2)+'px';var bt=d.querySelector('button');bt.style.maxWidth=w+'px';bt.style.width=Math.min(w,170)+'px';bt.style.setProperty('--gw',(Math.min(w,170)-30)+'px')}catch(e){}}
 addEventListener('resize',fit);
@@ -4679,7 +4687,7 @@ var up=false;async function flush(){var a=q(),c=cfg();if(!a.length||!c||!c.token
   var w=await RF(u,{method:"PUT",headers:H,body:JSON.stringify(b)});if(w.ok){sq([]);try{toast("📨 طلب التعديل وصل للبرنامج الأساسي")}catch(e){}bar()}}catch(e){}finally{up=false}}
 window.hreqFlush=flush;setInterval(flush,30000);addEventListener("online",flush);
 var P=Storage.prototype,s0=P.setItem;
-P.setItem=function(k,v){try{if(this===window.localStorage&&typeof A!=="undefined"&&A&&k===A.k){var old=localStorage.getItem(k);if(old){var nv=JSON.parse(v),pn=pk(nv);if(pn!==pk(JSON.parse(old))&&pn!==window._cloudD&&Date.now()-window._ug<2500&&!(nv.hist&&nv.hist[0]&&/إنشاء حساب|تسجيل (دخول|خروج)/.test(nv.hist[0].d||""))){var lq=q();if(lq.length&&JSON.stringify(lq[lq.length-1].data)===pn){try{S=JSON.parse(old)}catch(e){}return}var ds=(nv.hist&&nv.hist[0]&&Date.now()-nv.hist[0].t<8000)?String(nv.hist[0].d||""):"تعديل";var a=q();a.push({id:"r"+Date.now(),at:Date.now(),by:A.u,desc:ds,data:JSON.parse(pn)});sq(a);try{S=JSON.parse(old)}catch(e){}setTimeout(function(){try{render();toast("🔒 التعديل محتاج موافقة البرنامج الأساسي — اتبعت طلب");bar(1)}catch(e){}},30);setTimeout(flush,300);return}}}}catch(e){}return s0.apply(this,arguments)};
+P.setItem=function(k,v){try{if(this===window.localStorage&&typeof A!=="undefined"&&A&&k===A.k){var old=localStorage.getItem(k);if(old){var nv=JSON.parse(v),pn=pk(nv);if(pn!==pk(JSON.parse(old))&&pn!==window._cloudD&&Date.now()-window._ug<2500&&!(nv.hist&&nv.hist[0]&&/إنشاء حساب|تسجيل (دخول|خروج)/.test(nv.hist[0].d||""))){var lq=q();if(lq.length&&JSON.stringify(lq[lq.length-1].data)===pn){try{S=JSON.parse(old)}catch(e){}return}var ds=(nv.hist&&nv.hist[0]&&Date.now()-nv.hist[0].t<8000)?String(nv.hist[0].d||""):"تعديل";try{var ov=JSON.parse(old),gn=[];(nv.groups||[]).forEach(function(g){var f=function(o){return JSON.stringify([(o.units||[]).filter(function(u){return u.g===g.id}),(o.gp||{})[g.id]||[],(o.exp||[]).filter(function(e){return e.g===g.id})])};if(f(nv)!==f(ov))gn.push(g.name)});if(gn.length&&(nv.groups||[]).length>1)ds="【"+gn.join(" + ")+"】 "+ds}catch(e){}var a=q();a.push({id:"r"+Date.now(),at:Date.now(),by:A.u,desc:ds,data:JSON.parse(pn)});sq(a);try{S=JSON.parse(old)}catch(e){}setTimeout(function(){try{render();toast("🔒 التعديل محتاج موافقة البرنامج الأساسي — اتبعت طلب");bar(1)}catch(e){}},30);setTimeout(flush,300);return}}}}catch(e){}return s0.apply(this,arguments)};
 var bt=0;function bar(f){try{if(f)bt=Date.now();var n=q().length,b=document.getElementById("hbar");if(!n&&Date.now()-bt>5000){if(b)b.style.display="none";return}if(!b){b=document.createElement("div");b.id="hbar";b.style.cssText="position:fixed;bottom:calc(10px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:40;background:#2a9d5c;color:#fff;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.2);white-space:nowrap";document.body.appendChild(b)}var cc=cfg();b.style.background=(cc&&cc.token)?"#2a9d5c":"#d97706";b.style.display="";b.textContent=!(cc&&cc.token)?("⚠️ المزامنة مش متفعلة — الطلبات مش هتوصل"+(n?" ("+n+" مستني)":"")):(n?("⏳ "+n+" طلب بيتبعت للبرنامج الأساسي…"):"🔒 أي تعديل بيحتاج موافقة البرنامج الأساسي");b.onclick=function(){try{flush();if(window.syOpen&&!(cc&&cc.token))syOpen()}catch(e){}}}catch(e){}}
 setTimeout(bar,800);setInterval(bar,5000);
 var hET="",apB=false;async function ap(){try{if(typeof AUTH==="undefined"||!AUTH||document.hidden||navigator.onLine===false||!window.syNow||apB)return;var c=cfg();if(!c||!c.token)return;apB=true;var RF=window._rf||f1,H={"Authorization":"Bearer "+c.token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};if(hET)H["If-None-Match"]=hET;var r=await RF("https://api.github.com/repos/"+c.repo+"/contents/hakim.json",{headers:H,cache:"no-store"});if(r.status===304)return;if(r.ok){hET=r.headers.get("ETag")||"";var j=await r.json();if(j.sha&&j.sha===c.sha)return;syNow()}}catch(e){}finally{apB=false}}
