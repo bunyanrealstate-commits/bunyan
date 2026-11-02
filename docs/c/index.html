@@ -1403,7 +1403,7 @@ var r0=render;render=function(){r0.apply(this,arguments);try{if(!AUTH||!A||A.rol
  var B=window.bnyBio,lu=null;try{lu=localStorage.getItem('bny_lastu')}catch(e){}
  if(!AUTH){}}catch(e){}};
 var r1=render;function addBil(){try{var B=window.bnyBio,lu=null;try{lu=localStorage.getItem('bny_lastu')}catch(e){}
- if(!AUTH&&B&&B.on()&&B.P()&&lu&&US.some(function(x){return String(x.u).toLowerCase()===String(lu).toLowerCase()})){var bt=document.querySelector('#login .dlg .bt');if(bt&&!bt.querySelector('.bil')){var b=document.createElement('button');b.className='bil';b.textContent='🖐️ دخول بالبصمة ('+lu+')';b.onclick=async function(){if(await B.ask('تسجيل الدخول')){var f=US.find(function(x){return String(x.u).toLowerCase()===String(lu).toLowerCase()});if(f){A=f;S=ld(f.k);AUTH=true;try{logEv('تسجيل دخول بالبصمة')}catch(e){}render()}}};bt.appendChild(b)}}}catch(e){}}window.bnyAddBil=addBil;render=function(){r1.apply(this,arguments);addBil()};try{new MutationObserver(function(){if(!AUTH)addBil()}).observe(document.getElementById('login'),{childList:true})}catch(e){}setTimeout(addBil,0);
+ if(!AUTH&&B&&B.on()&&B.P()&&lu&&US.some(function(x){return String(x.u).toLowerCase()===String(lu).toLowerCase()})){var bt=document.querySelector('#login .dlg .bt');if(bt&&!document.querySelector('#login .bil')){var b=document.createElement('button');b.className='bil';b.textContent='🖐️ دخول بالبصمة ('+lu+')';b.onclick=async function(){if(await B.ask('تسجيل الدخول')){var f=US.find(function(x){return String(x.u).toLowerCase()===String(lu).toLowerCase()});if(f){A=f;S=ld(f.k);AUTH=true;try{logEv('تسجيل دخول بالبصمة')}catch(e){}render()}}};bt.appendChild(b)}}}catch(e){}}window.bnyAddBil=addBil;render=function(){r1.apply(this,arguments);addBil()};try{new MutationObserver(function(){if(!AUTH)addBil()}).observe(document.getElementById('login'),{childList:true})}catch(e){}setTimeout(addBil,0);
 var dl0=doLogin;doLogin=async function(){await dl0.apply(this,arguments);try{if(AUTH&&A)localStorage.setItem('bny_lastu',A.u)}catch(e){}};
 render()})();
 </script>
@@ -1544,8 +1544,9 @@ function enhBio(){var o=document.getElementById('bio');if(!o||o.dataset.lx)retur
  var av=document.createElement('div');av.className='av';var h=c.querySelector('h2');if(h)c.insertBefore(av,h);
  if(fb){fb.innerHTML=IF;fb.title='الدخول بالبصمة';var f=document.createElement('div');f.className='lfp';var orr=document.createElement('div');orr.className='lor';orr.textContent='أو';c.insertBefore(orr,fb);c.insertBefore(f,fb);f.appendChild(fb);var sm=document.createElement('small');sm.textContent='افتح بالبصمة';f.appendChild(sm)}
  var p=c.querySelector('p.mu');if(p)p.textContent='التطبيق مقفول — اكتب كلمة السر أو استخدم البصمة'}
+function dedupFp(){try{var fs=document.querySelectorAll('#login .lfp');for(var i=1;i<fs.length;i++){var pr=fs[i].previousElementSibling;if(pr&&pr.classList.contains('lor'))pr.remove();fs[i].remove()}}catch(e){}}
 function bioName(){var o=document.getElementById('bio');if(!o)return;var u='';try{u=(typeof A!=='undefined'&&A&&A.u)||lastU()}catch(e){u=lastU()}var av=o.querySelector('.av'),h=o.querySelector('.bcard h2');if(av)av.textContent=(u||'B').charAt(0);if(h)h.textContent=u?'أهلاً يا '+u+' 👋':'Bunyan Furnished'}
-var L=document.getElementById('login');if(L)new MutationObserver(function(){try{enh()}catch(e){}}).observe(L,{childList:true,subtree:true});
+var L=document.getElementById('login');if(L)new MutationObserver(function(){try{enh();dedupFp()}catch(e){}}).observe(L,{childList:true,subtree:true});
 try{enh()}catch(e){}
 function boot(){try{enhBio();bioName()}catch(e){}}boot();setTimeout(boot,600);
 var bo=document.getElementById('bio');if(bo)new MutationObserver(function(){bioName()}).observe(bo,{attributes:true,attributeFilter:['class']});
