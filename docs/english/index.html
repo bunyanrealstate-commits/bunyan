@@ -560,7 +560,7 @@ async function localFix(text){
   return[{you:text,better,why:""}];
 }
 const MODEL_URL="https://github.com/bunyanrealstate-commits/bunyan/releases/download/english-model/gemma3-1b-it-int4.task";
-let dlPoll=null;
+let dlPoll=null,dlLast=null,dlSpeed=0;
 function modelSetup(st){
   const mb=x=>Math.max(0,Math.round(x/1048576));
   $("#box").innerHTML=`<h3>جهّز عقل صاحبك</h3>
@@ -571,14 +571,16 @@ function modelSetup(st){
   const paint=s=>{const bar=$("#dlbar"),t=$("#dltxt"),b=$("#dlgo");if(!bar)return false;
     const pc=s.total>0?Math.floor(s.loaded/s.total*100):0;bar.style.width=pc+"%";
     if(s.ready){t.textContent="خلص التحميل";return true}
-    if(s.state==="downloading"||s.state==="paused"){b.hidden=true;
-      t.innerHTML=(s.total>0?`${mb(s.loaded)} من ${mb(s.total)} ميجا (${pc}%)`:"بيبدأ التحميل…")+(s.state==="paused"?" · مستني النت":"")+
+    if(s.state==="downloading"||s.state==="paused"){b.hidden=true;const nw=Date.now();
+      if(dlLast&&nw-dlLast.t>=1500){dlSpeed=(s.loaded-dlLast.l)/1048576/((nw-dlLast.t)/1000);dlLast={t:nw,l:s.loaded}}else if(!dlLast)dlLast={t:nw,l:s.loaded};
+      t.innerHTML=(s.total>0?`${mb(s.loaded)} من ${mb(s.total)} ميجا (${pc}%)`:"بيبدأ التحميل…")+(dlSpeed>0?` · ${dlSpeed.toFixed(1)} ميجا/ث`:"")+(s.state==="paused"?" · مستني النت":"")+
       `<br><b>التحميل شغال في الخلفية.</b> تقدر تقفل التطبيق أو تقفل الشاشة، وهتلاقي إشعار التحميل في الستارة فوق. ارجع للمحادثة لما يخلص.`}
-    else{b.hidden=false;b.disabled=false;b.textContent=s.state==="failed"?"التحميل وقف، حاول تاني":"نزّل عقل صاحبك";
-      t.textContent=s.state==="failed"?"اتأكد إن النت شغال وإن فيه مساحة فاضية على الموبايل (1 جيجا على الأقل).":"يفضّل على واي فاي."}
+    else{b.hidden=false;b.disabled=false;dlLast=null;dlSpeed=0;const resume=s.loaded>0;
+      b.textContent=resume?"كمّل التحميل":s.state==="failed"?"حاول تاني":"نزّل عقل صاحبك";
+      t.textContent=(resume?`اتنزّل ${mb(s.loaded)} من ${mb(s.total)} ميجا. `:"")+(s.state==="failed"?"التحميل وقف. اتأكد إن النت شغال وإن فيه مساحة فاضية (1 جيجا على الأقل).":"يفضّل على واي فاي.")}
     return false};
   const watch=()=>{clearInterval(dlPoll);dlPoll=setInterval(async()=>{if(!$("#dlbar")){clearInterval(dlPoll);return}
-    try{const s=await LLM().status();if(paint(s)){clearInterval(dlPoll);toast("صاحبك جاهز");chat()}}catch(e){}},1500)};
+    try{const s=await LLM().status();if(paint(s)){clearInterval(dlPoll);toast("صاحبك جاهز");chat()}}catch(e){}},1000)};
   paint(st);if(st.state==="downloading"||st.state==="paused")watch();
   $("#dlgo").onclick=async()=>{const b=$("#dlgo");b.disabled=true;
     try{const s=await LLM().download({url:MODEL_URL});paint(s);watch()}catch(e){b.disabled=false;$("#dltxt").textContent="مقدرش يبدأ التحميل: "+(e?.message||e)}};
