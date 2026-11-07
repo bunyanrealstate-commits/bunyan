@@ -25,7 +25,7 @@ const fails=[],notes=[];const F=m=>{fails.push(m);console.log('❌ '+m)},OK=m=>c
    try{const r=rcvP(),f=fpos();out.nums[g]={cash:Math.round(cashNow()),profit:Math.round(r.profit),rev:Math.round(r.rev),eq:Math.round(f.eq)}}catch(e){out.crash.push(g+' numbers: '+e.message)}});S.tab='home';render();return out},tabs);
  res.crash.forEach(c=>F('tab '+c));if(!res.crash.length)OK('all tabs render in '+Object.keys(res.nums).length+' groups');
  // 4) accounting self-test (golden example)
- const st=await p.evaluate(()=>{try{const r=window.monAudit(false);return (r.issues||[]).filter(x=>/محرك الحسابات/.test(x.area)).map(x=>x.msg)}catch(e){return ['monitor crashed: '+e.message]}});st.forEach(x=>F('self-test: '+x));if(!st.length)OK('accounting self-test');
+ const st=await p.evaluate(()=>{try{window.monAudit(false);const r=window.monAudit(false);return (r.issues||[]).filter(x=>/محرك الحسابات/.test(x.area)).map(x=>x.msg)}catch(e){return ['monitor crashed: '+e.message]}});st.forEach(x=>F('self-test: '+x));if(!st.length)OK('accounting self-test');
  // 5) key numbers vs baseline (same data => same numbers)
  const key=require('crypto').createHash('md5').update(data).digest('hex');let base=null;try{base=JSON.parse(fs.readFileSync(BASE,'utf8'))}catch(e){}
  if(base&&base.key===key){let diff=0;Object.keys(res.nums).forEach(g=>{const a=res.nums[g],o=base.nums[g]||{};Object.keys(a).forEach(k=>{if(Math.abs(a[k]-(o[k]||0))>1){diff++;F('number changed '+g+'.'+k+': '+o[k]+' → '+a[k])}})});if(!diff)OK('numbers unchanged vs baseline')}
