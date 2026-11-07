@@ -5351,7 +5351,7 @@ var nw=window.ctNew;window.ctNew=function(){var r=nw.apply(this,arguments);try{S
 <script id="tidyjs">(function(){
 /* 1) no sideways wobble: horizontal panning only when the page is zoomed in */
 var VV=window.visualViewport;function ta(){var a=document.getElementById('app'),z=VV&&VV.scale>1.02;if(a)a.style.touchAction=z?'pan-x pan-y pinch-zoom':'pan-y pinch-zoom';}
-if(VV){VV.addEventListener('resize',ta)}setInterval(ta,1500);
+if(VV){VV.addEventListener('resize',ta)}setInterval(ta,1500);ta();var r1=render;render=function(){var o=r1.apply(this,arguments);ta();return o};
 /* 2) tidy order of the cards in each tab */
 var ORDER={
  home:['hero2','#grid1','dsh','#grid2',/تنبيهات كل المجموعات/,/الدفعات القادمة/,/الإيجارات وصافي ربح/,/رأس مال أول المدة/,/آخر التعديلات/,'monl'],
