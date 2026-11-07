@@ -239,10 +239,17 @@ const W=()=>S.work??S.level??0;
 let voice=null;
 function pickVoice(){try{const vs=speechSynthesis.getVoices();voice=vs.find(v=>/en[-_]US/i.test(v.lang)&&/Samantha|Google|Natural|Aria|Jenny/i.test(v.name))||vs.find(v=>/en[-_](US|GB)/i.test(v.lang))||null}catch(e){}}
 try{pickVoice();speechSynthesis.onvoiceschanged=pickVoice}catch(e){}
-function say(t,slow){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-US";if(voice)u.voice=voice;u.rate=slow?0.7:0.95;speechSynthesis.speak(u)}catch(e){toast("الجهاز ده مش بيدعم تشغيل الصوت")}}
+function say(t,slow){const NT=window.Capacitor?.Plugins?.TextToSpeech;if(NT){NT.stop().catch(()=>{}).finally(()=>NT.speak({text:t,lang:"en-US",rate:slow?0.7:1,pitch:1,volume:1,category:"playback"}).catch(()=>toast("ثبّت محرك نطق جوجل من الإعدادات")));return}
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-US";if(voice)u.voice=voice;u.rate=slow?0.7:0.95;speechSynthesis.speak(u)}catch(e){toast("الجهاز ده مش بيدعم تشغيل الصوت")}}
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-let srBroken=!SR;
-function listen(onPartial){return new Promise((res,rej)=>{
+const NSR=()=>window.Capacitor?.Plugins?.SpeechRecognition;
+let srBroken=!SR&&!NSR();
+function listen(onPartial){
+  const N=NSR();
+  if(N)return (async()=>{try{const p=await N.requestPermissions();if(p&&p.speechRecognition&&p.speechRecognition!=="granted")throw"na";
+    const r=await N.start({language:"en-US",maxResults:1,partialResults:false,popup:true});const t=r?.matches?.[0];if(!t)throw"empty";return t}
+    catch(e){throw e==="na"?"na":"empty"}})();
+  return new Promise((res,rej)=>{
   if(srBroken)return rej("na");
   let r;try{r=new SR()}catch(e){srBroken=true;return rej("na")}
   r.lang="en-US";r.interimResults=true;r.maxAlternatives=1;let final="",got=false;
@@ -551,7 +558,7 @@ Return JSON only: {"reply":"...","corrections":[{"you":"...","better":"...","why
 
 /* ================= ROUTER ================= */
 const VIEWS={home,pron,vocab,gram,chat};
-function go(v){T=null;try{speechSynthesis.cancel()}catch(e){}cur=v;document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-current",t.dataset.v===v));render();window.scrollTo(0,0)}
+function go(v){T=null;try{speechSynthesis.cancel();window.Capacitor?.Plugins?.TextToSpeech?.stop()}catch(e){}cur=v;document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-current",t.dataset.v===v));render();window.scrollTo(0,0)}
 let cur="home";
 function render(){setChip();if(T)return;VIEWS[cur]()}
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{if(S.level==null&&t.dataset.v!=="home"&&t.dataset.v!=="pron"){S.work=S.work??1}go(t.dataset.v)});

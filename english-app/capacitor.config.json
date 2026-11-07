@@ -1,0 +1,11 @@
+{
+ "appId": "com.bunyan.english",
+ "appName": "مدرّب الإنجليزي",
+ "webDir": "www",
+ "backgroundColor": "#EEF2F7",
+ "server": {
+  "url": "https://bunyanrealstate-commits.github.io/bunyan/english/",
+  "androidScheme": "https",
+  "cleartext": false
+ }
+}

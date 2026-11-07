@@ -1,0 +1,570 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2747C9"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>مدرّب الإنجليزي</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
+<style>
+/* Layout: one-column phone app, sticky top bar + bottom tab bar; English text set in a book serif, UI in Plex Arabic. */
+:root{
+  --bg:#EEF2F7; --surface:#FFFFFF; --sunk:#E3E9F2; --fg:#16203A; --muted:#5A6684; --line:#D3DBE8;
+  --accent:#2747C9; --accent-ink:#FFFFFF; --accent-soft:#DFE6FB;
+  --good:#1C8A5E; --good-soft:#D8F1E6; --bad:#C63B3B; --bad-soft:#F8DEDE; --warn:#B07612; --warn-soft:#F7EBD2;
+  --ui:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+  --en:"Newsreader",Georgia,"Times New Roman",serif;
+  --r:14px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1424; --surface:#172038; --sunk:#111A2E; --fg:#E7ECF7; --muted:#9AA6C2; --line:#28334F;
+  --accent:#7D98FF; --accent-ink:#0E1424; --accent-soft:#222F57;
+  --good:#4CC892; --good-soft:#163A2D; --bad:#F07A7A; --bad-soft:#41202A; --warn:#E5B04F; --warn-soft:#3A2E16; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1424; --surface:#172038; --sunk:#111A2E; --fg:#E7ECF7; --muted:#9AA6C2; --line:#28334F;
+  --accent:#7D98FF; --accent-ink:#0E1424; --accent-soft:#222F57;
+  --good:#4CC892; --good-soft:#163A2D; --bad:#F07A7A; --bad-soft:#41202A; --warn:#E5B04F; --warn-soft:#3A2E16; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--ui);font-size:15px;line-height:1.6;direction:rtl}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:8px 110px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px}
+.brand{font-weight:700;font-size:18px}
+.brand small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.lvchip{font-family:var(--en);font-weight:600;font-size:15px;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:4px 14px;direction:ltr}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.3}
+h2{font-size:20px} h3{font-size:16px}
+p{margin:0}
+.muted{color:var(--muted)}
+.stack{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.label{font-size:12px;letter-spacing:.04em;color:var(--muted);font-weight:500}
+.en{font-family:var(--en);direction:ltr;text-align:left;unicode-bidi:isolate}
+.big-en{font-family:var(--en);font-size:22px;line-height:1.45;direction:ltr;text-align:left}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 14px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.5;cursor:default}
+.btn:focus-visible,.opt:focus-visible,.tab:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn svg{width:18px;height:18px;flex:none}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.row.end{justify-content:flex-end}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;direction:ltr;font-family:var(--en);font-size:17px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;min-height:48px}
+.opt.right{background:var(--good-soft);border-color:var(--good)}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.prog{height:6px;background:var(--sunk);border-radius:99px;overflow:hidden}
+.prog>i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
+/* CEFR scale */
+.cefr{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;direction:ltr}
+.cefr span{font-family:var(--en);font-weight:600;text-align:center;padding:8px 0;border-radius:8px;background:var(--sunk);color:var(--muted);font-size:14px}
+.cefr span.on{background:var(--accent-soft);color:var(--accent)}
+.cefr span.cur{background:var(--accent);color:var(--accent-ink)}
+.skills{display:grid;grid-template-columns:auto 1fr auto;gap:8px 10px;align-items:center;font-variant-numeric:tabular-nums}
+.skills .bar{height:8px;background:var(--sunk);border-radius:99px;overflow:hidden}
+.skills .bar i{display:block;height:100%;border-radius:99px}
+.plan{display:flex;flex-direction:column;gap:0;counter-reset:s}
+.plan button{all:unset;cursor:pointer;display:grid;grid-template-columns:32px 1fr auto;gap:10px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.plan button:first-child{border-top:0}
+.plan button:focus-visible{outline:3px solid var(--accent)}
+.plan .n{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--sunk);font-weight:700;font-size:13px}
+.plan .done .n{background:var(--good);color:var(--surface)}
+.pill{font-size:12px;border-radius:99px;padding:2px 10px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+/* pronunciation result */
+.words{display:flex;flex-wrap:wrap;gap:6px;direction:ltr;font-family:var(--en);font-size:20px}
+.words button{border:0;border-radius:8px;padding:2px 8px;background:var(--sunk)}
+.words .ok{background:var(--good-soft);color:var(--good)}
+.words .miss{background:var(--bad-soft);color:var(--bad);text-decoration:underline wavy}
+.score{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+textarea,input[type=text]{font:inherit;font-family:var(--en);font-size:17px;direction:ltr;text-align:left;width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;background:var(--sunk);color:var(--fg);padding:10px 12px;resize:vertical}
+.note{font-size:13px;color:var(--muted);background:var(--sunk);border-radius:10px;padding:10px 12px}
+.tip{border-inline-start:3px solid var(--warn);padding-inline-start:10px;font-size:14px}
+.ipa{font-family:var(--en);direction:ltr;unicode-bidi:isolate;color:var(--accent)}
+.rec.live{background:var(--bad);border-color:var(--bad);color:#fff}
+/* flashcard */
+.flash{min-height:180px;align-items:center;justify-content:center;text-align:center}
+.flash .w{font-family:var(--en);font-size:32px;font-weight:600;direction:ltr}
+/* chat */
+.chat{display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;border-radius:14px;padding:10px 12px;min-width:0}
+.msg.me{align-self:flex-start;background:var(--accent);color:var(--accent-ink)}
+.msg.bot{align-self:flex-end;background:var(--surface);border:1px solid var(--line)}
+.msg .en{font-size:17px}
+.fix{font-size:13px;border-top:1px dashed var(--line);margin-top:8px;padding-top:8px;display:flex;flex-direction:column;gap:6px}
+.fix s{color:var(--bad)} .fix b{color:var(--good);font-weight:600}
+/* tab bar */
+nav.tabs{position:fixed;inset:auto 0 0 0;z-index:6;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.tab{border:0;background:none;padding:8px 2px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:var(--muted)}
+.tab svg{width:22px;height:22px}
+.tab[aria-current="true"]{color:var(--accent);font-weight:700}
+.seg{display:flex;gap:6px;overflow-x:auto;direction:ltr;padding-bottom:2px}
+.seg button{font-family:var(--en);font-weight:600;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:4px 12px;min-height:34px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.passage{font-family:var(--en);font-size:17px;direction:ltr;text-align:left;background:var(--sunk);border-radius:10px;padding:10px 12px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head><body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">مدرّب الإنجليزي<small id="sub">اعرف مستواك وابدأ صح</small></div>
+    <span class="lvchip" id="lvchip" hidden>A2</span>
+  </header>
+  <main id="view" class="stack" aria-live="polite"></main>
+</div>
+
+<nav class="tabs" id="tabs" aria-label="الأقسام">
+  <button class="tab" data-v="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>خطتي</button>
+  <button class="tab" data-v="pron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>النطق</button>
+  <button class="tab" data-v="vocab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="14" height="16" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/></svg>كلمات</button>
+  <button class="tab" data-v="gram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5h11l5 5v9z"/><path d="M8 13h8M8 16h5"/></svg>قواعد</button>
+  <button class="tab" data-v="chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H9l-5 4z"/></svg>محادثة</button>
+</nav>
+
+<script>
+/* ================= DATA ================= */
+const LV=["A1","A2","B1","B2","C1","C2"];
+const LVNAME=["مبتدئ","أساسي","متوسط","فوق المتوسط","متقدم","متمكّن"];
+const SK={g:"القواعد",v:"المفردات",r:"القراءة",l:"الاستماع",s:"النطق"};
+
+const TEST=[
+// A1
+{lv:0,sk:"g",q:"She ___ a teacher.",o:["is","are","am","be"],a:0},
+{lv:0,sk:"g",q:"I ___ coffee every morning.",o:["drink","drinks","drinking","am drink"],a:0},
+{lv:0,sk:"v",q:"The opposite of “big” is ___.",o:["small","tall","long","old"],a:0},
+{lv:0,sk:"l",say:"My brother has two cats.",o:["My brother has two cats.","My mother has two hats.","My brother had two cars.","My father has blue cats."],a:0},
+{lv:0,sk:"v",q:"We eat breakfast in the ___.",o:["morning","night","week","year"],a:0},
+{lv:0,sk:"g",q:"There ___ three books on the table.",o:["are","is","be","am"],a:0},
+// A2
+{lv:1,sk:"g",q:"Yesterday I ___ to the market.",o:["went","go","goes","going"],a:0},
+{lv:1,sk:"g",q:"She is ___ than her sister.",o:["taller","more tall","tallest","tall"],a:0},
+{lv:1,sk:"v",q:"I need to ___ an appointment with the doctor.",o:["make","do","take off","put"],a:0},
+{lv:1,sk:"l",say:"Could you tell me where the bus station is?",o:["Could you tell me where the bus station is?","Can you tell me when the bus leaves?","Could you show me the train station?","Would you take me to the bus stop?"],a:0},
+{lv:1,sk:"r",p:"Sara works in a hotel. She starts at seven and finishes at three. After work she goes to the gym.",q:"When does Sara finish work?",o:["At three","At seven","After the gym","She doesn't work"],a:0},
+{lv:1,sk:"g",q:"How ___ money do you have?",o:["much","many","lot","more"],a:0},
+// B1
+{lv:2,sk:"g",q:"If it rains tomorrow, we ___ at home.",o:["will stay","stayed","would stay","stay will"],a:0},
+{lv:2,sk:"g",q:"I have lived here ___ 2019.",o:["since","for","from","at"],a:0},
+{lv:2,sk:"v",q:"He decided to ___ smoking.",o:["give up","give in","give out","give away"],a:0},
+{lv:2,sk:"l",say:"I've been waiting for over an hour, and nobody has called me back.",o:["I've been waiting for over an hour, and nobody has called me back.","I waited for an hour, and somebody called me back.","I'll be waiting for an hour until you call me back.","I've been working for hours, and nobody helped me."],a:0},
+{lv:2,sk:"r",p:"The meeting was postponed because the manager was stuck in traffic.",q:"Why was the meeting postponed?",o:["The manager was delayed by traffic","It was cancelled forever","The manager was sick","There was no room"],a:0},
+{lv:2,sk:"g",q:"The rent ___ paid on the first of every month.",o:["is","are being","has","was being"],a:0},
+// B2
+{lv:3,sk:"g",q:"If I ___ about the delay, I would have left later.",o:["had known","knew","have known","would know"],a:0},
+{lv:3,sk:"v",q:"The landlord agreed to ___ the cost of repairs.",o:["cover","recover","discover","uncover"],a:0},
+{lv:3,sk:"g",q:"She suggested ___ the contract again.",o:["reviewing","to review","review","reviewed"],a:0},
+{lv:3,sk:"l",say:"Had I known the tenant would leave early, I'd have asked for a bigger deposit.",o:["Had I known the tenant would leave early, I'd have asked for a bigger deposit.","I knew the tenant would leave early, so I asked for a deposit.","If the tenant leaves early, I'll ask for a bigger deposit.","I had no idea the tenant left, so I kept the deposit."],a:0},
+{lv:3,sk:"r",p:"Although demand for short-term rentals rose sharply, many owners hesitated to raise prices, fearing they would lose loyal tenants.",q:"Why didn't many owners raise prices?",o:["They were afraid of losing loyal tenants","Demand fell","The law banned it","Tenants asked them not to"],a:0},
+{lv:3,sk:"v",q:"Despite the ___ weather, the event went ahead.",o:["adverse","adverb","averse","advent"],a:0},
+// C1
+{lv:4,sk:"g",q:"Not only ___ late, but he also forgot the documents.",o:["did he arrive","he arrived","he did arrive","arrived he"],a:0},
+{lv:4,sk:"v",q:"The report ___ the importance of regular maintenance.",o:["underscores","undertakes","undermines","underlies"],a:0},
+{lv:4,sk:"g",q:"It's high time we ___ a decision.",o:["made","make","will make","have made"],a:0},
+{lv:4,sk:"l",say:"The figures, while encouraging, hardly justify the level of optimism expressed at the meeting.",o:["The figures are encouraging but don't really justify so much optimism.","The figures were disappointing, so nobody was optimistic.","The figures fully justify the optimism at the meeting.","Nobody discussed the figures at the meeting."],a:0},
+{lv:4,sk:"r",p:"The proposal was met with a lukewarm response.",q:"What does this mean?",o:["People showed little enthusiasm","People were very excited","People were angry","People were confused"],a:0},
+{lv:4,sk:"v",q:"Her argument doesn't ___ water.",o:["hold","keep","carry","bear"],a:0},
+// C2
+{lv:5,sk:"g",q:"Little ___ that the deal had already collapsed.",o:["did they realise","they realised","they did realise","realised they"],a:0},
+{lv:5,sk:"v",q:"His explanation was so ___ that nobody could follow it.",o:["convoluted","concise","candid","cogent"],a:0},
+{lv:5,sk:"r",p:"To say the plan was ambitious would be an understatement.",q:"What does the writer mean?",o:["The plan was extremely ambitious","The plan was not ambitious","The plan failed","The plan was cancelled"],a:0},
+{lv:5,sk:"g",q:"Were the company ___ its policy, many clients would return.",o:["to change","changing","changed","change"],a:0},
+{lv:5,sk:"v",q:"The negotiations reached an ___.",o:["impasse","impulse","impasto","imprint"],a:0},
+{lv:5,sk:"l",say:"Notwithstanding the setbacks, the committee remained steadfast in its commitment to the project.",o:["Despite problems, the committee stayed firmly committed to the project.","Because of problems, the committee left the project.","The committee had no setbacks and finished early.","The committee stood up and left the meeting."],a:0},
+];
+
+const PRON=[
+["I live in a small apartment.","My phone number is easy to remember.","Please open the window.","The bus is very busy today.","I have a big family.","Thank you very much for your help."],
+["Yesterday I visited my friend in the evening.","Could you speak a little slower, please?","I usually walk to work, but today I took a taxi.","There are three bedrooms in this flat.","What time does the pharmacy open?","I'd like a bottle of water, please."],
+["I've been working here for almost three years.","If you pay the deposit today, you can move in next week.","The view from the balcony is really beautiful.","I'm thinking about changing my job next year.","Would you mind turning the volume down?","The price includes water, electricity and internet."],
+["Had we known about the problem earlier, we would have fixed it.","The tenant is responsible for any damage to the property.","Prices have risen considerably over the past few months.","I'd appreciate it if you could confirm the booking by email.","Despite the traffic, we managed to arrive on time.","The contract will be renewed automatically unless either party objects."],
+["The figures, while encouraging, hardly justify such optimism.","It's worth bearing in mind that maintenance costs tend to accumulate.","Not only did the value increase, but the demand also doubled.","We should thoroughly evaluate the long-term implications.","Her presentation was articulate, persuasive and well researched.","The negotiations were protracted but ultimately fruitful."],
+["Notwithstanding the setbacks, the committee remained steadfast.","His argument, though superficially plausible, was fundamentally flawed.","The phenomenon has been thoroughly scrutinised by economists.","Rarely have we witnessed such a remarkable turnaround.","The ramifications of this decision are far from straightforward.","She navigated the bureaucracy with extraordinary diplomacy."],
+];
+
+const VOCAB=[
+[["apartment","شقة","I live in a small apartment."],["rent","إيجار","The rent is due on Monday."],["key","مفتاح","I lost my key."],["kitchen","مطبخ","The kitchen is clean."],["cheap","رخيص","This room is cheap."],["expensive","غالي","That car is expensive."],["clean","نضيف","Please keep the room clean."],["near","قريب","The shop is near my house."]],
+[["available","متاح","Is the room still available?"],["deposit","تأمين / عربون","You need to pay a deposit."],["furniture","أثاث","The flat comes with furniture."],["neighbour","جار","My neighbour is very friendly."],["repair","يصلّح","Can you repair the shower?"],["bill","فاتورة","The electricity bill is high."],["quiet","هادي","It's a quiet street."],["borrow","يستلف","Can I borrow your pen?"]],
+[["tenant","مستأجر","The tenant signed the contract."],["landlord","المالك","The landlord fixed the AC."],["agreement","اتفاق","We reached an agreement."],["afford","يقدر يتحمل تكلفة","I can't afford a bigger flat."],["complain","يشتكي","He complained about the noise."],["profit","ربح","We made a good profit this month."],["arrange","يرتب / ينظم","Let's arrange a viewing."],["reliable","يُعتمد عليه","She is a reliable partner."]],
+[["negotiate","يتفاوض","We negotiated a lower price."],["occupancy","نسبة الإشغال","Occupancy was high in winter."],["terminate","يُنهي","They terminated the contract early."],["maintenance","صيانة","Maintenance costs are rising."],["outstanding","مستحق / متأخر","There is an outstanding payment."],["incentive","حافز","We offered a discount as an incentive."],["feasible","ممكن عمليًا","Is this plan feasible?"],["refund","استرداد","The deposit is fully refundable."]],
+[["leverage","يستغل / يستفيد من","We can leverage our good reviews."],["scrutinise","يدقق","Investors scrutinised the figures."],["mitigate","يخفف","Insurance helps mitigate risk."],["substantial","كبير / معتبر","They made a substantial investment."],["underscore","يؤكد على","The data underscores the trend."],["viable","قابل للاستمرار","The business is financially viable."],["discrepancy","تناقض / فرق","There's a discrepancy in the accounts."],["prerequisite","شرط مسبق","A deposit is a prerequisite."]],
+[["ramification","تبعة / عاقبة","Consider the legal ramifications."],["ubiquitous","منتشر في كل مكان","Short-term rentals are now ubiquitous."],["meticulous","دقيق جدًا","She keeps meticulous records."],["exacerbate","يزيد سوءًا","Delays exacerbated the problem."],["circumvent","يتحايل على","They tried to circumvent the rules."],["pragmatic","عملي","We need a pragmatic approach."],["tenuous","ضعيف / هش","The link is tenuous at best."],["impasse","طريق مسدود","Talks reached an impasse."]],
+];
+
+const GRAM=[
+{t:"Present simple — المضارع البسيط",ex:"نستخدمه للعادات والحقائق. مع he / she / it نضيف <b>s</b> للفعل: <span class='en'>She works. He drinks.</span> والنفي بـ <span class='en'>don't / doesn't</span>.",
+ qs:[["He ___ in Dubai.",["lives","live","living"],0],["They ___ like tea.",["don't","doesn't","not"],0],["___ she speak English?",["Does","Do","Is"],0],["My partner ___ the rent every month.",["collects","collect","collecting"],0],["I ___ at 7 every day.",["wake up","wakes up","waking up"],0]]},
+{t:"Past simple — الماضي البسيط",ex:"لحدث خلص في الماضي. الأفعال المنتظمة + <b>ed</b> (<span class='en'>worked</span>)، والشاذة تتحفظ (<span class='en'>go → went</span>). النفي والسؤال بـ <span class='en'>did</span> والفعل يرجع لأصله.",
+ qs:[["Yesterday we ___ a new tenant.",["found","find","finded"],0],["I didn't ___ the email.",["see","saw","seen"],0],["___ you pay the bill?",["Did","Do","Were"],0],["She ___ the room last week.",["painted","paint","painting"],0],["They ___ to Cairo in July.",["went","goed","go"],0]]},
+{t:"Present perfect vs past simple",ex:"<span class='en'>have/has + V3</span> لتجربة أو حدث أثره مستمر أو مدة لسه شغالة (<span class='en'>since / for</span>). لو ذكرت وقت محدد خلص (<span class='en'>yesterday, in 2020</span>) استخدم الماضي البسيط.",
+ qs:[["I ___ here since 2019.",["have worked","worked","work"],0],["We ___ the contract yesterday.",["signed","have signed","sign"],0],["Have you ever ___ to London?",["been","went","go"],0],["She has lived here ___ five years.",["for","since","from"],0],["They ___ the flat in 2022.",["bought","have bought","buy"],0]]},
+{t:"Conditionals — الجمل الشرطية 1 و2 و3",ex:"الأولى: <span class='en'>If + present, will</span> (محتمل). الثانية: <span class='en'>If + past, would</span> (تخيلي). الثالثة: <span class='en'>If + had V3, would have V3</span> (ماضي متخيل ما حصلش).",
+ qs:[["If he pays today, I ___ him the key.",["will give","would give","gave"],0],["If I ___ rich, I would buy a building.",["were","am","will be"],0],["If we had advertised, we ___ more bookings.",["would have got","will get","got"],0],["If you ___ the AC, call me.",["need","needed","will need"],0],["She would have stayed if the price ___ lower.",["had been","was","would be"],0]]},
+{t:"Inversion & emphasis — التقديم للتوكيد",ex:"في الإنجليزي الرسمي، بعد كلمات زي <span class='en'>Not only, Never, Rarely, Little</span> في أول الجملة نقلب ترتيب الفاعل والفعل المساعد: <span class='en'>Never have I seen…</span>",
+ qs:[["Never ___ such a good offer.",["have I seen","I have seen","I saw"],0],["Not only ___ late, he was also rude.",["was he","he was","he is"],0],["Rarely ___ tenants complain.",["do our","our do","our"],0],["Only later ___ the mistake.",["did we notice","we noticed","we did notice"],0],["Had I known, I ___ earlier.",["would have called","would call","called"],0]]},
+{t:"Nuance & register — الدقة والأسلوب",ex:"في المستوى المتقدم جدًا المهم اختيار الكلمة بدقة والتمييز بين الأسلوب الرسمي والعامي، والتعابير الاصطلاحية (<span class='en'>hold water, beg the question</span>).",
+ qs:[["The excuse doesn't hold ___.",["water","air","weight"],0],["Formal for “get”: ___ approval.",["obtain","grab","pick"],0],["“To be on the fence” means ___.",["undecided","angry","guilty"],0],["Were he ___ resign, chaos would follow.",["to","going","will"],0],["The data are ___ inconclusive.",["at best","at most","at least"],0]]},
+];
+
+const TOPICS=[
+["Introduce yourself","Your family","Your daily routine"],
+["Your last holiday","Your favourite food","Renting a room"],
+["Your work","Solving a problem with a tenant","Plans for next year"],
+["Negotiating a rent price","Pros and cons of living in Dubai","Handling a complaint"],
+["Pitching your business to an investor","Remote work debate","Managing a team"],
+["Ethics of short-term rentals","The future of cities","A book or idea that changed you"],
+];
+
+/* ================= STATE ================= */
+const KEY="ec-state-v1";
+let S={level:null,skills:null,testDate:null,work:null,pron:{},vocab:{},gram:{},chats:0};
+function loadLocal(){try{const j=localStorage.getItem(KEY);if(j)S=Object.assign(S,JSON.parse(j))}catch(e){}}
+let dbDoc=null,saveT=null;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  clearTimeout(saveT);saveT=setTimeout(()=>{if(dbDoc)dbDoc.set({state:JSON.stringify(S),at:Date.now()}).catch(()=>{})},800)}
+async function connectDb(){
+  try{const db=await window.claude?.use?.("db");const user=await window.claude?.use?.("user");if(!db||!user)return;
+    const id=await user.id();dbDoc=db.collection("data/users/"+id).doc("state");
+    const snap=await dbDoc.get();
+    if(snap.exists){const d=snap.data();const remote=JSON.parse(d.state||"{}");
+      if(remote.testDate&&(!S.testDate||remote.testDate>=S.testDate)){S=Object.assign(S,remote);try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}render()}
+      else if(S.testDate)save();}
+    else if(S.testDate)save();
+  }catch(e){}
+}
+loadLocal();
+const W=()=>S.work??S.level??0;
+
+/* ================= SPEECH ================= */
+let voice=null;
+function pickVoice(){try{const vs=speechSynthesis.getVoices();voice=vs.find(v=>/en[-_]US/i.test(v.lang)&&/Samantha|Google|Natural|Aria|Jenny/i.test(v.name))||vs.find(v=>/en[-_](US|GB)/i.test(v.lang))||null}catch(e){}}
+try{pickVoice();speechSynthesis.onvoiceschanged=pickVoice}catch(e){}
+function say(t,slow){const NT=window.Capacitor?.Plugins?.TextToSpeech;if(NT){NT.stop().catch(()=>{}).finally(()=>NT.speak({text:t,lang:"en-US",rate:slow?0.7:1,pitch:1,volume:1,category:"playback"}).catch(()=>toast("ثبّت محرك نطق جوجل من الإعدادات")));return}
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-US";if(voice)u.voice=voice;u.rate=slow?0.7:0.95;speechSynthesis.speak(u)}catch(e){toast("الجهاز ده مش بيدعم تشغيل الصوت")}}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const NSR=()=>window.Capacitor?.Plugins?.SpeechRecognition;
+let srBroken=!SR&&!NSR();
+function listen(onPartial){
+  const N=NSR();
+  if(N)return (async()=>{try{const p=await N.requestPermissions();if(p&&p.speechRecognition&&p.speechRecognition!=="granted")throw"na";
+    const r=await N.start({language:"en-US",maxResults:1,partialResults:false,popup:true});const t=r?.matches?.[0];if(!t)throw"empty";return t}
+    catch(e){throw e==="na"?"na":"empty"}})();
+  return new Promise((res,rej)=>{
+  if(srBroken)return rej("na");
+  let r;try{r=new SR()}catch(e){srBroken=true;return rej("na")}
+  r.lang="en-US";r.interimResults=true;r.maxAlternatives=1;let final="",got=false;
+  r.onresult=e=>{let t="";for(const x of e.results)t+=x[0].transcript+" ";final=t.trim();got=true;onPartial&&onPartial(final)};
+  r.onerror=e=>{if(["not-allowed","service-not-allowed","audio-capture","network"].includes(e.error)){srBroken=true;rej("na")}else rej(e.error)};
+  r.onend=()=>got?res(final):rej("empty");
+  try{r.start()}catch(e){srBroken=true;rej("na")}
+  listen.stop=()=>{try{r.stop()}catch(e){}};
+})}
+
+/* ================= SCORING ================= */
+const norm=s=>s.toLowerCase().replace(/[’']/g,"'").replace(/[^a-z0-9' ]+/g," ").split(/\s+/).filter(Boolean);
+function align(target,heard){
+  const T=norm(target),H=norm(heard),n=T.length,m=H.length;
+  const sim=(a,b)=>a===b||(a.length>3&&lev(a,b)<=1);
+  const d=Array.from({length:n+1},()=>Array(m+1).fill(0));
+  for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)d[i][j]=sim(T[i],H[j])?d[i+1][j+1]+1:Math.max(d[i+1][j],d[i][j+1]);
+  const ok=Array(n).fill(false);let i=0,j=0;
+  while(i<n&&j<m){if(sim(T[i],H[j])){ok[i]=true;i++;j++}else if(d[i+1][j]>=d[i][j+1])i++;else j++}
+  const raw=target.split(/\s+/);
+  return{words:raw.map((w,k)=>({w,ok:ok[k]??false,n:T[k]})),score:n?Math.round(ok.filter(Boolean).length/n*100):0};
+}
+function lev(a,b){const d=Array.from({length:a.length+1},(_, i)=>[i]);for(let j=1;j<=b.length;j++)d[0][j]=j;
+  for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[a.length][b.length]}
+function tipsFor(missed){
+  const t=new Set();
+  for(const w of missed){
+    if(/th/.test(w))t.add(["th","<span class='ipa'>/θ/ /ð/</span> طلّع طرف لسانك بين سنانك وانفخ: think = ثِنك، this = ذِس. مش «سينك» ولا «زيس»."]);
+    if(/p/.test(w))t.add(["p","<span class='ipa'>/p/</span> زي الباء بس من غير صوت في الزور ومع دفعة هوا. جرّب تحط ورقة قدام بقك، لازم تتحرك مع p."]);
+    if(/v/.test(w))t.add(["v","<span class='ipa'>/v/</span> سنانك اللي فوق على شفتك اللي تحت مع صوت. مش f (من غير صوت) ومش b."]);
+    if(/ed$/.test(w))t.add(["ed","نهاية <b>ed</b>: بتتنطق /t/ بعد صوت مكتوم (walked = ووكت)، و/d/ بعد صوت مجهور (played)، و/ɪd/ بعد t أو d بس (wanted)."]);
+    if(/^(str|spr|spl|sch|sk|sp|st)/.test(w))t.add(["cl","كلمات بتبدأ بحرفين ساكنين زي <span class='en'>street, speak</span>: ما تحطش «إ» قبلها (مش إستريت). ابدأ بالـ s على طول."]);
+    if(/(ng)$/.test(w))t.add(["ng","<span class='ipa'>/ŋ/</span> في آخر الكلمة (-ing): الصوت يخرج من الأنف، وما تنطقش g واضحة في الآخر."]);
+    if(/[aeiou]{2}|o$|ou/.test(w)&&t.size<3)t.add(["vw","حروف العلة الإنجليزي أطول وأوضح من العربي. اسمع الكلمة ببطء وقلّد طول الصوت."]);
+  }
+  return [...t].slice(0,3).map(x=>x[1]);
+}
+
+/* ================= UI HELPERS ================= */
+const $=s=>document.querySelector(s);const V=$("#view");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const IC={
+ play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 9v6h4l5 4V5L8 9zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>',
+ slow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>',
+ mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>'};
+let toastT;function toast(m){let t=$("#toast");if(!t){t=document.createElement("div");t.id="toast";t.setAttribute("role","status");t.style.cssText="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:20;font-size:14px;max-width:86vw";document.body.appendChild(t)}
+ t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600)}
+function setChip(){const c=$("#lvchip");if(S.level==null){c.hidden=true;$("#sub").textContent="اعرف مستواك وابدأ صح";return}c.hidden=false;c.textContent=LV[W()];$("#sub").textContent="بتتدرب على مستوى "+LVNAME[W()]}
+function levelSeg(cb){return `<div class="seg" role="group" aria-label="المستوى">${LV.map((l,i)=>`<button data-l="${i}" aria-pressed="${i===W()}">${l}</button>`).join("")}</div>`}
+function bindSeg(cb){V.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{S.work=+b.dataset.l;save();setChip();cb()})}
+
+/* Speak-and-check component */
+function speakBox(target,onScore){
+  const id="sb"+Math.random().toString(36).slice(2,7);
+  const html=`<div class="stack" id="${id}">
+    <div class="row"><button class="btn" data-a="hear">${IC.play}اسمع</button><button class="btn" data-a="slow">${IC.slow}ببطء</button><button class="btn primary rec" data-a="rec" ${srBroken?"hidden":""}>${IC.mic}سجّل صوتك</button></div>
+    <div class="note" data-live hidden></div>
+    <div class="stack" data-dict ${srBroken?"":"hidden"}>
+      <p class="note">اضغط في المربع، وبعدين اضغط زرار <b>المايك اللي في الكيبورد</b> واقرأ الجملة بصوت عالي. الكيبورد هيكتب اللي فهمه من نطقك، والتطبيق هيقارنه بالجملة الصح.</p>
+      <label class="label" for="${id}t">اللي اتسمع من صوتك</label>
+      <textarea id="${id}t" rows="2" placeholder="Tap the keyboard mic and read…"></textarea>
+      <div class="row end"><button class="btn primary" data-a="check">صحّح نطقي</button></div>
+    </div>
+    <div data-out></div></div>`;
+  setTimeout(()=>{
+    const el=document.getElementById(id);if(!el)return;
+    const live=el.querySelector("[data-live]"),out=el.querySelector("[data-out]"),dict=el.querySelector("[data-dict]"),rec=el.querySelector("[data-a=rec]");
+    el.querySelector("[data-a=hear]").onclick=()=>say(target);
+    el.querySelector("[data-a=slow]").onclick=()=>say(target,true);
+    const show=heard=>{const r=align(target,heard);const missed=r.words.filter(w=>!w.ok).map(w=>w.n).filter(Boolean);
+      const tone=r.score>=85?"good":r.score>=60?"warn":"bad";const msg=r.score>=85?"ممتاز، نطقك واضح":r.score>=60?"كويس، فيه كلمات محتاجة شغل":"محتاج تعيد ببطء";
+      out.innerHTML=`<div class="card" style="background:var(--sunk);border:0">
+        <div class="row" style="justify-content:space-between"><div><div class="score" style="color:var(--${tone})">${r.score}%</div><div class="muted" style="font-size:13px">${msg}</div></div><span class="pill ${tone}">${missed.length?missed.length+" كلمة محتاجة تصحيح":"كل الكلمات صح"}</span></div>
+        <div class="words">${r.words.map(w=>`<button class="${w.ok?"ok":"miss"}" data-w="${esc(w.n||w.w)}" aria-label="اسمع ${esc(w.w)}">${esc(w.w)}</button>`).join("")}</div>
+        <p class="muted" style="font-size:13px">اللي اتسمع: <span class="en">${esc(heard||"—")}</span></p>
+        ${missed.length?`<p class="muted" style="font-size:13px">اضغط على أي كلمة حمرا عشان تسمع نطقها الصح وتعيدها.</p>`:""}
+        ${tipsFor(missed).map(t=>`<p class="tip">${t}</p>`).join("")}</div>`;
+      out.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>say(b.dataset.w,true));
+      onScore&&onScore(r.score);};
+    el.querySelector("[data-a=check]").onclick=()=>{const v=el.querySelector("textarea").value.trim();if(!v)return toast("اقرأ الجملة الأول عشان يتكتب كلامك");show(v)};
+    rec.onclick=async()=>{
+      if(rec.classList.contains("live")){listen.stop&&listen.stop();return}
+      rec.classList.add("live");rec.innerHTML=IC.mic+"وقّف";live.hidden=false;live.textContent="بسمعك… اقرأ الجملة";
+      try{const t=await listen(p=>live.innerHTML='<span class="en">'+esc(p)+'</span>');live.hidden=true;show(t)}
+      catch(e){live.hidden=true;if(e==="na"){rec.hidden=true;dict.hidden=false;toast("التسجيل المباشر مش متاح هنا، استخدم مايك الكيبورد")}else toast("ما سمعتش حاجة، جرّب تاني وقرّب الموبايل")}
+      finally{rec.classList.remove("live");rec.innerHTML=IC.mic+"سجّل صوتك"}};
+  });
+  return html;
+}
+
+/* ================= PLACEMENT TEST ================= */
+let T=null;
+function startTest(){T={cur:1,used:new Set(),ans:[],i:0,N:18,sp:[],stage:"mcq"};nextQ()}
+function pickQ(){for(let d=0;d<6;d++)for(const L of [T.cur+d,T.cur-d]){if(L<0||L>5)continue;const c=TEST.map((q,k)=>[q,k]).filter(([q,k])=>q.lv===L&&!T.used.has(k));if(c.length)return c[Math.floor(Math.random()*c.length)]}return null}
+function nextQ(){
+  if(T.i>=T.N){T.stage="speak";T.si=0;return speakStage()}
+  const p=pickQ();if(!p){T.stage="speak";T.si=0;return speakStage()}
+  const[q,k]=p;T.used.add(k);T.q=q;
+  const order=q.o.map((o,i)=>i).sort(()=>Math.random()-.5);
+  V.innerHTML=`<div class="card"><div class="row" style="justify-content:space-between"><span class="label">اختبار المستوى · سؤال ${T.i+1} من ${T.N}</span><span class="pill">${SK[q.sk]}</span></div>
+   <div class="prog"><i style="width:${T.i/(T.N+3)*100}%"></i></div>
+   ${q.p?`<div class="passage">${esc(q.p)}</div>`:""}
+   ${q.say?`<p>اسمع الجملة واختار اللي سمعته بالظبط${q.lv>=4?" أو معناها":""}.</p><div class="row"><button class="btn primary" id="pl">${IC.play}شغّل الجملة</button><button class="btn" id="pls">${IC.slow}ببطء</button></div>`:`<p class="big-en">${esc(q.q)}</p>`}
+   ${q.p?`<p class="en" style="font-size:17px;font-weight:600">${esc(q.q)}</p>`:""}
+   <div class="opts">${order.map(i=>`<button class="opt" data-i="${i}">${esc(q.o[i])}</button>`).join("")}</div>
+   <button class="btn ghost" id="idk">مش عارف</button></div>`;
+  if(q.say){$("#pl").onclick=()=>say(q.say);$("#pls").onclick=()=>say(q.say,true)}
+  const answer=i=>{const ok=i===q.a;T.ans.push({lv:q.lv,sk:q.sk,ok});T.cur=ok?Math.min(5,T.cur+1):Math.max(0,T.cur-1);T.i++;
+    V.querySelectorAll(".opt").forEach(b=>{b.disabled=true;if(+b.dataset.i===q.a)b.classList.add("right");else if(+b.dataset.i===i)b.classList.add("wrong")});
+    setTimeout(nextQ,ok?450:900)};
+  V.querySelectorAll(".opt").forEach(b=>b.onclick=()=>answer(+b.dataset.i));$("#idk").onclick=()=>answer(-1);
+}
+const SPK=[[1,"Could you speak a little slower, please?"],[2,"I've been working here for almost three years."],[4,"It's worth bearing in mind that maintenance costs tend to accumulate."]];
+function speakStage(){
+  if(T.si>=SPK.length)return finishTest();
+  const [lv,s]=SPK[T.si];
+  V.innerHTML=`<div class="card"><div class="row" style="justify-content:space-between"><span class="label">جزء النطق · ${T.si+1} من 3</span><span class="pill">${SK.s}</span></div>
+   <div class="prog"><i style="width:${(T.N+T.si)/(T.N+3)*100}%"></i></div>
+   <p>اقرأ الجملة دي بصوت عالي. ممكن تسمعها الأول.</p><p class="big-en">${esc(s)}</p>
+   ${speakBox(s,sc=>{T.sp[T.si]=sc;$("#nx").disabled=false})}
+   <div class="row end"><button class="btn" id="sk">تخطّى</button><button class="btn primary" id="nx" disabled>التالي</button></div></div>`;
+  $("#nx").onclick=()=>{T.si++;speakStage()};$("#sk").onclick=()=>{T.sp[T.si]=null;T.si++;speakStage()};
+}
+function finishTest(){
+  const by=LV.map(()=>({n:0,c:0}));T.ans.forEach(a=>{by[a.lv].n++;if(a.ok)by[a.lv].c++});
+  let lvl=0;for(let L=0;L<6;L++){if(by[L].n>=2&&by[L].c/by[L].n>=0.6)lvl=L}
+  const skills={};for(const k of ["g","v","r","l"]){const xs=T.ans.filter(a=>a.sk===k);
+    skills[k]=xs.length?Math.round(xs.reduce((s,a)=>s+(a.ok?(a.lv+1):0),0)/xs.reduce((s,a)=>s+(a.lv+1),0)*100):null}
+  const sp=T.sp.filter(x=>x!=null);skills.s=sp.length?Math.round(sp.reduce((a,b)=>a+b,0)/sp.length):null;
+  S.level=lvl;S.work=null;S.skills=skills;S.testDate=Date.now();save();T=null;setChip();
+  showResult();
+}
+function weakest(){if(!S.skills)return[];return Object.entries(S.skills).filter(([k,v])=>v!=null).sort((a,b)=>a[1]-b[1]).map(([k])=>k)}
+function showResult(){
+  const L=S.level;
+  V.innerHTML=`<div class="card"><span class="label">نتيجة اختبار المستوى</span>
+    <div class="row" style="gap:14px"><div class="lvchip" style="font-size:28px;padding:8px 18px">${LV[L]}</div><div><h2>${LVNAME[L]}</h2><p class="muted">${DESC[L]}</p></div></div>
+    ${cefrBar()}${skillBars()}
+    <p>هنبدأ معاك من مستوى <b class="en">${LV[L]}</b>، مع تركيز أكتر على <b>${weakest().slice(0,2).map(k=>SK[k]).join(" و")}</b>.</p>
+    <button class="btn primary" id="go">شوف خطتك</button></div>`;
+  $("#go").onclick=()=>go("home");
+}
+const DESC=["بتفهم جمل بسيطة جدًا وكلمات يومية.","بتتعامل في مواقف يومية بسيطة زي الشراء والسؤال عن الطريق.","بتتكلم في مواضيع مألوفة وبتفهم الفكرة الأساسية.","بتتكلم بطلاقة معقولة وبتفهم نصوص ومناقشات أعقد.","بتعبّر بمرونة ودقة في الشغل والدراسة.","قريب جدًا من مستوى المتحدث الأصلي."];
+function cefrBar(){return `<div class="cefr" aria-label="مقياس المستويات">${LV.map((l,i)=>`<span class="${i===S.level?"cur":i<S.level?"on":""}">${l}</span>`).join("")}</div>`}
+function skillBars(){if(!S.skills)return"";return `<div class="skills">${Object.keys(SK).map(k=>{const v=S.skills[k];const c=v==null?"var(--line)":v>=70?"var(--good)":v>=45?"var(--warn)":"var(--bad)";
+  return `<span>${SK[k]}</span><div class="bar"><i style="width:${v??0}%;background:${c}"></i></div><span class="muted" style="font-size:13px">${v==null?"لم يُقس":v+"%"}</span>`}).join("")}</div>`}
+
+/* ================= HOME / PLAN ================= */
+function stats(L){
+  const g=S.gram[L];const voc=VOCAB[L].filter(([w])=>(S.vocab[w]?.box||0)>=3).length;
+  const pr=PRON[L].map(s=>S.pron[s]).filter(x=>x!=null);const pavg=pr.length?Math.round(pr.reduce((a,b)=>a+b,0)/pr.length):null;
+  return{g,voc,pr:pr.length,pavg};
+}
+function home(){
+  if(S.level==null){
+    V.innerHTML=`<div class="card"><h2>نبدأ بمعرفة مستواك</h2>
+      <p>اختبار قصير (حوالي 10 دقايق) بيتكيّف معاك: لو جاوبت صح الأسئلة بتصعب، ولو غلطت بتسهل. بيقيس القواعد والمفردات والقراءة والاستماع، وفي الآخر تقرأ 3 جمل بصوتك عشان نقيس النطق.</p>
+      ${`<div class="cefr">${LV.map(l=>`<span>${l}</span>`).join("")}</div>`}
+      <p class="muted" style="font-size:13px">في الآخر هتعرف مستواك على مقياس CEFR الأوروبي، وهتاخد خطة تبدأ منها.</p>
+      <button class="btn primary" id="st">ابدأ اختبار المستوى</button></div>
+      <div class="card"><h3>أو جرّب النطق على طول</h3><p class="muted">اقرأ أي جملة والتطبيق يقولك أنهي كلمة نطقتها غلط وإزاي تصلّحها.</p><button class="btn" id="tp">تدريب النطق</button></div>`;
+    $("#st").onclick=startTest;$("#tp").onclick=()=>{S.work=S.work??1;go("pron")};return;
+  }
+  const L=W(),st=stats(L),wk=weakest();
+  const steps=[
+    {v:"gram",t:"درس القواعد: "+GRAM[L].t.split(" — ")[0],d:st.g!=null&&st.g>=80,m:st.g!=null?st.g+"%":"5 أسئلة"},
+    {v:"vocab",t:"احفظ 8 كلمات مستوى "+LV[L],d:st.voc>=8,m:st.voc+"/8"},
+    {v:"pron",t:"اقرأ 6 جمل بصوتك",d:st.pr>=6&&st.pavg>=80,m:st.pr?st.pavg+"% · "+st.pr+"/6":"0/6"},
+    {v:"chat",t:"محادثة 10 دقايق: "+TOPICS[L][0],d:S.chats>=3,m:S.chats+"/3"},
+  ];
+  if(wk[0]==="s"||wk[0]==="l")steps.unshift(steps.splice(2,1)[0]);
+  const done=steps.filter(s=>s.d).length;
+  V.innerHTML=`<div class="card"><div class="row" style="justify-content:space-between"><span class="label">مستواك من الاختبار</span><button class="btn ghost" id="rt" style="min-height:32px;padding:4px 10px;font-size:13px">أعد الاختبار</button></div>
+     ${cefrBar()}${skillBars()}</div>
+   <div class="card"><div class="row" style="justify-content:space-between"><h3>خطة مستوى <span class="en">${LV[L]}</span></h3><span class="pill ${done===4?"good":""}">${done} من 4</span></div>
+     <p class="muted" style="font-size:13px">20 دقيقة في اليوم. ابدأ بالترتيب، والخطة مرتبة حسب أضعف مهارة عندك.</p>
+     <div class="plan">${steps.map((s,i)=>`<button data-v="${s.v}" class="${s.d?"done":""}"><span class="n">${s.d?"✓":i+1}</span><span>${esc(s.t)}</span><span class="pill">${s.m}</span></button>`).join("")}</div>
+     ${done===4&&L<5?`<div class="note">خلّصت خطة المستوى ده. <button class="btn primary" id="up" style="margin-top:8px">انتقل لمستوى ${LV[L+1]}</button></div>`:""}</div>
+   <div class="card"><span class="label">غيّر مستوى التدريب يدويًا</span>${levelSeg()}</div>`;
+  V.querySelectorAll(".plan button").forEach(b=>b.onclick=()=>go(b.dataset.v));
+  $("#rt").onclick=startTest;const u=$("#up");if(u)u.onclick=()=>{S.work=L+1;save();setChip();home()};
+  bindSeg(home);
+}
+
+/* ================= PRONUNCIATION ================= */
+let pi=0;
+function pron(){
+  const L=W(),list=PRON[L];if(pi>=list.length)pi=0;const s=list[pi];const prev=S.pron[s];
+  V.innerHTML=`<div class="card"><span class="label">مستوى التدريب</span>${levelSeg()}</div>
+   <div class="card"><div class="row" style="justify-content:space-between"><span class="label">جملة ${pi+1} من ${list.length}</span>${prev!=null?`<span class="pill ${prev>=85?"good":prev>=60?"warn":"bad"}">آخر محاولة ${prev}%</span>`:""}</div>
+    <p class="big-en">${esc(s)}</p>
+    ${speakBox(s,sc=>{S.pron[s]=Math.max(sc,S.pron[s]??0);save()})}
+    <div class="row" style="justify-content:space-between"><button class="btn" id="pv">السابقة</button><button class="btn primary" id="nx">الجملة التالية</button></div></div>
+   <div class="card"><h3>اكتب جملتك أنت</h3><p class="muted" style="font-size:13px">عايز تتدرب على جملة بتستخدمها في شغلك؟ اكتبها هنا.</p>
+    <input type="text" id="own" placeholder="e.g. The room is available from next Monday."><button class="btn" id="ownb">درّبني عليها</button></div>`;
+  bindSeg(()=>{pi=0;pron()});
+  $("#nx").onclick=()=>{pi=(pi+1)%list.length;pron()};$("#pv").onclick=()=>{pi=(pi-1+list.length)%list.length;pron()};
+  $("#ownb").onclick=()=>{const t=$("#own").value.trim();if(norm(t).length<2)return toast("اكتب جملة إنجليزي من كلمتين على الأقل");
+    V.innerHTML=`<div class="card"><span class="label">جملتك</span><p class="big-en">${esc(t)}</p>${speakBox(t)}<button class="btn" id="bk">رجوع للجمل</button></div>`;$("#bk").onclick=pron};
+}
+
+/* ================= VOCAB ================= */
+let vq=[],vshow=false;
+function vocab(){
+  const L=W();
+  if(!vq.length||vq.L!==L){vq=VOCAB[L].filter(([w])=>(S.vocab[w]?.box||0)<3).sort((a,b)=>(S.vocab[a[0]]?.box||0)-(S.vocab[b[0]]?.box||0));vq.L=L;vshow=false}
+  const learned=VOCAB[L].length-VOCAB[L].filter(([w])=>(S.vocab[w]?.box||0)<3).length;
+  if(!vq.length){V.innerHTML=`<div class="card"><span class="label">مستوى التدريب</span>${levelSeg()}</div><div class="card"><h3>حفظت كل كلمات مستوى <span class="en">${LV[L]}</span></h3><p class="muted">كلمة بتتحسب محفوظة لما تعرفها 3 مرات. راجعها تاني أو انتقل للمستوى اللي بعده.</p><button class="btn" id="rs">راجعها من الأول</button></div>`;
+    bindSeg(vocab);$("#rs").onclick=()=>{VOCAB[L].forEach(([w])=>S.vocab[w]={box:0});save();vq=[];vocab()};return}
+  const [w,ar,ex]=vq[0];
+  V.innerHTML=`<div class="card"><span class="label">مستوى التدريب</span>${levelSeg()}</div>
+   <div class="card"><div class="row" style="justify-content:space-between"><span class="label">محفوظ ${learned} من ${VOCAB[L].length}</span><span class="pill">مرات المعرفة ${S.vocab[w]?.box||0}/3</span></div>
+    <div class="prog"><i style="width:${learned/VOCAB[L].length*100}%"></i></div>
+    <div class="card flash" style="background:var(--sunk);border:0"><div class="w">${esc(w)}</div>
+     <div class="row"><button class="btn" id="hw">${IC.play}اسمعها</button></div>
+     ${vshow?`<p style="font-size:20px;font-weight:700">${esc(ar)}</p><p class="en" style="font-size:17px">${esc(ex)}</p><button class="btn ghost" id="he">${IC.play}اسمع المثال</button>`:`<button class="btn primary" id="rv">اكشف المعنى</button>`}</div>
+    ${vshow?`<div class="row" style="justify-content:space-between"><button class="btn" id="no">لسه مش حافظها</button><button class="btn primary" id="yes">عرفتها</button></div>`:""}
+   </div>`;
+  bindSeg(()=>{vq=[];vocab()});
+  $("#hw").onclick=()=>say(w);
+  if(!vshow)$("#rv").onclick=()=>{vshow=true;vocab()};
+  else{$("#he").onclick=()=>say(ex);
+    $("#yes").onclick=()=>{S.vocab[w]={box:(S.vocab[w]?.box||0)+1};save();vq.shift();if(S.vocab[w].box<3)vq.push([w,ar,ex]);vshow=false;vocab()};
+    $("#no").onclick=()=>{S.vocab[w]={box:0};save();vq.push(vq.shift());vshow=false;vocab()}}
+}
+
+/* ================= GRAMMAR ================= */
+let G=null;
+function gram(){
+  const L=W(),les=GRAM[L];
+  if(!G||G.L!==L){G={L,i:-1,c:0}}
+  if(G.i===-1){
+    V.innerHTML=`<div class="card"><span class="label">مستوى التدريب</span>${levelSeg()}</div>
+     <div class="card"><span class="label">درس مستوى ${LV[L]}</span><h2 class="en" style="text-align:right">${esc(les.t)}</h2><p>${les.ex}</p>
+     ${S.gram[L]!=null?`<span class="pill ${S.gram[L]>=80?"good":"warn"}">أفضل نتيجة ${S.gram[L]}%</span>`:""}
+     <button class="btn primary" id="sg">ابدأ التمرين (5 أسئلة)</button></div>`;
+    bindSeg(()=>{G=null;gram()});$("#sg").onclick=()=>{G.i=0;G.c=0;gram()};return}
+  if(G.i>=les.qs.length){const pc=Math.round(G.c/les.qs.length*100);S.gram[L]=Math.max(pc,S.gram[L]??0);save();
+    V.innerHTML=`<div class="card"><h3>النتيجة</h3><div class="score" style="color:var(--${pc>=80?"good":pc>=60?"warn":"bad"})">${pc}%</div><p class="muted">${pc>=80?"ممتاز، الدرس ده اتقفل.":"اقرا الشرح تاني وجرب مرة كمان، محتاج 80% عشان الخطوة تتقفل."}</p>
+    <div class="row"><button class="btn" id="ag">أعد التمرين</button><button class="btn primary" id="hm">رجوع للخطة</button></div></div>`;
+    $("#ag").onclick=()=>{G.i=0;G.c=0;gram()};$("#hm").onclick=()=>go("home");return}
+  const [q,o,a]=les.qs[G.i];const order=o.map((x,i)=>i).sort(()=>Math.random()-.5);
+  V.innerHTML=`<div class="card"><span class="label">${esc(les.t)} · ${G.i+1}/${les.qs.length}</span><div class="prog"><i style="width:${G.i/les.qs.length*100}%"></i></div>
+    <p class="big-en">${esc(q)}</p><div class="opts">${order.map(i=>`<button class="opt" data-i="${i}">${esc(o[i])}</button>`).join("")}</div><div id="fb"></div></div>`;
+  V.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const i=+b.dataset.i,ok=i===a;if(ok)G.c++;
+    V.querySelectorAll(".opt").forEach(x=>{x.disabled=true;if(+x.dataset.i===a)x.classList.add("right");else if(+x.dataset.i===i)x.classList.add("wrong")});
+    const full=q.replace("___",o[a]);
+    $("#fb").innerHTML=`<div class="row" style="justify-content:space-between;margin-top:8px"><button class="btn ghost" id="hs">${IC.play}اسمع الجملة</button><button class="btn primary" id="gn">التالي</button></div>`;
+    $("#hs").onclick=()=>say(full);$("#gn").onclick=()=>{G.i++;gram()}});
+}
+
+/* ================= CHAT (AI tutor) ================= */
+let C={msgs:[],busy:false,topic:null},sampler;
+async function chat(){
+  const L=W();if(!C.topic)C.topic=TOPICS[L][0];
+  V.innerHTML=`<div class="card"><span class="label">موضوع المحادثة · مستوى ${LV[L]}</span>
+     <div class="seg">${TOPICS[L].map(t=>`<button data-t="${esc(t)}" aria-pressed="${t===C.topic}">${esc(t)}</button>`).join("")}</div>
+     <p class="muted" style="font-size:13px">اكتب أو استخدم مايك الكيبورد عشان تتكلم. المدرّب هيرد عليك بالإنجليزي ويصحّحلك أخطاءك بالعربي.</p></div>
+   <div class="chat" id="ch"></div>
+   <div class="card" id="box"><label class="label" for="inp">ردّك بالإنجليزي</label><textarea id="inp" rows="2" placeholder="Type or use the keyboard mic…"></textarea>
+     <div class="row end"><button class="btn primary" id="snd">ابعت</button></div></div>`;
+  V.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{C={msgs:[],busy:false,topic:b.dataset.t};chat()});
+  drawChat();
+  $("#snd").onclick=send;
+  if(sampler===undefined){sampler=await window.claude?.use?.("sample")??null;}
+  if(!sampler&&!gemKey()){$("#box").innerHTML=`<h3>فعّل المدرّب مجانًا</h3>
+    <p class="muted" style="font-size:13px">المحادثة بتشتغل بـ Gemini من جوجل ببلاش. ادخل على <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> بحساب جيميل، اضغط Create API key، وانسخ المفتاح وحطه هنا. مرة واحدة بس.</p>
+    <label class="label" for="gk">مفتاح Gemini</label><input type="text" id="gk" placeholder="AIza…" autocomplete="off">
+    <div class="row end"><button class="btn primary" id="gks">حفظ وابدأ</button></div>`;
+    $("#gks").onclick=()=>{const k=$("#gk").value.trim();if(k.length<20)return toast("المفتاح ده مش كامل");try{localStorage.setItem("ec-gem",k)}catch(e){}chat()};return}
+  if(!C.msgs.length&&!C.busy)tutor(null);
+}
+function gemKey(){try{return localStorage.getItem("ec-gem")||""}catch(e){return""}}
+async function ask(prompt){
+  if(sampler)return sampler.json(prompt,{modelTier:"quick",cache:false});
+  const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key="+encodeURIComponent(gemKey()),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:0.7}})});
+  if(r.status===400||r.status===403){try{localStorage.removeItem("ec-gem")}catch(e){}throw{code:"bad_key"}}
+  if(r.status===429)throw{code:"rate_limited"};
+  if(!r.ok)throw{code:"upstream"};
+  const j=await r.json();const t=j?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
+  return JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1));
+}
+function drawChat(){const ch=$("#ch");if(!ch)return;
+  ch.innerHTML=C.msgs.map((m,k)=>m.r==="me"?`<div class="msg me"><div class="en">${esc(m.t)}</div></div>`:
+   `<div class="msg bot"><div class="en">${esc(m.t)}</div><div class="row" style="margin-top:6px"><button class="btn ghost" data-k="${k}" style="min-height:34px;padding:2px 10px;font-size:13px">${IC.play}اسمع</button></div>
+    ${m.fix&&m.fix.length?`<div class="fix"><span class="label">تصحيح كلامك</span>${m.fix.map(f=>`<div><span class="en"><s>${esc(f.you)}</s> → <b>${esc(f.better)}</b></span><br><span class="muted">${esc(f.why)}</span></div>`).join("")}</div>`:""}
+    ${m.tip?`<p class="tip" style="margin-top:8px">${esc(m.tip)}</p>`:""}</div>`).join("")+(C.busy?`<div class="msg bot muted">بيكتب…</div>`:"");
+  ch.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>say(C.msgs[+b.dataset.k].t));
+}
+function send(){const v=$("#inp").value.trim();if(!v||C.busy)return;C.msgs.push({r:"me",t:v});$("#inp").value="";tutor(v)}
+async function tutor(last){
+  const L=W();C.busy=true;drawChat();
+  const hist=C.msgs.slice(-10).map(m=>(m.r==="me"?"Learner: ":"Tutor: ")+m.t).join("\n");
+  const prompt=`You are a friendly English conversation tutor for an Egyptian Arabic speaker at CEFR level ${LV[L]}. Topic: "${C.topic}".
+Rules: reply in English only, using vocabulary and grammar suited to ${LV[L]}; 1-3 short sentences; always end with one question to keep the learner talking.
+${last?`Check ONLY the learner's last message for grammar, word choice or unnatural phrasing. For each real mistake give: "you" (their exact words), "better" (corrected English), "why" (a short explanation in Egyptian Arabic). If there are no mistakes return an empty list. Optionally add "tip": one short useful phrase or idea in Egyptian Arabic, or "".`:`This is the start: greet the learner and ask the first question. Return empty corrections and empty tip.`}
+Conversation so far:
+${hist||"(none)"}
+Return JSON only: {"reply":"...","corrections":[{"you":"...","better":"...","why":"..."}],"tip":"..."}`;
+  try{const r=await ask(prompt);
+    C.msgs.push({r:"bot",t:String(r.reply||""),fix:Array.isArray(r.corrections)?r.corrections.slice(0,4):[],tip:r.tip||""});
+    if(last&&C.msgs.filter(m=>m.r==="me").length===3){S.chats++;save()}
+  }catch(e){toast(e?.code==="rate_limited"?"استنى دقيقة وجرب تاني":e?.code==="bad_key"?"مفتاح Gemini مش شغال، حط مفتاح جديد":e?.code==="not_granted"?"المحادثة محتاجة إذن، فعّله من صلاحيات الصفحة":"حصلت مشكلة في الرد، ابعت تاني")}
+  C.busy=false;drawChat();
+}
+
+/* ================= ROUTER ================= */
+const VIEWS={home,pron,vocab,gram,chat};
+function go(v){T=null;try{speechSynthesis.cancel();window.Capacitor?.Plugins?.TextToSpeech?.stop()}catch(e){}cur=v;document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-current",t.dataset.v===v));render();window.scrollTo(0,0)}
+let cur="home";
+function render(){setChip();if(T)return;VIEWS[cur]()}
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{if(S.level==null&&t.dataset.v!=="home"&&t.dataset.v!=="pron"){S.work=S.work??1}go(t.dataset.v)});
+go("home");
+connectDb();
+if("serviceWorker" in navigator&&location.protocol==="https:"){navigator.serviceWorker.register("sw.js").catch(()=>{})}
+</script>
+
+</body></html>
