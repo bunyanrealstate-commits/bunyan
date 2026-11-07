@@ -615,7 +615,7 @@ async function talk(t){const mc=$("#mycap");if(mc)setTimeout(()=>{if(!F.listenin
 async function chat(){
   const f=FS(),L=W();
   V.innerHTML=`<div class="stage idle${F.subs===false?" nosubs":""}" id="stage"><div class="win"></div>
-     <div class="stage-top"><span class="live"></span><span>${esc(f.name)}</span><span class="tm" id="ctm">00:00</span></div>
+     <div class="stage-top"><span class="live"></span><span>${esc(f.name)}</span><span class="pill" id="mode" style="background:rgba(255,255,255,.2);color:#fff">أوفلاين</span><span class="tm" id="ctm">00:00</span></div>
      ${AVATAR}<div class="think" aria-hidden="true"><i></i><i></i><i></i></div>
      <div class="mycap" id="mycap"></div>
      <div class="pip"><div class="pip-ava">أنت</div><span>${LV[L]}</span></div>
@@ -642,16 +642,15 @@ async function chat(){
   if(srBroken){$("#talk").disabled=true;$("#hint").textContent="المايك مش متاح هنا، اكتب في المربع"}
   drawChat();
   const lastBot=[...f.msgs].reverse().find(m=>m.r==="bot");if(lastBot)$("#cap").textContent=lastBot.t;
+  const smart=()=>navigator.onLine&&!!gemKey();
+  paintSmart();
+  if(smart()){if(!f.msgs.length&&!F.busy)friend(null);return}
   if(LLM()){let st={};try{st=await LLM().status()}catch(e){}
     if(!st.ready)return modelSetup(st);
     if(!f.msgs.length&&!F.busy){setMood("thinking");$("#hint").textContent=f.name+" بتجهز… ثواني";try{await llmLoad();if($("#hint"))$("#hint").textContent="اضغط المايك واتكلم بالإنجليزي"}catch(e){$("#hint").textContent="مقدرش يشغّل العقل: "+(e?.message||e);setMood("idle");return}}
     if(!f.msgs.length&&!F.busy)friend(null);return}
   if(sampler===undefined){sampler=await window.claude?.use?.("sample")??null;}
-  if(!sampler&&!gemKey()){$("#box").innerHTML=`<h3>فعّل ${esc(f.name)} مجانًا</h3>
-    <p class="muted" style="font-size:13px">المحادثة بتشتغل بـ Gemini من جوجل ببلاش. ادخل على <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> بحساب جيميل، اضغط Create API key، وانسخ المفتاح وحطه هنا.</p>
-    <label class="label" for="gk">مفتاح Gemini</label><input type="text" id="gk" placeholder="AIza…" autocomplete="off">
-    <div class="row end"><button class="btn primary" id="gks">حفظ وابدأ</button></div>`;
-    $("#gks").onclick=()=>{const k=$("#gk").value.trim();if(k.length<20)return toast("المفتاح ده مش كامل");try{localStorage.setItem("ec-gem",k)}catch(e){}chat()};return}
+  if(!sampler&&!gemKey()){$("#hint").textContent="فعّل الوضع الذكي من تحت عشان تبدأ";return}
   if(!f.msgs.length&&!F.busy)friend(null);
 }
 const LLM=()=>window.Capacitor?.Plugins?.LocalLlm;
@@ -700,11 +699,35 @@ function modelSetup(st){
   paint(st);if(st.state==="downloading"||st.state==="paused")watch();
   $("#dlgo").onclick=async()=>{const b=$("#dlgo");b.disabled=true;
     try{const s=await LLM().download({url:MODEL_URL});paint(s);watch()}catch(e){b.disabled=false;$("#dltxt").textContent="مقدرش يبدأ التحميل: "+(e?.message||e)}};
+  paintSmart();
 }
+function paintSmart(){const box=$("#box");if(!box)return;const f=FS();let el=$("#smart");if(!el){el=document.createElement("div");el.id="smart";box.prepend(el)}
+  const tag=$("#mode");if(tag)tag.textContent=navigator.onLine&&gemKey()?"وضع ذكي":"أوفلاين";
+  if(gemKey()){el.innerHTML=`<div class="row" style="justify-content:space-between"><span class="pill good">متصلة بالنت: محادثة طبيعية وتصحيح بالشرح</span><button class="btn ghost" id="rmkey" style="min-height:30px;padding:2px 8px;font-size:12px">شيل المفتاح</button></div>`;
+    $("#rmkey").onclick=()=>{try{localStorage.removeItem("ec-gem")}catch(e){}chat()};return}
+  el.innerHTML=`<div class="stack" style="gap:8px;padding-bottom:10px;border-bottom:1px solid var(--line)">
+    <h3>خلّي ${esc(f.name)} أذكى بالنت</h3>
+    <p class="muted" style="font-size:13px">بالنت ${esc(f.name)} بتتكلم بشكل طبيعي أكتر، وبتصحّحلك كل غلطة مع شرح بالعربي، وبتفتكر حكاياتك. ولو النت قطع بتكمّل أوفلاين لوحدها. مجاني من جوجل، ومحتاج تعمل الخطوة دي مرة واحدة:</p>
+    <ol style="margin:0;padding-inline-start:20px;font-size:13px;display:flex;flex-direction:column;gap:4px">
+      <li>افتح <b class="en">aistudio.google.com/apikey</b> وادخل بحساب الجيميل بتاعك</li>
+      <li>اضغط <b class="en">Create API key</b> وبعدين انسخ المفتاح</li>
+      <li>الزقه هنا واضغط تفعيل</li></ol>
+    <div class="row" style="flex-wrap:nowrap"><input type="text" id="gk" placeholder="AIza…" autocomplete="off" style="flex:1;min-width:0"><button class="btn primary" id="gks">تفعيل</button></div></div>`;
+  $("#gks").onclick=async()=>{const k=$("#gk").value.trim();if(!/^AIza[\w-]{30,}$/.test(k))return toast("المفتاح لازم يبدأ بـ AIza وطوله حوالي 39 حرف");
+    try{localStorage.setItem("ec-gem",k)}catch(e){}
+    $("#gks").disabled=true;$("#gks").textContent="بجرب…";
+    try{await ask('Return JSON only: {"ok":true}');toast("اتفعّل الوضع الذكي");f.msgs=[];save();chat()}
+    catch(e){try{localStorage.removeItem("ec-gem")}catch(_){}$("#gks").disabled=false;$("#gks").textContent="تفعيل";toast(e?.code==="bad_key"?"المفتاح ده مش شغال، انسخه تاني":"اتأكد إن النت شغال وجرب تاني")}};
+}
+window.addEventListener("online",()=>{if(cur==="chat")paintSmart()});window.addEventListener("offline",()=>{if(cur==="chat")paintSmart()});
 function gemKey(){try{return localStorage.getItem("ec-gem")||""}catch(e){return""}}
 async function ask(prompt){
   if(sampler)return sampler.json(prompt,{modelTier:"quick",cache:false});
-  const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key="+encodeURIComponent(gemKey()),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:0.9}})});
+  let r;const body=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:0.9}});
+  for(const m of ["gemini-flash-latest","gemini-2.5-flash","gemini-2.0-flash"]){
+    const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),20000);
+    try{r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+m+":generateContent?key="+encodeURIComponent(gemKey()),{method:"POST",headers:{"Content-Type":"application/json"},body,signal:ctl.signal})}catch(e){clearTimeout(to);throw{code:"network"}}
+    clearTimeout(to);if(r.status!==404)break}
   if(r.status===400||r.status===403){try{localStorage.removeItem("ec-gem")}catch(e){}throw{code:"bad_key"}}
   if(r.status===429)throw{code:"rate_limited"};
   if(!r.ok)throw{code:"upstream"};
@@ -737,7 +760,7 @@ async function hear(){
 function userSaid(t){const f=FS();f.msgs.push({r:"me",t,voice:true});save();drawChat();friend(f.msgs.length-1)}
 async function friend(meIdx){
   const f=FS(),L=W();F.busy=true;drawChat();
-  if(LLM()){try{const {reply}=await localFriend(meIdx);f.msgs.push({r:"bot",t:reply});f.msgs=f.msgs.slice(-40);
+  if(LLM()&&!(navigator.onLine&&gemKey())){try{const {reply}=await localFriend(meIdx);f.msgs.push({r:"bot",t:reply});f.msgs=f.msgs.slice(-40);
       if(meIdx!=null&&f.msgs.filter(m=>m.r==="me").length%3===0)S.chats++;save();F.busy=false;drawChat();
       const speaking=cur==="chat"?talk(reply):Promise.resolve();
       if(meIdx!=null&&f.msgs[meIdx]){try{f.msgs[meIdx].fix=await localFix(f.msgs[meIdx].t);save();drawChat()}catch(e){}}
@@ -763,7 +786,11 @@ Return JSON only: {"reply":"...","corrections":[],"sounds":[],"remember":[]}`;
     if(meIdx!=null&&f.msgs.filter(m=>m.r==="me").length%3===0){S.chats++}
     save();F.busy=false;drawChat();
     if(reply&&cur==="chat"){await talk(reply);if(f.call&&cur==="chat"&&!srBroken)hear()}
-  }catch(e){F.busy=false;drawChat();toast(e?.code==="rate_limited"?"استنى دقيقة وجرب تاني":e?.code==="bad_key"?"مفتاح Gemini مش شغال، حط مفتاح جديد":e?.code==="not_granted"?"المحادثة محتاجة إذن، فعّله من صلاحيات الصفحة":"النت ضعيف أو حصلت مشكلة، ابعت تاني");if(e?.code==="bad_key")chat()}
+  }catch(e){
+    if(LLM()&&e?.code!=="bad_key"){let st={};try{st=await LLM().status()}catch(_){}
+      if(st.ready){try{const {reply}=await localFriend(meIdx);f.msgs.push({r:"bot",t:reply});save();F.busy=false;drawChat();toast("النت ضعيف، كمّلت بالوضع الأوفلاين");
+        const sp=talk(reply);if(meIdx!=null&&f.msgs[meIdx]){try{f.msgs[meIdx].fix=await localFix(f.msgs[meIdx].t);save();drawChat()}catch(_){}}await sp;if(f.call&&cur==="chat"&&!srBroken)hear();return}catch(_){}}}
+    F.busy=false;drawChat();toast(e?.code==="rate_limited"?"استنى دقيقة وجرب تاني":e?.code==="bad_key"?"مفتاح Gemini مش شغال، حط مفتاح جديد":e?.code==="not_granted"?"المحادثة محتاجة إذن، فعّله من صلاحيات الصفحة":"النت ضعيف أو حصلت مشكلة، ابعت تاني");if(e?.code==="bad_key")chat()}
 }
 
 /* ================= ROUTER ================= */
