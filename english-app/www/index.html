@@ -160,7 +160,7 @@ details.card summary{cursor:pointer;font-weight:600}
 
 <div class="wrap">
   <header class="top">
-    <div class="brand">مدرّب الإنجليزي<small id="sub">اعرف مستواك وابدأ صح</small></div>
+    <div class="brand">مدرّب الإنجليزي <span style="font-size:11px;color:var(--muted);font-weight:400" class="en">v12</span><small id="sub">اعرف مستواك وابدأ صح</small></div>
     <span class="lvchip" id="lvchip" hidden>A2</span>
   </header>
   <main id="view" class="stack" aria-live="polite"></main>
@@ -802,6 +802,11 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{if(S.level==null&&t.
 go("home");
 connectDb();
 if("serviceWorker" in navigator&&location.protocol==="https:"){navigator.serviceWorker.register("sw.js").catch(()=>{})}
+const APPV="12";
+(async()=>{try{if(!navigator.onLine||location.protocol!=="https:")return;const r=await fetch("version.txt?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const v=(await r.text()).trim();
+  if(v&&v!==APPV){let tried=0;try{tried=+sessionStorage.getItem("ec-upd")||0}catch(e){}if(tried>=2)return;try{sessionStorage.setItem("ec-upd",tried+1)}catch(e){}
+    toast("بحدّث التطبيق…");try{const reg=await navigator.serviceWorker?.getRegistration();await reg?.update();const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}
+    setTimeout(()=>location.reload(),600)}}catch(e){}})();
 </script>
 
 </body></html>
