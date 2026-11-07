@@ -34,7 +34,7 @@ jobs:
       - name: Native AI plugin
         run: |
           D=android/app/src/main/java/com/bunyan/english
-          mkdir -p $D && cp native/LocalLlmPlugin.java native/MainActivity.java native/ModelDownloadService.java $D/
+          mkdir -p $D && cp native/*.java $D/
           sed -i 's/minSdkVersion = [0-9]*/minSdkVersion = 24/' android/variables.gradle
           sed -i 's#distributionUrl=.*#distributionUrl=https\\://services.gradle.org/distributions/gradle-8.9-all.zip#' android/gradle/wrapper/gradle-wrapper.properties
           cat android/gradle/wrapper/gradle-wrapper.properties

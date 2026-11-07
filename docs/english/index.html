@@ -303,6 +303,19 @@ const NSR=()=>window.Capacitor?.Plugins?.SpeechRecognition;
 let srBroken=!SR&&!NSR();
 function listen(onPartial){
   const N=NSR();
+  const HP=window.Capacitor?.Plugins?.Hear;
+  if(HP)return (async()=>{
+    let h1=null,h2=null;
+    try{h1=await HP.addListener("partial",d=>{d&&d.text&&onPartial&&onPartial(d.text)})}catch(e){}
+    try{h2=await HP.addListener("level",d=>{const r=Math.max(0,Math.min(1,((d&&d.rms)||0)/10));const el=$(".pip-ava");if(el)el.style.transform="scale("+(1+r*.25)+")"})}catch(e){}
+    listen.stop=()=>HP.stop().catch(()=>{});
+    try{const r=await HP.start({lang:"en-US"});const t=r&&r.text;if(!t)throw{code:"7"};return t}
+    catch(e){const c=String((e&&e.code)||"");listen.err=c;
+      if(c==="9"||c==="permission")throw"na-perm";
+      if(c==="7"||c==="6")throw"empty";
+      throw"err"+c}
+    finally{try{h1&&h1.remove();h2&&h2.remove()}catch(e){}const el=$(".pip-ava");if(el)el.style.transform=""}
+  })();
   if(N)return (async()=>{
     const p=await N.requestPermissions().catch(()=>null);if(p&&p.speechRecognition&&p.speechRecognition!=="granted")throw"na";
     return await new Promise(async(res,rej)=>{
@@ -712,7 +725,13 @@ async function hear(){
   if(F.busy||F.listening)return;const t=$("#talk"),h=$("#hint"),mc=$("#mycap");if(!t)return;
   F.listening=true;t.classList.add("live");setMood("listening");h.textContent="بسمعك… اتكلم، واضغط تاني لما تخلص";
   try{const said=await listen(p=>{if(mc)mc.textContent=p});if(mc)mc.textContent=said;userSaid(said)}
-  catch(e){setMood("idle");if(mc)mc.textContent="";if(e==="na"){t.disabled=true;h.textContent="المايك مش متاح، اكتب في المربع"}else h.textContent="ما سمعتش حاجة، اضغط واتكلم تاني"}
+  catch(e){setMood("idle");if(mc)mc.textContent="";
+    const M={"na":"المايك مش متاح، اكتب في المربع","na-perm":"محتاج إذن المايك: افتح إعدادات الموبايل ← التطبيقات ← مدرّب الإنجليزي ← الأذونات ← الميكروفون ← سماح",
+      "empty":"ما سمعتش كلام واضح، اضغط المايك وقرّب الموبايل واتكلم",
+      "err2":"محتاج نت للتعرف على الصوت، أو نزّل حزمة الإنجليزي أوفلاين من إعدادات جوجل","err1":"النت بطيء، جرب تاني","err4":"خدمة الصوت مش ردت، جرب تاني",
+      "err3":"المايك مشغول في تطبيق تاني، اقفله وجرب","err8":"لحظة… جرب تاني","err5":"خدمة الصوت مش شغالة، جرب تاني",
+      "err12":"اللغة الإنجليزي مش متنزّلة: إعدادات ← جوجل ← التعرف على الكلام ← نزّل English","err13":"اللغة الإنجليزي مش متنزّلة: إعدادات ← جوجل ← التعرف على الكلام ← نزّل English","err11":"اللغة الإنجليزي مش متنزّلة: إعدادات ← جوجل ← التعرف على الكلام ← نزّل English"};
+    if(e==="na"){t.disabled=true}h.textContent=M[e]||("ما قدرتش أسمعك (كود "+String(e).replace("err","")+")، جرب تاني")}
   finally{F.listening=false;t.classList.remove("live");if($("#hint")&&h.textContent.startsWith("بسمعك"))h.textContent="اضغط المايك واتكلم بالإنجليزي"}
 }
 function userSaid(t){const f=FS();f.msgs.push({r:"me",t,voice:true});save();drawChat();friend(f.msgs.length-1)}
