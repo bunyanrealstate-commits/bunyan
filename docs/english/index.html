@@ -527,12 +527,34 @@ async function chat(){
   if(srBroken){$("#talk").hidden=true;$("#hint").textContent="استخدم مايك الكيبورد في مربع الكتابة"}
   drawChat();
   if(sampler===undefined){sampler=await window.claude?.use?.("sample")??null;}
+  if(LLM()){if(!f.msgs.length&&!F.busy){$("#hint").textContent="بيجهز صاحبك… أول مرة بتاخد دقيقة";try{await llmLoad();if($("#hint"))$("#hint").textContent="اضغط واتكلم بالإنجليزي"}catch(e){$("#hint").textContent="مقدرش يشغّل العقل المحلي: "+(e?.message||e)}}if(!f.msgs.length&&!F.busy)friend(null);return}
   if(!sampler&&!gemKey()){$("#box").innerHTML=`<h3>فعّل صاحبك مجانًا</h3>
     <p class="muted" style="font-size:13px">المحادثة بتشتغل بـ Gemini من جوجل ببلاش. ادخل على <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> بحساب جيميل، اضغط Create API key، وانسخ المفتاح وحطه هنا. مرة واحدة بس.</p>
     <label class="label" for="gk">مفتاح Gemini</label><input type="text" id="gk" placeholder="AIza…" autocomplete="off">
     <div class="row end"><button class="btn primary" id="gks">حفظ وابدأ</button></div>`;
     $("#gks").onclick=()=>{const k=$("#gk").value.trim();if(k.length<20)return toast("المفتاح ده مش كامل");try{localStorage.setItem("ec-gem",k)}catch(e){}chat()};return}
   if(!f.msgs.length&&!F.busy)friend(null);
+}
+const LLM=()=>window.Capacitor?.Plugins?.LocalLlm;
+let llmReady=null;
+function llmLoad(){if(!llmReady)llmReady=LLM().load().catch(e=>{llmReady=null;throw e});return llmReady}
+async function localGen(prompt){await llmLoad();const r=await LLM().generate({prompt});return String(r?.text||"").trim()}
+function cleanReply(t,name){t=t.replace(/<[^>]+>/g,"").replace(/\*+/g,"").replace(/^\s*(\w+)\s*:\s*/,"").replace(/^["“]|["”]$/g,"").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu,"").trim();
+  const parts=t.split(/(?<=[.!?])\s+/).filter(Boolean);return parts.slice(0,3).join(" ")}
+async function localFriend(meIdx){
+  const f=FS(),L=W();const hist=f.msgs.slice(-8).map(m=>(m.r==="me"?"Osama: ":f.name+": ")+m.t).join("\n");
+  const lvl=L<2?"very simple English with short common words":L<4?"simple everyday English":"natural everyday English";
+  const replyP=`You are ${f.name}, Osama's close friend. Osama is Egyptian, lives in Dubai and is practising English with you. Talk like a warm, funny friend on a phone call, in ${lvl}. Reply in 1 or 2 short sentences, react to what he said, and end with one simple question. Write only ${f.name}'s words.
+${f.facts.length?"You know about him: "+f.facts.slice(-8).join("; ")+".\n":""}${meIdx==null?`Start the conversation: greet him and ask how his day is going.`:`Conversation:\n${hist}\n${f.name}:`}`;
+  const reply=cleanReply(await localGen(replyP),f.name)||"That's cool! Tell me more?";
+  return{reply,me:meIdx};
+}
+async function localFix(text){
+  const c=await localGen(`Correct the grammar of this English sentence so it sounds natural. Write only the corrected sentence, nothing else.\nSentence: ${text}\nCorrected:`);
+  let better=c.split("\n").map(x=>x.trim()).filter(Boolean)[0]||"";better=better.replace(/^(corrected( sentence)?\s*:\s*)/i,"").replace(/^["“]|["”]$/g,"").trim();
+  if(!better)return[];const a=norm(text).join(" "),b=norm(better).join(" ");
+  if(a===b||norm(better).length>norm(text).length*2+3)return[];
+  return[{you:text,better,why:""}];
 }
 function gemKey(){try{return localStorage.getItem("ec-gem")||""}catch(e){return""}}
 async function ask(prompt){
@@ -566,6 +588,13 @@ async function hear(){
 function userSaid(t){const f=FS();f.msgs.push({r:"me",t,voice:true});save();drawChat();friend(f.msgs.length-1)}
 async function friend(meIdx){
   const f=FS(),L=W();F.busy=true;drawChat();
+  if(LLM()){try{const {reply}=await localFriend(meIdx);f.msgs.push({r:"bot",t:reply});f.msgs=f.msgs.slice(-40);
+      if(meIdx!=null&&f.msgs.filter(m=>m.r==="me").length%3===0)S.chats++;save();F.busy=false;drawChat();
+      const speaking=cur==="chat"?say(reply):Promise.resolve();
+      if(meIdx!=null&&f.msgs[meIdx]){try{f.msgs[meIdx].fix=await localFix(f.msgs[meIdx].t);save();drawChat()}catch(e){}}
+      await speaking;if(f.call&&cur==="chat"&&!srBroken)hear()}
+    catch(e){F.busy=false;drawChat();toast("صاحبك مش قادر يرد دلوقتي، جرب تاني")}
+    return}
   const hist=f.msgs.slice(-16).map(m=>(m.r==="me"?"Me: ":f.name+": ")+m.t).join("\n");
   const prompt=`You are ${f.name}, a warm, funny close friend of an Egyptian man named Osama who lives in Dubai. You chat with him casually in English like a real friend on a phone call, to help him practise speaking. His English level is CEFR ${LV[L]}.
 Style: natural spoken English, contractions, short (1-3 sentences, max 40 words), vocabulary suited to ${LV[L]}${L<2?", speak simply and slowly":""}. Show real interest, react to what he says, share small things about your own (made-up) life, joke a little, and usually end with ONE question. Never lecture. If he made a mistake, naturally echo the correct form inside your reply (e.g. "Oh, you went to the beach? Nice!") without pointing it out. If he writes Arabic, gently answer in English and help him say it.

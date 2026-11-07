@@ -1,4 +1,4 @@
-name: Build English Coach APK
+name: Build English Coach APK (offline AI)
 on:
   workflow_dispatch:
   push:
@@ -22,10 +22,27 @@ jobs:
       - run: npx cap add android
       - run: npx capacitor-assets generate --android --iconBackgroundColor '#2747C9' --iconBackgroundColorDark '#2747C9'
       - run: npx cap sync android
-      - name: Microphone permission
-        run: sed -i 's#<application#<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n    <queries><intent><action android:name="android.speech.RecognitionService" /></intent><intent><action android:name="android.intent.action.TTS_SERVICE" /></intent></queries>\n    <application#' android/app/src/main/AndroidManifest.xml
+      - name: Download on-device AI model (Gemma 3 1B, int4)
+        run: |
+          mkdir -p android/app/src/main/assets/model
+          curl -fL --retry 3 -o android/app/src/main/assets/model/gemma3-1b-it-int4.task \
+            https://huggingface.co/aquhm/gemma3-1b-it-int4-litert/resolve/main/gemma3-1b-it-int4.task
+          ls -la android/app/src/main/assets/model
+          test $(stat -c%s android/app/src/main/assets/model/gemma3-1b-it-int4.task) -gt 400000000
+      - name: Native AI plugin
+        run: |
+          D=android/app/src/main/java/com/bunyan/english
+          mkdir -p $D && cp native/LocalLlmPlugin.java native/MainActivity.java $D/
+          sed -i 's/minSdkVersion = [0-9]*/minSdkVersion = 24/' android/variables.gradle
+          cat >> android/app/build.gradle <<'GEOF'
+          dependencies { implementation 'com.google.mediapipe:tasks-genai:0.10.24' }
+          android { androidResources { noCompress += ['task'] } }
+          GEOF
+          echo "org.gradle.jvmargs=-Xmx4g" >> android/gradle.properties
+      - name: Microphone + speech permissions
+        run: sed -i 's#<application#<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n    <queries><intent><action android:name="android.speech.RecognitionService" /></intent><intent><action android:name="android.intent.action.TTS_SERVICE" /></intent></queries>\n    <application android:largeHeap="true"#' android/app/src/main/AndroidManifest.xml
       - name: Increase versionCode on every build
-        run: sed -i "s/versionCode [0-9]*/versionCode ${{ github.run_number }}/; s/versionName \"[^\"]*\"/versionName \"1.${{ github.run_number }}\"/" android/app/build.gradle
+        run: sed -i "s/versionCode [0-9]*/versionCode $((100 + ${{ github.run_number }}))/; s/versionName \"[^\"]*\"/versionName \"2.${{ github.run_number }}\"/" android/app/build.gradle
       - name: Lock portrait
         run: sed -i 's/<activity /<activity android:screenOrientation="portrait" /' android/app/src/main/AndroidManifest.xml
       - name: Use fixed signing key (so updates install over the old app)
@@ -37,8 +54,11 @@ jobs:
           }
           GEOF
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
-      - name: Publish APK to branch apk-english
+      - name: Publish APK as a release download
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir /tmp/out && cp android/app/build/outputs/apk/debug/app-debug.apk /tmp/out/English.apk
-          cd /tmp/out && git init -q -b apk-english && git config user.name github-actions && git config user.email actions@github.com
-          git add . && git commit -q -m "Build APK" && git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git apk-english
+          cp android/app/build/outputs/apk/debug/app-debug.apk /tmp/English-Coach.apk
+          ls -la /tmp/English-Coach.apk
+          gh release delete english-offline -y --cleanup-tag -R ${{ github.repository }} || true
+          gh release create english-offline /tmp/English-Coach.apk -R ${{ github.repository }} --title "مدرّب الإنجليزي (أوفلاين)" --notes "Build ${{ github.run_number }} — on-device AI, works without internet."
