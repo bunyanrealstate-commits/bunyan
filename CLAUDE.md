@@ -7,7 +7,9 @@ Before every publish/push of `rental-tracker.html`:
    syntax of all scripts, the 3 builds boot clean, every tab renders in every group with the real data,
    accounting self-test, key numbers (cash/profit/rent/equity per group) unchanged vs `tools/baseline.json`,
    language switch doesn't hang, no stray UI.
-   - Must print `ALL GOOD`. Fix anything red before releasing.
+   - Must print `ALL GOOD`. Fix anything red before releasing. Gate on it for real:
+     `node tools/check.js <book.json> | tee /tmp/chk.log; grep -q 'ALL GOOD' /tmp/chk.log && git commit ...`
+   - Key numbers are computed on the baseline's own day (Date is frozen), so they only change when code or data change.
    - If a number change is intended (an accounting rule changed on purpose), re-run with `ACCEPT=1` and say so in the commit.
    - New data in book.json => a new baseline is saved automatically.
 3. Commit + push main, publish the artifact, open it.

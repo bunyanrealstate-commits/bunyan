@@ -21,16 +21,18 @@ const fails=[],notes=[];const F=m=>{fails.push(m);console.log('❌ '+m)},OK=m=>c
  await p.fill('#lu','osama');await p.fill('#lp','1234');await p.fill('#lp2','1234');await p.tap('.dlg button.p');await p.waitForTimeout(1500);
  const data=fs.readFileSync(DATA,'utf8');await p.evaluate(d=>{Object.assign(S,JSON.parse(d));window.__noSave=1},data);
  const tabs=['home','units','grp','acc','n','ct','log','bk','books','rem'];
- const res=await p.evaluate(tabs=>{const out={crash:[],nums:{}};const gs=(S.groups||[]).map(g=>g.id);gs.forEach(g=>{setW(g);tabs.forEach(t=>{try{S.tab=t;render();const a=document.getElementById('app');if(!a||a.innerText.trim().length<20)out.crash.push(g+'/'+t+': empty')}catch(e){out.crash.push(g+'/'+t+': '+e.message)}});
-   try{const r=rcvP(),f=fpos();out.nums[g]={cash:Math.round(cashNow()),profit:Math.round(r.profit),rev:Math.round(r.rev),eq:Math.round(f.eq)}}catch(e){out.crash.push(g+' numbers: '+e.message)}});S.tab='home';render();return out},tabs);
+ let base0=null;try{base0=JSON.parse(fs.readFileSync(BASE,'utf8'))}catch(e){}const DAY=(base0&&base0.day)||new Date().toISOString().slice(0,10);
+ const res=await p.evaluate(([tabs,DAY])=>{const out={crash:[],nums:{}};const gs=(S.groups||[]).map(g=>g.id);gs.forEach(g=>{setW(g);tabs.forEach(t=>{try{S.tab=t;render();const a=document.getElementById('app');if(!a||a.innerText.trim().length<20)out.crash.push(g+'/'+t+': empty')}catch(e){out.crash.push(g+'/'+t+': '+e.message)}});
+   const RD=Date,FIX=new RD(DAY+'T12:00:00').getTime();function FD(){var a=[].slice.call(arguments);return a.length?new (Function.prototype.bind.apply(RD,[null].concat(a)))():new RD(FIX)}FD.now=function(){return FIX};FD.UTC=RD.UTC;FD.parse=RD.parse;FD.prototype=RD.prototype;
+   window.Date=FD;try{const r=rcvP(),f=fpos();out.nums[g]={cash:Math.round(cashNow()),profit:Math.round(r.profit),rev:Math.round(r.rev),eq:Math.round(f.eq)}}catch(e){out.crash.push(g+' numbers: '+e.message)}finally{window.Date=RD}});S.tab='home';render();return out},[tabs,DAY]);
  res.crash.forEach(c=>F('tab '+c));if(!res.crash.length)OK('all tabs render in '+Object.keys(res.nums).length+' groups');
  // 4) accounting self-test (golden example)
  const st=await p.evaluate(()=>{try{window.monAudit(false);const r=window.monAudit(false);return (r.issues||[]).filter(x=>/محرك الحسابات/.test(x.area)).map(x=>x.msg)}catch(e){return ['monitor crashed: '+e.message]}});st.forEach(x=>F('self-test: '+x));if(!st.length)OK('accounting self-test');
  // 5) key numbers vs baseline (same data => same numbers)
  const key=require('crypto').createHash('md5').update(data).digest('hex');let base=null;try{base=JSON.parse(fs.readFileSync(BASE,'utf8'))}catch(e){}
  if(base&&base.key===key){let diff=0;Object.keys(res.nums).forEach(g=>{const a=res.nums[g],o=base.nums[g]||{};Object.keys(a).forEach(k=>{if(Math.abs(a[k]-(o[k]||0))>1){diff++;F('number changed '+g+'.'+k+': '+o[k]+' → '+a[k])}})});if(!diff)OK('numbers unchanged vs baseline')}
- else{notes.push('baseline saved for this data');fs.writeFileSync(BASE,JSON.stringify({key,at:new Date().toISOString(),nums:res.nums},null,1))}
- if(process.env.ACCEPT){fs.writeFileSync(BASE,JSON.stringify({key,at:new Date().toISOString(),nums:res.nums},null,1));notes.push('baseline accepted')}
+ else{notes.push('baseline saved for this data');fs.writeFileSync(BASE,JSON.stringify({key,day:DAY,at:new Date().toISOString(),nums:res.nums},null,1))}
+ if(process.env.ACCEPT){fs.writeFileSync(BASE,JSON.stringify({key,day:DAY,at:new Date().toISOString(),nums:res.nums},null,1));notes.push('baseline accepted')}
  // 5b) finger scroll over the contract moves the page (regression: it used to be stuck)
  try{await p.evaluate(()=>{setW((S.groups[0]||{}).id);S.tab='ct';render()});await p.waitForTimeout(500);await p.evaluate(()=>{const v=document.getElementById('ctview');scrollTo(0,v.getBoundingClientRect().top+scrollY-250)});await p.waitForTimeout(200);
   const cd=await ctx.newCDPSession(p);const r=await p.evaluate(()=>{const v=document.getElementById('ctview').getBoundingClientRect();return {x:v.left+v.width/2,y:Math.min(innerHeight-100,v.top+200)}});const y0=await p.evaluate(()=>scrollY);
