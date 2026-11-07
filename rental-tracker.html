@@ -5858,9 +5858,9 @@ logTab=function(){S.bksub='log';return bkTab.apply(this,arguments)};
 var r0=render;render=function(){if(S&&S.tab==='log'){S.tab='bk';S.bksub='log'}return r0.apply(this,arguments)};
 })();</script>
 <script id="swupd">(function(){if(!('serviceWorker' in navigator))return;var t0=Date.now(),pend=false;
-function go(){try{sessionStorage.setItem('bny_spl','1')}catch(e){}location.reload()}
-navigator.serviceWorker.addEventListener('message',function(e){if(!e.data||e.data.t!=='updated')return;var ae=document.activeElement,typing=ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&ae.value;if(Date.now()-t0<4500&&!typing){go();return}pend=true});
-document.addEventListener('visibilitychange',function(){if(!document.hidden&&pend&&!document.querySelector('#modal .dlg input'))go()});try{navigator.serviceWorker.ready.then(function(r){[600,2500].forEach(function(w){setTimeout(function(){try{navigator.serviceWorker.controller&&navigator.serviceWorker.controller.postMessage('q')}catch(e){}},w)})})}catch(e){}})();</script>
+function go(v){try{var last=+sessionStorage.getItem('bny_rl')||0,lv=sessionStorage.getItem('bny_rv')||'';if(Date.now()-last<60000||(v&&v===lv)){pend=false;return}sessionStorage.setItem('bny_rl',String(Date.now()));if(v)sessionStorage.setItem('bny_rv',v);sessionStorage.setItem('bny_spl','1')}catch(e){return}location.reload()}
+navigator.serviceWorker.addEventListener('message',function(e){if(!e.data||e.data.t!=='updated')return;var v=e.data.v||'';try{if(v&&v===sessionStorage.getItem('bny_rv'))return}catch(x){}var ae=document.activeElement,typing=ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&ae.value;if(Date.now()-t0<4500&&!typing){go(v);return}pend=v||true});
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&pend&&!document.querySelector('#modal .dlg input'))go(typeof pend==='string'?pend:'')});try{navigator.serviceWorker.ready.then(function(r){[600,2500].forEach(function(w){setTimeout(function(){try{navigator.serviceWorker.controller&&navigator.serviceWorker.controller.postMessage('q')}catch(e){}},w)})})}catch(e){}})();</script>
 <script id="acctjs">(function(){if(window.HBUILD)return;
 /* حسابات متعددة: دخول بالاسم أو الإيميل أو رقم الموبايل + حساب جديد + تبديل الحساب.
    مفاتيح المزامنة/الدرايف/الواتساب تخص صاحبها بس — لو دخل حساب تاني بتتشال على جنب وترجع لما صاحبها يدخل. */
