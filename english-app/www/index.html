@@ -145,22 +145,34 @@ nav.tabs{position:fixed;inset:auto 0 0 0;z-index:6;background:var(--surface);bor
 @keyframes dot{50%{transform:translateY(-4px);opacity:.5}}
 .mycap{position:absolute;top:44px;left:12px;right:108px;color:#fff;font-size:15px;background:rgba(10,14,30,.5);border-radius:12px;padding:6px 10px;z-index:2;direction:ltr;text-align:left}
 .mycap:empty{display:none}
-.callbar{justify-content:center;gap:18px}
-.cbtn{width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--en)}
-.cbtn svg{width:24px;height:24px}
+.callbar{justify-content:center;gap:10px;flex-wrap:nowrap}
+.cbtn{width:48px;height:48px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--en)}
+.cbtn svg{width:22px;height:22px}
 .cbtn[aria-pressed="false"]{opacity:.5}
-.cbtn.mic{width:76px;height:76px;background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.cbtn.mic svg{width:34px;height:34px}
+.cbtn.mic{width:68px;height:68px;background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.cbtn.mic svg{width:30px;height:30px}
 .cbtn.mic.live{background:#D64545;border-color:#D64545;color:#fff;animation:pulse2 1.2s infinite}
 @keyframes pulse2{50%{box-shadow:0 0 0 10px rgba(214,69,69,.2)}}
 details.card summary{cursor:pointer;font-weight:600}
+
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 14px;font-size:14px;min-height:36px;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.cbtn.end{background:#D64545;border-color:#D64545;color:#fff}
+.idea{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 10px;text-align:left;width:100%}
+.idea .en{flex:1;font-size:16px}
+.rep-score{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.rep-score div{background:var(--sunk);border-radius:12px;padding:10px 4px}
+.rep-score b{display:block;font-size:24px;font-variant-numeric:tabular-nums}
+.tips{margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:8px;font-size:14px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head><body>
 
 <div class="wrap">
   <header class="top">
-    <div class="brand">مدرّب الإنجليزي <span style="font-size:11px;color:var(--muted);font-weight:400" class="en">v12</span><small id="sub">اعرف مستواك وابدأ صح</small></div>
+    <div class="brand">مدرّب الإنجليزي <span style="font-size:11px;color:var(--muted);font-weight:400" class="en">v13</span><small id="sub">اعرف مستواك وابدأ صح</small></div>
     <span class="lvchip" id="lvchip" hidden>A2</span>
   </header>
   <main id="view" class="stack" aria-live="polite"></main>
@@ -296,12 +308,12 @@ let nVoice;async function nativeVoice(NT){if(nVoice!==undefined)return nVoice;nV
   for(const p of pref){const i=vs.findIndex(v=>(v.voiceURI||v.name||"").toLowerCase().includes(p));if(i>=0){nVoice=i;break}}
   if(nVoice==null){const i=vs.findIndex(v=>/en[-_]US/i.test(v.lang)&&/female/i.test(v.name||v.voiceURI||""));if(i>=0)nVoice=i}}catch(e){}return nVoice}
 function say(t,slow){return new Promise(async done=>{const NT=window.Capacitor?.Plugins?.TextToSpeech;
-  if(NT){const vi=await nativeVoice(NT);NT.stop().catch(()=>{}).finally(()=>NT.speak(Object.assign({text:t,lang:"en-US",rate:slow?0.7:1,pitch:1.05,volume:1,category:"playback"},vi!=null?{voice:vi}:{})).then(done,()=>{toast("ثبّت محرك نطق جوجل من الإعدادات");done()}));return}
-  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-US";if(voice)u.voice=voice;u.rate=slow?0.7:0.95;u.onend=u.onerror=()=>done();speechSynthesis.speak(u)}catch(e){toast("الجهاز ده مش بيدعم تشغيل الصوت");done()}})}
+  if(NT){const vi=await nativeVoice(NT);NT.stop().catch(()=>{}).finally(()=>NT.speak(Object.assign({text:t,lang:"en-US",rate:slow?0.7:(S.vr||1),pitch:1.05,volume:1,category:"playback"},vi!=null?{voice:vi}:{})).then(done,()=>{toast("ثبّت محرك نطق جوجل من الإعدادات");done()}));return}
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-US";if(voice)u.voice=voice;u.rate=slow?0.7:0.95*(S.vr||1);u.onend=u.onerror=()=>done();speechSynthesis.speak(u)}catch(e){toast("الجهاز ده مش بيدعم تشغيل الصوت");done()}})}
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const NSR=()=>window.Capacitor?.Plugins?.SpeechRecognition;
 let srBroken=!SR&&!NSR();
-function listen(onPartial){
+function listen(onPartial,lang){lang=lang||"en-US";
   const N=NSR();
   const HP=window.Capacitor?.Plugins?.Hear;
   if(HP)return (async()=>{
@@ -309,7 +321,7 @@ function listen(onPartial){
     try{h1=await HP.addListener("partial",d=>{d&&d.text&&onPartial&&onPartial(d.text)})}catch(e){}
     try{h2=await HP.addListener("level",d=>{const r=Math.max(0,Math.min(1,((d&&d.rms)||0)/10));const el=$(".pip-ava");if(el)el.style.transform="scale("+(1+r*.25)+")"})}catch(e){}
     listen.stop=()=>HP.stop().catch(()=>{});
-    try{const r=await HP.start({lang:"en-US"});const t=r&&r.text;if(!t)throw{code:"7"};return t}
+    try{const r=await HP.start({lang});const t=r&&r.text;if(!t)throw{code:"7"};return t}
     catch(e){const c=String((e&&e.code)||"");listen.err=c;
       if(c==="9"||c==="permission")throw"na-perm";
       if(c==="7"||c==="6")throw"empty";
@@ -324,14 +336,14 @@ function listen(onPartial){
       try{h1=await N.addListener("partialResults",d=>{const t=d&&d.matches&&d.matches[0];if(t){last=t;onPartial&&onPartial(t);clearTimeout(silT);silT=setTimeout(finish,1700)}})}catch(e){}
       try{h2=await N.addListener("listeningState",d=>{if(d&&d.status==="stopped")setTimeout(finish,400)})}catch(e){}
       hardT=setTimeout(finish,20000);listen.stop=finish;
-      try{const r=await N.start({language:"en-US",maxResults:1,partialResults:true,popup:false});const t=r&&r.matches&&r.matches[0];if(t){last=t;finish()}}
+      try{const r=await N.start({language:lang,maxResults:1,partialResults:true,popup:false});const t=r&&r.matches&&r.matches[0];if(t){last=t;finish()}}
       catch(e){finish()}
     });
   })().catch(e=>{throw e==="na"?"na":"empty"});
   return new Promise((res,rej)=>{
   if(srBroken)return rej("na");
   let r;try{r=new SR()}catch(e){srBroken=true;return rej("na")}
-  r.lang="en-US";r.interimResults=true;r.maxAlternatives=1;let final="",got=false;
+  r.lang=lang;r.interimResults=true;r.maxAlternatives=1;let final="",got=false;
   r.onresult=e=>{let t="";for(const x of e.results)t+=x[0].transcript+" ";final=t.trim();got=true;onPartial&&onPartial(final)};
   r.onerror=e=>{if(["not-allowed","service-not-allowed","audio-capture","network"].includes(e.error)){srBroken=true;rej("na")}else rej(e.error)};
   r.onend=()=>got?res(final):rej("empty");
@@ -371,6 +383,9 @@ function tipsFor(missed){
 const $=s=>document.querySelector(s);const V=$("#view");
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const IC={
+ bulb:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z"/></svg>',
+ end:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 9c-3.3 0-6.3.9-8.6 2.5-.6.4-.8 1.2-.4 1.8l1.4 2c.4.6 1.2.8 1.8.4l2-1.3c.4-.3.6-.7.6-1.2v-1.5c1-.3 2.1-.4 3.2-.4s2.2.1 3.2.4v1.5c0 .5.2.9.6 1.2l2 1.3c.6.4 1.4.2 1.8-.4l1.4-2c.4-.6.2-1.4-.4-1.8C18.3 9.9 15.3 9 12 9z"/></svg>',
+ ar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h9M8.5 3v2M6 5c0 4 3 7 6 8M11 5c-1 4-4 7-7 8M13 21l4-9 4 9M14.5 18h5"/></svg>',
  play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 9v6h4l5 4V5L8 9zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>',
  slow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>',
  mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>'};
@@ -583,6 +598,18 @@ function gram(){
 /* ================= CHAT: personal friend ================= */
 let sampler,F={busy:false,listening:false};
 function FS(){S.friend=S.friend||{name:"Lily",msgs:[],facts:[],call:true};if(S.friend.name==="Sam"){S.friend.name="Lily";S.friend.msgs=[]}return S.friend}
+const SCEN=[
+ {id:"friend",ar:"دردشة مع صاحبة",role:n=>`You are ${n}, a cheerful, warm, funny young woman and Osama's close friend, on a casual video call. Chat about his day, work, plans, family, food, travel and hobbies; share small things about your own (made-up) life.`,start:"Greet him like an old friend and ask how his day is going."},
+ {id:"tenant",ar:"مكالمة مع مستأجر",role:n=>`Role-play: you are Sarah, a woman calling Osama because she saw his ad for a furnished room/studio in Dubai. Ask realistic questions one at a time: price, what's included (bills, internet, cleaning), deposit, contract length, move-in date, rules, location and parking. Sometimes ask for a discount. Stay in role.`,start:"Open the call as Sarah: say you saw his ad and ask if the room is still available."},
+ {id:"company",ar:"تفاوض مع شركة",role:n=>`Role-play: you are Ms. Clarke, leasing manager at a property company in Dubai. Osama wants to lease several unfurnished units. Negotiate professionally: price per unit, payment terms (cheques), contract length, maintenance responsibility. Don't agree too easily; make counter-offers. Stay in role.`,start:"Open the meeting as Ms. Clarke: welcome him and ask what he's looking for."},
+ {id:"complaint",ar:"شكوى من عميل",role:n=>`Role-play: you are Maya, a tenant in one of Osama's rooms. You're calling, a bit upset, because the AC stopped working and it's very hot. Give details when asked; calm down only if he responds professionally (apologises, gives a clear plan and time). Stay in role.`,start:"Open the call as Maya: say there's a problem with the AC and you're not happy."},
+ {id:"interview",ar:"مقابلة شغل",role:n=>`Role-play: you are Ms. Patel, interviewing Osama for a property operations manager job in Dubai. Ask common interview questions one at a time (tell me about yourself, experience, strengths, a problem you solved, why this job) and react to his answers. Stay in role.`,start:"Open the interview as Ms. Patel: introduce yourself and ask him to tell you about himself."},
+ {id:"daily",ar:"مواقف يومية",role:n=>`Role-play a realistic everyday situation in Dubai, changing it each new call: a restaurant waiter, a taxi driver, a pharmacist, a hotel receptionist, a shop assistant or a bank clerk. Play that person naturally. Stay in role.`,start:"Pick one situation, say in a few words where we are, and start the scene in role."},
+ {id:"debate",ar:"نقاش وتبادل آراء",role:n=>`You are ${n}, his friend. Discuss an interesting everyday topic (e.g. remote work, social media, living abroad, saving money, AI). Ask his opinion, then politely give a different view so he has to explain and defend his ideas.`,start:"Suggest a topic in one sentence and ask what he thinks."},
+];
+const scen=()=>SCEN.find(x=>x.id===(FS().scen||"friend"))||SCEN[0];
+const hasAr=t=>/[؀-ۿ]/.test(t);
+let callIdx=0;
 const AVATAR=`<svg class="ava" viewBox="0 0 300 340" role="img" aria-label="ليلي">
  <g class="body"><path d="M38 340 C44 272 96 246 150 246 C204 246 256 272 262 340 Z" fill="var(--top)"/>
   <path d="M150 246 L150 340" stroke="var(--top2)" stroke-width="3"/><path d="M118 252 Q150 290 182 252" fill="none" stroke="var(--top2)" stroke-width="7" stroke-linecap="round"/>
@@ -613,33 +640,52 @@ function mouth(on){const st=$("#stage");clearInterval(mouthT);if(!st)return;
 async function talk(t){const mc=$("#mycap");if(mc)setTimeout(()=>{if(!F.listening&&mc)mc.textContent=""},1500);const c=$("#cap");if(c)c.textContent=t;setMood("talking");mouth(true);
   try{await say(t)}finally{mouth(false);setMood("idle")}}
 async function chat(){
-  const f=FS(),L=W();
-  V.innerHTML=`<div class="stage idle${F.subs===false?" nosubs":""}" id="stage"><div class="win"></div>
+  const f=FS(),L=W();callIdx=f.msgs.length;
+  V.innerHTML=`<div class="chips" role="group" aria-label="نوع المكالمة">${SCEN.map(x=>`<button class="chip" data-sc="${x.id}" aria-pressed="${x.id===scen().id}">${x.ar}</button>`).join("")}</div>
+   <div class="stage idle${F.subs===false?" nosubs":""}" id="stage"><div class="win"></div>
      <div class="stage-top"><span class="live"></span><span>${esc(f.name)}</span><span class="pill" id="mode" style="background:rgba(255,255,255,.2);color:#fff">أوفلاين</span><span class="tm" id="ctm">00:00</span></div>
      ${AVATAR}<div class="think" aria-hidden="true"><i></i><i></i><i></i></div>
      <div class="mycap" id="mycap"></div>
      <div class="pip"><div class="pip-ava">أنت</div><span>${LV[L]}</span></div>
      <div class="cap en" id="cap" aria-live="polite"></div></div>
    <div class="row callbar">
-     <button class="cbtn" id="cc" aria-pressed="${F.subs!==false}" aria-label="الترجمة على الشاشة">CC</button>
+     <button class="cbtn" id="help" aria-label="مش عارف أقول إيه">${IC.bulb}</button>
+     <button class="cbtn" id="arb" aria-label="قولها بالعربي">${IC.ar}</button>
      <button class="cbtn mic" id="talk" aria-label="اتكلم">${IC.mic}</button>
-     <button class="cbtn" id="replay" aria-label="أعد آخر جملة">${IC.play}</button></div>
-   <p class="muted" id="hint" style="font-size:13px;text-align:center">اضغط المايك واتكلم بالإنجليزي</p>
+     <button class="cbtn" id="replay" aria-label="أعد آخر جملة">${IC.play}</button>
+     <button class="cbtn end" id="endc" aria-label="إنهاء المكالمة وتقرير">${IC.end}</button></div>
+   <p class="muted" id="hint" style="font-size:13px;text-align:center">اضغط المايك واتكلم بالإنجليزي · ${IC.bulb.replace('<svg','<svg style="width:14px;height:14px;vertical-align:-2px"')} لو مش عارف تقول إيه</p>
+   <div id="ideas"></div>
    <div id="fixbox"></div>
    <div class="card" id="box">
-     <label class="row" style="gap:8px;font-size:14px"><input type="checkbox" id="callm" ${f.call?"checked":""} style="width:20px;height:20px">مكالمة مستمرة: المايك يفتح لوحده بعد ما ${esc(f.name)} تخلّص كلامها</label>
-     <div class="row" style="flex-wrap:nowrap"><input type="text" id="inp" placeholder="أو اكتب هنا…" style="flex:1;min-width:0"><button class="btn" id="snd">ابعت</button></div>
-     <button class="btn ghost" id="newc">ابدأ مكالمة جديدة</button></div>
+     <label class="row" style="gap:8px;font-size:14px"><input type="checkbox" id="callm" ${f.call?"checked":""} style="width:20px;height:20px">مكالمة مستمرة: المايك يفتح لوحده بعد ما ${esc(f.name)} تخلّص</label>
+     <div class="row" style="gap:8px;font-size:14px"><span>التصحيح:</span>
+       <button class="chip" id="fxall" aria-pressed="${S.fixAll!==false}">كل الأخطاء</button><button class="chip" id="fximp" aria-pressed="${S.fixAll===false}">المهمة بس</button></div>
+     <div class="row" style="gap:8px;font-size:14px"><span>صوتها:</span>
+       <button class="chip" id="vslow" aria-pressed="${(S.vr||1)<1}">أبطأ</button><button class="chip" id="vnorm" aria-pressed="${(S.vr||1)>=1}">عادي</button>
+       <button class="chip" id="cc" aria-pressed="${F.subs!==false}">كلامها مكتوب</button></div>
+     <div class="row" style="flex-wrap:nowrap"><input type="text" id="inp" placeholder="اكتب بالإنجليزي أو بالعربي…" style="flex:1;min-width:0"><button class="btn" id="snd">ابعت</button></div>
+     <div class="row"><button class="btn ghost" id="newc">مكالمة جديدة</button><button class="btn ghost" id="book">دفتر أخطائي (${(S.mistakes||[]).length})</button></div></div>
+   <details class="card"><summary>إزاي تتكلم إنجليزي باحتراف</summary><ol class="tips" style="margin-top:10px">${TIPS.map(t=>`<li>${t}</li>`).join("")}</ol></details>
    <details class="card"><summary>المكالمة مكتوبة</summary><div class="chat" id="ch" style="margin-top:10px"></div></details>`;
   clearInterval(callT);callStart=Date.now();callT=setInterval(()=>{const e=$("#ctm");if(!e){clearInterval(callT);return}const s=Math.floor((Date.now()-callStart)/1000);e.textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")},1000);
+  V.querySelectorAll("[data-sc]").forEach(b=>b.onclick=()=>{if(F.busy)return;f.scen=b.dataset.sc;f.msgs=[];save();chat()});
   $("#cc").onclick=()=>{F.subs=F.subs===false;$("#cc").setAttribute("aria-pressed",F.subs!==false);$("#stage").classList.toggle("nosubs",F.subs===false)};
+  $("#fxall").onclick=()=>{S.fixAll=true;save();$("#fxall").setAttribute("aria-pressed",true);$("#fximp").setAttribute("aria-pressed",false)};
+  $("#fximp").onclick=()=>{S.fixAll=false;save();$("#fxall").setAttribute("aria-pressed",false);$("#fximp").setAttribute("aria-pressed",true)};
+  $("#vslow").onclick=()=>{S.vr=0.85;save();$("#vslow").setAttribute("aria-pressed",true);$("#vnorm").setAttribute("aria-pressed",false)};
+  $("#vnorm").onclick=()=>{S.vr=1;save();$("#vslow").setAttribute("aria-pressed",false);$("#vnorm").setAttribute("aria-pressed",true)};
   $("#replay").onclick=()=>{const last=[...f.msgs].reverse().find(m=>m.r==="bot");if(last&&!F.listening)talk(last.t)};
   $("#callm").onchange=e=>{f.call=e.target.checked;save()};
-  $("#newc").onclick=()=>{f.msgs=[];save();chat()};
-  $("#snd").onclick=()=>{const v=$("#inp").value.trim();if(v){$("#inp").value="";userSaid(v)}};
+  $("#newc").onclick=()=>{if(F.busy)return;f.msgs=[];save();chat()};
+  $("#book").onclick=mistakeBook;
+  $("#endc").onclick=endCall;
+  $("#help").onclick=ideas;
+  $("#arb").onclick=()=>hear("ar");
+  $("#snd").onclick=()=>{const v=$("#inp").value.trim();if(v){$("#inp").value="";hasAr(v)?arabicToEn(v):userSaid(v)}};
   $("#inp").onkeydown=e=>{if(e.key==="Enter")$("#snd").click()};
   $("#talk").onclick=()=>{if(F.listening){listen.stop&&listen.stop();return}hear()};
-  if(srBroken){$("#talk").disabled=true;$("#hint").textContent="المايك مش متاح هنا، اكتب في المربع"}
+  if(srBroken){$("#talk").disabled=true;$("#arb").disabled=true;$("#hint").textContent="المايك مش متاح هنا، اكتب في المربع"}
   drawChat();
   const lastBot=[...f.msgs].reverse().find(m=>m.r==="bot");if(lastBot)$("#cap").textContent=lastBot.t;
   const smart=()=>navigator.onLine&&!!gemKey();
@@ -653,6 +699,19 @@ async function chat(){
   if(!sampler&&!gemKey()){$("#hint").textContent="فعّل الوضع الذكي من تحت عشان تبدأ";return}
   if(!f.msgs.length&&!F.busy)friend(null);
 }
+const TIPS=[
+ "<b>كل يوم 10 دقايق</b> مكالمة مع ليلي أحسن بكتير من ساعتين مرة في الأسبوع. الاستمرار هو السر.",
+ "بعد كل تصحيح دوس <b>«جرّب تقولها»</b> وقول الجملة الصح بصوتك. دماغك بيحفظ اللي لسانك قاله، مش اللي عينك قرأته.",
+ "<b>تقنية الظل (Shadowing):</b> دوس السماعة واسمع جملتها، وقولها معاها في نفس اللحظة بنفس السرعة والنغمة. دي أسرع طريقة تحسّن بيها النطق والطلاقة.",
+ "اتدرب على <b>مواقف شغلك</b> الحقيقية: مكالمة مستأجر، تفاوض مع شركة، شكوى عميل. دي الجمل اللي هتستخدمها فعلًا.",
+ "لو وقفت ومش لاقي الكلمة، ما تسكتش. قول <span class='en'>“Let me think…”</span> أو <span class='en'>“How can I put it…”</span> وكمّل بكلمات أبسط. ده اللي المحترفين بيعملوه.",
+ "ما تترجمش في دماغك من العربي. لو مش عارف تقول حاجة، دوس <b>زرار «قولها بالعربي»</b> واتعلم الجملة الإنجليزي، وبعدين قولها بنفسك.",
+ "اختار <b>«التصحيح: المهمة بس»</b> لما تحب تتكلم براحتك من غير ما تتشتت، و<b>«كل الأخطاء»</b> لما تحب تدقق.",
+ "اقفل <b>«كلامها مكتوب»</b> شوية عشان تدرّب ودنك تفهم من غير ما تقرأ.",
+ "في آخر كل مكالمة دوس <b>الزرار الأحمر</b> عشان تاخد تقرير. خد منه عبارة جديدة واستخدمها 3 مرات في المكالمة الجاية.",
+ "راجع <b>«دفتر أخطائي»</b> دقيقتين قبل كل مكالمة. الغلطة اللي تقولها صح 3 مرات مش هترجعلها تاني.",
+ "اتكلم بجمل كاملة حتى لو بسيطة، وما تخافش من الغلط. ليلي موجودة عشان تغلط قدامها مش قدام عميل.",
+];
 const LLM=()=>window.Capacitor?.Plugins?.LocalLlm;
 let llmReady=null;
 function llmLoad(){if(!llmReady)llmReady=LLM().load().catch(e=>{llmReady=null;throw e});return llmReady}
@@ -662,8 +721,8 @@ function cleanReply(t,name){t=t.replace(/<[^>]+>/g,"").replace(/\*+/g,"").replac
 async function localFriend(meIdx){
   const f=FS(),L=W();const hist=f.msgs.slice(-8).map(m=>(m.r==="me"?"Osama: ":f.name+": ")+m.t).join("\n");
   const lvl=L<2?"very simple English with short common words":L<4?"simple everyday English":"natural everyday English";
-  const replyP=`You are ${f.name}, a cheerful, kind young woman and Osama's close friend; you are on a video call. Osama is Egyptian, lives in Dubai and is practising English with you. Talk like a warm, funny friend on a phone call, in ${lvl}. Reply in 1 or 2 short sentences, react to what he said, and end with one simple question. Write only ${f.name}'s words.
-${f.facts.length?"You know about him: "+f.facts.slice(-8).join("; ")+".\n":""}${meIdx==null?`Start the conversation: greet him and ask how his day is going.`:`Conversation:\n${hist}\n${f.name}:`}`;
+  const replyP=`${scen().role(f.name)} Osama is Egyptian, lives in Dubai and is practising English with you. Talk naturally like on a phone call, in ${lvl}. Reply in 1 or 2 short sentences, react to what he said, and end with one simple question. Write only ${f.name}'s words.
+${f.facts.length?"You know about him: "+f.facts.slice(-8).join("; ")+".\n":""}${meIdx==null?scen().start:`Conversation:\n${hist}\n${f.name}:`}`;
   const reply=cleanReply(await localGen(replyP),f.name)||"That's cool! Tell me more?";
   return{reply,me:meIdx};
 }
@@ -736,18 +795,29 @@ async function ask(prompt){
 }
 function drawChat(){const ch=$("#ch");if(!ch)return;const f=FS();
   ch.innerHTML=f.msgs.map(m=>m.r==="me"?`<div class="msg me"><div class="en">${esc(m.t)}</div></div>`:`<div class="msg bot"><div class="en">${esc(m.t)}</div></div>`).join("");
-  const lastMe=[...f.msgs].reverse().find(m=>m.r==="me");const fb=$("#fixbox");
-  if(fb){const m=lastMe;fb.innerHTML=m&&((m.fix&&m.fix.length)||(m.snd&&m.snd.length))?`<div class="card" style="gap:8px;background:var(--warn-soft);border:0">
-     <span class="label">تصحيح آخر جملة قلتها</span>
-     ${(m.fix||[]).map(x=>`<div style="font-size:14px"><span class="en"><s style="color:var(--bad)">${esc(x.you)}</s></span><br><span class="en"><b style="color:var(--good)">${esc(x.better)}</b></span> <button class="btn ghost" data-say="${esc(x.better)}" style="min-height:30px;padding:0 8px">${IC.play}</button>${x.why?`<br><span class="muted">${esc(x.why)}</span>`:""}</div>`).join("")}
-     ${m.snd&&m.snd.length?`<div style="font-size:13px">كلمات محتاجة تنطقها أوضح: ${m.snd.map(w=>`<button class="btn ghost en" data-say="${esc(w)}" style="min-height:30px;padding:0 8px">${esc(w)}</button>`).join(" ")}</div>`:""}</div>`:"";
-    fb.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>say(b.dataset.say,true))}
+  const m=[...f.msgs].reverse().find(m=>m.r==="me");const fb=$("#fixbox");
+  if(fb){const has=m&&((m.fix&&m.fix.length)||(m.snd&&m.snd.length)||m.pro);
+    const target=m&&((m.fix&&m.fix.length&&m.fix.length===1&&norm(m.fix[0].you).length>=norm(m.t).length-1)?m.fix[0].better:(m.pro||(m.fix&&m.fix[0]&&m.fix[0].better)));
+    fb.innerHTML=has?`<div class="card" style="gap:10px;background:var(--warn-soft);border:0">
+     ${m.fix&&m.fix.length?`<span class="label">تصحيح آخر جملة قلتها</span>${m.fix.map(x=>`<div style="font-size:14px"><span class="en"><s style="color:var(--bad)">${esc(x.you)}</s></span><br><span class="en"><b style="color:var(--good)">${esc(x.better)}</b></span> <button class="btn ghost" data-say="${esc(x.better)}" style="min-height:30px;padding:0 8px">${IC.play}</button>${x.why?`<br><span class="muted">${esc(x.why)}</span>`:""}</div>`).join("")}`:`<span class="pill good" style="align-self:flex-start">جملتك صح</span>`}
+     ${m.pro?`<div style="font-size:14px"><span class="label">قولها زي المحترفين</span><br><span class="en" style="font-size:16px">${esc(m.pro)}</span> <button class="btn ghost" data-say="${esc(m.pro)}" style="min-height:30px;padding:0 8px">${IC.play}</button></div>`:""}
+     ${m.snd&&m.snd.length?`<div style="font-size:13px">كلمات محتاجة تنطقها أوضح: ${m.snd.map(w=>`<button class="btn ghost en" data-say="${esc(w)}" style="min-height:30px;padding:0 8px">${esc(w)}</button>`).join(" ")}</div>`:""}
+     ${target&&!srBroken?`<button class="btn" id="tryit">${IC.mic}جرّب تقولها بصوتك</button><div id="tryout"></div>`:""}</div>`:"";
+    fb.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>say(b.dataset.say,true));
+    const tb=$("#tryit");if(tb)tb.onclick=()=>practiceLine(target,$("#tryout"),tb)}
   const st=$("#stage");if(st&&F.busy&&!st.classList.contains("talking"))setMood("thinking");
 }
-async function hear(){
+async function practiceLine(target,out,btn){if(F.listening||F.busy)return;F.listening=true;btn.classList.add("rec","live");out.innerHTML=`<p class="muted" style="font-size:13px">قول: <span class="en">${esc(target)}</span></p>`;
+  try{const heard=await listen(p=>{out.innerHTML=`<p class="en">${esc(p)}</p>`});const r=align(target,heard);
+    out.innerHTML=`<div class="row" style="gap:10px"><span class="score" style="font-size:24px;color:var(--${r.score>=85?"good":r.score>=60?"warn":"bad"})">${r.score}%</span><span class="muted" style="font-size:13px">${r.score>=85?"ممتاز! كده اتثبتت":"قرّب أكتر، اسمعها ببطء وجرب تاني"}</span></div>
+      <div class="words">${r.words.map(w=>`<button class="${w.ok?"ok":"miss"}" data-w="${esc(w.n||w.w)}">${esc(w.w)}</button>`).join("")}</div>`;
+    out.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>say(b.dataset.w,true))}
+  catch(e){out.innerHTML=`<p class="muted" style="font-size:13px">ما سمعتش، جرب تاني</p>`}
+  finally{F.listening=false;btn.classList.remove("rec","live")}}
+async function hear(lang){
   if(F.busy||F.listening)return;const t=$("#talk"),h=$("#hint"),mc=$("#mycap");if(!t)return;
-  F.listening=true;t.classList.add("live");setMood("listening");h.textContent="بسمعك… اتكلم، واضغط تاني لما تخلص";
-  try{const said=await listen(p=>{if(mc)mc.textContent=p});if(mc)mc.textContent=said;userSaid(said)}
+  F.listening=true;t.classList.add("live");setMood("listening");h.textContent=lang==="ar"?"قول اللي عايزه بالعربي، وأنا أقولك تقوله إزاي بالإنجليزي":"بسمعك… اتكلم، واضغط تاني لما تخلص";
+  try{const said=await listen(p=>{if(mc)mc.textContent=p},lang==="ar"?"ar-EG":"en-US");if(mc)mc.textContent=said;if(lang==="ar"||hasAr(said)){setMood("idle");arabicToEn(said)}else userSaid(said)}
   catch(e){setMood("idle");if(mc)mc.textContent="";
     const M={"na":"المايك مش متاح، اكتب في المربع","na-perm":"محتاج إذن المايك: افتح إعدادات الموبايل ← التطبيقات ← مدرّب الإنجليزي ← الأذونات ← الميكروفون ← سماح",
       "empty":"ما سمعتش كلام واضح، اضغط المايك وقرّب الموبايل واتكلم",
@@ -767,19 +837,21 @@ async function friend(meIdx){
       await speaking;if(f.call&&cur==="chat"&&!srBroken)hear()}
     catch(e){F.busy=false;drawChat();toast("صاحبك مش قادر يرد دلوقتي، جرب تاني")}
     return}
-  const hist=f.msgs.slice(-16).map(m=>(m.r==="me"?"Me: ":f.name+": ")+m.t).join("\n");
-  const prompt=`You are ${f.name}, a cheerful, warm, funny young woman and close friend of an Egyptian man named Osama who lives in Dubai. You are on a video call with him. You chat with him casually in English like a real friend on a phone call, to help him practise speaking. His English level is CEFR ${LV[L]}.
-Style: natural spoken English, contractions, short (1-3 sentences, max 40 words), vocabulary suited to ${LV[L]}${L<2?", speak simply and slowly":""}. Show real interest, react to what he says, share small things about your own (made-up) life, joke a little, and usually end with ONE question. Never lecture. If he made a mistake, naturally echo the correct form inside your reply (e.g. "Oh, you went to the beach? Nice!") without pointing it out. If he writes Arabic, gently answer in English and help him say it.
-Things you remember about him from earlier chats: ${f.facts.length?f.facts.join("; "):"nothing yet"}.
-${meIdx!=null?`Then analyse ONLY his last message:
-- "corrections": real grammar/word-choice/unnatural phrasing mistakes, each {"you": his exact words, "better": natural English, "why": very short explanation in Egyptian Arabic}. Empty list if none. Ignore missing punctuation/capitals.
-- "sounds": his message was transcribed from speech, so list up to 3 English words he probably meant but that came out wrong in the transcript (likely mispronounced). Empty list if none.
-- "remember": up to 2 short new facts about him worth remembering (English), or empty list.`:`This is the start of a new chat: greet him like an old friend${f.facts.length?" and ask about something you remember":" and ask how his day is going"}. Return empty corrections, sounds and remember.`}
-Chat so far:
+  const sc=scen();const hist=f.msgs.slice(-16).map(m=>(m.r==="me"?"Osama: ":"You: ")+m.t).join("\n");
+  const prompt=`${sc.role(f.name)}
+Osama is an Egyptian man living in Dubai who runs a business renting furnished rooms and studios. He is practising spoken English with you on a video call. His level: CEFR ${LV[L]}.
+How to talk: natural spoken English with contractions; 1-3 short sentences (max 40 words); vocabulary at about ${LV[Math.min(5,L+1)]} so he learns a little${L<2?"; keep it very simple":""}. React to what he actually said and keep the conversation moving, usually ending with ONE question. Never lecture or mention that you're correcting him. If he made a mistake, naturally echo the correct form inside your reply.
+What you remember about him: ${f.facts.length?f.facts.join("; "):"nothing yet"}.
+${meIdx!=null?`Then analyse ONLY his last message (it came from speech recognition, so ignore punctuation and capital letters):
+- "corrections": ${S.fixAll===false?"only the important mistakes that change the meaning or sound clearly wrong":"every grammar, word-choice or unnatural-phrasing mistake"}. Each {"you": his exact words, "better": the corrected words, "why": a short, simple explanation in Egyptian Arabic}. Empty list if none.
+- "pro": the same message said the way a confident, fluent professional would say it (natural, polite, a bit more advanced than his level). Empty string if his message was already excellent or very short like "yes"/"ok".
+- "sounds": up to 3 English words he most likely meant but that were mis-transcribed (probably mispronounced). Empty list if none.
+- "remember": up to 2 short new facts about him worth remembering, or empty list.`:`This is the start of the call. ${sc.start} Return empty corrections, pro, sounds and remember.`}
+Conversation so far:
 ${hist||"(none)"}
-Return JSON only: {"reply":"...","corrections":[],"sounds":[],"remember":[]}`;
+Return JSON only: {"reply":"...","corrections":[],"pro":"","sounds":[],"remember":[]}`;
   try{const r=await ask(prompt);const reply=String(r.reply||"").trim();
-    if(meIdx!=null&&f.msgs[meIdx]){f.msgs[meIdx].fix=Array.isArray(r.corrections)?r.corrections.slice(0,4):[];f.msgs[meIdx].snd=Array.isArray(r.sounds)?r.sounds.slice(0,3):[]}
+    if(meIdx!=null&&f.msgs[meIdx]){f.msgs[meIdx].fix=Array.isArray(r.corrections)?r.corrections.slice(0,4):[];f.msgs[meIdx].snd=Array.isArray(r.sounds)?r.sounds.slice(0,3):[];f.msgs[meIdx].pro=typeof r.pro==="string"&&norm(r.pro).join(" ")!==norm(f.msgs[meIdx].t).join(" ")?r.pro.trim():"";addMistakes(f.msgs[meIdx].fix)}
     if(Array.isArray(r.remember))for(const x of r.remember){if(x&&!f.facts.includes(x))f.facts.push(String(x).slice(0,120))}
     f.facts=f.facts.slice(-25);
     if(reply)f.msgs.push({r:"bot",t:reply});f.msgs=f.msgs.slice(-40);
@@ -793,6 +865,74 @@ Return JSON only: {"reply":"...","corrections":[],"sounds":[],"remember":[]}`;
     F.busy=false;drawChat();toast(e?.code==="rate_limited"?"استنى دقيقة وجرب تاني":e?.code==="bad_key"?"مفتاح Gemini مش شغال، حط مفتاح جديد":e?.code==="not_granted"?"المحادثة محتاجة إذن، فعّله من صلاحيات الصفحة":"النت ضعيف أو حصلت مشكلة، ابعت تاني");if(e?.code==="bad_key")chat()}
 }
 
+function addMistakes(list){if(!Array.isArray(list)||!list.length)return;S.mistakes=S.mistakes||[];
+  for(const x of list){if(!x||!x.better)continue;if(S.mistakes.some(m=>norm(m.better).join(" ")===norm(x.better).join(" ")))continue;S.mistakes.unshift({you:String(x.you||""),better:String(x.better),why:String(x.why||""),at:Date.now()})}
+  S.mistakes=S.mistakes.slice(0,150);save();const b=$("#book");if(b)b.textContent="دفتر أخطائي ("+S.mistakes.length+")"}
+async function ideas(){const box=$("#ideas");if(!box||F.busy)return;const f=FS(),L=W();
+  if(!(navigator.onLine&&gemKey())&&!sampler){box.innerHTML=`<div class="card"><p class="muted" style="font-size:13px">الاقتراحات شغالة في الوضع الذكي بس (بالنت).</p></div>`;return}
+  box.innerHTML=`<div class="card"><p class="muted">بفكرلك في ردود…</p></div>`;
+  const hist=f.msgs.slice(-8).map(m=>(m.r==="me"?"Osama: ":"Partner: ")+m.t).join("\n");
+  try{const r=await ask(`An English learner (CEFR ${LV[L]}) is in this conversation and doesn't know what to say next.
+Situation: ${scen().ar}.
+${hist}
+Suggest 3 different natural replies he could say next (short, at about ${LV[Math.min(5,L+1)]}), each with an Egyptian Arabic meaning. Return JSON only: {"ideas":[{"en":"...","ar":"..."}]}`);
+    const list=(r.ideas||[]).slice(0,3);
+    box.innerHTML=`<div class="card" style="gap:8px"><span class="label">ممكن تقول… (دوس عشان تسمعها، وبعدين قولها بصوتك)</span>${list.map(x=>`<button class="idea" data-en="${esc(x.en)}">${IC.play.replace('<svg','<svg style="width:18px;height:18px;flex:none"')}<span class="en">${esc(x.en)}</span></button><span class="muted" style="font-size:12px;margin-top:-4px">${esc(x.ar||"")}</span>`).join("")}<button class="btn ghost" id="ideasx">إخفاء</button></div>`;
+    box.querySelectorAll("[data-en]").forEach(b=>b.onclick=()=>say(b.dataset.en,true));$("#ideasx").onclick=()=>box.innerHTML=""}
+  catch(e){box.innerHTML="";toast("مقدرتش أجيب اقتراحات، جرب تاني")}}
+async function arabicToEn(t){const box=$("#ideas");if(!box)return;const L=W();
+  if(!(navigator.onLine&&gemKey())&&!sampler){box.innerHTML=`<div class="card"><p class="muted" style="font-size:13px">الترجمة شغالة في الوضع الذكي بس (بالنت).</p></div>`;return}
+  box.innerHTML=`<div class="card"><p class="muted">بترجملك…</p></div>`;
+  try{const r=await ask(`An Egyptian English learner (CEFR ${LV[L]}) wants to say this in a conversation (${scen().ar}): "${t}"
+Give the natural spoken English way to say it, simple enough for his level, plus one very short tip in Egyptian Arabic about a useful word in it. Return JSON only: {"en":"...","tip":"..."}`);
+    const en=String(r.en||"").trim();if(!en)throw 0;
+    box.innerHTML=`<div class="card" style="gap:8px"><span class="label">قولها كده بالإنجليزي</span><p class="big-en">${esc(en)}</p>${r.tip?`<p class="tip">${esc(r.tip)}</p>`:""}
+      <div class="row"><button class="btn" id="aeh">${IC.play}اسمعها</button>${srBroken?"":`<button class="btn primary" id="aes">${IC.mic}قولها بصوتك</button>`}<button class="btn ghost" id="aex">إخفاء</button></div><div id="aeo"></div></div>`;
+    $("#aeh").onclick=()=>say(en,true);$("#aex").onclick=()=>box.innerHTML="";
+    const sb=$("#aes");if(sb)sb.onclick=async()=>{if(F.listening)return;F.listening=true;sb.classList.add("live");const o=$("#aeo");
+      try{const heard=await listen(p=>{o.innerHTML=`<p class="en">${esc(p)}</p>`});const sc=align(en,heard).score;
+        if(sc>=60){box.innerHTML="";userSaid(heard)}else{o.innerHTML=`<p class="muted" style="font-size:13px">${sc}% — اسمعها تاني وقولها ببطء</p>`}}
+      catch(e){o.innerHTML=`<p class="muted" style="font-size:13px">ما سمعتش، جرب تاني</p>`}finally{F.listening=false;sb.classList.remove("live")}}}
+  catch(e){box.innerHTML="";toast("مقدرتش أترجم، جرب تاني")}}
+async function endCall(){const f=FS(),L=W();if(F.listening){listen.stop&&listen.stop()}
+  try{speechSynthesis.cancel();window.Capacitor?.Plugins?.TextToSpeech?.stop()}catch(e){}
+  const part=f.msgs.slice(callIdx);const mine=part.filter(m=>m.r==="me");
+  const mins=Math.max(1,Math.round((Date.now()-callStart)/60000));
+  if(mine.length<2){toast("اتكلم شوية الأول عشان أعملك تقرير");return}
+  const words=mine.reduce((a,m)=>a+norm(m.t).length,0);const fixes=mine.flatMap(m=>m.fix||[]);
+  V.innerHTML=`<div class="card"><h2>تقرير المكالمة</h2><p class="muted">بجهّز التقرير…</p></div>`;
+  let r=null;
+  if((navigator.onLine&&gemKey())||sampler){try{r=await ask(`You are an expert English speaking coach. Review this practice call of an Egyptian learner (CEFR ${LV[L]}), situation: ${scen().ar}.
+Transcript (his lines came from speech recognition):
+${part.map(m=>(m.r==="me"?"Learner: ":"Partner: ")+m.t).join("\n")}
+Return JSON only: {"summary":"2 sentences in Egyptian Arabic: what went well and the main thing to improve","fluency":1-10,"grammar":1-10,"vocab":1-10,"top_mistakes":[{"you":"...","better":"...","why":"Egyptian Arabic"}] (max 4, the most important),"phrases":[{"en":"useful natural phrase he should learn for this situation","ar":"meaning"}] (4 items),"tips":["3 short, practical tips in Egyptian Arabic"]}`)}catch(e){r=null}}
+  const rep={at:Date.now(),scen:scen().ar,mins,turns:mine.length,words,r};S.reports=[rep,...(S.reports||[])].slice(0,30);S.chats++;
+  if(r&&r.top_mistakes)addMistakes(r.top_mistakes);if(r&&r.phrases){S.phrases=[...r.phrases,...(S.phrases||[])].slice(0,100)}save();
+  const sc=(k,v)=>`<div><b style="color:var(--${v>=7?"good":v>=5?"warn":"bad"})">${v??"–"}</b><span class="muted" style="font-size:12px">${k}</span></div>`;
+  V.innerHTML=`<div class="card"><span class="label">${esc(rep.scen)} · ${mins} دقيقة · ${mine.length} جملة · ${words} كلمة</span><h2>تقرير المكالمة</h2>
+    ${r?`<p>${esc(r.summary||"")}</p><div class="rep-score">${sc("الطلاقة",r.fluency)}${sc("القواعد",r.grammar)}${sc("المفردات",r.vocab)}</div>`:`<p class="muted">التقرير المفصّل محتاج الوضع الذكي (بالنت). ده ملخص سريع.</p>`}</div>
+   ${(r&&r.top_mistakes&&r.top_mistakes.length)||fixes.length?`<div class="card"><h3>أهم الأخطاء</h3>${((r&&r.top_mistakes)||fixes.slice(0,4)).map(x=>`<div style="font-size:14px"><span class="en"><s style="color:var(--bad)">${esc(x.you)}</s></span><br><span class="en"><b style="color:var(--good)">${esc(x.better)}</b></span> <button class="btn ghost" data-say="${esc(x.better)}" style="min-height:30px;padding:0 8px">${IC.play}</button>${x.why?`<br><span class="muted">${esc(x.why)}</span>`:""}</div>`).join("")}<p class="muted" style="font-size:12px">اتحفظوا في «دفتر أخطائي» عشان تراجعهم.</p></div>`:""}
+   ${r&&r.phrases&&r.phrases.length?`<div class="card"><h3>عبارات تخليك تتكلم زي المحترفين</h3>${r.phrases.map(x=>`<button class="idea" data-en="${esc(x.en)}">${IC.play.replace('<svg','<svg style="width:18px;height:18px;flex:none"')}<span class="en">${esc(x.en)}</span></button><span class="muted" style="font-size:12px;margin-top:-6px">${esc(x.ar||"")}</span>`).join("")}<p class="muted" style="font-size:12px">استخدم واحدة منهم 3 مرات في المكالمة الجاية.</p></div>`:""}
+   ${r&&r.tips&&r.tips.length?`<div class="card"><h3>نصايح للمرة الجاية</h3><ol class="tips">${r.tips.map(t=>`<li>${esc(t)}</li>`).join("")}</ol></div>`:""}
+   <div class="row"><button class="btn primary" id="again">مكالمة جديدة</button><button class="btn" id="bk2">دفتر أخطائي</button></div>`;
+  V.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>say(b.dataset.say,true));V.querySelectorAll("[data-en]").forEach(b=>b.onclick=()=>say(b.dataset.en,true));
+  $("#again").onclick=()=>{f.msgs=[];save();chat()};$("#bk2").onclick=mistakeBook;window.scrollTo(0,0)}
+function mistakeBook(){const list=S.mistakes||[];
+  V.innerHTML=`<div class="card"><h2>دفتر أخطائي</h2><p class="muted" style="font-size:13px">الأخطاء اللي وقعت فيها في المكالمات. اسمع الصح وقوله بصوتك، ولما تقوله صح (85% أو أكتر) بيتشال من الدفتر.</p>
+    ${list.length?"":`<p class="muted">لسه مفيش أخطاء متسجلة. اعمل مكالمة مع ليلي.</p>`}</div>
+   ${list.slice(0,40).map((x,i)=>`<div class="card" style="gap:6px"><span class="en"><s style="color:var(--bad)">${esc(x.you)}</s></span><span class="en" style="font-size:17px"><b style="color:var(--good)">${esc(x.better)}</b></span>${x.why?`<span class="muted" style="font-size:13px">${esc(x.why)}</span>`:""}
+     <div class="row"><button class="btn ghost" data-say="${esc(x.better)}">${IC.play}اسمع</button>${srBroken?"":`<button class="btn" data-pr="${i}">${IC.mic}قولها</button>`}<button class="btn ghost" data-del="${i}">اتعلمتها</button></div><div data-out="${i}"></div></div>`).join("")}
+   <button class="btn primary" id="bkback">رجوع للمكالمة</button>`;
+  V.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>say(b.dataset.say,true));
+  V.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{S.mistakes.splice(+b.dataset.del,1);save();mistakeBook()});
+  V.querySelectorAll("[data-pr]").forEach(b=>b.onclick=async()=>{const i=+b.dataset.pr,x=S.mistakes[i];const out=V.querySelector(`[data-out="${i}"]`);
+    if(F.listening)return;F.listening=true;b.classList.add("live");
+    try{const heard=await listen(p=>out.innerHTML=`<p class="en">${esc(p)}</p>`);const r=align(x.better,heard);
+      out.innerHTML=`<p><b style="color:var(--${r.score>=85?"good":"warn"})">${r.score}%</b> ${r.score>=85?"ممتاز! اتشالت من الدفتر":"جرب تاني ببطء"}</p>`;
+      if(r.score>=85){S.mistakes.splice(i,1);save();setTimeout(mistakeBook,1200)}}
+    catch(e){out.innerHTML=`<p class="muted">ما سمعتش، جرب تاني</p>`}finally{F.listening=false;b.classList.remove("live")}});
+  $("#bkback").onclick=()=>go("chat");window.scrollTo(0,0)}
+
 /* ================= ROUTER ================= */
 const VIEWS={home,pron,vocab,gram,chat};
 function go(v){T=null;try{speechSynthesis.cancel();window.Capacitor?.Plugins?.TextToSpeech?.stop()}catch(e){}cur=v;F.listening=false;clearInterval(mouthT);document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-current",t.dataset.v===v));render();window.scrollTo(0,0)}
@@ -802,7 +942,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{if(S.level==null&&t.
 go("home");
 connectDb();
 if("serviceWorker" in navigator&&location.protocol==="https:"){navigator.serviceWorker.register("sw.js").catch(()=>{})}
-const APPV="12";
+const APPV="13";
 (async()=>{try{if(!navigator.onLine||location.protocol!=="https:")return;const r=await fetch("version.txt?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const v=(await r.text()).trim();
   if(v&&v!==APPV){let tried=0;try{tried=+sessionStorage.getItem("ec-upd")||0}catch(e){}if(tried>=2)return;try{sessionStorage.setItem("ec-upd",tried+1)}catch(e){}
     toast("بحدّث التطبيق…");try{const reg=await navigator.serviceWorker?.getRegistration();await reg?.update();const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}
