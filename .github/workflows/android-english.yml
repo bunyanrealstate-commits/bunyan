@@ -1,4 +1,4 @@
-name: Build English Coach APK (offline AI)
+name: Build English Coach APK
 on:
   workflow_dispatch:
   push:
@@ -22,13 +22,15 @@ jobs:
       - run: npx cap add android
       - run: npx capacitor-assets generate --android --iconBackgroundColor '#2747C9' --iconBackgroundColorDark '#2747C9'
       - run: npx cap sync android
-      - name: Download on-device AI model (Gemma 3 1B, int4)
+      - name: Host the AI model in this repo's releases (once)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p android/app/src/main/assets/model
-          curl -fL --retry 3 -o android/app/src/main/assets/model/gemma3-1b-it-int4.task \
-            https://huggingface.co/aquhm/gemma3-1b-it-int4-litert/resolve/main/gemma3-1b-it-int4.task
-          ls -la android/app/src/main/assets/model
-          test $(stat -c%s android/app/src/main/assets/model/gemma3-1b-it-int4.task) -gt 400000000
+          if ! gh release view english-model -R ${{ github.repository }} >/dev/null 2>&1; then
+            curl -fL --retry 3 -o /tmp/gemma3-1b-it-int4.task https://huggingface.co/aquhm/gemma3-1b-it-int4-litert/resolve/main/gemma3-1b-it-int4.task
+            test $(stat -c%s /tmp/gemma3-1b-it-int4.task) -gt 400000000
+            gh release create english-model /tmp/gemma3-1b-it-int4.task -R ${{ github.repository }} --title "English coach AI model" --notes "Gemma 3 1B IT int4 for on-device use."
+          fi
       - name: Native AI plugin
         run: |
           D=android/app/src/main/java/com/bunyan/english
@@ -38,7 +40,6 @@ jobs:
           cat android/gradle/wrapper/gradle-wrapper.properties
           cat >> android/app/build.gradle <<'GEOF'
           dependencies { implementation 'com.google.mediapipe:tasks-genai:0.10.24' }
-          android { androidResources { noCompress += ['task'] } }
           GEOF
           echo "org.gradle.jvmargs=-Xmx4g" >> android/gradle.properties
       - name: Microphone + speech permissions
@@ -56,11 +57,11 @@ jobs:
           }
           GEOF
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
-      - name: Publish APK as a release download
+      - name: Publish APK
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk /tmp/English-Coach.apk
-          ls -la /tmp/English-Coach.apk
+          mkdir /tmp/out && cp android/app/build/outputs/apk/debug/app-debug.apk /tmp/out/English.apk && ls -la /tmp/out
           gh release delete english-offline -y --cleanup-tag -R ${{ github.repository }} || true
-          gh release create english-offline /tmp/English-Coach.apk -R ${{ github.repository }} --title "مدرّب الإنجليزي (أوفلاين)" --notes "Build ${{ github.run_number }} — on-device AI, works without internet."
+          cd /tmp/out && git init -q -b apk-english && git config user.name github-actions && git config user.email actions@github.com
+          git add . && git commit -q -m "Build APK" && git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git apk-english

@@ -527,7 +527,10 @@ async function chat(){
   if(srBroken){$("#talk").hidden=true;$("#hint").textContent="استخدم مايك الكيبورد في مربع الكتابة"}
   drawChat();
   if(sampler===undefined){sampler=await window.claude?.use?.("sample")??null;}
-  if(LLM()){if(!f.msgs.length&&!F.busy){$("#hint").textContent="بيجهز صاحبك… أول مرة بتاخد دقيقة";try{await llmLoad();if($("#hint"))$("#hint").textContent="اضغط واتكلم بالإنجليزي"}catch(e){$("#hint").textContent="مقدرش يشغّل العقل المحلي: "+(e?.message||e)}}if(!f.msgs.length&&!F.busy)friend(null);return}
+  if(LLM()){let st={};try{st=await LLM().status()}catch(e){}
+    if(!st.ready)return modelSetup(st);
+    if(!f.msgs.length&&!F.busy){$("#hint").textContent="بيجهز صاحبك… ثواني";try{await llmLoad();if($("#hint"))$("#hint").textContent="اضغط واتكلم بالإنجليزي"}catch(e){$("#hint").textContent="مقدرش يشغّل العقل: "+(e?.message||e);return}}
+    if(!f.msgs.length&&!F.busy)friend(null);return}
   if(!sampler&&!gemKey()){$("#box").innerHTML=`<h3>فعّل صاحبك مجانًا</h3>
     <p class="muted" style="font-size:13px">المحادثة بتشتغل بـ Gemini من جوجل ببلاش. ادخل على <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> بحساب جيميل، اضغط Create API key، وانسخ المفتاح وحطه هنا. مرة واحدة بس.</p>
     <label class="label" for="gk">مفتاح Gemini</label><input type="text" id="gk" placeholder="AIza…" autocomplete="off">
@@ -555,6 +558,23 @@ async function localFix(text){
   if(!better)return[];const a=norm(text).join(" "),b=norm(better).join(" ");
   if(a===b||norm(better).length>norm(text).length*2+3)return[];
   return[{you:text,better,why:""}];
+}
+const MODEL_URL="https://github.com/bunyanrealstate-commits/bunyan/releases/download/english-model/gemma3-1b-it-int4.task";
+let dlHandle=null;
+function modelSetup(st){
+  const mb=x=>Math.round(x/1048576);
+  $("#box").innerHTML=`<h3>جهّز عقل صاحبك</h3>
+    <p class="muted" style="font-size:14px">صاحبك بيشتغل بذكاء اصطناعي جوه موبايلك من غير نت. محتاج تنزّل عقله مرة واحدة بس (حوالي 550 ميجا). يفضّل على واي فاي. لو النت قطع، هيكمّل من مكان ما وقف.</p>
+    <div class="prog" style="width:100%"><i id="dlbar" style="width:0%"></i></div>
+    <p class="muted" id="dltxt" style="font-size:13px">${st.partial?"اتنزّل "+mb(st.partial)+" ميجا قبل كده":"لسه ما اتنزّلش"}</p>
+    <button class="btn primary" id="dlgo" style="width:100%">${st.partial?"كمّل التحميل":"نزّل عقل صاحبك"}</button>`;
+  const go=async()=>{const b=$("#dlgo");b.disabled=true;b.textContent="بينزّل… سيب التطبيق مفتوح";
+    try{if(!dlHandle)dlHandle=await LLM().addListener("progress",p=>{const bar=$("#dlbar"),t=$("#dltxt");if(!bar)return;
+        const pc=p.total>0?Math.floor(p.loaded/p.total*100):0;bar.style.width=pc+"%";t.textContent=mb(p.loaded)+" من "+(p.total>0?mb(p.total):"؟")+" ميجا ("+pc+"%)"});
+      try{await window.Capacitor?.Plugins?.KeepAwake?.keepAwake()}catch(e){}
+      await LLM().download({url:MODEL_URL});toast("صاحبك جاهز");chat()}
+    catch(e){if(!$("#dlgo"))return;b.disabled=false;b.textContent="كمّل التحميل";$("#dltxt").textContent="التحميل وقف ("+(e?.message||e)+"). اتأكد من النت واضغط كمّل."}};
+  $("#dlgo").onclick=go;
 }
 function gemKey(){try{return localStorage.getItem("ec-gem")||""}catch(e){return""}}
 async function ask(prompt){
