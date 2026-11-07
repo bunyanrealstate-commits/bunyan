@@ -31,6 +31,11 @@ const fails=[],notes=[];const F=m=>{fails.push(m);console.log('❌ '+m)},OK=m=>c
  if(base&&base.key===key){let diff=0;Object.keys(res.nums).forEach(g=>{const a=res.nums[g],o=base.nums[g]||{};Object.keys(a).forEach(k=>{if(Math.abs(a[k]-(o[k]||0))>1){diff++;F('number changed '+g+'.'+k+': '+o[k]+' → '+a[k])}})});if(!diff)OK('numbers unchanged vs baseline')}
  else{notes.push('baseline saved for this data');fs.writeFileSync(BASE,JSON.stringify({key,at:new Date().toISOString(),nums:res.nums},null,1))}
  if(process.env.ACCEPT){fs.writeFileSync(BASE,JSON.stringify({key,at:new Date().toISOString(),nums:res.nums},null,1));notes.push('baseline accepted')}
+ // 5b) finger scroll over the contract moves the page (regression: it used to be stuck)
+ try{await p.evaluate(()=>{setW((S.groups[0]||{}).id);S.tab='ct';render()});await p.waitForTimeout(500);await p.evaluate(()=>{const v=document.getElementById('ctview');scrollTo(0,v.getBoundingClientRect().top+scrollY-250)});await p.waitForTimeout(200);
+  const cd=await ctx.newCDPSession(p);const r=await p.evaluate(()=>{const v=document.getElementById('ctview').getBoundingClientRect();return {x:v.left+v.width/2,y:Math.min(innerHeight-100,v.top+200)}});const y0=await p.evaluate(()=>scrollY);
+  await cd.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:r.x,y:r.y}]});for(let i=1;i<=12;i++){await cd.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:r.x,y:r.y-i*20}]});await p.waitForTimeout(16)}await cd.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await p.waitForTimeout(400);
+  const y1=await p.evaluate(()=>scrollY);if(Math.abs(y1-y0)<40)F('contract: finger scroll over the contract does not move the page');else OK('contract: finger scroll works');await p.evaluate(()=>{S.tab='home';render()})}catch(e){F('contract scroll check crashed: '+e.message)}
  // 6) language switch must not hang
  const t0=Date.now();const ok=await Promise.race([p.evaluate(()=>{setLang('en');return true}),new Promise(r=>setTimeout(()=>r(false),6000))]);const dt=Date.now()-t0;if(!ok||dt>4000)F('language switch slow/hung ('+dt+'ms)');else OK('language switch '+dt+'ms');await p.evaluate(()=>setLang('ar')).catch(()=>{});await p.waitForTimeout(600);
  // 7) stray UI
