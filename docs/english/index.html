@@ -560,21 +560,28 @@ async function localFix(text){
   return[{you:text,better,why:""}];
 }
 const MODEL_URL="https://github.com/bunyanrealstate-commits/bunyan/releases/download/english-model/gemma3-1b-it-int4.task";
-let dlHandle=null;
+let dlPoll=null;
 function modelSetup(st){
-  const mb=x=>Math.round(x/1048576);
+  const mb=x=>Math.max(0,Math.round(x/1048576));
   $("#box").innerHTML=`<h3>جهّز عقل صاحبك</h3>
-    <p class="muted" style="font-size:14px">صاحبك بيشتغل بذكاء اصطناعي جوه موبايلك من غير نت. محتاج تنزّل عقله مرة واحدة بس (حوالي 550 ميجا). يفضّل على واي فاي. لو النت قطع، هيكمّل من مكان ما وقف.</p>
+    <p class="muted" style="font-size:14px">صاحبك بيشتغل بذكاء اصطناعي جوه موبايلك من غير نت. محتاج تنزّل عقله مرة واحدة بس (حوالي 530 ميجا).</p>
     <div class="prog" style="width:100%"><i id="dlbar" style="width:0%"></i></div>
-    <p class="muted" id="dltxt" style="font-size:13px">${st.partial?"اتنزّل "+mb(st.partial)+" ميجا قبل كده":"لسه ما اتنزّلش"}</p>
-    <button class="btn primary" id="dlgo" style="width:100%">${st.partial?"كمّل التحميل":"نزّل عقل صاحبك"}</button>`;
-  const go=async()=>{const b=$("#dlgo");b.disabled=true;b.textContent="بينزّل… سيب التطبيق مفتوح";
-    try{if(!dlHandle)dlHandle=await LLM().addListener("progress",p=>{const bar=$("#dlbar"),t=$("#dltxt");if(!bar)return;
-        const pc=p.total>0?Math.floor(p.loaded/p.total*100):0;bar.style.width=pc+"%";t.textContent=mb(p.loaded)+" من "+(p.total>0?mb(p.total):"؟")+" ميجا ("+pc+"%)"});
-      try{await window.Capacitor?.Plugins?.KeepAwake?.keepAwake()}catch(e){}
-      await LLM().download({url:MODEL_URL});toast("صاحبك جاهز");chat()}
-    catch(e){if(!$("#dlgo"))return;b.disabled=false;b.textContent="كمّل التحميل";$("#dltxt").textContent="التحميل وقف ("+(e?.message||e)+"). اتأكد من النت واضغط كمّل."}};
-  $("#dlgo").onclick=go;
+    <p class="muted" id="dltxt" style="font-size:13px"></p>
+    <button class="btn primary" id="dlgo" style="width:100%">نزّل عقل صاحبك</button>`;
+  const paint=s=>{const bar=$("#dlbar"),t=$("#dltxt"),b=$("#dlgo");if(!bar)return false;
+    const pc=s.total>0?Math.floor(s.loaded/s.total*100):0;bar.style.width=pc+"%";
+    if(s.ready){t.textContent="خلص التحميل";return true}
+    if(s.state==="downloading"||s.state==="paused"){b.hidden=true;
+      t.innerHTML=(s.total>0?`${mb(s.loaded)} من ${mb(s.total)} ميجا (${pc}%)`:"بيبدأ التحميل…")+(s.state==="paused"?" · مستني النت":"")+
+      `<br><b>التحميل شغال في الخلفية.</b> تقدر تقفل التطبيق أو تقفل الشاشة، وهتلاقي إشعار التحميل في الستارة فوق. ارجع للمحادثة لما يخلص.`}
+    else{b.hidden=false;b.disabled=false;b.textContent=s.state==="failed"?"التحميل وقف، حاول تاني":"نزّل عقل صاحبك";
+      t.textContent=s.state==="failed"?"اتأكد إن النت شغال وإن فيه مساحة فاضية على الموبايل (1 جيجا على الأقل).":"يفضّل على واي فاي."}
+    return false};
+  const watch=()=>{clearInterval(dlPoll);dlPoll=setInterval(async()=>{if(!$("#dlbar")){clearInterval(dlPoll);return}
+    try{const s=await LLM().status();if(paint(s)){clearInterval(dlPoll);toast("صاحبك جاهز");chat()}}catch(e){}},1500)};
+  paint(st);if(st.state==="downloading"||st.state==="paused")watch();
+  $("#dlgo").onclick=async()=>{const b=$("#dlgo");b.disabled=true;
+    try{const s=await LLM().download({url:MODEL_URL});paint(s);watch()}catch(e){b.disabled=false;$("#dltxt").textContent="مقدرش يبدأ التحميل: "+(e?.message||e)}};
 }
 function gemKey(){try{return localStorage.getItem("ec-gem")||""}catch(e){return""}}
 async function ask(prompt){

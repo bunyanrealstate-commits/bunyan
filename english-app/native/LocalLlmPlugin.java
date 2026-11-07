@@ -7,11 +7,13 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.mediapipe.tasks.genai.llminference.LlmInference;
 
+import android.app.DownloadManager;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
+
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -22,77 +24,81 @@ public class LocalLlmPlugin extends Plugin {
     private static final long MIN_SIZE = 400_000_000L;
     private LlmInference llm;
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
-    private final ExecutorService net = Executors.newSingleThreadExecutor();
-    private volatile boolean downloading = false;
 
-    private File modelFile() { return new File(getContext().getFilesDir(), NAME); }
+    private SharedPreferences prefs() { return getContext().getSharedPreferences("llm", Context.MODE_PRIVATE); }
+    private File extFile() { return new File(getContext().getExternalFilesDir(null), NAME); }
+    private File intFile() { return new File(getContext().getFilesDir(), NAME); }
+    private File modelFile() { File i = intFile(); return (i.exists() && i.length() > MIN_SIZE) ? i : extFile(); }
+    private DownloadManager dm() { return (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE); }
 
-    @PluginMethod
-    public void status(PluginCall call) {
-        File f = modelFile();
-        File tmp = new File(f.getPath() + ".part");
+    private JSObject query() {
         JSObject o = new JSObject();
-        o.put("ready", f.exists() && f.length() > MIN_SIZE);
-        o.put("partial", tmp.exists() ? tmp.length() : 0);
-        o.put("downloading", downloading);
-        o.put("loaded", llm != null);
-        call.resolve(o);
+        boolean ready = (intFile().exists() && intFile().length() > MIN_SIZE)
+                || (prefs().getBoolean("ready", false) && extFile().exists() && extFile().length() > MIN_SIZE);
+        String state = ready ? "ready" : "none";
+        long loaded = 0, total = -1;
+        long id = prefs().getLong("id", -1);
+        if (!ready && id >= 0) {
+            try (Cursor c = dm().query(new DownloadManager.Query().setFilterById(id))) {
+                if (c != null && c.moveToFirst()) {
+                    int st = c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
+                    loaded = c.getLong(c.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                    total = c.getLong(c.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+                    if (st == DownloadManager.STATUS_SUCCESSFUL) {
+                        if (extFile().length() > MIN_SIZE) {
+                            prefs().edit().putBoolean("ready", true).remove("id").apply();
+                            ready = true; state = "ready";
+                        } else { state = "failed"; prefs().edit().remove("id").apply(); }
+                    } else if (st == DownloadManager.STATUS_FAILED) {
+                        state = "failed";
+                        o.put("reason", c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON)));
+                        prefs().edit().remove("id").apply();
+                        dm().remove(id);
+                    } else if (st == DownloadManager.STATUS_PAUSED) {
+                        state = "paused";
+                    } else {
+                        state = "downloading";
+                    }
+                } else {
+                    prefs().edit().remove("id").apply();
+                }
+            } catch (Exception e) { state = "none"; }
+        }
+        o.put("ready", ready);
+        o.put("state", state);
+        o.put("loaded", loaded);
+        o.put("total", total);
+        o.put("loadedModel", llm != null);
+        return o;
     }
 
+    @PluginMethod
+    public void status(PluginCall call) { call.resolve(query()); }
+
+    /** Hands the download to Android's download manager: it keeps going with the app closed and shows a notification. */
     @PluginMethod
     public void download(PluginCall call) {
         final String url = call.getString("url");
         if (url == null) { call.reject("no_url"); return; }
-        if (downloading) { call.reject("busy"); return; }
-        downloading = true;
-        net.execute(() -> {
-            File f = modelFile();
-            File tmp = new File(f.getPath() + ".part");
-            try {
-                long have = tmp.exists() ? tmp.length() : 0;
-                String u = url;
-                HttpURLConnection c = null;
-                for (int i = 0; i < 6; i++) {
-                    c = (HttpURLConnection) new URL(u).openConnection();
-                    c.setInstanceFollowRedirects(false);
-                    c.setConnectTimeout(20000);
-                    c.setReadTimeout(60000);
-                    if (have > 0) c.setRequestProperty("Range", "bytes=" + have + "-");
-                    int code = c.getResponseCode();
-                    if (code >= 300 && code < 400) { u = new URL(new URL(u), c.getHeaderField("Location")).toString(); c.disconnect(); continue; }
-                    break;
-                }
-                int code = c.getResponseCode();
-                if (code != 200 && code != 206) throw new Exception("HTTP " + code);
-                boolean append = code == 206;
-                if (!append) have = 0;
-                long len = c.getContentLengthLong();
-                long total = len > 0 ? have + len : -1;
-                long done = have, lastSent = 0;
-                try (InputStream in = c.getInputStream(); FileOutputStream out = new FileOutputStream(tmp, append)) {
-                    byte[] buf = new byte[1 << 16];
-                    int n;
-                    while ((n = in.read(buf)) > 0) {
-                        out.write(buf, 0, n);
-                        done += n;
-                        if (done - lastSent > 2_000_000L) {
-                            lastSent = done;
-                            JSObject p = new JSObject();
-                            p.put("loaded", done); p.put("total", total);
-                            notifyListeners("progress", p);
-                        }
-                    }
-                }
-                if (tmp.length() < MIN_SIZE) throw new Exception("incomplete");
-                if (f.exists()) f.delete();
-                if (!tmp.renameTo(f)) throw new Exception("rename");
-                downloading = false;
-                call.resolve();
-            } catch (Throwable e) {
-                downloading = false;
-                call.reject(String.valueOf(e.getMessage()));
-            }
-        });
+        JSObject now = query();
+        String st = now.getString("state");
+        if ("ready".equals(st) || "downloading".equals(st) || "paused".equals(st)) { call.resolve(now); return; }
+        try {
+            File f = extFile();
+            if (f.exists()) f.delete();
+            DownloadManager.Request r = new DownloadManager.Request(Uri.parse(url))
+                    .setTitle("عقل صاحبك — مدرّب الإنجليزي")
+                    .setDescription("بيتحمّل مرة واحدة بس")
+                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    .setDestinationInExternalFilesDir(getContext(), null, NAME)
+                    .setAllowedOverMetered(true)
+                    .setAllowedOverRoaming(true);
+            long id = dm().enqueue(r);
+            prefs().edit().putLong("id", id).putBoolean("ready", false).apply();
+            call.resolve(query());
+        } catch (Throwable e) {
+            call.reject(String.valueOf(e.getMessage()));
+        }
     }
 
     @PluginMethod
