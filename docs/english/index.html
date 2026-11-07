@@ -239,8 +239,9 @@ const W=()=>S.work??S.level??0;
 let voice=null;
 function pickVoice(){try{const vs=speechSynthesis.getVoices();voice=vs.find(v=>/en[-_]US/i.test(v.lang)&&/Samantha|Google|Natural|Aria|Jenny/i.test(v.name))||vs.find(v=>/en[-_](US|GB)/i.test(v.lang))||null}catch(e){}}
 try{pickVoice();speechSynthesis.onvoiceschanged=pickVoice}catch(e){}
-function say(t,slow){const NT=window.Capacitor?.Plugins?.TextToSpeech;if(NT){NT.stop().catch(()=>{}).finally(()=>NT.speak({text:t,lang:"en-US",rate:slow?0.7:1,pitch:1,volume:1,category:"playback"}).catch(()=>toast("ثبّت محرك نطق جوجل من الإعدادات")));return}
-  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-US";if(voice)u.voice=voice;u.rate=slow?0.7:0.95;speechSynthesis.speak(u)}catch(e){toast("الجهاز ده مش بيدعم تشغيل الصوت")}}
+function say(t,slow){return new Promise(done=>{const NT=window.Capacitor?.Plugins?.TextToSpeech;
+  if(NT){NT.stop().catch(()=>{}).finally(()=>NT.speak({text:t,lang:"en-US",rate:slow?0.7:1,pitch:1,volume:1,category:"playback"}).then(done,()=>{toast("ثبّت محرك نطق جوجل من الإعدادات");done()}));return}
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-US";if(voice)u.voice=voice;u.rate=slow?0.7:0.95;u.onend=u.onerror=()=>done();speechSynthesis.speak(u)}catch(e){toast("الجهاز ده مش بيدعم تشغيل الصوت");done()}})}
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const NSR=()=>window.Capacitor?.Plugins?.SpeechRecognition;
 let srBroken=!SR&&!NSR();
@@ -418,7 +419,7 @@ function home(){
     {v:"gram",t:"درس القواعد: "+GRAM[L].t.split(" — ")[0],d:st.g!=null&&st.g>=80,m:st.g!=null?st.g+"%":"5 أسئلة"},
     {v:"vocab",t:"احفظ 8 كلمات مستوى "+LV[L],d:st.voc>=8,m:st.voc+"/8"},
     {v:"pron",t:"اقرأ 6 جمل بصوتك",d:st.pr>=6&&st.pavg>=80,m:st.pr?st.pavg+"% · "+st.pr+"/6":"0/6"},
-    {v:"chat",t:"محادثة 10 دقايق: "+TOPICS[L][0],d:S.chats>=3,m:S.chats+"/3"},
+    {v:"chat",t:"كلّم صاحبك 10 دقايق",d:S.chats>=3,m:S.chats+"/3"},
   ];
   if(wk[0]==="s"||wk[0]==="l")steps.unshift(steps.splice(2,1)[0]);
   const done=steps.filter(s=>s.d).length;
@@ -501,64 +502,95 @@ function gram(){
     $("#hs").onclick=()=>say(full);$("#gn").onclick=()=>{G.i++;gram()}});
 }
 
-/* ================= CHAT (AI tutor) ================= */
-let C={msgs:[],busy:false,topic:null},sampler;
+/* ================= CHAT: personal friend ================= */
+let sampler,F={busy:false,listening:false};
+function FS(){S.friend=S.friend||{name:"Sam",msgs:[],facts:[],call:true};return S.friend}
 async function chat(){
-  const L=W();if(!C.topic)C.topic=TOPICS[L][0];
-  V.innerHTML=`<div class="card"><span class="label">موضوع المحادثة · مستوى ${LV[L]}</span>
-     <div class="seg">${TOPICS[L].map(t=>`<button data-t="${esc(t)}" aria-pressed="${t===C.topic}">${esc(t)}</button>`).join("")}</div>
-     <p class="muted" style="font-size:13px">اكتب أو استخدم مايك الكيبورد عشان تتكلم. المدرّب هيرد عليك بالإنجليزي ويصحّحلك أخطاءك بالعربي.</p></div>
+  const f=FS(),L=W();
+  V.innerHTML=`<div class="card"><div class="row" style="gap:12px;flex-wrap:nowrap">
+      <div style="width:48px;height:48px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--en);font-size:22px;font-weight:600;flex:none">${esc(f.name[0])}</div>
+      <div style="flex:1;min-width:0"><h3><span class="en">${esc(f.name)}</span> · صاحبك في الإنجليزي</h3><p class="muted" style="font-size:13px">بيكلمك على قد مستواك <span class="en">${LV[L]}</span>، وبيفتكر اللي بتحكيه، وبيصحّحلك من غير ما يقطع الكلام.</p></div></div>
+    <div class="row" style="justify-content:space-between">
+      <label class="row" style="gap:6px;font-size:14px"><input type="checkbox" id="callm" ${f.call?"checked":""} style="width:20px;height:20px">وضع المكالمة (يسمعك تلقائي بعد ما يرد)</label>
+      <button class="btn ghost" id="newc" style="min-height:34px;padding:4px 10px;font-size:13px">موضوع جديد</button></div></div>
    <div class="chat" id="ch"></div>
-   <div class="card" id="box"><label class="label" for="inp">ردّك بالإنجليزي</label><textarea id="inp" rows="2" placeholder="Type or use the keyboard mic…"></textarea>
-     <div class="row end"><button class="btn primary" id="snd">ابعت</button></div></div>`;
-  V.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{C={msgs:[],busy:false,topic:b.dataset.t};chat()});
+   <div class="card" id="box" style="align-items:center">
+     <button class="btn primary" id="talk" style="width:84px;height:84px;border-radius:50%;padding:0" aria-label="اتكلم">${IC.mic.replace('<svg','<svg style="width:36px;height:36px"')}</button>
+     <p class="muted" id="hint" style="font-size:13px;text-align:center">اضغط واتكلم بالإنجليزي</p>
+     <div class="row" style="width:100%;flex-wrap:nowrap"><input type="text" id="inp" placeholder="أو اكتب هنا…" style="flex:1;min-width:0"><button class="btn" id="snd">ابعت</button></div>
+   </div>`;
+  $("#callm").onchange=e=>{f.call=e.target.checked;save()};
+  $("#newc").onclick=()=>{f.msgs=[];save();chat()};
+  $("#snd").onclick=()=>{const v=$("#inp").value.trim();if(v){$("#inp").value="";userSaid(v)}};
+  $("#inp").onkeydown=e=>{if(e.key==="Enter")$("#snd").click()};
+  $("#talk").onclick=()=>hear();
+  if(srBroken){$("#talk").hidden=true;$("#hint").textContent="استخدم مايك الكيبورد في مربع الكتابة"}
   drawChat();
-  $("#snd").onclick=send;
   if(sampler===undefined){sampler=await window.claude?.use?.("sample")??null;}
-  if(!sampler&&!gemKey()){$("#box").innerHTML=`<h3>فعّل المدرّب مجانًا</h3>
+  if(!sampler&&!gemKey()){$("#box").innerHTML=`<h3>فعّل صاحبك مجانًا</h3>
     <p class="muted" style="font-size:13px">المحادثة بتشتغل بـ Gemini من جوجل ببلاش. ادخل على <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> بحساب جيميل، اضغط Create API key، وانسخ المفتاح وحطه هنا. مرة واحدة بس.</p>
     <label class="label" for="gk">مفتاح Gemini</label><input type="text" id="gk" placeholder="AIza…" autocomplete="off">
     <div class="row end"><button class="btn primary" id="gks">حفظ وابدأ</button></div>`;
     $("#gks").onclick=()=>{const k=$("#gk").value.trim();if(k.length<20)return toast("المفتاح ده مش كامل");try{localStorage.setItem("ec-gem",k)}catch(e){}chat()};return}
-  if(!C.msgs.length&&!C.busy)tutor(null);
+  if(!f.msgs.length&&!F.busy)friend(null);
 }
 function gemKey(){try{return localStorage.getItem("ec-gem")||""}catch(e){return""}}
 async function ask(prompt){
   if(sampler)return sampler.json(prompt,{modelTier:"quick",cache:false});
-  const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key="+encodeURIComponent(gemKey()),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:0.7}})});
+  const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key="+encodeURIComponent(gemKey()),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:0.9}})});
   if(r.status===400||r.status===403){try{localStorage.removeItem("ec-gem")}catch(e){}throw{code:"bad_key"}}
   if(r.status===429)throw{code:"rate_limited"};
   if(!r.ok)throw{code:"upstream"};
   const j=await r.json();const t=j?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
   return JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1));
 }
-function drawChat(){const ch=$("#ch");if(!ch)return;
-  ch.innerHTML=C.msgs.map((m,k)=>m.r==="me"?`<div class="msg me"><div class="en">${esc(m.t)}</div></div>`:
-   `<div class="msg bot"><div class="en">${esc(m.t)}</div><div class="row" style="margin-top:6px"><button class="btn ghost" data-k="${k}" style="min-height:34px;padding:2px 10px;font-size:13px">${IC.play}اسمع</button></div>
-    ${m.fix&&m.fix.length?`<div class="fix"><span class="label">تصحيح كلامك</span>${m.fix.map(f=>`<div><span class="en"><s>${esc(f.you)}</s> → <b>${esc(f.better)}</b></span><br><span class="muted">${esc(f.why)}</span></div>`).join("")}</div>`:""}
-    ${m.tip?`<p class="tip" style="margin-top:8px">${esc(m.tip)}</p>`:""}</div>`).join("")+(C.busy?`<div class="msg bot muted">بيكتب…</div>`:"");
-  ch.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>say(C.msgs[+b.dataset.k].t));
+function drawChat(){const ch=$("#ch");if(!ch)return;const f=FS();
+  ch.innerHTML=f.msgs.map((m,k)=>m.r==="me"?`<div class="msg me"><div class="en">${esc(m.t)}</div></div>
+    ${(m.fix&&m.fix.length)||(m.snd&&m.snd.length)?`<div class="card" style="align-self:flex-start;max-width:92%;padding:10px 12px;gap:6px;background:var(--warn-soft);border:0">
+      ${(m.fix||[]).map(x=>`<div style="font-size:13px"><span class="en"><s style="color:var(--bad)">${esc(x.you)}</s> → <b style="color:var(--good)">${esc(x.better)}</b></span> <button class="btn ghost" data-say="${esc(x.better)}" style="min-height:28px;padding:0 6px">${IC.play}</button><br><span class="muted">${esc(x.why)}</span></div>`).join("")}
+      ${m.snd&&m.snd.length?`<div style="font-size:13px">كلمات ممكن تكون نطقتها مش واضح: ${m.snd.map(w=>`<button class="btn ghost en" data-say="${esc(w)}" style="min-height:28px;padding:0 8px">${esc(w)}</button>`).join(" ")}</div>`:""}
+    </div>`:""}`:
+   `<div class="msg bot"><div class="en">${esc(m.t)}</div><div class="row" style="margin-top:4px"><button class="btn ghost" data-say="${esc(m.t)}" style="min-height:32px;padding:2px 8px;font-size:13px">${IC.play}اسمع</button><button class="btn ghost" data-slow="${esc(m.t)}" style="min-height:32px;padding:2px 8px;font-size:13px">${IC.slow}ببطء</button></div></div>`).join("")
+   +(F.busy?`<div class="msg bot muted">${esc(f.name)} بيكتب…</div>`:"");
+  ch.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>say(b.dataset.say));
+  ch.querySelectorAll("[data-slow]").forEach(b=>b.onclick=()=>say(b.dataset.slow,true));
+  const last=ch.lastElementChild;if(last)last.scrollIntoView({block:"nearest",behavior:"smooth"});
 }
-function send(){const v=$("#inp").value.trim();if(!v||C.busy)return;C.msgs.push({r:"me",t:v});$("#inp").value="";tutor(v)}
-async function tutor(last){
-  const L=W();C.busy=true;drawChat();
-  const hist=C.msgs.slice(-10).map(m=>(m.r==="me"?"Learner: ":"Tutor: ")+m.t).join("\n");
-  const prompt=`You are a friendly English conversation tutor for an Egyptian Arabic speaker at CEFR level ${LV[L]}. Topic: "${C.topic}".
-Rules: reply in English only, using vocabulary and grammar suited to ${LV[L]}; 1-3 short sentences; always end with one question to keep the learner talking.
-${last?`Check ONLY the learner's last message for grammar, word choice or unnatural phrasing. For each real mistake give: "you" (their exact words), "better" (corrected English), "why" (a short explanation in Egyptian Arabic). If there are no mistakes return an empty list. Optionally add "tip": one short useful phrase or idea in Egyptian Arabic, or "".`:`This is the start: greet the learner and ask the first question. Return empty corrections and empty tip.`}
-Conversation so far:
+async function hear(){
+  if(F.busy||F.listening)return;const t=$("#talk"),h=$("#hint");if(!t)return;
+  F.listening=true;t.classList.add("rec","live");h.textContent="بسمعك… اتكلم";
+  try{const said=await listen(p=>{h.innerHTML='<span class="en">'+esc(p)+'</span>'});userSaid(said)}
+  catch(e){if(e==="na"){t.hidden=true;h.textContent="المايك مش متاح، اكتب أو استخدم مايك الكيبورد"}else h.textContent="ما سمعتش حاجة، اضغط واتكلم تاني"}
+  finally{F.listening=false;t.classList.remove("rec","live");if($("#hint")&&h.textContent.startsWith("بسمعك"))h.textContent="اضغط واتكلم بالإنجليزي"}
+}
+function userSaid(t){const f=FS();f.msgs.push({r:"me",t,voice:true});save();drawChat();friend(f.msgs.length-1)}
+async function friend(meIdx){
+  const f=FS(),L=W();F.busy=true;drawChat();
+  const hist=f.msgs.slice(-16).map(m=>(m.r==="me"?"Me: ":f.name+": ")+m.t).join("\n");
+  const prompt=`You are ${f.name}, a warm, funny close friend of an Egyptian man named Osama who lives in Dubai. You chat with him casually in English like a real friend on a phone call, to help him practise speaking. His English level is CEFR ${LV[L]}.
+Style: natural spoken English, contractions, short (1-3 sentences, max 40 words), vocabulary suited to ${LV[L]}${L<2?", speak simply and slowly":""}. Show real interest, react to what he says, share small things about your own (made-up) life, joke a little, and usually end with ONE question. Never lecture. If he made a mistake, naturally echo the correct form inside your reply (e.g. "Oh, you went to the beach? Nice!") without pointing it out. If he writes Arabic, gently answer in English and help him say it.
+Things you remember about him from earlier chats: ${f.facts.length?f.facts.join("; "):"nothing yet"}.
+${meIdx!=null?`Then analyse ONLY his last message:
+- "corrections": real grammar/word-choice/unnatural phrasing mistakes, each {"you": his exact words, "better": natural English, "why": very short explanation in Egyptian Arabic}. Empty list if none. Ignore missing punctuation/capitals.
+- "sounds": his message was transcribed from speech, so list up to 3 English words he probably meant but that came out wrong in the transcript (likely mispronounced). Empty list if none.
+- "remember": up to 2 short new facts about him worth remembering (English), or empty list.`:`This is the start of a new chat: greet him like an old friend${f.facts.length?" and ask about something you remember":" and ask how his day is going"}. Return empty corrections, sounds and remember.`}
+Chat so far:
 ${hist||"(none)"}
-Return JSON only: {"reply":"...","corrections":[{"you":"...","better":"...","why":"..."}],"tip":"..."}`;
-  try{const r=await ask(prompt);
-    C.msgs.push({r:"bot",t:String(r.reply||""),fix:Array.isArray(r.corrections)?r.corrections.slice(0,4):[],tip:r.tip||""});
-    if(last&&C.msgs.filter(m=>m.r==="me").length===3){S.chats++;save()}
-  }catch(e){toast(e?.code==="rate_limited"?"استنى دقيقة وجرب تاني":e?.code==="bad_key"?"مفتاح Gemini مش شغال، حط مفتاح جديد":e?.code==="not_granted"?"المحادثة محتاجة إذن، فعّله من صلاحيات الصفحة":"حصلت مشكلة في الرد، ابعت تاني")}
-  C.busy=false;drawChat();
+Return JSON only: {"reply":"...","corrections":[],"sounds":[],"remember":[]}`;
+  try{const r=await ask(prompt);const reply=String(r.reply||"").trim();
+    if(meIdx!=null&&f.msgs[meIdx]){f.msgs[meIdx].fix=Array.isArray(r.corrections)?r.corrections.slice(0,4):[];f.msgs[meIdx].snd=Array.isArray(r.sounds)?r.sounds.slice(0,3):[]}
+    if(Array.isArray(r.remember))for(const x of r.remember){if(x&&!f.facts.includes(x))f.facts.push(String(x).slice(0,120))}
+    f.facts=f.facts.slice(-25);
+    if(reply)f.msgs.push({r:"bot",t:reply});f.msgs=f.msgs.slice(-40);
+    if(meIdx!=null&&f.msgs.filter(m=>m.r==="me").length%3===0){S.chats++}
+    save();F.busy=false;drawChat();
+    if(reply&&cur==="chat"){await say(reply);if(f.call&&cur==="chat"&&!srBroken)hear()}
+  }catch(e){F.busy=false;drawChat();toast(e?.code==="rate_limited"?"استنى دقيقة وجرب تاني":e?.code==="bad_key"?"مفتاح Gemini مش شغال، حط مفتاح جديد":e?.code==="not_granted"?"المحادثة محتاجة إذن، فعّله من صلاحيات الصفحة":"النت ضعيف أو حصلت مشكلة، ابعت تاني");if(e?.code==="bad_key")chat()}
 }
 
 /* ================= ROUTER ================= */
 const VIEWS={home,pron,vocab,gram,chat};
-function go(v){T=null;try{speechSynthesis.cancel();window.Capacitor?.Plugins?.TextToSpeech?.stop()}catch(e){}cur=v;document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-current",t.dataset.v===v));render();window.scrollTo(0,0)}
+function go(v){T=null;try{speechSynthesis.cancel();window.Capacitor?.Plugins?.TextToSpeech?.stop()}catch(e){}cur=v;F.listening=false;document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-current",t.dataset.v===v));render();window.scrollTo(0,0)}
 let cur="home";
 function render(){setChip();if(T)return;VIEWS[cur]()}
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{if(S.level==null&&t.dataset.v!=="home"&&t.dataset.v!=="pron"){S.work=S.work??1}go(t.dataset.v)});
