@@ -50,6 +50,8 @@ jobs:
           const nw='<style name=\"AppTheme.NoActionBarLaunch\" parent=\"Theme.SplashScreen\"><item name=\"windowSplashScreenBackground\">#FFFFFF</item><item name=\"windowSplashScreenAnimatedIcon\">@drawable/bny_blank</item><item name=\"windowSplashScreenAnimationDuration\">0</item><item name=\"postSplashScreenTheme\">@style/AppTheme.NoActionBar</item><item name=\"android:background\">#FFFFFF</item><item name=\"android:windowBackground\">@android:color/white</item></style>';
           const s2=s.replace(/<style name=\"AppTheme\.NoActionBarLaunch\"[^>]*>[\s\S]*?<\/style>/,nw);
           if(s2===s){console.error('launch theme not found');process.exit(1)}fs.writeFileSync(p,s2);console.log(s2)"
+      - name: Notification tone
+        run: mkdir -p android/app/src/main/res/raw && cp assets/sounds/bny_tone.wav android/app/src/main/res/raw/bny_tone.wav
       - name: WhatsApp Business first (native helper)
         run: |
           MA=$(find android/app/src/main/java -name MainActivity.java | head -1); D=$(dirname "$MA"); PK=$(grep -m1 '^package' "$MA" | sed 's/package \(.*\);/\1/')
