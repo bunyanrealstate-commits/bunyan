@@ -102,6 +102,58 @@ nav.tabs{position:fixed;inset:auto 0 0 0;z-index:6;background:var(--surface);bor
 .seg button{font-family:var(--en);font-weight:600;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:4px 12px;min-height:34px}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .passage{font-family:var(--en);font-size:17px;direction:ltr;text-align:left;background:var(--sunk);border-radius:10px;padding:10px 12px}
+
+/* video-call stage */
+:root{--skin:#F1C7A5;--skin2:#E4B08B;--skin3:#C98B6B;--hair:#3A2318;--top:#2E8C87;--top2:#246F6B;--stage1:#DCE6F7;--stage2:#BCCBEB;--win:#F6F9FF}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--stage1:#22305A;--stage2:#141D38;--win:#2C3B66}}
+:root[data-theme="dark"]{--stage1:#22305A;--stage2:#141D38;--win:#2C3B66}
+.stage{position:relative;border-radius:22px;overflow:hidden;background:radial-gradient(120% 90% at 50% 20%,var(--stage1),var(--stage2));aspect-ratio:3/4;max-height:60vh;width:100%;max-width:100%;margin-inline:auto;display:flex;align-items:flex-end;justify-content:center}
+.stage .win{position:absolute;top:8%;left:9%;width:30%;height:26%;border-radius:10px;background:var(--win);opacity:.55}
+.stage .win::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 48%,var(--stage2) 48% 52%,transparent 52%)}
+.ava{width:92%;max-width:420px;height:auto;display:block;position:relative}
+.ava .head{transform-box:view-box;transform-origin:150px 250px;animation:sway 7s ease-in-out infinite;transition:transform .5s}
+.ava .body{transform-box:view-box;transform-origin:150px 340px;animation:breathe 4s ease-in-out infinite}
+.ava .ey{transform-box:fill-box;transform-origin:center;animation:blink 5.2s infinite}
+.ava .iris{transition:transform .35s}
+.ava .brow{transition:transform .3s}
+.ava .m-open{display:none}
+.stage.talking .ava .head{animation:nod 1.4s ease-in-out infinite}
+.stage.mouth-open .ava .m-open{display:inline}.stage.mouth-open .ava .m-closed{display:none}
+.stage.listening .ava .head{animation:none;transform:rotate(-5deg) translateY(4px)}
+.stage.listening .ava .brow{transform:translateY(-4px)}
+.stage.thinking .ava .iris{transform:translate(4px,-5px)}
+.stage.thinking .ava .head{animation:none;transform:rotate(3deg)}
+@keyframes sway{0%,100%{transform:rotate(0)}30%{transform:rotate(2deg)}70%{transform:rotate(-2deg)}}
+@keyframes nod{0%,100%{transform:rotate(0) translateY(0)}25%{transform:rotate(1.5deg) translateY(2px)}60%{transform:rotate(-1.5deg) translateY(-1px)}}
+@keyframes breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.012)}}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
+.stage-top{position:absolute;top:12px;inset-inline:12px;display:flex;align-items:center;gap:8px;color:#fff;font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,.4);z-index:2;direction:ltr}
+.stage-top .live{width:9px;height:9px;border-radius:50%;background:#3DDC84;box-shadow:0 0 0 3px rgba(61,220,132,.3)}
+.stage-top .tm{margin-inline-start:auto;font-variant-numeric:tabular-nums;font-weight:500}
+.cap{position:absolute;left:0;right:0;bottom:0;padding:40px 16px 14px;background:linear-gradient(transparent,rgba(10,14,30,.78));color:#fff;font-size:18px;line-height:1.4;min-height:20px;z-index:2;transition:opacity .3s}
+.cap:empty{opacity:0}
+.stage.nosubs .cap{display:none}
+.pip{position:absolute;top:44px;right:12px;width:84px;border-radius:14px;background:rgba(10,14,30,.55);padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;z-index:3;color:#fff}
+.pip-ava{width:46px;height:46px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700;transition:box-shadow .2s}
+.stage.listening .pip-ava{box-shadow:0 0 0 4px rgba(61,220,132,.8);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 9px rgba(61,220,132,.25)}}
+.pip span{font-size:11px}
+.think{position:absolute;top:40%;right:16%;display:none;gap:5px;background:#fff;border-radius:16px;padding:8px 10px;z-index:2}
+.think i{width:8px;height:8px;border-radius:50%;background:#7A86A8;animation:dot 1s infinite}
+.think i:nth-child(2){animation-delay:.15s}.think i:nth-child(3){animation-delay:.3s}
+.stage.thinking .think{display:flex}
+@keyframes dot{50%{transform:translateY(-4px);opacity:.5}}
+.mycap{position:absolute;top:44px;left:12px;right:108px;color:#fff;font-size:15px;background:rgba(10,14,30,.5);border-radius:12px;padding:6px 10px;z-index:2;direction:ltr;text-align:left}
+.mycap:empty{display:none}
+.callbar{justify-content:center;gap:18px}
+.cbtn{width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--en)}
+.cbtn svg{width:24px;height:24px}
+.cbtn[aria-pressed="false"]{opacity:.5}
+.cbtn.mic{width:76px;height:76px;background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.cbtn.mic svg{width:34px;height:34px}
+.cbtn.mic.live{background:#D64545;border-color:#D64545;color:#fff;animation:pulse2 1.2s infinite}
+@keyframes pulse2{50%{box-shadow:0 0 0 10px rgba(214,69,69,.2)}}
+details.card summary{cursor:pointer;font-weight:600}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head><body>
@@ -237,19 +289,32 @@ const W=()=>S.work??S.level??0;
 
 /* ================= SPEECH ================= */
 let voice=null;
-function pickVoice(){try{const vs=speechSynthesis.getVoices();voice=vs.find(v=>/en[-_]US/i.test(v.lang)&&/Samantha|Google|Natural|Aria|Jenny/i.test(v.name))||vs.find(v=>/en[-_](US|GB)/i.test(v.lang))||null}catch(e){}}
+function pickVoice(){try{const vs=speechSynthesis.getVoices();voice=vs.find(v=>/en[-_]US/i.test(v.lang)&&/Samantha|Jenny|Aria|Zira|female|Google US English/i.test(v.name))||vs.find(v=>/en[-_](US|GB)/i.test(v.lang))||null}catch(e){}}
 try{pickVoice();speechSynthesis.onvoiceschanged=pickVoice}catch(e){}
-function say(t,slow){return new Promise(done=>{const NT=window.Capacitor?.Plugins?.TextToSpeech;
-  if(NT){NT.stop().catch(()=>{}).finally(()=>NT.speak({text:t,lang:"en-US",rate:slow?0.7:1,pitch:1,volume:1,category:"playback"}).then(done,()=>{toast("ثبّت محرك نطق جوجل من الإعدادات");done()}));return}
+let nVoice;async function nativeVoice(NT){if(nVoice!==undefined)return nVoice;nVoice=null;try{const r=await NT.getSupportedVoices();const vs=(r&&r.voices)||[];
+  const pref=["en-us-x-sfg","en-us-x-tpf","en-us-x-iob","en-us-x-iog","en-gb-x-gba","en-gb-x-rjs"];
+  for(const p of pref){const i=vs.findIndex(v=>(v.voiceURI||v.name||"").toLowerCase().includes(p));if(i>=0){nVoice=i;break}}
+  if(nVoice==null){const i=vs.findIndex(v=>/en[-_]US/i.test(v.lang)&&/female/i.test(v.name||v.voiceURI||""));if(i>=0)nVoice=i}}catch(e){}return nVoice}
+function say(t,slow){return new Promise(async done=>{const NT=window.Capacitor?.Plugins?.TextToSpeech;
+  if(NT){const vi=await nativeVoice(NT);NT.stop().catch(()=>{}).finally(()=>NT.speak(Object.assign({text:t,lang:"en-US",rate:slow?0.7:1,pitch:1.05,volume:1,category:"playback"},vi!=null?{voice:vi}:{})).then(done,()=>{toast("ثبّت محرك نطق جوجل من الإعدادات");done()}));return}
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-US";if(voice)u.voice=voice;u.rate=slow?0.7:0.95;u.onend=u.onerror=()=>done();speechSynthesis.speak(u)}catch(e){toast("الجهاز ده مش بيدعم تشغيل الصوت");done()}})}
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const NSR=()=>window.Capacitor?.Plugins?.SpeechRecognition;
 let srBroken=!SR&&!NSR();
 function listen(onPartial){
   const N=NSR();
-  if(N)return (async()=>{try{const p=await N.requestPermissions();if(p&&p.speechRecognition&&p.speechRecognition!=="granted")throw"na";
-    const r=await N.start({language:"en-US",maxResults:1,partialResults:false,popup:true});const t=r?.matches?.[0];if(!t)throw"empty";return t}
-    catch(e){throw e==="na"?"na":"empty"}})();
+  if(N)return (async()=>{
+    const p=await N.requestPermissions().catch(()=>null);if(p&&p.speechRecognition&&p.speechRecognition!=="granted")throw"na";
+    return await new Promise(async(res,rej)=>{
+      let last="",done=false,silT=null,hardT=null,h1=null,h2=null;
+      const finish=async()=>{if(done)return;done=true;clearTimeout(silT);clearTimeout(hardT);try{h1&&h1.remove();h2&&h2.remove()}catch(e){}try{await N.stop()}catch(e){}last?res(last):rej("empty")};
+      try{h1=await N.addListener("partialResults",d=>{const t=d&&d.matches&&d.matches[0];if(t){last=t;onPartial&&onPartial(t);clearTimeout(silT);silT=setTimeout(finish,1700)}})}catch(e){}
+      try{h2=await N.addListener("listeningState",d=>{if(d&&d.status==="stopped")setTimeout(finish,400)})}catch(e){}
+      hardT=setTimeout(finish,20000);listen.stop=finish;
+      try{const r=await N.start({language:"en-US",maxResults:1,partialResults:true,popup:false});const t=r&&r.matches&&r.matches[0];if(t){last=t;finish()}}
+      catch(e){finish()}
+    });
+  })().catch(e=>{throw e==="na"?"na":"empty"});
   return new Promise((res,rej)=>{
   if(srBroken)return rej("na");
   let r;try{r=new SR()}catch(e){srBroken=true;return rej("na")}
@@ -504,35 +569,73 @@ function gram(){
 
 /* ================= CHAT: personal friend ================= */
 let sampler,F={busy:false,listening:false};
-function FS(){S.friend=S.friend||{name:"Sam",msgs:[],facts:[],call:true};return S.friend}
+function FS(){S.friend=S.friend||{name:"Lily",msgs:[],facts:[],call:true};if(S.friend.name==="Sam"){S.friend.name="Lily";S.friend.msgs=[]}return S.friend}
+const AVATAR=`<svg class="ava" viewBox="0 0 300 340" role="img" aria-label="ليلي">
+ <g class="body"><path d="M38 340 C44 272 96 246 150 246 C204 246 256 272 262 340 Z" fill="var(--top)"/>
+  <path d="M150 246 L150 340" stroke="var(--top2)" stroke-width="3"/><path d="M118 252 Q150 290 182 252" fill="none" stroke="var(--top2)" stroke-width="7" stroke-linecap="round"/>
+  <path d="M131 206 h38 v42 q-19 14 -38 0z" fill="var(--skin2)"/></g>
+ <g class="head">
+  <path d="M68 140 C58 58 110 28 150 28 C202 28 248 62 234 150 C242 204 236 250 218 268 L82 268 C64 248 60 202 68 140Z" fill="var(--hair)"/>
+  <ellipse cx="81" cy="142" rx="12" ry="18" fill="var(--skin2)"/><ellipse cx="219" cy="142" rx="12" ry="18" fill="var(--skin2)"/>
+  <circle cx="81" cy="164" r="4.5" fill="#E8B64C"/><circle cx="219" cy="164" r="4.5" fill="#E8B64C"/>
+  <ellipse cx="150" cy="136" rx="70" ry="82" fill="var(--skin)"/>
+  <path d="M79 124 C82 62 124 46 160 50 C202 54 228 86 223 128 C206 100 186 88 162 84 C142 100 112 112 79 124Z" fill="var(--hair)"/>
+  <circle cx="104" cy="170" r="12" fill="#F28B9B" opacity=".35"/><circle cx="196" cy="170" r="12" fill="#F28B9B" opacity=".35"/>
+  <path class="brow" d="M106 110 q15 -9 30 -2" stroke="var(--hair)" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path class="brow" d="M164 108 q15 -7 30 2" stroke="var(--hair)" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <g transform="translate(122 136)"><g class="ey"><ellipse rx="13" ry="15" fill="#fff"/><g class="iris"><circle r="9" fill="#6B4430"/><circle r="4.6" fill="#1B1210"/><circle cx="3" cy="-4" r="2.6" fill="#fff"/></g><path d="M-14 -9 q14 -12 28 0" stroke="#1B1210" stroke-width="3" fill="none" stroke-linecap="round"/></g></g>
+  <g transform="translate(178 136)"><g class="ey"><ellipse rx="13" ry="15" fill="#fff"/><g class="iris"><circle r="9" fill="#6B4430"/><circle r="4.6" fill="#1B1210"/><circle cx="3" cy="-4" r="2.6" fill="#fff"/></g><path d="M-14 -9 q14 -12 28 0" stroke="#1B1210" stroke-width="3" fill="none" stroke-linecap="round"/></g></g>
+  <path d="M150 152 q-6 13 2 16" stroke="var(--skin3)" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <g transform="translate(150 188)"><path class="m-closed" d="M-17 0 Q0 13 17 0" stroke="#A3404A" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+   <g class="m-open"><ellipse id="mo" rx="13" ry="8" fill="#6B2430"/><ellipse id="mt" cx="0" cy="5" rx="8" ry="3" fill="#E77D8B"/><rect id="mteeth" x="-10" y="-8" width="20" height="4" rx="2" fill="#fff"/></g></g>
+ </g></svg>`;
+let mouthT=null,callT=null,callStart=0;
+function setMood(m){const st=$("#stage");if(!st)return;st.classList.remove("idle","talking","listening","thinking");st.classList.add(m)}
+function mouth(on){const st=$("#stage");clearInterval(mouthT);if(!st)return;
+  if(!on){st.classList.remove("mouth-open");return}
+  mouthT=setInterval(()=>{const st=$("#stage");if(!st){clearInterval(mouthT);return}
+    const open=Math.random()>.22;st.classList.toggle("mouth-open",open);if(!open)return;
+    const ry=[4,6,8,10,12][Math.floor(Math.random()*5)],rx=[10,12,13,15][Math.floor(Math.random()*4)];
+    const mo=$("#mo"),mt=$("#mt"),te=$("#mteeth");if(mo){mo.setAttribute("ry",ry);mo.setAttribute("rx",rx)}if(mt)mt.setAttribute("cy",ry*.55);if(te){te.setAttribute("y",-ry);te.setAttribute("x",-rx*.7);te.setAttribute("width",rx*1.4)}},115)}
+async function talk(t){const mc=$("#mycap");if(mc)setTimeout(()=>{if(!F.listening&&mc)mc.textContent=""},1500);const c=$("#cap");if(c)c.textContent=t;setMood("talking");mouth(true);
+  try{await say(t)}finally{mouth(false);setMood("idle")}}
 async function chat(){
   const f=FS(),L=W();
-  V.innerHTML=`<div class="card"><div class="row" style="gap:12px;flex-wrap:nowrap">
-      <div style="width:48px;height:48px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--en);font-size:22px;font-weight:600;flex:none">${esc(f.name[0])}</div>
-      <div style="flex:1;min-width:0"><h3><span class="en">${esc(f.name)}</span> · صاحبك في الإنجليزي</h3><p class="muted" style="font-size:13px">بيكلمك على قد مستواك <span class="en">${LV[L]}</span>، وبيفتكر اللي بتحكيه، وبيصحّحلك من غير ما يقطع الكلام.</p></div></div>
-    <div class="row" style="justify-content:space-between">
-      <label class="row" style="gap:6px;font-size:14px"><input type="checkbox" id="callm" ${f.call?"checked":""} style="width:20px;height:20px">وضع المكالمة (يسمعك تلقائي بعد ما يرد)</label>
-      <button class="btn ghost" id="newc" style="min-height:34px;padding:4px 10px;font-size:13px">موضوع جديد</button></div></div>
-   <div class="chat" id="ch"></div>
-   <div class="card" id="box" style="align-items:center">
-     <button class="btn primary" id="talk" style="width:84px;height:84px;border-radius:50%;padding:0" aria-label="اتكلم">${IC.mic.replace('<svg','<svg style="width:36px;height:36px"')}</button>
-     <p class="muted" id="hint" style="font-size:13px;text-align:center">اضغط واتكلم بالإنجليزي</p>
-     <div class="row" style="width:100%;flex-wrap:nowrap"><input type="text" id="inp" placeholder="أو اكتب هنا…" style="flex:1;min-width:0"><button class="btn" id="snd">ابعت</button></div>
-   </div>`;
+  V.innerHTML=`<div class="stage idle${F.subs===false?" nosubs":""}" id="stage"><div class="win"></div>
+     <div class="stage-top"><span class="live"></span><span>${esc(f.name)}</span><span class="tm" id="ctm">00:00</span></div>
+     ${AVATAR}<div class="think" aria-hidden="true"><i></i><i></i><i></i></div>
+     <div class="mycap" id="mycap"></div>
+     <div class="pip"><div class="pip-ava">أنت</div><span>${LV[L]}</span></div>
+     <div class="cap en" id="cap" aria-live="polite"></div></div>
+   <div class="row callbar">
+     <button class="cbtn" id="cc" aria-pressed="${F.subs!==false}" aria-label="الترجمة على الشاشة">CC</button>
+     <button class="cbtn mic" id="talk" aria-label="اتكلم">${IC.mic}</button>
+     <button class="cbtn" id="replay" aria-label="أعد آخر جملة">${IC.play}</button></div>
+   <p class="muted" id="hint" style="font-size:13px;text-align:center">اضغط المايك واتكلم بالإنجليزي</p>
+   <div id="fixbox"></div>
+   <div class="card" id="box">
+     <label class="row" style="gap:8px;font-size:14px"><input type="checkbox" id="callm" ${f.call?"checked":""} style="width:20px;height:20px">مكالمة مستمرة: المايك يفتح لوحده بعد ما ${esc(f.name)} تخلّص كلامها</label>
+     <div class="row" style="flex-wrap:nowrap"><input type="text" id="inp" placeholder="أو اكتب هنا…" style="flex:1;min-width:0"><button class="btn" id="snd">ابعت</button></div>
+     <button class="btn ghost" id="newc">ابدأ مكالمة جديدة</button></div>
+   <details class="card"><summary>المكالمة مكتوبة</summary><div class="chat" id="ch" style="margin-top:10px"></div></details>`;
+  clearInterval(callT);callStart=Date.now();callT=setInterval(()=>{const e=$("#ctm");if(!e){clearInterval(callT);return}const s=Math.floor((Date.now()-callStart)/1000);e.textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")},1000);
+  $("#cc").onclick=()=>{F.subs=F.subs===false;$("#cc").setAttribute("aria-pressed",F.subs!==false);$("#stage").classList.toggle("nosubs",F.subs===false)};
+  $("#replay").onclick=()=>{const last=[...f.msgs].reverse().find(m=>m.r==="bot");if(last&&!F.listening)talk(last.t)};
   $("#callm").onchange=e=>{f.call=e.target.checked;save()};
   $("#newc").onclick=()=>{f.msgs=[];save();chat()};
   $("#snd").onclick=()=>{const v=$("#inp").value.trim();if(v){$("#inp").value="";userSaid(v)}};
   $("#inp").onkeydown=e=>{if(e.key==="Enter")$("#snd").click()};
-  $("#talk").onclick=()=>hear();
-  if(srBroken){$("#talk").hidden=true;$("#hint").textContent="استخدم مايك الكيبورد في مربع الكتابة"}
+  $("#talk").onclick=()=>{if(F.listening){listen.stop&&listen.stop();return}hear()};
+  if(srBroken){$("#talk").disabled=true;$("#hint").textContent="المايك مش متاح هنا، اكتب في المربع"}
   drawChat();
-  if(sampler===undefined){sampler=await window.claude?.use?.("sample")??null;}
+  const lastBot=[...f.msgs].reverse().find(m=>m.r==="bot");if(lastBot)$("#cap").textContent=lastBot.t;
   if(LLM()){let st={};try{st=await LLM().status()}catch(e){}
     if(!st.ready)return modelSetup(st);
-    if(!f.msgs.length&&!F.busy){$("#hint").textContent="بيجهز صاحبك… ثواني";try{await llmLoad();if($("#hint"))$("#hint").textContent="اضغط واتكلم بالإنجليزي"}catch(e){$("#hint").textContent="مقدرش يشغّل العقل: "+(e?.message||e);return}}
+    if(!f.msgs.length&&!F.busy){setMood("thinking");$("#hint").textContent=f.name+" بتجهز… ثواني";try{await llmLoad();if($("#hint"))$("#hint").textContent="اضغط المايك واتكلم بالإنجليزي"}catch(e){$("#hint").textContent="مقدرش يشغّل العقل: "+(e?.message||e);setMood("idle");return}}
     if(!f.msgs.length&&!F.busy)friend(null);return}
-  if(!sampler&&!gemKey()){$("#box").innerHTML=`<h3>فعّل صاحبك مجانًا</h3>
-    <p class="muted" style="font-size:13px">المحادثة بتشتغل بـ Gemini من جوجل ببلاش. ادخل على <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> بحساب جيميل، اضغط Create API key، وانسخ المفتاح وحطه هنا. مرة واحدة بس.</p>
+  if(sampler===undefined){sampler=await window.claude?.use?.("sample")??null;}
+  if(!sampler&&!gemKey()){$("#box").innerHTML=`<h3>فعّل ${esc(f.name)} مجانًا</h3>
+    <p class="muted" style="font-size:13px">المحادثة بتشتغل بـ Gemini من جوجل ببلاش. ادخل على <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> بحساب جيميل، اضغط Create API key، وانسخ المفتاح وحطه هنا.</p>
     <label class="label" for="gk">مفتاح Gemini</label><input type="text" id="gk" placeholder="AIza…" autocomplete="off">
     <div class="row end"><button class="btn primary" id="gks">حفظ وابدأ</button></div>`;
     $("#gks").onclick=()=>{const k=$("#gk").value.trim();if(k.length<20)return toast("المفتاح ده مش كامل");try{localStorage.setItem("ec-gem",k)}catch(e){}chat()};return}
@@ -547,7 +650,7 @@ function cleanReply(t,name){t=t.replace(/<[^>]+>/g,"").replace(/\*+/g,"").replac
 async function localFriend(meIdx){
   const f=FS(),L=W();const hist=f.msgs.slice(-8).map(m=>(m.r==="me"?"Osama: ":f.name+": ")+m.t).join("\n");
   const lvl=L<2?"very simple English with short common words":L<4?"simple everyday English":"natural everyday English";
-  const replyP=`You are ${f.name}, Osama's close friend. Osama is Egyptian, lives in Dubai and is practising English with you. Talk like a warm, funny friend on a phone call, in ${lvl}. Reply in 1 or 2 short sentences, react to what he said, and end with one simple question. Write only ${f.name}'s words.
+  const replyP=`You are ${f.name}, a cheerful, kind young woman and Osama's close friend; you are on a video call. Osama is Egyptian, lives in Dubai and is practising English with you. Talk like a warm, funny friend on a phone call, in ${lvl}. Reply in 1 or 2 short sentences, react to what he said, and end with one simple question. Write only ${f.name}'s words.
 ${f.facts.length?"You know about him: "+f.facts.slice(-8).join("; ")+".\n":""}${meIdx==null?`Start the conversation: greet him and ask how his day is going.`:`Conversation:\n${hist}\n${f.name}:`}`;
   const reply=cleanReply(await localGen(replyP),f.name)||"That's cool! Tell me more?";
   return{reply,me:meIdx};
@@ -596,36 +699,34 @@ async function ask(prompt){
   return JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1));
 }
 function drawChat(){const ch=$("#ch");if(!ch)return;const f=FS();
-  ch.innerHTML=f.msgs.map((m,k)=>m.r==="me"?`<div class="msg me"><div class="en">${esc(m.t)}</div></div>
-    ${(m.fix&&m.fix.length)||(m.snd&&m.snd.length)?`<div class="card" style="align-self:flex-start;max-width:92%;padding:10px 12px;gap:6px;background:var(--warn-soft);border:0">
-      ${(m.fix||[]).map(x=>`<div style="font-size:13px"><span class="en"><s style="color:var(--bad)">${esc(x.you)}</s> → <b style="color:var(--good)">${esc(x.better)}</b></span> <button class="btn ghost" data-say="${esc(x.better)}" style="min-height:28px;padding:0 6px">${IC.play}</button><br><span class="muted">${esc(x.why)}</span></div>`).join("")}
-      ${m.snd&&m.snd.length?`<div style="font-size:13px">كلمات ممكن تكون نطقتها مش واضح: ${m.snd.map(w=>`<button class="btn ghost en" data-say="${esc(w)}" style="min-height:28px;padding:0 8px">${esc(w)}</button>`).join(" ")}</div>`:""}
-    </div>`:""}`:
-   `<div class="msg bot"><div class="en">${esc(m.t)}</div><div class="row" style="margin-top:4px"><button class="btn ghost" data-say="${esc(m.t)}" style="min-height:32px;padding:2px 8px;font-size:13px">${IC.play}اسمع</button><button class="btn ghost" data-slow="${esc(m.t)}" style="min-height:32px;padding:2px 8px;font-size:13px">${IC.slow}ببطء</button></div></div>`).join("")
-   +(F.busy?`<div class="msg bot muted">${esc(f.name)} بيكتب…</div>`:"");
-  ch.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>say(b.dataset.say));
-  ch.querySelectorAll("[data-slow]").forEach(b=>b.onclick=()=>say(b.dataset.slow,true));
-  const last=ch.lastElementChild;if(last)last.scrollIntoView({block:"nearest",behavior:"smooth"});
+  ch.innerHTML=f.msgs.map(m=>m.r==="me"?`<div class="msg me"><div class="en">${esc(m.t)}</div></div>`:`<div class="msg bot"><div class="en">${esc(m.t)}</div></div>`).join("");
+  const lastMe=[...f.msgs].reverse().find(m=>m.r==="me");const fb=$("#fixbox");
+  if(fb){const m=lastMe;fb.innerHTML=m&&((m.fix&&m.fix.length)||(m.snd&&m.snd.length))?`<div class="card" style="gap:8px;background:var(--warn-soft);border:0">
+     <span class="label">تصحيح آخر جملة قلتها</span>
+     ${(m.fix||[]).map(x=>`<div style="font-size:14px"><span class="en"><s style="color:var(--bad)">${esc(x.you)}</s></span><br><span class="en"><b style="color:var(--good)">${esc(x.better)}</b></span> <button class="btn ghost" data-say="${esc(x.better)}" style="min-height:30px;padding:0 8px">${IC.play}</button>${x.why?`<br><span class="muted">${esc(x.why)}</span>`:""}</div>`).join("")}
+     ${m.snd&&m.snd.length?`<div style="font-size:13px">كلمات محتاجة تنطقها أوضح: ${m.snd.map(w=>`<button class="btn ghost en" data-say="${esc(w)}" style="min-height:30px;padding:0 8px">${esc(w)}</button>`).join(" ")}</div>`:""}</div>`:"";
+    fb.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>say(b.dataset.say,true))}
+  const st=$("#stage");if(st&&F.busy&&!st.classList.contains("talking"))setMood("thinking");
 }
 async function hear(){
-  if(F.busy||F.listening)return;const t=$("#talk"),h=$("#hint");if(!t)return;
-  F.listening=true;t.classList.add("rec","live");h.textContent="بسمعك… اتكلم";
-  try{const said=await listen(p=>{h.innerHTML='<span class="en">'+esc(p)+'</span>'});userSaid(said)}
-  catch(e){if(e==="na"){t.hidden=true;h.textContent="المايك مش متاح، اكتب أو استخدم مايك الكيبورد"}else h.textContent="ما سمعتش حاجة، اضغط واتكلم تاني"}
-  finally{F.listening=false;t.classList.remove("rec","live");if($("#hint")&&h.textContent.startsWith("بسمعك"))h.textContent="اضغط واتكلم بالإنجليزي"}
+  if(F.busy||F.listening)return;const t=$("#talk"),h=$("#hint"),mc=$("#mycap");if(!t)return;
+  F.listening=true;t.classList.add("live");setMood("listening");h.textContent="بسمعك… اتكلم، واضغط تاني لما تخلص";
+  try{const said=await listen(p=>{if(mc)mc.textContent=p});if(mc)mc.textContent=said;userSaid(said)}
+  catch(e){setMood("idle");if(mc)mc.textContent="";if(e==="na"){t.disabled=true;h.textContent="المايك مش متاح، اكتب في المربع"}else h.textContent="ما سمعتش حاجة، اضغط واتكلم تاني"}
+  finally{F.listening=false;t.classList.remove("live");if($("#hint")&&h.textContent.startsWith("بسمعك"))h.textContent="اضغط المايك واتكلم بالإنجليزي"}
 }
 function userSaid(t){const f=FS();f.msgs.push({r:"me",t,voice:true});save();drawChat();friend(f.msgs.length-1)}
 async function friend(meIdx){
   const f=FS(),L=W();F.busy=true;drawChat();
   if(LLM()){try{const {reply}=await localFriend(meIdx);f.msgs.push({r:"bot",t:reply});f.msgs=f.msgs.slice(-40);
       if(meIdx!=null&&f.msgs.filter(m=>m.r==="me").length%3===0)S.chats++;save();F.busy=false;drawChat();
-      const speaking=cur==="chat"?say(reply):Promise.resolve();
+      const speaking=cur==="chat"?talk(reply):Promise.resolve();
       if(meIdx!=null&&f.msgs[meIdx]){try{f.msgs[meIdx].fix=await localFix(f.msgs[meIdx].t);save();drawChat()}catch(e){}}
       await speaking;if(f.call&&cur==="chat"&&!srBroken)hear()}
     catch(e){F.busy=false;drawChat();toast("صاحبك مش قادر يرد دلوقتي، جرب تاني")}
     return}
   const hist=f.msgs.slice(-16).map(m=>(m.r==="me"?"Me: ":f.name+": ")+m.t).join("\n");
-  const prompt=`You are ${f.name}, a warm, funny close friend of an Egyptian man named Osama who lives in Dubai. You chat with him casually in English like a real friend on a phone call, to help him practise speaking. His English level is CEFR ${LV[L]}.
+  const prompt=`You are ${f.name}, a cheerful, warm, funny young woman and close friend of an Egyptian man named Osama who lives in Dubai. You are on a video call with him. You chat with him casually in English like a real friend on a phone call, to help him practise speaking. His English level is CEFR ${LV[L]}.
 Style: natural spoken English, contractions, short (1-3 sentences, max 40 words), vocabulary suited to ${LV[L]}${L<2?", speak simply and slowly":""}. Show real interest, react to what he says, share small things about your own (made-up) life, joke a little, and usually end with ONE question. Never lecture. If he made a mistake, naturally echo the correct form inside your reply (e.g. "Oh, you went to the beach? Nice!") without pointing it out. If he writes Arabic, gently answer in English and help him say it.
 Things you remember about him from earlier chats: ${f.facts.length?f.facts.join("; "):"nothing yet"}.
 ${meIdx!=null?`Then analyse ONLY his last message:
@@ -642,13 +743,13 @@ Return JSON only: {"reply":"...","corrections":[],"sounds":[],"remember":[]}`;
     if(reply)f.msgs.push({r:"bot",t:reply});f.msgs=f.msgs.slice(-40);
     if(meIdx!=null&&f.msgs.filter(m=>m.r==="me").length%3===0){S.chats++}
     save();F.busy=false;drawChat();
-    if(reply&&cur==="chat"){await say(reply);if(f.call&&cur==="chat"&&!srBroken)hear()}
+    if(reply&&cur==="chat"){await talk(reply);if(f.call&&cur==="chat"&&!srBroken)hear()}
   }catch(e){F.busy=false;drawChat();toast(e?.code==="rate_limited"?"استنى دقيقة وجرب تاني":e?.code==="bad_key"?"مفتاح Gemini مش شغال، حط مفتاح جديد":e?.code==="not_granted"?"المحادثة محتاجة إذن، فعّله من صلاحيات الصفحة":"النت ضعيف أو حصلت مشكلة، ابعت تاني");if(e?.code==="bad_key")chat()}
 }
 
 /* ================= ROUTER ================= */
 const VIEWS={home,pron,vocab,gram,chat};
-function go(v){T=null;try{speechSynthesis.cancel();window.Capacitor?.Plugins?.TextToSpeech?.stop()}catch(e){}cur=v;F.listening=false;document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-current",t.dataset.v===v));render();window.scrollTo(0,0)}
+function go(v){T=null;try{speechSynthesis.cancel();window.Capacitor?.Plugins?.TextToSpeech?.stop()}catch(e){}cur=v;F.listening=false;clearInterval(mouthT);document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-current",t.dataset.v===v));render();window.scrollTo(0,0)}
 let cur="home";
 function render(){setChip();if(T)return;VIEWS[cur]()}
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{if(S.level==null&&t.dataset.v!=="home"&&t.dataset.v!=="pron"){S.work=S.work??1}go(t.dataset.v)});
