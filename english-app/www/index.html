@@ -712,8 +712,8 @@ function paintSmart(){const box=$("#box");if(!box)return;const f=FS();let el=$("
       <li>افتح <b class="en">aistudio.google.com/apikey</b> وادخل بحساب الجيميل بتاعك</li>
       <li>اضغط <b class="en">Create API key</b> وبعدين انسخ المفتاح</li>
       <li>الزقه هنا واضغط تفعيل</li></ol>
-    <div class="row" style="flex-wrap:nowrap"><input type="text" id="gk" placeholder="AIza…" autocomplete="off" style="flex:1;min-width:0"><button class="btn primary" id="gks">تفعيل</button></div></div>`;
-  $("#gks").onclick=async()=>{const k=$("#gk").value.trim();if(!/^AIza[\w-]{30,}$/.test(k))return toast("المفتاح لازم يبدأ بـ AIza وطوله حوالي 39 حرف");
+    <div class="row" style="flex-wrap:nowrap"><input type="text" id="gk" placeholder="الصق المفتاح هنا" autocomplete="off" style="flex:1;min-width:0"><button class="btn primary" id="gks">تفعيل</button></div></div>`;
+  $("#gks").onclick=async()=>{let k=$("#gk").value.trim();const kk=k.replace(/\s+/g,"");if(kk.length<20||/[^\w.\-]/.test(kk))return toast("المفتاح ده مش كامل، انسخه تاني من جوجل");k=kk;
     try{localStorage.setItem("ec-gem",k)}catch(e){}
     $("#gks").disabled=true;$("#gks").textContent="بجرب…";
     try{await ask('Return JSON only: {"ok":true}');toast("اتفعّل الوضع الذكي");f.msgs=[];save();chat()}
@@ -726,7 +726,7 @@ async function ask(prompt){
   let r;const body=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:0.9}});
   for(const m of ["gemini-flash-latest","gemini-2.5-flash","gemini-2.0-flash"]){
     const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),20000);
-    try{r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+m+":generateContent?key="+encodeURIComponent(gemKey()),{method:"POST",headers:{"Content-Type":"application/json"},body,signal:ctl.signal})}catch(e){clearTimeout(to);throw{code:"network"}}
+    try{r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+m+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":gemKey()},body,signal:ctl.signal})}catch(e){clearTimeout(to);throw{code:"network"}}
     clearTimeout(to);if(r.status!==404)break}
   if(r.status===400||r.status===403){try{localStorage.removeItem("ec-gem")}catch(e){}throw{code:"bad_key"}}
   if(r.status===429)throw{code:"rate_limited"};
