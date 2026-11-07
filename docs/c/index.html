@@ -2244,7 +2244,7 @@ function dm(iso){if(!iso)return '';var p=String(iso).split('-');return p.length=
 function nf(v){var n=+v;return n?n.toLocaleString('en-US'):(v||'')}
 function F(){S.ct=S.ct||{};S.ct.f=S.ct.f||{ll:'عبد الحكيم أحمد عبد الحكيم أحمد الرفاعي',lid:'',nat:'',tn:'',tid:'',ph:'',sub:'',st:'',en:'',due:'',rent:'',mo:'',chq:'',cx:''};return S.ct.f}
 function disp(k,f){var v=f[k];if(v==null)v='';
- if(k==='st'||k==='en')return dm(v);if(k==='due')return v?((S.ct&&S.ct.lang)==='en'?'Day '+v+' of every month':'يوم '+v+' من كل شهر'):'';if(k==='rent')return nf(v);if(k==='mo')return v?v+' Months':'';return String(v)}
+ if(k==='st'||k==='en')return dm(v);if(k==='due')return v?(+v>=31?((S.ct&&S.ct.lang)==='en'?'Last day of every month':'آخر يوم من كل شهر'):((S.ct&&S.ct.lang)==='en'?'Day '+v+' of every month':'يوم '+v+' من كل شهر')):'';if(k==='rent')return nf(v);if(k==='mo')return v?v+' Months':'';return String(v)}
 function sp(k,f){return '<span class="fv" data-f="'+k+'">'+esc(disp(k,f))+'</span>'}
 function paper(f){var r=function(en,k,ar,x){return '<tr><td class="en">'+en+'</td><td colspan="3">'+(x||sp(k,f))+'</td><td class="ar">'+ar+'</td></tr>'};
  return '<div class="fr"><h1>Tenancy Contract<small>عقد إيجار</small></h1><table>'+
@@ -5319,11 +5319,11 @@ var lc=window.lnClose;window.lnClose=function(){X=null;return lc.apply(this,argu
 /* نهاية العقد أوتوماتيك + يوم الدفع (قبل نهاية شهر الإيجار بيوم) + الشيكات بعددها وشيك التأمين */
 function f(){S.ct=S.ct||{};S.ct.f=S.ct.f||{};return S.ct.f}
 function en(){return (S.ct&&S.ct.lang)==='en'}
-function dueDay(st){try{var d=pd(st),e=new Date(d.getFullYear(),d.getMonth()+1,d.getDate());e.setDate(e.getDate()-2);return e.getDate()}catch(x){return ''}}
+function dueDay(st){try{var d=pd(st);if(d.getDate()===1)return 31;var e=new Date(d.getFullYear(),d.getMonth()+1,d.getDate());e.setDate(e.getDate()-1);return e.getDate()}catch(x){return ''}}
 function chqTxt(n,dep){n=+n||0;var a,b;if(en()){a=n?(n+(n===1?' Cheque':' Cheques')):'';b=dep?(a?' + ':'')+'1 Security Deposit Cheque':''}else{a=n===1?'شيك واحد':n===2?'شيكين':n>=3&&n<=10?n+' شيكات':n>10?n+' شيك':'';b=dep?(a?' + ':'')+'شيك تأمين بقيمة إيجار شهر':''}return a+b}
 function months(){return Math.round(+String(f().mo||'').replace(/[^\d.]/g,'')||0)}
 function setv(k,v){f()[k]=v;var e=document.getElementById('ct_'+k);if(e)e.value=v}
-function refresh(){var F=f();document.querySelectorAll('#ctpaper [data-f]').forEach(function(x){var k=x.getAttribute('data-f');try{x.textContent=k==='due'?(F.due?(en()?'Day '+F.due+' of every month':'يوم '+F.due+' من كل شهر'):''):x.textContent}catch(e){}});var p=document.getElementById('ctpaper');if(p){S.ct.html=p.innerHTML}try{save()}catch(e){}}
+function refresh(){var F=f();document.querySelectorAll('#ctpaper [data-f]').forEach(function(x){var k=x.getAttribute('data-f');try{x.textContent=k==='due'?(F.due?(+F.due>=31?(en()?'Last day of every month':'آخر يوم من كل شهر'):(en()?'Day '+F.due+' of every month':'يوم '+F.due+' من كل شهر')):''):x.textContent}catch(e){}});var p=document.getElementById('ctpaper');if(p){S.ct.html=p.innerHTML}try{save()}catch(e){}}
 function oneTxt(dep){var F=f(),r=+String(F.rent||'').replace(/[^\d.]/g,'')||0,m=months(),tot=r*m+(dep?r:0),amt=tot?tot.toLocaleString('en-US'):'';return en()?'1 Cheque for the full period'+(amt?' (AED '+amt+')':'')+(dep?' including the security deposit':''):'شيك واحد بإجمالي قيمة المدة كلها'+(amt?' ('+amt+' درهم)':'')+(dep?' شامل شيك التأمين':'')}
 function applyChq(){var F=f();S.ct.cq=S.ct.cq||{n:months(),dep:true};var t=S.ct.cq.one?oneTxt(S.ct.cq.dep):chqTxt(S.ct.cq.n,S.ct.cq.dep);setv('chq',t);try{ctUpd('chq')}catch(e){}}
 var u0=window.ctUpd;window.ctUpd=function(k){var r=u0.apply(this,arguments);try{var F=f();
@@ -5333,7 +5333,7 @@ window.ctCq=function(w,v){S.ct=S.ct||{};S.ct.cq=S.ct.cq||{n:months(),dep:true};i
 function paintChq(){var q=document.getElementById('ct_chq');if(!q)return;S.ct=S.ct||{};S.ct.cq=S.ct.cq||{n:months(),dep:true};var b=document.getElementById('ctcq');if(!b){b=document.createElement('div');b.id='ctcq';b.style.cssText='display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0';q.parentNode.insertBefore(b,q.nextSibling)}
  var n=S.ct.cq.n,mx=Math.max(24,months());var o='';for(var i=0;i<=mx;i++)o+='<option value="'+i+'"'+(i===+n?' selected':'')+'>'+i+'</option>';
  var one=!!S.ct.cq.one;b.innerHTML='<select onchange="ctCq(\'one\',this.value===\'1\')" style="width:auto"><option value="0"'+(one?'':' selected')+'>شيكات بعدد</option><option value="1"'+(one?' selected':'')+'>شيك واحد بإجمالي المدة</option></select>'+(one?'':'<select onchange="ctCq(\'n\',this.value)" style="width:auto;min-width:70px">'+o+'</select>')+'<label style="margin:0;display:inline-flex;gap:6px;align-items:center;font-weight:700"><input type="checkbox" '+(S.ct.cq.dep?'checked':'')+' onchange="ctCq(\'dep\',this.checked)" style="width:auto"> + شيك تأمين</label><small class="mu">'+(months()?'العقد '+months()+(months()>2&&months()<11?' شهور':' شهر'):'')+'</small>'}
-function paintDue(){var e=document.getElementById('ct_due');if(!e||document.getElementById('ctduehint'))return;var h=document.createElement('small');h.id='ctduehint';h.className='mu';h.style.display='block';h.textContent='بيتحسب لوحده: قبل نهاية شهر الإيجار بيوم (تقدر تغيّره)';e.parentNode.appendChild(h)}
+function paintDue(){var e=document.getElementById('ct_due');if(!e||document.getElementById('ctduehint'))return;var h=document.createElement('small');h.id='ctduehint';h.className='mu';h.style.display='block';h.textContent='بيتحسب لوحده: اليوم اللي قبل يوم بداية العقد (بداية 8 ← الدفع يوم 7) — تقدر تغيّره';e.parentNode.appendChild(h)}
 var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(S.tab==='ct')setTimeout(function(){paintChq();paintDue()},150)}catch(e){}return o};
 var lg=window.ctLang;if(typeof lg==='function')window.ctLang=function(l){var r=lg.apply(this,arguments);try{if(S.ct.cq)applyChq();refresh()}catch(e){}return r};
 var nw=window.ctNew;window.ctNew=function(){var r=nw.apply(this,arguments);try{S.ct.cq=null;S.ct.dueMan=false;save()}catch(e){}return r};
