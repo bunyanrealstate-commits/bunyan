@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: 17 }
+        with: { distribution: temurin, java-version: 21 }
       - run: npm install
       - run: npx cap add android
       - run: npx capacitor-assets generate --android --iconBackgroundColor '#2747C9' --iconBackgroundColorDark '#2747C9'
@@ -34,6 +34,8 @@ jobs:
           D=android/app/src/main/java/com/bunyan/english
           mkdir -p $D && cp native/LocalLlmPlugin.java native/MainActivity.java $D/
           sed -i 's/minSdkVersion = [0-9]*/minSdkVersion = 24/' android/variables.gradle
+          sed -i 's#distributionUrl=.*#distributionUrl=https\\://services.gradle.org/distributions/gradle-8.9-all.zip#' android/gradle/wrapper/gradle-wrapper.properties
+          cat android/gradle/wrapper/gradle-wrapper.properties
           cat >> android/app/build.gradle <<'GEOF'
           dependencies { implementation 'com.google.mediapipe:tasks-genai:0.10.24' }
           android { androidResources { noCompress += ['task'] } }
