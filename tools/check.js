@@ -1,0 +1,39 @@
+// Full-app regression check. Run before every release:
+//   node tools/check.js [data.json]
+// Fails (exit 1) on: script syntax errors, page errors in any build, a crashed tab,
+// accounting self-test mismatch, changed key numbers vs the saved baseline (tools/baseline.json),
+// slow/hung language switch, stray UI (visible empty toast, header overlaps).
+const fs=require('fs'),path=require('path');const {chromium,devices}=require('playwright');
+const ROOT=path.join(__dirname,'..'),DATA=process.argv[2]||'/home/claude/bunyan-data2/book.json',BASE=path.join(__dirname,'baseline.json');
+const fails=[],notes=[];const F=m=>{fails.push(m);console.log('❌ '+m)},OK=m=>console.log('✅ '+m);
+(async()=>{
+ // 1) syntax of every inline script
+ const src=fs.readFileSync(path.join(ROOT,'rental-tracker.html'),'utf8');let n=0,bad=0;const re=/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g;let m;while(m=re.exec(src)){n++;try{new Function(m[1])}catch(e){bad++;F('syntax: '+e.message+' :: '+m[1].slice(0,60).replace(/\s+/g,' '))}}
+ if(!bad)OK('syntax: '+n+' scripts');
+ const b=await chromium.launch();
+ async function page(file,tz){const ctx=await b.newContext({...devices['Pixel 7'],timezoneId:tz||'Asia/Dubai'});const p=await ctx.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+  await p.addInitScript(()=>{try{localStorage.setItem('bny_hd_t',String(Date.now()));sessionStorage.setItem('bny_spl','1')}catch(e){}});await p.goto('file://'+file);await p.waitForTimeout(1800);return {p,errs,ctx}}
+ // 2) every build boots clean
+ for(const f of ['docs/index.html','docs/c/index.html','docs/h/index.html']){const fp=path.join(ROOT,f);if(!fs.existsSync(fp)){F('missing '+f);continue}const {p,errs,ctx}=await page(fp);const t=await p.evaluate(()=>document.body.innerText.length);if(errs.length)F(f+' boot errors: '+errs.slice(0,3).join(' | '));else if(t<50)F(f+' blank page');else OK(f+' boots');await ctx.close()}
+ // 3) main app with real data: every tab in every group
+ const {p,errs,ctx}=await page(path.join(ROOT,'rental-tracker.html'));
+ await p.evaluate(()=>{const b=document.getElementById('bio');b&&b.classList.remove('on')});
+ await p.fill('#lu','osama');await p.fill('#lp','1234');await p.fill('#lp2','1234');await p.tap('.dlg button.p');await p.waitForTimeout(1500);
+ const data=fs.readFileSync(DATA,'utf8');await p.evaluate(d=>{Object.assign(S,JSON.parse(d));window.__noSave=1},data);
+ const tabs=['home','units','grp','acc','n','ct','log','bk','books','rem'];
+ const res=await p.evaluate(tabs=>{const out={crash:[],nums:{}};const gs=(S.groups||[]).map(g=>g.id);gs.forEach(g=>{setW(g);tabs.forEach(t=>{try{S.tab=t;render();const a=document.getElementById('app');if(!a||a.innerText.trim().length<20)out.crash.push(g+'/'+t+': empty')}catch(e){out.crash.push(g+'/'+t+': '+e.message)}});
+   try{const r=rcvP(),f=fpos();out.nums[g]={cash:Math.round(cashNow()),profit:Math.round(r.profit),rev:Math.round(r.rev),eq:Math.round(f.eq)}}catch(e){out.crash.push(g+' numbers: '+e.message)}});S.tab='home';render();return out},tabs);
+ res.crash.forEach(c=>F('tab '+c));if(!res.crash.length)OK('all tabs render in '+Object.keys(res.nums).length+' groups');
+ // 4) accounting self-test (golden example)
+ const st=await p.evaluate(()=>{try{const r=window.monAudit(false);return (r.issues||[]).filter(x=>/محرك الحسابات/.test(x.area)).map(x=>x.msg)}catch(e){return ['monitor crashed: '+e.message]}});st.forEach(x=>F('self-test: '+x));if(!st.length)OK('accounting self-test');
+ // 5) key numbers vs baseline (same data => same numbers)
+ const key=require('crypto').createHash('md5').update(data).digest('hex');let base=null;try{base=JSON.parse(fs.readFileSync(BASE,'utf8'))}catch(e){}
+ if(base&&base.key===key){let diff=0;Object.keys(res.nums).forEach(g=>{const a=res.nums[g],o=base.nums[g]||{};Object.keys(a).forEach(k=>{if(Math.abs(a[k]-(o[k]||0))>1){diff++;F('number changed '+g+'.'+k+': '+o[k]+' → '+a[k])}})});if(!diff)OK('numbers unchanged vs baseline')}
+ else{notes.push('baseline saved for this data');fs.writeFileSync(BASE,JSON.stringify({key,at:new Date().toISOString(),nums:res.nums},null,1))}
+ if(process.env.ACCEPT){fs.writeFileSync(BASE,JSON.stringify({key,at:new Date().toISOString(),nums:res.nums},null,1));notes.push('baseline accepted')}
+ // 6) language switch must not hang
+ const t0=Date.now();const ok=await Promise.race([p.evaluate(()=>{setLang('en');return true}),new Promise(r=>setTimeout(()=>r(false),6000))]);const dt=Date.now()-t0;if(!ok||dt>4000)F('language switch slow/hung ('+dt+'ms)');else OK('language switch '+dt+'ms');await p.evaluate(()=>setLang('ar')).catch(()=>{});await p.waitForTimeout(600);
+ // 7) stray UI
+ const ui=await p.evaluate(()=>{const o=[];const t=document.getElementById('toast');if(t&&!t.textContent.trim()&&t.offsetHeight>0)o.push('empty toast visible');try{(window.bnyUiCheck&&bnyUiCheck()||[]).forEach(x=>o.push('ui: '+(x.msg||x)))}catch(e){}if(document.documentElement.scrollWidth>innerWidth+2)o.push('page scrolls sideways');return o});ui.forEach(F);if(!ui.length)OK('UI checks');
+ if(errs.length)errs.slice(0,5).forEach(e=>F('page error: '+e));else OK('no page errors');
+ await b.close();notes.forEach(x=>console.log('ℹ️ '+x));console.log(fails.length?'\nFAILED: '+fails.length:'\nALL GOOD');process.exit(fails.length?1:0)})().catch(e=>{console.log('❌ checker crashed: '+e.message);process.exit(2)});
