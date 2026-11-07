@@ -521,7 +521,7 @@ function drawM(){const e=gi('modal');if(!M){e.innerHTML='';return}
 function dlBackup(){logEv('تنزيل نسخة احتياطية');const b=new Blob([JSON.stringify(S)],{type:'application/json'});saveFile(b,'bunyan-backup-'+td()+'.json');try{localStorage.setItem('bunyan_bk',td())}catch(e){}toast('تم تنزيل نسخة احتياطية. إذا لم يعمل التنزيل عبر الرابط فاستخدم زر نسخ / لصق النص.');render()}
 function ldBackup(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.units)throw 0;confirmM('سيتم استبدال كل البيانات الحالية بهذه النسخة. هل تريد المتابعة؟',()=>{S=x;PREVL=null;logEv('استعادة نسخة احتياطية')})}catch(e){toast('الملف غير صالح')}};r.readAsText(f)}
 const bkAge=()=>{try{const d=localStorage.getItem('bunyan_bk');return d?Math.floor((today()-pd(d))/864e5):null}catch(e){return null}};
-setTimeout(()=>{let sy=false;try{sy=window.bkSafe?bkSafe():false}catch(e){}if(AUTH&&!sy&&S.units.length&&(bkAge()==null||bkAge()>=7))toast('⚠️ أنشئ نسخة احتياطية من تبويب النسخ الاحتياطي')},6000);
+setTimeout(()=>{let sy=false;try{sy=window.bkSafe?bkSafe():false}catch(e){}if(0)toast('')},6000);
 const mvO=(ot,mine)=>{const od=iso(new Date(ot)),t=today();let c=0;
  SU().forEach(u=>{const f=mine?shR(u.g):1;u.inst.forEach(i=>{if(i.p&&(i.at||0)>ot)c-=i.a*f});if(u.fp&&(u.fat||0)>ot)c-=(u.furn||0)*f;
   u.leases.forEach(L=>{L.rcv.forEach(i=>{if(((L.rat||{})[i]||0)>ot)c+=((L.rav||{})[i]??la(L,i))*f});if(L.penp&&(L.pat||0)>ot)c+=(L.pen||0)*f;if(L.adv&&(L.advat||0)>ot)c+=L.adv*f;(L.pp||[]).forEach(x=>{if((x.at||0)>ot)c+=(+x.a||0)*f});
@@ -824,7 +824,7 @@ function togI(id,k){const u=U(id),i=u.inst[k];if(i.p){i.p=false;i.at=0;if(window
 function togR(id,k,i){const L=U(id).leases[k],r=L.rcv,x=r.indexOf(i),a=la(L,i);L.rat=L.rat||{};L.rav=L.rav||{};x>=0?(r.splice(x,1),delete L.rat[i],delete L.rav[i]):(r.push(i),L.rat[i]=Date.now(),L.rav[i]=a);save();render()}
 /* ===== تنبيه النسخة الاحتياطية + تقرير المجموعات الشهري ===== */
 function bkSafe(){try{const c=JSON.parse(localStorage.getItem('bny_sync')||'null');if(c&&c.token&&c.repo)return true;const d=JSON.parse(localStorage.getItem('bny_dbk')||'{}');if(d.t&&Date.now()-d.t<3*864e5)return true;const g=JSON.parse(localStorage.getItem('bny_drv')||'{}');if(g.u&&g.t&&Date.now()-g.t<3*864e5)return true}catch(e){}return false}window.bkSafe=bkSafe;
-function bkWarn(){if(!S||!S.units||!S.units.length||bkSafe())return'';let l='';try{l=localStorage.getItem('bunyan_bk')||''}catch(e){}
+function bkWarn(){return '';if(!S||!S.units||!S.units.length||bkSafe())return'';let l='';try{l=localStorage.getItem('bunyan_bk')||''}catch(e){}
  const days=l?Math.floor((today()-pd(l))/864e5):999;if(days<7)return'';
  return `<div class='card' style='border-color:#e0a030'><h2>💾 أنشئ نسخة احتياطية</h2><p>${l?'آخر نسخة من '+days+' يوم.':'لم تنشئ نسخة احتياطية بعد.'} بياناتك مهمة، نزّل نسخة احتياطية الآن واحفظها على هاتفك أو Drive.</p><button class='p' onclick='dlBackup()'>نزّل نسخة الآن</button></div>`}
 const home0=home;home=function(){return bkWarn()+home0()};
@@ -4212,7 +4212,7 @@ var tf=tog;tog=function(id){var u=U(id);if(!u)return;if(u.fp){if(u.fsrc==='split
 window.spOpen=open;
 })();
 </script>
-<script id="dailybk">(function(){
+<script id="dailybk">(function(){return;/* اتشالت: النسخ بقت على السحابة وDrive */
 var C=window.Capacitor,FS=C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.Filesystem;if(!FS)return;
 var DIR='Bunyan-Backups',KEEP=30,K='bny_dbk',busy=false,lastSig='';
 function st(){try{return JSON.parse(localStorage.getItem(K)||'{}')}catch(e){return{}}}
@@ -5041,7 +5041,7 @@ function issueCard(full){var rp=null;try{rp=JSON.parse(localStorage.getItem('bny
 window.monFixCard=fixCard;
 function monLine(){var rp=null;try{rp=JSON.parse(localStorage.getItem('bny_mon_rep')||'null')}catch(e){}var I=(rp&&rp.issues)||[],open=I.filter(function(x){var k=kb(x);return !(k&&k.auto&&k.fix)}),fx=F().filter(function(r){return Date.now()-r.at<864e5&&r.st!=='no'}),last=rp?new Date(rp.t).toLocaleTimeString('ar-EG',{hour:'numeric',minute:'2-digit'}):'—';
  var st=open.some(function(x){return x.sev==='err'})?'<b class="neg">'+open.length+' محتاجة منك نظرة</b>':'<b class="pos">كل حاجة سليمة</b>';
- return "<div class='card monl' onclick=\"S.tab='bk';S.bksub='bk';render();setTimeout(function(){var c=document.querySelector('.mfx')||document.getElementById('moncard');c&&c.scrollIntoView({block:'start'})},150)\" style='cursor:pointer;padding:10px 14px'><div style='display:flex;align-items:center;gap:8px;font-size:13px'><span>🛡️</span><span style='flex:1;min-width:0'>المراقب: "+st+(fx.length?" • صلّح لوحده <b>"+fx.length+"</b> النهارده":"")+"<br><small class='mu'>آخر فحص "+last+" • بيفحص كل 5 دقايق — اضغط للتفاصيل</small></span><span class='mu'>‹</span></div></div>"}
+ return "<div class='card monl' onclick=\"S.tab='bk';S.bksub='bk';render();setTimeout(function(){var c=document.getElementById('moncard');c&&c.scrollIntoView({block:'start'})},150)\" style='cursor:pointer;padding:10px 14px'><div style='display:flex;align-items:center;gap:8px;font-size:13px'><span>🛡️</span><span style='flex:1;min-width:0'>المراقب: "+st+(fx.length?" • صلّح لوحده <b>"+fx.length+"</b> النهارده":"")+"<br><small class='mu'>آخر فحص "+last+" • بيفحص كل 5 دقايق — اضغط للتفاصيل</small></span><span class='mu'>‹</span></div></div>"}
 var rh=render,rhN=0;render=function(){try{var o=rh.apply(this,arguments);rhN=0;return o}catch(e){try{window.__monPush&&__monPush({m:'render('+(S&&S.tab)+'): '+(e&&e.message),l:'heal',s:e&&e.stack})}catch(x){}if(rhN++<2&&S&&S.tab!=='home'){S.tab='home';try{toast('⚠️ الصفحة دي وقعت — رجعتك للداشبورد واتبعت تقرير بالمشكلة')}catch(x){}return render()}throw e}};
 setInterval(function(){try{document.querySelectorAll('.ov').forEach(function(o){if(!o.querySelector('.dlg,input,button,iframe,img,canvas')&&!o.textContent.trim())o.remove()})}catch(e){}},30000);
 var hm=home;home=function(){var o=hm.apply(this,arguments);try{var d=o.indexOf("<div class=\"card\" id=\"moncard\"");if(d>=0){var e=o.indexOf('<div class="card"',d+10),e2=o.indexOf("<div class='card'",d+10);var end=[e,e2].filter(function(x){return x>0}).sort(function(a,b){return a-b})[0];if(end)o=o.slice(0,d)+o.slice(end)}o=o+monLine()}catch(x){}return o};
@@ -5156,7 +5156,14 @@ window.__hf={apply:apply,unapply:unapply,testPatch:testPatch,fnName:fnName,heal:
 /* «السجل والحماية» = سجل النشاط + النسخ الاحتياطي في تبويب واحد */
 var bk0=bkTab,lg0=logTab;
 function seg(){var n=0;try{n=(CL==='yes'&&unread())?unread():0}catch(e){}var sub=S.bksub||'log';return "<div class='lbseg'><button class='"+(sub==='log'?'on':'')+"' onclick=\"S.bksub='log';render();scrollTo(0,0)\">📜 سجل النشاط"+(n?' 🔴'+n:'')+"</button><button class='"+(sub==='bk'?'on':'')+"' onclick=\"S.bksub='bk';render();scrollTo(0,0)\">💾 النسخ والمراقب</button></div>"}
-bkTab=function(){var sub=S.bksub||'log';try{return seg()+(sub==='log'?lg0.apply(this,arguments):bk0.apply(this,arguments))}catch(e){return seg()+bk0.apply(this,arguments)}};
+function mergeMon(h){try{var d=document.createElement('div');d.innerHTML=h;var cs=[].slice.call(d.children).filter(function(c){return c.classList&&c.classList.contains('card')});
+ var pick=function(re){return cs.filter(function(c){var t=(c.querySelector('h2')||{}).textContent||'';return re.test(t)})[0]};
+ var a=pick(/مراقب البرنامج/),b=pick(/تقرير إصلاحات المراقب/),c=pick(/تعديلات المراقب في كود/);if(!a&&!b&&!c)return h;
+ var sec=function(el,title,open){if(!el)return '';var h2=el.querySelector('h2');if(h2)h2.remove();var inner=el.innerHTML;el.remove();return "<details"+(open?' open':'')+" style='border-top:1px solid rgba(120,140,160,.2);padding-top:6px;margin-top:6px'><summary style='font-weight:800;cursor:pointer;padding:4px 0'>"+title+"</summary>"+inner+"</details>"};
+ var rp=null;try{rp=JSON.parse(localStorage.getItem('bny_mon_rep')||'null')}catch(e){}var n=(rp&&rp.issues||[]).length;
+ var x=document.createElement('div');x.className='card';x.id='moncard';x.innerHTML="<h2>🛡️ المراقب</h2><p class='mu' style='margin:0 0 4px;font-size:12.5px'>"+(n?n+' ملاحظة':'✅ كل حاجة سليمة')+(rp?' • آخر فحص '+new Date(rp.t).toLocaleTimeString('ar-EG',{hour:'numeric',minute:'2-digit'}):'')+"</p>"+sec(a,'🔍 الفحص والملاحظات',n>0)+sec(b,'🛠️ اللي صلّحه لوحده',false)+sec(c,'🤖 تعديلات الكود',false);
+ var first=a||b||c;d.insertBefore(x,d.firstChild);return d.innerHTML}catch(e){return h}}
+bkTab=function(){var sub=S.bksub||'log';try{return seg()+(sub==='log'?lg0.apply(this,arguments):mergeMon(bk0.apply(this,arguments)))}catch(e){return seg()+bk0.apply(this,arguments)}};
 logTab=function(){S.bksub='log';return bkTab.apply(this,arguments)};
 var r0=render;render=function(){if(S&&S.tab==='log'){S.tab='bk';S.bksub='log'}return r0.apply(this,arguments)};
 })();</script>
