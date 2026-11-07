@@ -3,7 +3,7 @@
 // Fails (exit 1) on: script syntax errors, page errors in any build, a crashed tab,
 // accounting self-test mismatch, changed key numbers vs the saved baseline (tools/baseline.json),
 // slow/hung language switch, stray UI (visible empty toast, header overlaps).
-const fs=require('fs'),path=require('path');const {chromium,devices}=require('playwright');
+const fs=require('fs'),path=require('path');function cp(a,b){fs.mkdirSync(b,{recursive:true});for(const n of fs.readdirSync(a)){const x=path.join(a,n),y=path.join(b,n);fs.statSync(x).isDirectory()?cp(x,y):fs.copyFileSync(x,y)}}const {chromium,devices}=require('playwright');
 const ROOT=path.join(__dirname,'..'),DATA=process.argv[2]||'/home/claude/bunyan-data2/book.json',BASE=path.join(__dirname,'baseline.json');
 const fails=[],notes=[];const F=m=>{fails.push(m);console.log('❌ '+m)},OK=m=>console.log('✅ '+m);
 (async()=>{
@@ -36,4 +36,15 @@ const fails=[],notes=[];const F=m=>{fails.push(m);console.log('❌ '+m)},OK=m=>c
  // 7) stray UI
  const ui=await p.evaluate(()=>{const o=[];const t=document.getElementById('toast');if(t&&!t.textContent.trim()&&t.offsetHeight>0)o.push('empty toast visible');try{(window.bnyUiCheck&&bnyUiCheck()||[]).forEach(x=>o.push('ui: '+(x.msg||x)))}catch(e){}if(document.documentElement.scrollWidth>innerWidth+2)o.push('page scrolls sideways');return o});ui.forEach(F);if(!ui.length)OK('UI checks');
  if(errs.length)errs.slice(0,5).forEach(e=>F('page error: '+e));else OK('no page errors');
+ // 8) real-phone flow over http (service worker, refresh, update): no reload loops, app opens
+ try{const http=require('http'),os=require('os');const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'bny-'));cp(path.join(ROOT,'docs'),tmp);
+  const srv=http.createServer((q,r)=>{let f=path.join(tmp,decodeURIComponent(q.url.split('?')[0]));if(f.endsWith('/'))f+='index.html';fs.readFile(f,(e,d)=>{if(e){r.statusCode=404;return r.end()}r.setHeader('Content-Type',f.endsWith('.html')?'text/html; charset=utf-8':f.endsWith('.js')?'application/javascript':f.endsWith('.json')?'application/json':'application/octet-stream');r.end(d)})}).listen(0);
+  const port=srv.address().port,ctx2=await b.newContext({...devices['Pixel 7']}),q=await ctx2.newPage();let loads=0;q.on('load',()=>loads++);const e2=[];q.on('pageerror',e=>e2.push(e.message));
+  await q.addInitScript(()=>{try{localStorage.setItem('bny_hd_t',String(Date.now()))}catch(e){}});
+  await q.goto('http://127.0.0.1:'+port+'/index.html');await q.waitForTimeout(4000);
+  loads=0;await q.reload();await q.waitForTimeout(9000);if(loads>1)F('refresh without update reloaded '+loads+' times');
+  fs.appendFileSync(path.join(tmp,'index.html'),'\n<!-- t'+Date.now()+' -->');loads=0;await q.reload();await q.waitForTimeout(15000);if(loads>2)F('reload loop after an update: '+loads+' loads in 15s');
+  fs.appendFileSync(path.join(tmp,'index.html'),'\n<!-- u'+Date.now()+' -->');loads=0;await q.reload();await q.waitForTimeout(12000);if(loads>2)F('reload loop after 2nd update: '+loads+' loads');
+  const shown=await q.evaluate(()=>document.body.innerText.length);if(shown<50)F('app blank over http');
+  e2.slice(0,3).forEach(e=>F('http page error: '+e));if(!fails.some(x=>/reload|http/.test(x)))OK('http flow: refresh/update without loops');srv.close();await ctx2.close()}catch(e){F('http flow check crashed: '+e.message)}
  await b.close();notes.forEach(x=>console.log('ℹ️ '+x));console.log(fails.length?'\nFAILED: '+fails.length:'\nALL GOOD');process.exit(fails.length?1:0)})().catch(e=>{console.log('❌ checker crashed: '+e.message);process.exit(2)});
