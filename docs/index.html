@@ -6091,7 +6091,7 @@ var VV=window.visualViewport;function ta(){var a=document.getElementById('app'),
 if(VV){VV.addEventListener('resize',ta)}setInterval(ta,1500);ta();var r1=render;render=function(){var o=r1.apply(this,arguments);ta();return o};
 /* 2) tidy order of the cards in each tab */
 var ORDER={
- home:['hero2','#grid1','dsh','#grid2',/تنبيهات كل المجموعات/,/الدفعات القادمة/,/خطة السحب/,/الإيجارات وصافي ربح/,/رأس مال أول المدة/,/آخر التعديلات/,'monl'],
+ home:['hero2','#grid1','wpmini','dsh','#grid2',/تنبيهات كل المجموعات/,/الدفعات القادمة/,/خطة السحب/,/الإيجارات وصافي ربح/,/رأس مال أول المدة/,/آخر التعديلات/,'monl'],
  acc:['bkb','fx-btns','grid',/وضعي المالي اليوم/,/المتأخرات/,/النقدي: مصاريف وسحب/,/التحليل المالي/,/مقارنة الاستديوهات/,/مصروفات إضافية|كهرباء ومياه/,/تصدير للمحاسب/],
  grp:['bkb',/المجموعات \(الشراكات\)/,/تقرير المجموعات/,/طريقة حساب الأرقام/],
  bk:['bkb','lbseg',/النسخ الاحتياطي$|💾 النسخ الاحتياطي/,/Google Drive/,/تقرير Excel/,/المراقب/,/سلة المحذوفات/,/قفل الشهور/,/إعدادات أساسية/,/الترخيص/,/لاسترجاع كلمة السر/,/مربوط/]};
@@ -7208,8 +7208,10 @@ function body(){_nsMx=null;var T=tl(),P=T.P,R=Math.max(0,K('res',0)),X=Math.max(
  return h}
 window.wpSetS=function(k,v){try{localStorage.setItem('bny_wp_'+k,String(v||''))}catch(e){}var b=document.getElementById('wpb');if(b)b.innerHTML=body()};
 window.wpSet=function(k,v){SK(k,k==='nsW'&&+v<0?-1:Math.max(0,+v||0));var b=document.getElementById('wpb');if(b)b.innerHTML=body()};
+window.wpMini=function(){try{_nsMx=null;var T=tl(),P=T.P;if(P.length<2)return '';var R=Math.max(0,K('res',0)),now=Math.max(0,T.mf[0]-R),mi=0;for(var i=0;i<P.length;i++)if(P[i].b<P[mi].b)mi=i;var bad=T.mf[0]<R-0.5;
+ return "<div class='card wpmini' onclick=\"var c=document.getElementById('wpcard');if(c)c.scrollIntoView({behavior:'smooth',block:'start'})\" style='cursor:pointer;padding:12px 14px;display:flex;align-items:center;gap:10px;border-inline-start:5px solid "+(bad?'#dc2626':'#16a34a')+"'><span style='font-size:26px'>🧭</span><span style='flex:1;min-width:0'><b style='font-size:15px'>"+(bad?'⚠️ هيحصل عجز — ناقص '+F(-(T.mf[0]-R))+' يوم '+fd(P[mi].d):'تقدر تسحب دلوقتي من غير عجز: <span style="color:#15803d;font-size:19px">'+F(now)+'</span>')+"</b><br><small class='mu'>أقل رصيد هيوصله "+F(P[mi].b)+" يوم "+fd(P[mi].d)+" • اضغط لخطة السحب</small></span><span style='opacity:.5'>‹</span></div>"}catch(e){return ''}};
 window.wpCard=function(){var c="<div class='card wpc' id='wpcard'><h2>🧭 خطة السحب</h2><p class='wpsub'>من رصيدك دلوقتي وكل إيجار جاي وكل دفعة شركة: تسحب كام وامتى من غير ما يحصل عجز.</p><div id='wpb'>"+body()+"</div></div>";return c};
-var h0=home;home=function(){var o=h0.apply(this,arguments);try{if(typeof AUTH!=='undefined'&&AUTH)o+=wpCard()}catch(e){}return o};
+var h0=home;home=function(){var o=h0.apply(this,arguments);try{if(typeof AUTH!=='undefined'&&AUTH)o+=wpMini()+wpCard()}catch(e){}return o};
 })();</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
