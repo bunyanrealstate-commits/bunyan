@@ -5927,9 +5927,9 @@ async function readId(file){var c=await img(file),o=null;
  if(!o||!(o.en||o.ar||o.id)){o=idText(await tess(c,'eng+ara'))}
  if(o&&!o.nat_ar&&o.nat_en){o.nat_ar=NAT[o.nat_en.toLowerCase()]||''}return o}
 function pick(o,k){var L=lang();return L==='en'?(o[k+'_en']||o[k==='nat'?'nat_en':'en']||o[k+'_ar']||o.ar):(o[k+'_ar']||o[k==='nat'?'nat_ar':'ar']||o[k+'_en']||o.en)}
-window.ctIdRead=async function(inp){var fl=inp.files&&inp.files[0];inp.value='';if(!fl)return;toast('⏳ بقرأ هوية المستأجر…');try{var o=await readId(fl);if(!o||!(o.en||o.ar||o.id)){toast('⚠️ مقدرتش أقرأ الهوية — صوّرها أوضح');return}
+window.ctIdRead=async function(inp){var fl=inp.files&&inp.files[0];inp.value='';if(!fl)return;toast('⏳ بقرأ هوية المستأجر…');try{var o=await readId(fl);try{S.ct.alt=S.ct.alt||{};if(o){S.ct.alt.tn={ar:o.ar||'',en:o.en||''};S.ct.alt.nat={ar:o.nat_ar||'',en:o.nat_en||''}}}catch(x){}if(!o||!(o.en||o.ar||o.id)){toast('⚠️ مقدرتش أقرأ الهوية — صوّرها أوضح');return}
  var nm=lang()==='en'?(o.en||o.ar):(o.ar||o.en),nat=lang()==='en'?(o.nat_en||o.nat_ar):(o.nat_ar||o.nat_en);setF('tn',nm);setF('tid',o.id);setF('nat',nat);toast('✅ '+(nm||'')+(o.id?' • '+o.id:'')+(nat?' • '+nat:''))}catch(e){toast('⚠️ '+(e.message||e))}};
-window.ctLlRead=async function(inp){var fl=inp.files&&inp.files[0];inp.value='';if(!fl)return;toast('⏳ بقرأ هوية المؤجر…');try{var o=await readId(fl);if(!o||!(o.en||o.ar||o.id)){toast('⚠️ مقدرتش أقرأ الهوية');return}var nm=lang()==='en'?(o.en||o.ar):(o.ar||o.en);setF('ll',nm);setF('lid',o.id);toast('✅ المؤجر: '+(nm||'')+(o.id?' • '+o.id:''))}catch(e){toast('⚠️ '+(e.message||e))}};
+window.ctLlRead=async function(inp){var fl=inp.files&&inp.files[0];inp.value='';if(!fl)return;toast('⏳ بقرأ هوية المؤجر…');try{var o=await readId(fl);try{S.ct.alt=S.ct.alt||{};if(o)S.ct.alt.ll={ar:o.ar||'',en:o.en||''}}catch(x){}if(!o||!(o.en||o.ar||o.id)){toast('⚠️ مقدرتش أقرأ الهوية');return}var nm=lang()==='en'?(o.en||o.ar):(o.ar||o.en);setF('ll',nm);setF('lid',o.id);toast('✅ المؤجر: '+(nm||'')+(o.id?' • '+o.id:''))}catch(e){toast('⚠️ '+(e.message||e))}};
 window.ctPhRead=async function(inp){var fl=inp.files&&inp.files[0];inp.value='';if(!fl)return;toast('⏳ بدوّر على رقم الموبايل…');try{var c=await img(fl),p='';try{var o=await gem(c,'Find the main mobile phone number in this image (contact card, WhatsApp profile, screenshot, business card, or handwriting). Return ONLY JSON {"phone":"number with country code if visible, digits and + only"}.');p=o&&o.phone||''}catch(e){}
  if(!p){var t=await tess(c,'eng');var m=t.replace(/[٠-٩]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'.indexOf(d)}).match(/\+?\d[\d\s\-()]{7,16}\d/);p=m?m[0].replace(/[\s\-()]/g,''):''}
  if(!p){toast('⚠️ ملقيتش رقم في الصورة');return}setF('ph',p);toast('✅ الرقم: '+p)}catch(e){toast('⚠️ '+(e.message||e))}};
@@ -6282,6 +6282,32 @@ async function go(withSig){var F=(S.ct&&S.ct.f)||{},ph=phone(),nm='Tenancy-Contr
 window.ctSend=function(){var ph=phone(),F=(S.ct&&S.ct.f)||{},hasSig=!!(S.ct&&(S.ct.sig||S.ct.tsig));var o=document.createElement('div');o.className='ov sndw';
  o.innerHTML="<div class='dlg'><h2>📤 ابعت العقد للعميل</h2><p class='mu' style='margin:0 0 8px'>"+(ph?"هيتبعت PDF على واتساب <b dir='ltr'>+"+ph+"</b>":"⚠️ مفيش رقم موبايل في العقد — هتختار العميل من واتساب")+"</p><div class='bt'><button type='button' class='p' data-s='1'"+(hasSig?'':' disabled')+">✍️ PDF بالتوقيع"+(hasSig?'':' (مفيش توقيع)')+"</button><button type='button' class='p' data-s='0' style='background:#1b6a8a!important'>📄 PDF من غير توقيع</button><button type='button' data-s='x'>إلغاء</button></div></div>";
  document.body.appendChild(o);o.addEventListener('click',function(e){var b=e.target.closest('button');if(e.target===o||(b&&b.getAttribute('data-s')==='x')){o.remove();return}if(!b||b.disabled)return;o.remove();toast('⏳ بجهّز الـ PDF…');go(b.getAttribute('data-s')==='1')})};
+})();</script>
+<script id="ctlangjs">(function(){
+/* switching عربي/EN converts the names, nationality and subject already in the contract */
+var K=['tn','ll','nat','sub'];
+function isAr(v){return /[؀-ۿ]/.test(v||'')}
+var N2={'netherlands':'هولندا','dutch':'هولندي','germany':'ألمانيا','france':'فرنسا','italy':'إيطاليا','spain':'إسبانيا','usa':'أمريكا','united states':'أمريكا','canada':'كندا','australia':'أستراليا','turkey':'تركيا','ukraine':'أوكرانيا','poland':'بولندا','romania':'رومانيا','belgium':'بلجيكا','sweden':'السويد','ireland':'أيرلندا','south africa':'جنوب أفريقيا','brazil':'البرازيل','indonesia':'إندونيسيا','vietnam':'فيتنام','thailand':'تايلاند','kazakhstan':'كازاخستان','uzbekistan':'أوزبكستان','cameroon':'الكاميرون','ghana':'غانا','libya':'ليبيا','kuwait':'الكويت','qatar':'قطر','bahrain':'البحرين'};
+function natTr(v,to){var M={},s=String(v||'').trim().toLowerCase();try{Object.keys(N2).forEach(function(k){M[k]=N2[k]})}catch(e){}
+ var base={'egypt':'مصر','united arab emirates':'الإمارات','uae':'الإمارات','india':'الهند','pakistan':'باكستان','philippines':'الفلبين','bangladesh':'بنغلاديش','syria':'سوريا','jordan':'الأردن','sudan':'السودان','morocco':'المغرب','lebanon':'لبنان','yemen':'اليمن','iraq':'العراق','palestine':'فلسطين','tunisia':'تونس','algeria':'الجزائر','saudi arabia':'السعودية','oman':'عُمان','nepal':'نيبال','sri lanka':'سريلانكا','nigeria':'نيجيريا','ethiopia':'إثيوبيا','kenya':'كينيا','uganda':'أوغندا','russia':'روسيا','united kingdom':'بريطانيا','uk':'بريطانيا','china':'الصين','iran':'إيران','afghanistan':'أفغانستان','somalia':'الصومال','eritrea':'إريتريا'};Object.keys(base).forEach(function(k){M[k]=base[k]});
+ if(to==='ar')return M[s]||'';var r='';Object.keys(M).forEach(function(k){if(!r&&M[k]===String(v).trim())r=k.replace(/\b\w/g,function(c){return c.toUpperCase()})});return r?r.toUpperCase():''}
+async function gemTr(obj,to){var g=window.bnyGem,cf=g&&g.cfg&&g.cfg();if(!cf||!cf.key)return null;var model=(cf.models&&cf.models[0])||'gemini-2.5-flash';
+ var pr=to==='ar'?'Convert these tenancy-contract fields to Arabic. Person names: transliterate to Arabic letters exactly the way names are written on a UAE Emirates ID (do not translate meanings). Other text: translate naturally into formal Arabic, keep numbers. Return ONLY JSON with the same keys. ':'Convert these tenancy-contract fields to English. Person names: transliterate to English letters the way they are written on a UAE Emirates ID / passport (UPPER/Title case as usual). Other text: translate naturally, keep numbers. Return ONLY JSON with the same keys. ';
+ var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':cf.key},body:JSON.stringify({contents:[{parts:[{text:pr+JSON.stringify(obj)}]}],generationConfig:{temperature:0,responseMimeType:'application/json'}})});
+ var j=await r.json(),t=(((j.candidates||[])[0]||{}).content||{}).parts;t=t&&t.map(function(p){return p.text||''}).join('');var m=t&&t.match(/\{[\s\S]*\}/);return m?JSON.parse(m[0]):null}
+function setV(k,v){var f=S.ct.f;f[k]=v;var el=document.getElementById('ct_'+k);if(el){el.value=v;el.setAttribute('dir','auto')}try{ctUpd(k)}catch(e){document.querySelectorAll('#ctpaper [data-f="'+k+'"]').forEach(function(x){x.textContent=v})}}
+async function convert(to){if(!S.ct||!S.ct.f)return;var f=S.ct.f,A=S.ct.alt=S.ct.alt||{},need={},done=0;
+ K.forEach(function(k){var v=String(f[k]||'').trim();if(!v)return;var cur=isAr(v)?'ar':'en';if(cur===to)return;A[k]=A[k]||{};A[k][cur]=v;
+  if(A[k][to]){setV(k,A[k][to]);done++;return}
+  if(k==='nat'){var n=natTr(v,to);if(n){A[k][to]=n;setV(k,n);done++;return}}
+  need[k]=v});
+ var ks=Object.keys(need);if(ks.length){toast('⏳ بحوّل البيانات لل'+(to==='ar'?'عربي':'إنجليزي')+'…');var o=null;try{o=await gemTr(need,to)}catch(e){o=null}
+  if(o){ks.forEach(function(k){var v=String(o[k]||'').trim();if(v&&(to==='ar')===isAr(v)){A[k][to]=v;setV(k,v);done++}})}
+  else{toast('⚠️ مقدرتش أحوّل '+ks.map(function(k){return {tn:'اسم المستأجر',ll:'اسم المؤجر',nat:'الجنسية',sub:'موضوع الإيجار'}[k]}).join(' و')+' — محتاج مفتاح Gemini، أو صوّر الهوية تاني، أو اكتبها بإيدك');try{save()}catch(e){}return}}
+ try{save()}catch(e){}if(done)toast('✅ البيانات بقت '+(to==='ar'?'بالعربي':'بالإنجليزي'))}
+window.ctConvertLang=convert;
+var tried='';var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(S.tab==='ct'&&S.ct&&S.ct.f){var to=S.ct.lang==='en'?'en':'ar',sig=to+'|'+K.map(function(k){return S.ct.f[k]||''}).join('|');if(sig!==tried){var mis=K.some(function(k){var v=S.ct.f[k];return v&&(isAr(v)?'ar':'en')!==to});tried=sig;if(mis)setTimeout(function(){convert(to)},700)}}}catch(e){}return o};
+var lg=window.ctLang;if(typeof lg==='function')window.ctLang=function(l){var r=lg.apply(this,arguments);convert(l);return r};
 })();</script>
 </body>
 </html>
