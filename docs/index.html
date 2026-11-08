@@ -5225,6 +5225,8 @@ function isStatement(q){var w=String(q).trim().split(/\s+/);return w.length>=3&&
 var o=window.bnyAsk;
 window.bnyAsk=function(q){var n=near(q);if(n&&n.v>=0.7){n.x.used=(n.x.used||0)+1;return {t:'📝 **الإجابة اللي علمتهالي:**\n'+n.x.t,i:'custom'}}
  var r=o(q);if(r&&r.then)return r;
+ /* a sentence that tells me something (e.g. «المستأجر في الحمادي 197 بيدفع يوم 5») must not be answered with a general summary */
+ if(r&&r.i&&/^(totals|cash|profit|proj|summary|upcoming)$/.test(r.i)&&isStatement(q)&&String(q).trim().split(/\s+/).length>=5&&!/(اجمال|إجمال|مجموع|كاش|رصيد|ربح|ملخص|الوضع|حسابات|فلوس)/.test(q))r={t:'',ask:1};
  if(r&&r.ask&&!r.i){
   if(n&&n.v>=0.4)return {t:'🤔 أعتقد قصدك «'+n.x.q+'»؟ اللي علمتهولي:\n'+n.x.t+'\n\nلو صح اضغط ✅ وهفهمها كده على طول، ولو غلط اضغط ✍️ واكتبلي الصح.',i:'custom'};
   if(isStatement(q)){M.addFact(q);return {t:'🧠 خدت بالي وهفتكرها: «'+String(q).trim()+'»\nهستخدمها لما تسألني عن حاجة قريبة. لو مكانتش معلومة اضغط ❌.',i:'autofact'}}}
@@ -6574,6 +6576,8 @@ var R=[
   check:function(){var o=[];if(window.__bnyIsStmt&&__bnyIsStmt('انت علي علم بالتحديث اللي حصل للبرنامج'))o.push('بيعتبر الأسئلة معلومات');try{(BNYMEM.facts()||[]).forEach(function(f){if(window.__bnyIsStmt&&!__bnyIsStmt(f.t))o.push('سؤال متحفظ كمعلومة: «'+String(f.t).slice(0,40)+'»')})}catch(e){}return o},fix:function(){var n=window.bnyFactClean?bnyFactClean():0;return 'شلت '+n+' سؤال اتحفظ غلط'}},
  {id:'ainews',area:'المساعد',t:'المساعد مكانش عارف آخر تحديثات البرنامج ولا تبويب الأبديت',
   check:function(){try{var r=window.bnyAsk&&bnyAsk('انت علي علم بالتحديث اللي حصل للبرنامج من تبويب ابديت');return r&&r.i==='help'?[]:['المساعد مش بيرد على سؤال التحديثات']}catch(e){return []}},fix:null},
+ {id:'aistmt',area:'المساعد',t:'لما قلتله معلومة فيها أرقام (المستأجر في الحمادي 197 بيدفع يوم 5) رد بإجماليات الحسابات بدل ما ياخد باله منها',
+  check:function(){try{var Fs=BNYMEM.facts(),n0=Fs.length;var r=bnyAsk('المستأجر في الحمادي 197 بيدفع يوم 5');var bad=r&&!r.then&&r.i==='totals';var F2=BNYMEM.facts();if(F2.length>n0)BNYMEM.delFact(F2.length-1);return bad?['بيرد بالإجماليات على معلومة']:[]}catch(e){return []}},fix:null},
  {id:'updlong',area:'الأبديت',t:'صفحة الأبديت كانت طويلة جداً (كل الشقق مفتوحة والمعاينة كبيرة)',
   check:function(){if(S.tab!=='upd')return [];var o=document.querySelectorAll('#updwrap .uvl.open').length;return o>1?['أكتر من فيلا مفتوحة في نفس الوقت']:[]},fix:function(){window.__updOpen='';render();return 'قفلت الفلل المفتوحة'}},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
@@ -6966,6 +6970,7 @@ var lg=window.ctLang;if(typeof lg==='function')window.ctLang=function(l){var r=l
 <script id="bnynews">(function(){
 /* the assistant knows what changed in the app and how each new part works — answers on its own, no Claude/Gemini needed */
 var NEWS=[
+ ['2026-11-08','المساعد: بقى يفرّق بين السؤال والمعلومة — لو قلتله معلومة بيحفظها، ولو سألته بيجاوب.'],
  ['2026-11-08','العقد: الكتابة في خانات بيانات العقد (زي موضوع الإيجار) مبقتش تقفل الكيبورد ولا تحرّك الصفحة.'],
  ['2026-11-08','العقد: تحت «موضوع الإيجار» فيه قايمة «🏠 اختار الاستديو من المجموعات» — بتكتب اسم الفيلا ورقمها ورقم الاستديو لوحدها، وباقي الجملة بيفضل زي ما هو حتى مع «➕ عقد جديد».'],
  ['2026-11-08','الأبديت: الصفحة بقت قصيرة — كل فيلا سطر واحد تدوس عليه يفتح شققها، والصورة مستخبية لحد ما تدوس «👀 شوف الصورة».'],
