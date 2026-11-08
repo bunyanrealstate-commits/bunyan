@@ -5687,6 +5687,7 @@ function lay(){if(S.tab!=='ct')return;var w=document.getElementById('ctwrap');if
  try{var rs=document.querySelector('#ctpaper [data-f="rent"]');if(rs&&S.ct.f.rent&&!/AED|درهم/.test(rs.textContent))ctUpd('rent')}catch(e){}
  var st=box('st');if(st&&!st.querySelector('.cttoday')){var tb=document.createElement('button');tb.type='button';tb.className='cttoday';tb.textContent='📅 العقد بتاريخ النهارده';tb.setAttribute('onclick','ctToday()');st.appendChild(tb)}
 }
+var lk=function(){var g=document.querySelector('#ctpaper .sg');if(g&&g.getAttribute('contenteditable')!=='false')g.setAttribute('contenteditable','false')};var l0=lay;lay=function(){l0();lk()};
 window.ctLayout=lay;
 var r0=render;render=function(){if(S.tab==='ct')migrate();var o=r0.apply(this,arguments);if(S.tab==='ct'){[0,60,200,450,900].forEach(function(t){setTimeout(lay,t)})}return o};
 var pend=0;try{new MutationObserver(function(){if(pend||S.tab!=='ct')return;pend=1;setTimeout(function(){pend=0;try{lay()}catch(e){}},30)}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true})}catch(e){}
@@ -5726,12 +5727,16 @@ window.ctWSign=function(){var w=1,W=(S.ct&&S.ct.wsig)||{};var o=document.createE
  o.querySelector('#wsok').onclick=function(){if(!drawn){toast('محتاج توقيع الأول');return}var d=g.getImageData(0,0,cv.width,cv.height).data,Wd=cv.width,H=cv.height,x0=Wd,y0=H,x1=0,y1=0;for(var y=0;y<H;y+=2)for(var x=0;x<Wd;x+=2){if(d[(y*Wd+x)*4+3]>10){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}}var pad=8,ww=Math.max(10,x1-x0+pad*2),h=Math.max(10,y1-y0+pad*2),k=Math.min(1,360/ww),t=document.createElement('canvas');t.width=Math.round(ww*k);t.height=Math.round(h*k);t.getContext('2d').drawImage(cv,x0-pad,y0-pad,ww,h,0,0,t.width,t.height);
   S.ct.wsig=S.ct.wsig||{};S.ct.wsig[w]=t.toDataURL('image/png');o.remove();applyW();keepHtml();render();toast('✅ توقيع الشاهد '+(w===1?'الأول':'التاني')+' اتحط على العقد')}};
 /* ---------- undo (step back) ---------- */
-var H=[],RD=[],last=null,busy=false,ign=0,wasCt=false;
-function snap(){var c=S.ct||{},o={};Object.keys(c).forEach(function(k){if(k!=='ids')o[k]=c[k]});return JSON.stringify(o)}
-function tick(){if(S.tab!=='ct'){wasCt=false;return}if(busy||!S.ct)return;var s=snap();if(!wasCt){wasCt=true;ign=Date.now()+2500}if(Date.now()<ign){last=s;return}if(last===null){last=s;return}if(s!==last){H.push(last);if(H.length>60)H.shift();RD=[];last=s;btn()}}
-function restore(s){busy=true;try{var o=JSON.parse(s),ids=S.ct&&S.ct.ids;S.ct=o;if(ids)S.ct.ids=ids;last=s;try{save()}catch(e){}render()}catch(e){}setTimeout(function(){busy=false;last=snap();btn()},600)}
-window.ctUndo=function(){if(!H.length){toast('مفيش خطوات ترجعها');return}RD.push(snap());restore(H.pop());toast('↶ رجعت خطوة'+(H.length?' — فاضل '+H.length:''))};
-window.ctRedo=function(){if(!RD.length)return;H.push(snap());restore(RD.pop());toast('↷ رجّعت الخطوة')};
+var H=[],RD=[],last=null,busy=false,ign=0,wasCt=false,PH=null;
+function snap(){var c=S.ct||{},o={};Object.keys(c).forEach(function(k){if(k!=='ids')o[k]=c[k]});if(o.html)o.html=String(o.html).replace(/src="data:[^"]*"/g,'src=""');return JSON.stringify(o)}
+var IMG={};function pack(s){return s.replace(/"(data:image\/[^"]{200,})"/g,function(m,d){var h='#i'+d.length+'_'+d.slice(-24).replace(/[^A-Za-z0-9]/g,'');IMG[h]=d;return '"'+h+'"'})}
+function unpack(s){return s.replace(/"(#i\d+_[A-Za-z0-9]*)"/g,function(m,h){return IMG[h]?'"'+IMG[h]+'"':'""'})}
+var pT=0;function persist(){clearTimeout(pT);pT=setTimeout(function(){try{var hh=H.slice(-40).map(pack),used={};hh.forEach(function(x){(x.match(/#i\d+_[A-Za-z0-9]*/g)||[]).forEach(function(k){used[k]=IMG[k]})});localStorage.setItem('bny_ct_hist',JSON.stringify({h:hh,i:used}))}catch(e){try{localStorage.removeItem('bny_ct_hist')}catch(x){}}},800)}
+try{PH=JSON.parse(localStorage.getItem('bny_ct_hist')||'null');if(PH&&PH.h){IMG=PH.i||{};H=PH.h.map(unpack)}}catch(e){}
+function tick(){if(S.tab!=='ct'){wasCt=false;return}if(busy||!S.ct)return;var s=snap();if(!wasCt){wasCt=true;ign=Date.now()+2500}if(Date.now()<ign){last=s;return}if(last===null){last=s;return}if(s!==last){H.push(last);if(H.length>60)H.shift();RD=[];last=s;btn();persist()}}
+function restore(s){busy=true;try{var o=JSON.parse(s),ids=S.ct&&S.ct.ids;S.ct=o;if(ids)S.ct.ids=ids;setTimeout(function(){try{applyW();window.ctSigApply&&ctSigApply()}catch(e){}},300);last=s;try{save()}catch(e){}render()}catch(e){}setTimeout(function(){busy=false;last=snap();btn()},600)}
+window.ctUndo=function(){if(!H.length){toast('مفيش خطوات ترجعها');return}RD.push(snap());restore(H.pop());persist();toast('↶ رجعت خطوة'+(H.length?' — فاضل '+H.length:''))};
+window.__ctHist=function(){return H.length};window.ctRedo=function(){if(!RD.length)return;H.push(snap());restore(RD.pop());toast('↷ رجّعت الخطوة')};
 function btn(){var b=document.getElementById('ctundo');if(S.tab!=='ct'){if(b)b.remove();return}if(!b){b=document.createElement('div');b.id='ctundo';b.innerHTML="<button type='button' id='ctrd' title='ترجيع الخطوة اللي رجعتها' onclick='ctRedo()'>↷</button><button type='button' id='ctud' title='رجوع خطوة' onclick='ctUndo()' style='position:relative'>↶<small></small></button>";document.body.appendChild(b)}
  var u=b.querySelector('#ctud'),r=b.querySelector('#ctrd');u.disabled=!H.length;u.querySelector('small').textContent=H.length?H.length:'';u.querySelector('small').style.display=H.length?'':'none';r.style.display=RD.length?'':'none'}
 setInterval(tick,700);
@@ -5815,6 +5820,12 @@ var R=[
  {id:'ctfit',area:'العقد',t:'الكلام في ورقة العقد كان بيطلع برّه خانته ويركب على اللي جنبه',
   check:function(){var p=$('#ctpaper');if(!p||!vis(p))return [];var o=[];[].slice.call(p.querySelectorAll('td')).forEach(function(td){if(o.length>3||!td.textContent.trim())return;var rg=document.createRange();rg.selectNodeContents(td);var a=rg.getBoundingClientRect(),b=td.getBoundingClientRect();if(a.width&&(a.left<b.left-2||a.right>b.right+2))o.push('«'+td.textContent.trim().slice(0,25)+'»')});return o},
   fix:function(){var p=$('#ctpaper');[].slice.call(p.querySelectorAll('td')).forEach(function(td){td.style.whiteSpace='normal';td.style.overflowWrap='break-word'});try{window.ctFit&&ctFit();ct().html=p.innerHTML;save()}catch(e){}return 'خليت الكلام الطويل ينزل سطر جوه خانته'}},
+ {id:'ctsigrow',area:'العقد',t:'خانات التوقيع تحت العقد اتلخبطت (اتمسح شاهد، الكلام اتداخل، أو التوقيع اتكرر)',
+  check:function(){var h=ct().html;if(!h)return [];var d=document.createElement('div');d.innerHTML=h;var g=d.querySelector('.sg');if(!g)return ['خانات التوقيع مش موجودة'];var c=[].slice.call(g.children),o=[];var want=['Witness','Witness','Tenant Signature','Landlord Signature'];
+   if(c.length!==4)o.push('عدد خانات التوقيع '+c.length+' بدل 4');else c.forEach(function(x,i){var t=(x.firstChild&&x.firstChild.nodeType===3?x.firstChild.textContent:x.textContent).trim();if(t.indexOf(want[i])!==0)o.push('خانة '+(i+1)+': «'+t.slice(0,20)+'»')});
+   ['ctsig','cttsig','ctwsig1','ctwsig2'].forEach(function(k){if(g.querySelectorAll('img.'+k).length>1)o.push('توقيع متكرر')});if(d.querySelectorAll('img.ctsig,img.cttsig,img.ctwsig1,img.ctwsig2').length>g.querySelectorAll('img.ctsig,img.cttsig,img.ctwsig1,img.ctwsig2').length)o.push('توقيع برّه خانته');return o},
+  fix:function(){var c=ct(),d=document.createElement('div');d.innerHTML=c.html;[].slice.call(d.querySelectorAll('img.ctsig,img.cttsig,img.ctwsig1,img.ctwsig2')).forEach(function(i){i.remove()});var g=d.querySelector('.sg');if(!g){g=document.createElement('div');g.className='sg';(d.querySelector('.fr')||d).appendChild(g)}
+   g.innerHTML='<div>Witness<small>الشاهد</small></div><div>Witness<small>الشاهد</small></div><div>Tenant Signature<small>توقيع المستأجر</small></div><div>Landlord Signature<small>توقيع المؤجر</small></div>';g.setAttribute('contenteditable','false');c.html=d.innerHTML;try{save()}catch(e){}if(S.tab==='ct')render();return 'رجّعت خانات التوقيع الأربعة زي ما كانت والتوقيعات اتحطت في أماكنها'}},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
   check:function(){if(S.tab!=='ct')return [];var seen={},o=[];[].slice.call(document.querySelectorAll('#app button')).filter(vis).forEach(function(b){var t=b.textContent.trim();if(t.length<5)return;seen[t]=(seen[t]||0)+1;if(seen[t]===2)o.push('«'+t.slice(0,25)+'»')});return o},fix:null},
  {id:'stray',area:'الشاشة',t:'شريط تعديل أو زرار رجوع كان ممكن يفضل ظاهر برّه صفحة العقد',
@@ -5846,7 +5857,7 @@ setInterval(function(){if(!document.hidden)runAll()},60000);
 window.bnyRulesSelfTest=function(){var bad=[],t=S.tab,hc=S.ct&&S.ct.html;S.ct=S.ct||{};
  var cases=[['sgmode',function(){document.documentElement.classList.add('sgmode')}],['toast',function(){var x=$('#toast');x.textContent=' ';x.style.display='block'}],
   ['ctblur',function(){S.ct.html=(S.ct.html||'<p>1</p>')+'<span class="bq">123</span>'}],['ctlabels',function(){S.ct.html=(S.ct.html||'')+'<td>LandLord Name</td>'.replace('<td>','<td>')+'<b>x</b>';S.ct.html=S.ct.html.replace('<b>x</b>','<i>>LandLord Name<</i>')}],
-  ['ctsig',function(){S.ct.sgpos={l:{x:900,y:0}}}],['stray',function(){S.tab='home';var d=document.createElement('div');d.id='ctxl';document.body.appendChild(d)}],
+  ['ctsig',function(){S.ct.sgpos={l:{x:900,y:0}}}],['ctsigrow',function(){S.ct.html=(S.ct.html||'<div class="fr"></div>').replace(/<div class="sg"[^>]*>[\s\S]*$/,'')+'<div class="sg"><div>Witness<small>الشاه</small>االختا Tenant</div><div>Landlord Signature<small>توقيع المؤجر</small></div></div></div>'}],['stray',function(){S.tab='home';var d=document.createElement('div');d.id='ctxl';document.body.appendChild(d)}],
   ['menu',function(){var hd=$('.hd');hd.classList.add('mopen');var o=document.createElement('div');o.className='ov';o.id='__rt';document.body.appendChild(o)}]];
  cases.forEach(function(c){try{c[1]();var res=runAll([c[0]]);var x=res.filter(function(y){return y.r.id===c[0]})[0];if(!x)bad.push(c[0]+': not detected');else if(!x.fixed)bad.push(c[0]+': detected but not fixed')}catch(e){bad.push(c[0]+': crashed '+e.message)}var o=document.getElementById('__rt');o&&o.remove()});
  S.tab=t;if(hc!=null)S.ct.html=hc;S.ct.sgpos={};S.monfix=(S.monfix||[]).filter(function(x){return !/^r:/.test(x.k)});return bad};
