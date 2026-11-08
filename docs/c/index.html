@@ -5517,9 +5517,11 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);if(S.tab==='ct')s
 setTimeout(fix,1500);
 })();</script>
 <style id="sgmovecss">
-#ctpaper img.ctsig,#ctpaper img.cttsig{position:relative;touch-action:none;cursor:grab;-webkit-user-drag:none;user-select:none}
+#ctpaper img.ctsig,#ctpaper img.cttsig{position:relative;pointer-events:none;-webkit-user-drag:none;user-select:none}
+html.sgmode,html.sgmode body{overscroll-behavior:none;touch-action:none}html.sgmode #ctview{touch-action:none}html.sgmode #ctpaper img.ctsig,html.sgmode #ctpaper img.cttsig{opacity:.55}html.sgmode #ctpaper img.sgsel{opacity:1}
+#sgbar{gap:4px!important;padding:8px!important}#sgbar>button{min-width:34px!important;padding:0 8px!important}#sgbar .sgt{display:inline-flex;border-radius:999px;overflow:hidden;background:#ffffff1f}#sgbar .sgt button{border-radius:0;background:transparent;font-size:12.5px}#sgbar .sgt button.on{background:#1473e6}#sgbar small{flex-basis:100%;text-align:center;font-size:11.5px;font-weight:600;opacity:.85}
 #ctpaper img.sgsel{outline:2px dashed #1473e6;outline-offset:3px;border-radius:4px}
-#sgbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:2147483000;display:flex;gap:6px;align-items:center;background:#0f2742;color:#fff;padding:8px 10px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:13px;font-weight:800;white-space:nowrap}
+#sgbar{flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 24px);border-radius:22px!important;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:2147483000;display:flex;gap:6px;align-items:center;background:#0f2742;color:#fff;padding:8px 10px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:13px;font-weight:800;white-space:nowrap}
 #sgbar button{min-height:34px;min-width:38px;border-radius:999px;border:0;background:#ffffff1f;color:#fff;font-size:15px;font-weight:800;padding:0 10px}
 #sgbar button.ok{background:#22a06b}
 .sndw .bt{flex-direction:column}.sndw .bt button{width:100%}
@@ -5529,24 +5531,45 @@ function P(){S.ct=S.ct||{};return S.ct.sgpos=S.ct.sgpos||{}}
 function key(im){return im.classList.contains('cttsig')?'t':'l'}
 function apply(){var p=document.getElementById('ctpaper');if(!p)return;['ctsig','cttsig'].forEach(function(c){var im=p.querySelector('img.'+c);if(!im)return;var o=P()[c==='cttsig'?'t':'l'];if(o){im.style.left=(o.x||0)+'px';im.style.top=(o.y||0)+'px';if(o.w){im.style.width=o.w+'px';im.style.maxWidth='none';im.style.maxHeight='none';im.style.height='auto'}}else{im.style.left='';im.style.top='';im.style.width='';im.style.maxWidth='';im.style.maxHeight='';im.style.height=''}im.draggable=false;im.setAttribute('contenteditable','false')})}
 function store(){var p=document.getElementById('ctpaper');if(p&&S.ct){[].slice.call(p.querySelectorAll('.sgsel')).forEach(function(x){x.classList.remove('sgsel')});S.ct.html=p.innerHTML;if(sel)sel.classList.add('sgsel')}try{save()}catch(e){}}
-var sel=null;
-function bar(){var b=document.getElementById('sgbar');if(!sel){if(b)b.remove();return}if(!b){b=document.createElement('div');b.id='sgbar';b.innerHTML="<span>✍️ اسحبه بصباعك</span><button type='button' data-a='-' title='أصغر'>−</button><button type='button' data-a='+' title='أكبر'>+</button><button type='button' data-a='r' title='رجّعه مكانه'>↺</button><button type='button' class='ok' data-a='ok'>تمام</button>";document.body.appendChild(b);
- b.addEventListener('click',function(e){var a=e.target.closest('button');if(!a||!sel)return;var k=key(sel),o=P()[k]||{x:0,y:0},act=a.getAttribute('data-a');
-  if(act==='ok'){unsel();return}if(act==='r'){delete P()[k];apply();store();return}
-  var w=o.w||sel.getBoundingClientRect().width/scale();w=Math.max(40,Math.min(320,w*(act==='+'?1.15:1/1.15)));o.w=Math.round(w);P()[k]=o;apply();store()})}}
-function unsel(){if(sel)sel.classList.remove('sgsel');sel=null;bar();store()}
+/* Signature edit MODE: outside it the signatures are inert (the contract pans/zooms normally);
+   inside it the contract is frozen and every touch goes to the chosen signature only:
+   one finger = move, two fingers = resize. Listeners sit on window (capture) so they run before
+   the contract's own pan/zoom handlers and swallow the event. */
+var sel=null,mode=false;
+function sigs(){var p=document.getElementById('ctpaper');return p?[].slice.call(p.querySelectorAll('img.ctsig,img.cttsig')):[]}
+function pick(im){if(sel)sel.classList.remove('sgsel');sel=im||null;if(sel)sel.classList.add('sgsel');bar()}
+function bar(){var b=document.getElementById('sgbar');if(!mode){if(b)b.remove();return}
+ var L=sigs(),has=function(c){return L.some(function(x){return x.classList.contains(c)})};
+ if(!b){b=document.createElement('div');b.id='sgbar';document.body.appendChild(b);
+  b.addEventListener('click',function(e){var a=e.target.closest('button');if(!a)return;var act=a.getAttribute('data-a');
+   if(act==='ok'){exit();return}if(act==='l'||act==='t'){pick(sigs().filter(function(x){return x.classList.contains(act==='t'?'cttsig':'ctsig')})[0]);return}
+   if(!sel)return;var k=key(sel),o=P()[k]||{x:0,y:0};if(act==='r'){delete P()[k];apply();store();return}
+   resize(k,act==='+'?1.15:1/1.15)})}
+ b.innerHTML="<div class='sgt'>"+(has('ctsig')?"<button type='button' data-a='l' class='"+(sel&&key(sel)==='l'?'on':'')+"'>المؤجر</button>":"")+(has('cttsig')?"<button type='button' data-a='t' class='"+(sel&&key(sel)==='t'?'on':'')+"'>المستأجر</button>":"")+"</div><button type='button' data-a='-' title='أصغر'>−</button><button type='button' data-a='+' title='أكبر'>+</button><button type='button' data-a='r' title='رجّعه مكانه'>↺</button><button type='button' class='ok' data-a='ok'>✓ تمام</button><small>صباع واحد يحرّك • صباعين يكبّر/يصغّر</small>"}
+function resize(k,f,base){var im=sel;if(!im)return;var o=P()[k]||{x:0,y:0};var w=base||o.w||im.getBoundingClientRect().width/scale();o.w=Math.round(Math.max(40,Math.min(300,w*f)));P()[k]=o;apply();store()}
 function scale(){var p=document.getElementById('ctpaper');if(!p||!p.offsetWidth)return 1;return p.getBoundingClientRect().width/p.offsetWidth||1}
-var drag=null;
-document.addEventListener('pointerdown',function(e){var im=e.target&&e.target.closest&&e.target.closest('#ctpaper img.ctsig,#ctpaper img.cttsig');if(!im){if(sel&&!e.target.closest('#sgbar'))unsel();return}
- e.preventDefault();e.stopPropagation();if(sel!==im){if(sel)sel.classList.remove('sgsel');sel=im;im.classList.add('sgsel');bar()}
- var o=P()[key(im)]||{x:0,y:0};drag={id:e.pointerId,sx:e.clientX,sy:e.clientY,x:o.x||0,y:o.y||0,k:key(im),moved:false};try{im.setPointerCapture(e.pointerId)}catch(x){}},true);
-document.addEventListener('pointermove',function(e){if(!drag||e.pointerId!==drag.id)return;e.preventDefault();var s=scale(),o=P()[drag.k]||{};o.x=Math.round(drag.x+(e.clientX-drag.sx)/s);o.y=Math.round(drag.y+(e.clientY-drag.sy)/s);o.x=Math.max(-400,Math.min(400,o.x));o.y=Math.max(-300,Math.min(200,o.y));P()[drag.k]=o;drag.moved=true;apply()},{passive:false,capture:true});
-document.addEventListener('pointerup',function(e){if(!drag||e.pointerId!==drag.id)return;var m=drag.moved;drag=null;if(m)store()},true);
-document.addEventListener('touchmove',function(e){if(drag){e.preventDefault();e.stopPropagation()}},{passive:false,capture:true});['touchstart','touchend'].forEach(function(ev){document.addEventListener(ev,function(e){if(drag||(e.target&&e.target.closest&&e.target.closest('#ctpaper img.ctsig,#ctpaper img.cttsig')))e.stopPropagation()},{capture:true,passive:true})});
-var r0=render;render=function(){var o=r0.apply(this,arguments);if(S.tab!=='ct'){sel=null;bar()}else{apply();setTimeout(apply,60);setTimeout(apply,400)}return o};
+function enter(){var L=sigs();if(!L.length){toast('حط توقيع الأول من «✍️ توقيع المؤجر» أو «توقيع المستأجر»');return}mode=true;document.documentElement.classList.add('sgmode');
+ pick(L.filter(function(x){return x.classList.contains('ctsig')})[0]||L[0]);try{sel.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}}
+function exit(){mode=false;document.documentElement.classList.remove('sgmode');if(sel)sel.classList.remove('sgsel');sel=null;bar();store()}
+window.ctSigMode=function(){mode?exit():enter()};
+function inBar(t){return t&&t.closest&&t.closest('#sgbar')}
+function hit(x,y){var r=null;sigs().forEach(function(im){var b=im.getBoundingClientRect();if(x>=b.left-12&&x<=b.right+12&&y>=b.top-12&&y<=b.bottom+12)r=im});return r}
+function eat(e){e.stopImmediatePropagation();e.stopPropagation();if(e.cancelable)e.preventDefault()}
+var G=null;
+function dist(a,b){return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)}
+function start(list){if(!sel)return G=null;var k=key(sel),o=P()[k]||{x:0,y:0};
+ if(list.length>=2)G={m:'pz',d0:dist(list[0],list[1])||1,w0:o.w||sel.getBoundingClientRect().width/scale(),k:k};
+ else{var t=list[0],h=hit(t.clientX,t.clientY);if(h&&h!==sel){pick(h);k=key(h);o=P()[k]||{x:0,y:0}}G={m:'mv',sx:t.clientX,sy:t.clientY,x:o.x||0,y:o.y||0,k:k}}}
+function move(list){if(!G||!sel)return;if(G.m==='pz'&&list.length>=2){resize(G.k,dist(list[0],list[1])/G.d0,G.w0);return}
+ if(G.m==='mv'){var t=list[0],s=scale(),o=P()[G.k]||{};o.x=Math.max(-450,Math.min(450,Math.round(G.x+(t.clientX-G.sx)/s)));o.y=Math.max(-350,Math.min(250,Math.round(G.y+(t.clientY-G.sy)/s)));P()[G.k]=o;apply()}}
+['touchstart','touchmove','touchend','touchcancel'].forEach(function(ev){addEventListener(ev,function(e){if(!mode||inBar(e.target))return;eat(e);
+ var L=[].slice.call(e.touches);if(ev==='touchstart')start(L);else if(ev==='touchmove')move(L);else{if(L.length)start(L);else{G=null;store()}}},{capture:true,passive:false})});
+['pointerdown','pointermove','pointerup','pointercancel','click','dblclick','wheel','gesturestart','gesturechange'].forEach(function(ev){addEventListener(ev,function(e){if(!mode||inBar(e.target))return;eat(e);
+ if(e.pointerType!=='mouse')return;if(ev==='pointerdown')start([e]);else if(ev==='pointermove'&&e.buttons)move([e]);else if(ev==='pointerup'){G=null;store()}},{capture:true,passive:false})});
+var r0=render;render=function(){var o=r0.apply(this,arguments);if(S.tab!=='ct'){if(mode)exit()}else{apply();setTimeout(apply,60);setTimeout(apply,400)}return o};
 try{new MutationObserver(function(){if(S.tab==='ct')apply()}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true})}catch(e){}
 window.ctSigApply=apply;
-function hint(){var c=document.getElementById('sgcard');if(c&&!c.querySelector('.sghint')){var h=document.createElement('p');h.className='mu sghint';h.style.cssText='margin:8px 0 0;font-size:12.5px';h.textContent='👆 دوس على أي توقيع في العقد (بتاعك أو بتاع المستأجر) واسحبه لمكانه، وكبّره أو صغّره من الشريط اللي هيظهر تحت.';c.appendChild(h)}}
+function hint(){var ca=document.querySelector('#app .ctact');if(ca&&!ca.querySelector('.sgmb')&&S.ct&&(S.ct.sig||S.ct.tsig)){var bb=document.createElement('button');bb.type='button';bb.className='sgmb';bb.textContent='✋ حرّك/كبّر التوقيع';bb.setAttribute('onclick','ctSigMode()');ca.appendChild(bb)}var c=document.getElementById('sgcard');if(c&&!c.querySelector('.sghint')){var h=document.createElement('p');h.className='mu sghint';h.style.cssText='margin:8px 0 0;font-size:12.5px';h.innerHTML='<button type="button" class="p" onclick="ctSigMode()" style="width:100%">✋ حرّك أو كبّر التوقيعات</button><span style="display:block;margin-top:4px">العقد بيثبت وانت بتظبط التوقيع، وبيرجع يتحرك عادي لما تدوس «تمام».</span>';c.appendChild(h)}}
 var r1=render;render=function(){var o=r1.apply(this,arguments);if(S.tab==='ct'){setTimeout(hint,80);setTimeout(hint,450)}return o};
 
 /* send the contract PDF to the tenant's WhatsApp, with or without signatures */
