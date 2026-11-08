@@ -2294,7 +2294,7 @@ function disp(k,f){var v=f[k];if(v==null)v='';
 function sp(k,f){return '<span class="fv" data-f="'+k+'">'+esc(disp(k,f))+'</span>'}
 function paper(f){var r=function(en,k,ar,x){return '<tr><td class="en">'+en+'</td><td colspan="3">'+(x||sp(k,f))+'</td><td class="ar">'+ar+'</td></tr>'};
  return '<div class="fr"><h1>Tenancy Contract<small>عقد إيجار</small></h1><table>'+
- r('LandLord Name','ll','اسم المؤجر')+r('LandLord ID','lid','رقم هوية المؤجر')+r('Tenant Name','tn','اسم المستأجر')+r('Tenant ID','tid','رقم هوية المستأجر')+r("Tenant's Nationality",'nat','جنسية المستأجر')+r('phone','ph','رقم الموبايل')+r('Tenancy Subject','sub','موضوع الإيجار')+
+ r('LandLord Name','ll','اسم المؤجر')+r('LandLord ID','lid','رقم هوية المؤجر')+r('Tenant Name','tn','اسم المستأجر')+r('Tenant ID','tid','رقم هوية المستأجر')+r("Tenant's Nationality",'nat','جنسية المستأجر')+r('Mobile No.','ph','رقم الموبايل')+r('Tenancy Subject','sub','موضوع الإيجار')+
  '<tr><td class="en" rowspan="2">Tenancy Period</td><td class="en" style="width:15%">Start Date</td><td style="width:22%">'+sp('st',f)+'</td><td style="width:14%">من تاريخ</td><td class="ar" rowspan="2">مدة الإيجار</td></tr><tr><td class="en">End Date</td><td>'+sp('en',f)+'</td><td>إلى تاريخ</td></tr>'+
  r('Due Date','due','تاريخ استحقاق الإيجار')+r('Monthly Rent','rent','قيمة الإيجار الشهري')+r('Number Of Rental Months','mo','عدد أشهر الإيجار')+r('Number Of Cheques','chq','عدد الشيكات')+'</table>'+
  '<h2>Contract Terms &nbsp; بنود العقد</h2><div class="tm"><div><ul><li>Family Housing Only</li><li>The contract includes water, electricity, and maintenance.</li><li>If the contract is canceled before the end of its term by the tenant, one month will be deducted from it.</li><li>The tenant must notify the landlord in the event of non-renewal one month before the end of the contract.</li><li>The security deposit will be refunded if the property is returned in good condition.</li><li>Any damage or insufficient cleaning will be deducted from the security deposit or paid in cash upon check-out.</li><li>The tenant must vacate the apartment on the lease end date. A late checkout fee of AED 300 per day will apply for any delay.</li></ul></div>'+
@@ -5092,7 +5092,7 @@ window.bnyUiCheck=function(){var out=[];try{var hd=document.querySelector('.hd')
  var app=document.getElementById('app'),tx=app?app.innerText:'';['undefined','NaN','[object'].forEach(function(k){if(tx.indexOf(k)>=0)out.push('كلمة «'+k+'» ظاهرة في الصفحة')})}catch(e){}return out};
 })();</script>
 <script id="monjs2">(function(){if(window.HBUILD)return;
-var C=window.monChecks=window.monChecks||[];function reg(n,f){f.n=n;C.push(f)}
+var C=window.monChecks=window.monChecks||[];function reg(n,f){f.n=n;C.push(f)}window.monReg=reg;
 var fin=function(v){return typeof v==='number'&&isFinite(v)},TABN={home:'الداشبورد',units:'الاستديوهات',acc:'الحسابات',grp:'المجموعات',ct:'عقد العميل',log:'السجل والحماية',bk:'السجل والحماية',qrc:'الكاشير'};
 function tabName(){try{return TABN[S.tab]||S.tab||''}catch(e){return ''}}
 function sel(e){if(!e||!e.tagName)return '';var t=e.tagName.toLowerCase();if(e.id)return t+'#'+e.id;var c=(typeof e.className==='string'?e.className:'').trim().split(/\s+/)[0];var h=e.closest&&e.closest('.card');var hh=h&&h.querySelector('h2');return (hh?'«'+hh.textContent.trim().slice(0,30)+'» ':'')+t+(c?'.'+c:'')}
@@ -6051,6 +6051,32 @@ function rank(rules,k){for(var j=0;j<rules.length;j++){var r=rules[j];if(typeof 
 function tidy(){try{if(!AUTH)return;var R=ORDER[S.tab];if(!R)return;if(S.tab==='bk'&&(S.bksub||'log')==='log')return;var a=document.getElementById('app');if(!a)return;var kids=[].slice.call(a.children),gn=0;var L=kids.map(function(c,i){if(/\bgrid\b/.test(String(c.className||'')))gn++;return {c:c,i:i,r:rank(R,key(c,i,/\bgrid\b/.test(String(c.className||''))?gn:0))}});
  var sorted=L.slice().sort(function(x,y){return x.r-y.r||x.i-y.i});if(sorted.every(function(x,i){return x.c===kids[i]}))return;var y=scrollY;sorted.forEach(function(x){a.appendChild(x.c)});if(Math.abs(scrollY-y)>2)scrollTo(0,y)}catch(e){}}
 var r0=render;render=function(){var o=r0.apply(this,arguments);tidy();return o};
+})();</script>
+<script id="ctchkjs">(function(){
+/* مراجعة العقد: خانات فاضية في الورقة، التواريخ، يوم الدفع، رقم الهوية، أخطاء القراءة في الأسماء، الرقم، اللغة */
+var LBL={'LandLord Name':'ll','LandLord ID':'lid','Tenant Name':'tn','Tenant ID':'tid',"Tenant's Nationality":'nat','phone':'ph','Mobile No.':'ph','Tenancy Subject':'sub','Start Date':'st','End Date':'en','Due Date':'due','Monthly Rent':'rent','Number Of Rental Months':'mo','Number Of Cheques':'chq'};
+var NM={ll:'اسم المؤجر',lid:'رقم هوية المؤجر',tn:'اسم المستأجر',tid:'رقم هوية المستأجر',nat:'الجنسية',ph:'رقم الموبايل',sub:'موضوع الإيجار',st:'من تاريخ',en:'إلى تاريخ',due:'يوم الدفع',rent:'الإيجار',mo:'عدد الشهور',chq:'الشيكات'};
+function F(){return (S.ct&&S.ct.f)||{}}
+/* 1) put back value fields the user deleted by mistake while editing the paper */
+function repair(){var p=document.getElementById('ctpaper');if(!p)return 0;var n=0;[].slice.call(p.querySelectorAll('tr')).forEach(function(tr){var tds=[].slice.call(tr.children);tds.forEach(function(td,i){var lab=(td.textContent||'').trim();if(lab==='phone'){td.textContent='Mobile No.';n++;lab='Mobile No.'}var k=LBL[lab];if(!k||!td.classList.contains('en'))return;var v=tds[i+1];if(!v||v.querySelector('[data-f]'))return;if(tr.querySelector('[data-f="'+k+'"]'))return;v.innerHTML='<span class="fv" data-f="'+k+'"></span>';n++;try{ctUpd(k)}catch(e){}})});if(n){S.ct.html=p.innerHTML;try{save()}catch(e){}}return n}
+function luhn(s){var d=String(s).replace(/\D/g,'');if(d.length<8)return true;var t=0;for(var i=0;i<d.length;i++){var x=+d[d.length-1-i];if(i%2){x*=2;if(x>9)x-=9}t+=x}return t%10===0}
+function lev(a,b){if(Math.abs(a.length-b.length)>2)return 9;var m=[],i,j;for(i=0;i<=a.length;i++){m[i]=[i]}for(j=1;j<=b.length;j++)m[0][j]=j;for(i=1;i<=a.length;i++)for(j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return m[a.length][b.length]}
+var JUNK=/\b(SENT|SEX|NAME|NATIONALITY|IDENTITY|CARD|UNITED|ARAB|EMIRATES|RESIDENT|SIGNATURE|DATE|BIRTH|EXPIRY|ISSUING|PLACE|NUMBER|ID|NO)\b/i;
+window.ctIssues=function(){var f=F(),o=[],p=document.getElementById('ctpaper'),en=(S.ct&&S.ct.lang)==='en';
+ if(p){[].slice.call(p.querySelectorAll('[data-f]')).forEach(function(x){var k=x.getAttribute('data-f');if(f[k]&&!String(x.textContent).trim()&&NM[k])o.push(NM[k]+' مكتوب في الفورم بس مش ظاهر في العقد')})}
+ try{if(f.st&&f.mo&&f.en){var d=pd(f.st),m=Math.round(+f.mo||0),e=new Date(d.getFullYear(),d.getMonth()+m,d.getDate());e.setDate(e.getDate()-1);if(iso(e)!==f.en)o.push('تاريخ النهاية '+f.en+' مش مظبوط مع '+m+' شهر من '+f.st+' — المفروض '+iso(e))}}catch(x){}
+ try{if(f.st&&f.due){var sd=pd(f.st).getDate(),want=sd===1?31:sd-1;if(+f.due!==want)o.push('يوم الدفع '+f.due+' — المفروض يوم '+(want===31?'آخر الشهر':want)+' (قبل يوم البداية بيوم)')}}catch(x){}
+ [['tid','رقم هوية المستأجر'],['lid','رقم هوية المؤجر']].forEach(function(q){var v=String(f[q[0]]||'');if(!v)return;var dg=v.replace(/\D/g,'');if(/^784/.test(dg)&&(dg.length!==15||!luhn(dg)))o.push(q[1]+' '+v+' فيه رقم غلط (رقم هوية الإمارات 15 رقم وآخر رقم للتأكيد مش راكب)')});
+ [['tn','اسم المستأجر'],['ll','اسم المؤجر']].forEach(function(q){var v=String(f[q[0]]||'').trim();if(!v)return;var w=v.split(/\s+/),J=w.filter(function(x){return JUNK.test(x)});if(J.length)o.push(q[1]+' فيه كلمة زيادة من الهوية: «'+J.join(' ')+'»');for(var i=0;i<w.length;i++)for(var j=i+1;j<w.length;j++){var a=w[i].toLowerCase(),b=w[j].toLowerCase();if(a!==b&&a.length>4&&lev(a,b)<=2){o.push(q[1]+': «'+w[i]+'» و«'+w[j]+'» شبه بعض — غالباً غلطة في القراية');i=w.length;break}}
+  if(en&&/[؀-ۿ]/.test(v))o.push(q[1]+' بالعربي والعقد إنجليزي');if(!en&&/^[A-Za-z\s.'-]+$/.test(v)&&q[0]==='tn')o.push(q[1]+' بالإنجليزي والعقد عربي')});
+ var ph=String(f.ph||'').replace(/[^\d]/g,'');if(ph&&/^971/.test(ph)&&ph.length!==12)o.push('رقم الموبايل '+f.ph+' ناقص أو زيادة (رقم الإمارات 12 رقم مع 971)');if(ph&&ph.length<8)o.push('رقم الموبايل قصير');
+ if(f.rent&&!(+String(f.rent).replace(/,/g,'')>0))o.push('الإيجار مش رقم');
+ return o};
+/* show in the contract tab */
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(S.tab==='ct')setTimeout(function(){repair();var L=ctIssues(),b=document.getElementById('ctact');if(!b)return;var w=document.getElementById('ctwarn');if(!w){w=document.createElement('div');w.id='ctwarn';b.parentNode.insertBefore(w,b)}w.innerHTML=L.length?"<div class='ctmiss' style='background:#fdecec;border-color:#f5c2c2;color:#9b1c1c'>🔎 <b>راجع في العقد:</b><br>• "+L.map(function(x){return String(x).replace(/[<>&]/g,'')}).join('<br>• ')+"</div>":''},260)}catch(e){}return o};
+var u0=window.ctUpd;if(typeof u0==='function')window.ctUpd=function(k){var r=u0.apply(this,arguments);clearTimeout(window.__ctW);window.__ctW=setTimeout(function(){try{var w=document.getElementById('ctwarn');if(!w)return;var L=ctIssues();w.innerHTML=L.length?"<div class='ctmiss' style='background:#fdecec;border-color:#f5c2c2;color:#9b1c1c'>🔎 <b>راجع في العقد:</b><br>• "+L.map(function(x){return String(x).replace(/[<>&]/g,'')}).join('<br>• ')+"</div>":''}catch(e){}},500);return r};
+/* the monitor checks the open contract too */
+try{if(window.monReg)monReg('العقد',function(add){if(!S.ct||!S.ct.f||!S.ct.f.tn)return;var was=document.getElementById('ctpaper');ctIssues().forEach(function(m){add('warn','العقد','عقد «'+(S.ct.f.tn||'')+'»: '+m)})})}catch(e){}
 })();</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
