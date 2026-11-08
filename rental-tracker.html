@@ -6377,7 +6377,7 @@ function lay(){if(S.tab!=='ct')return;var w=document.getElementById('ctwrap');if
 }
 var lk=function(){var g=document.querySelector('#ctpaper .sg');if(g&&g.getAttribute('contenteditable')!=='false')g.setAttribute('contenteditable','false')};var l0=lay;lay=function(){l0();lk()};
 window.ctLayout=lay;
-var r0=render;render=function(){if(S.tab==='ct')migrate();var o=r0.apply(this,arguments);if(S.tab==='ct'){[0,60,200,450,900].forEach(function(t){setTimeout(lay,t)})}return o};
+var r0=render;render=function(){if(S.tab==='ct')migrate();var o=r0.apply(this,arguments);if(S.tab==='ct'){try{lay()}catch(e){}/* place the photo/language bar before the first paint so the form doesn't jump down */requestAnimationFrame(function(){try{window.ctTidyBar&&ctTidyBar()}catch(e){}try{lay()}catch(e){}});[0,60,200,450,900].forEach(function(t){setTimeout(lay,t)})}return o};
 var pend=0;try{new MutationObserver(function(){if(pend||S.tab!=='ct')return;pend=1;setTimeout(function(){pend=0;try{lay()}catch(e){}},30)}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true})}catch(e){}
 /* switching the language also rewrites rent/months/due wording in the paper */
 var lg=window.ctLang;if(typeof lg==='function')window.ctLang=function(l){var r=lg.apply(this,arguments);try{ctUpd('rent')}catch(e){}return r};
@@ -6514,6 +6514,8 @@ var R=[
    ['ctsig','cttsig','ctwsig1','ctwsig2'].forEach(function(k){if(g.querySelectorAll('img.'+k).length>1)o.push('توقيع متكرر')});if(d.querySelectorAll('img.ctsig,img.cttsig,img.ctwsig1,img.ctwsig2').length>g.querySelectorAll('img.ctsig,img.cttsig,img.ctwsig1,img.ctwsig2').length)o.push('توقيع برّه خانته');return o},
   fix:function(){var c=ct(),d=document.createElement('div');d.innerHTML=c.html;[].slice.call(d.querySelectorAll('img.ctsig,img.cttsig,img.ctwsig1,img.ctwsig2')).forEach(function(i){i.remove()});var g=d.querySelector('.sg');if(!g){g=document.createElement('div');g.className='sg';(d.querySelector('.fr')||d).appendChild(g)}
    g.innerHTML='<div>Witness<small>الشاهد</small></div><div>Witness<small>الشاهد</small></div><div>Tenant Signature<small>توقيع المستأجر</small></div><div>Landlord Signature<small>توقيع المؤجر</small></div>';g.setAttribute('contenteditable','false');c.html=d.innerHTML;try{save()}catch(e){}if(S.tab==='ct')render();return 'رجّعت خانات التوقيع الأربعة زي ما كانت والتوقيعات اتحطت في أماكنها'}},
+ {id:'ctjump',area:'العقد',t:'صفحة العقد كانت بتتنطّ 135px لتحت أول ما تفتحها (شريط الصورة واللغة كان بيتحط بعد ما الشاشة تترسم)',
+  check:function(){var z=$('#ctzb'),c=$('#ctwrap .card');return S.tab==='ct'&&z&&c&&z.querySelector('.zr1')&&z.parentNode!==c?['شريط الصورة واللغة مش في مكانه فوق البيانات']:[]},fix:null},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
   check:function(){if(S.tab!=='ct')return [];var seen={},o=[];[].slice.call(document.querySelectorAll('#app button')).filter(vis).forEach(function(b){var t=b.textContent.trim();if(t.length<5)return;seen[t]=(seen[t]||0)+1;if(seen[t]===2)o.push('«'+t.slice(0,25)+'»')});return o},fix:null},
  {id:'stray',area:'الشاشة',t:'شريط تعديل أو زرار رجوع كان ممكن يفضل ظاهر برّه صفحة العقد',
