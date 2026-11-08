@@ -5890,6 +5890,13 @@ var R=[
   check:function(){return window.__bnyNewsKind&&__bnyNewsKind('انت علي علم بالتحديث اللي حصل للبرنامج من تبويب ابديت')?[]:['المساعد مش بيرد على سؤال التحديثات']},fix:null},
  {id:'aistmt',area:'المساعد',t:'لما قلتله معلومة فيها أرقام (المستأجر في الحمادي 197 بيدفع يوم 5) رد بإجماليات الحسابات بدل ما ياخد باله منها',
   check:function(){return window.__bnyGenStmt&&!__bnyGenStmt('المستأجر في الحمادي 197 بيدفع يوم 5','totals')?['بيرد بالإجماليات على معلومة']:[]},fix:null},
+ {id:'dashmiss',area:'الداشبورد',t:'الداشبورد ظهرت من غير الرصيد النقدي والربح والدفعات القادمة والإيجارات (فاضل الصورة ورأس المال وآخر التعديلات بس)',
+  check:function(){try{if(typeof AUTH==='undefined'||!AUTH||S.tab!=='home')return [];var a=document.getElementById('app');if(!a||!a.innerHTML)return [];var st=[].slice.call(a.querySelectorAll('.stat'));var vis=st.filter(function(e){return e.offsetParent!==null&&e.getBoundingClientRect().height>10});if(vis.length)return [];
+   var why=st.length?'الكروت موجودة بس مستخبية ('+st.length+')':'الكروت مش بتترسم';try{home()}catch(e){why+=' • خطأ: '+String(e.message||e).slice(0,80)}
+   var hf=[];try{hf=JSON.parse(localStorage.getItem('bny_hotfix')||'[]').filter(function(h){return h.st==='on'}).map(function(h){return h.target})}catch(e){}var cf=document.querySelectorAll('style.bnycf').length;if(hf.length)why+=' • تعديلات كود شغالة: '+hf.join(',');if(cf)why+=' • تعديلات شكل: '+cf;return [why]}catch(e){return []}},
+  fix:function(){var did=[];try{var A=JSON.parse(localStorage.getItem('bny_hotfix')||'[]');A.forEach(function(h){if(h.st==='on'){try{window.hfOff&&hfOff(h.id)}catch(e){}did.push('وقفت تعديل الكود في '+h.target)}})}catch(e){}
+   try{var cs=document.querySelectorAll('style.bnycf');if(cs.length){var C=JSON.parse(localStorage.getItem('bny_cssfix')||'[]');C.forEach(function(f){f.st='off'});localStorage.setItem('bny_cssfix',JSON.stringify(C));[].slice.call(cs).forEach(function(x){x.remove()});did.push('شلت تعديلات الشكل ('+cs.length+')')}}catch(e){}
+   try{render()}catch(e){}return did.length?did.join(' • '):'رسمت الداشبورد من تاني'}},
  {id:'updlong',area:'الأبديت',t:'صفحة الأبديت كانت طويلة جداً (كل الشقق مفتوحة والمعاينة كبيرة)',
   check:function(){if(S.tab!=='upd')return [];var o=document.querySelectorAll('#updwrap .uvl.open').length;return o>1?['أكتر من فيلا مفتوحة في نفس الوقت']:[]},fix:function(){window.__updOpen='';render();return 'قفلت الفلل المفتوحة'}},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
@@ -5925,6 +5932,7 @@ window.bnyRulesSelfTest=function(){var bad=[],t=S.tab,hc=S.ct&&S.ct.html,ts0=S.c
   ['ctblur',function(){S.ct.html=(S.ct.html||'<p>1</p>')+'<span class="bq">123</span>'}],['ctlabels',function(){S.ct.html=(S.ct.html||'')+'<td>LandLord Name</td>'.replace('<td>','<td>')+'<b>x</b>';S.ct.html=S.ct.html.replace('<b>x</b>','<i>>LandLord Name<</i>')}],
   ['ctsig',function(){S.ct.sgpos={l:{x:900,y:0}}}],['updsep',function(){S.upd={villas:[]}}],['ctsigorph',function(){S.ct.tsig='';S.ct.html=(S.ct.html||'')+'<img class="cttsig" src="data:image/png;base64,AAAA">'}],['ctsigrow',function(){S.ct.html=(S.ct.html||'<div class="fr"></div>').replace(/<div class="sg"[^>]*>[\s\S]*$/,'')+'<div class="sg"><div>Witness<small>الشاه</small>االختا Tenant</div><div>Landlord Signature<small>توقيع المؤجر</small></div></div></div>'}],['stray',function(){S.tab='home';var d=document.createElement('div');d.id='ctxl';document.body.appendChild(d)}],
   ['aiqfact',function(){BNYMEM.addFact('انت تعرف الجديد في البرنامج')}],
+  ['dashmiss',function(){S.tab='home';render();var x=document.createElement('style');x.className='bnycf';x.textContent='#app .stat{display:none!important}';document.head.appendChild(x)}],
   ['ctsubpk',function(){S.tab='ct';render();var e=document.getElementById('ctsubpk');e&&e.remove()}],
   ['menu',function(){var hd=$('.hd');hd.classList.add('mopen');var o=document.createElement('div');o.className='ov';o.id='__rt';document.body.appendChild(o)}]];
  cases.forEach(function(c){try{c[1]();var res=runAll([c[0]]);var x=res.filter(function(y){return y.r.id===c[0]})[0];if(!x)bad.push(c[0]+': not detected');else if(!x.fixed)bad.push(c[0]+': detected but not fixed')}catch(e){bad.push(c[0]+': crashed '+e.message)}var o=document.getElementById('__rt');o&&o.remove()});
