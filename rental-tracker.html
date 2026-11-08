@@ -2320,7 +2320,7 @@ var tmr=null;window.ctInput=function(){clearTimeout(tmr);tmr=setTimeout(window.c
 window.ctFill=function(v){if(v==='')return;var q=v.split('|'),u=S.units[+q[0]],L=u&&u.leases[+q[1]];if(!L)return;var f=F();
  f.tn=L.tenant||'';f.ph=L.phone||'';if(L.tid)f.tid=L.tid;if(L.nat)f.nat=L.nat;f.sub='إيجار استديو مفروش — '+(u.name||'');f.st=L.start||'';f.en=L.end||endOf(L.start,L.cmo);f.due=L.day||'';f.rent=L.rent||'';f.mo=L.cmo||'';f.cx=L.rent||'';f.chq=(L.chq&&L.chq.length?L.chq.length:Math.ceil(L.cmo||0))+' شيكات شامل شيك تأمين بقيمة شهر';
  S.ct.html='';save();render()};
-window.ctNew=function(){var f=F(),ll=f.ll;S.ct={sig:(S.ct&&S.ct.sig)||'',lang:(S.ct&&S.ct.lang)||'ar',f:{ll:ll,lid:F().lid||'',nat:'',tn:'',tid:'',ph:'',sub:'',st:'',en:'',due:'',rent:'',mo:'',chq:'',cx:''},html:''};save();render()};
+window.ctNew=function(){var f=F(),ll=f.ll,sub0=f.sub||'';S.ct={sig:(S.ct&&S.ct.sig)||'',lang:(S.ct&&S.ct.lang)||'ar',f:{ll:ll,lid:F().lid||'',nat:'',tn:'',tid:'',ph:'',sub:sub0,st:'',en:'',due:'',rent:'',mo:'',chq:'',cx:''},html:''};save();render()};
 window.ctReset=function(){S.ct.html='';save();render()};
 function rdy(cb){var done=function(){var v=document.getElementById('ctview'),p=document.getElementById('ctpaper');if(!p)return;var t=p.style.transform,h=v.style.height,z=p.style.zoom,mh=v.style.maxHeight,ov=v.style.overflow;p.style.transform='none';p.style.zoom='';v.style.height='auto';v.style.maxHeight='';v.style.overflow='hidden';var fin=function(){p.style.transform=t;p.style.zoom=z;v.style.height=h;v.style.maxHeight=mh;v.style.overflow=ov;fit()};cb(p,fin)};done()}
 window.ctPdf=function(){window.ctSave();rdy(function(p,fin){var nm=(F().tn||'').trim().replace(/\s+/g,'-')||'contract',done=function(){window._sc=0;window._bg='';fin()};window._sc=innerWidth<700?2.4:3;window._bg='#fff';exportPdf(p,'contract-'+nm).then(done,done)})};
@@ -6365,10 +6365,14 @@ function lay(){if(S.tab!=='ct')return;var w=document.getElementById('ctwrap');if
  var zb=document.getElementById('ctzb');if(zb&&zb.querySelector('.zr1')){var zg=zb.querySelector('.zg');var zm=document.getElementById('ctzoom');var v=document.getElementById('ctview');
   if(zg&&v){if(!zm){zm=document.createElement('div');zm.id='ctzoom';v.parentNode.insertBefore(zm,v)}if(zg.parentNode!==zm)zm.appendChild(zg)}
   if(zb.parentNode!==c1){var sel=c1.querySelector('select');c1.insertBefore(zb,sel||ctf)}zb.classList.add('inform');var cap=zb.querySelector('.zcap');if(cap&&cap.textContent.indexOf('اختياري')<0)cap.textContent='📷 املا البيانات من صورة (اختياري) — دوس وصوّر:';
-  var r2=zb.querySelector('.zr2');if(r2&&zb.firstElementChild!==r2)zb.insertBefore(r2,zb.firstChild);var r1=zb.querySelector('.zr1');if(r1){['ll','','ph'].forEach(function(){});var a1=r1.querySelector('.ctid.ll'),a3=r1.querySelector('.ctid.ph'),a2=[].slice.call(r1.querySelectorAll('.ctid')).filter(function(x){return x!==a1&&x!==a3})[0];[a1,a2,a3].forEach(function(x){if(x)r1.appendChild(x)})}if(r2){r2.style.justifyContent='center';var lg=r2.querySelector('.ctlang');if(lg&&!r2.querySelector('.lglab')){var s=document.createElement('span');s.className='lglab';s.style.cssText='font-weight:800;font-size:12.5px;color:#3d5568';s.textContent='لغة بيانات العميل في العقد:';r2.insertBefore(s,lg)}}}
+  var r2=zb.querySelector('.zr2');if(r2&&zb.firstElementChild!==r2)zb.insertBefore(r2,zb.firstChild);var r1=zb.querySelector('.zr1');if(r1){['ll','','ph'].forEach(function(){});var a1=r1.querySelector('.ctid.ll'),a3=r1.querySelector('.ctid.ph'),a2=[].slice.call(r1.querySelectorAll('.ctid')).filter(function(x){return x!==a1&&x!==a3})[0];var cur=[].slice.call(r1.querySelectorAll('.ctid'));if(!(cur[0]===a1&&cur[1]===a2&&cur[2]===a3))[a1,a2,a3].forEach(function(x){if(x)r1.appendChild(x)})}if(r2){r2.style.justifyContent='center';var lg=r2.querySelector('.ctlang');if(lg&&!r2.querySelector('.lglab')){var s=document.createElement('span');s.className='lglab';s.style.cssText='font-weight:800;font-size:12.5px;color:#3d5568';s.textContent='لغة بيانات العميل في العقد:';r2.insertBefore(s,lg)}}}
  /* grouped fields */
  var order=[['👤 المؤجر',['ll','lid']],['🧑 المستأجر',['tn','tid','nat','ph']],['🏠 الإيجار',['sub','st','mo','en','due','rent','chq']]];
- order.forEach(function(g){var first=null;g[1].forEach(function(k){var b=box(k);if(!b)return;if(!first)first=b;ctf.appendChild(b)});if(first)sec(g[0],first)});
+ /* reorder only when the order is actually wrong, and never move the box you are typing in (moving it closes the keyboard) */
+ var want=[];order.forEach(function(g){g[1].forEach(function(k){var b=box(k);if(b)want.push(b)})});var have=[].slice.call(ctf.children).filter(function(x){return want.indexOf(x)>=0});var ok=have.length===want.length&&have.every(function(x,i){return x===want[i]});
+ var ae=document.activeElement,typing=ae&&ae!==document.body&&ctf.contains(ae);
+ if(!ok&&!typing)order.forEach(function(g){var first=null;g[1].forEach(function(k){var b=box(k);if(!b)return;if(!first)first=b;ctf.appendChild(b)});if(first)sec(g[0],first)});
+ else if(!typing)order.forEach(function(g){var b=box(g[1][0]);if(b)sec(g[0],b)});
  [].slice.call(ctf.querySelectorAll('.ctsec')).forEach(function(x){var n=x.nextElementSibling;if(!n||n.classList.contains('ctsec'))x.remove()});
  var ph=document.getElementById('ct_ph');if(ph){ph.setAttribute('inputmode','tel');ph.placeholder='مثال: 0501234567 — عليه هيتبعت العقد'}
  /* one action bar after the contract (own buttons; the old bars are hidden) */
@@ -6561,6 +6565,10 @@ var R=[
   check:function(){var w=$('#updprev'),p=$('#updposter');if(!w||!p||S.tab!=='upd')return [];var a=w.getBoundingClientRect(),b=p.getBoundingClientRect();return b.width>a.width+2||document.documentElement.scrollWidth>innerWidth+2?['معاينة الأبديت أعرض من الشاشة']:[]},fix:function(){var w=$('#updprev'),p=$('#updposter');var k=Math.min(1,w.clientWidth/720);p.style.transform='scale('+k+')';w.style.height=Math.ceil(p.offsetHeight*k)+'px';return 'صغّرت المعاينة على قد الشاشة'}},
  {id:'upddep',area:'الأبديت',t:'التأمين في الأبديت لازم يتكتب «1 Month (Cheque)» مش «ONE MONTH RENT»',
   check:function(){var d=window.updData&&updData();return d&&d.dep==='ONE MONTH RENT'?['التأمين مكتوب بالصيغة القديمة']:[]},fix:function(){var d=updData();d.dep='1 Month (Cheque)';try{localStorage.setItem('bny_upd',JSON.stringify(d))}catch(e){}return 'غيّرت التأمين لـ 1 Month (Cheque)'}},
+ {id:'ctfocus',area:'العقد',t:'لما تدوس على خانة في بيانات العقد (زي موضوع الإيجار) عشان تكتب، الصفحة كانت بتتحرك والكيبورد بيقفل لأن الخانات كانت بتترتب من جديد وهي مفتوحة',
+  check:function(){if(S.tab!=='ct'||!window.ctLayout)return [];var i=document.getElementById('ct_sub');if(!i)return [];var a=document.activeElement;try{i.focus({preventScroll:true});ctLayout();var ok=document.activeElement===i;i.blur();if(a&&a!==document.body&&a.focus)a.focus({preventScroll:true});return ok?[]:['الكتابة في خانات العقد بتقفل الكيبورد']}catch(e){return []}},fix:null},
+ {id:'ctsubpk',area:'العقد',t:'موضوع الإيجار كان لازم يتكتب بإيدك؛ دلوقتي فيه اختيار الاستديو من المجموعات',
+  check:function(){if(S.tab!=='ct'||!(S.units||[]).length||!document.getElementById('ct_sub'))return [];return document.getElementById('ctsubpk')?[]:['اختيار الاستديو في موضوع الإيجار مش ظاهر']},fix:function(){window.ctSubPut&&ctSubPut();return 'رجّعت اختيار الاستديو'}},
  {id:'updlong',area:'الأبديت',t:'صفحة الأبديت كانت طويلة جداً (كل الشقق مفتوحة والمعاينة كبيرة)',
   check:function(){if(S.tab!=='upd')return [];var o=document.querySelectorAll('#updwrap .uvl.open').length;return o>1?['أكتر من فيلا مفتوحة في نفس الوقت']:[]},fix:function(){window.__updOpen='';render();return 'قفلت الفلل المفتوحة'}},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
@@ -6595,6 +6603,7 @@ window.bnyRulesSelfTest=function(){var bad=[],t=S.tab,hc=S.ct&&S.ct.html,ts0=S.c
  var cases=[['sgmode',function(){document.documentElement.classList.add('sgmode')}],['toast',function(){var x=$('#toast');x.textContent=' ';x.style.display='block'}],
   ['ctblur',function(){S.ct.html=(S.ct.html||'<p>1</p>')+'<span class="bq">123</span>'}],['ctlabels',function(){S.ct.html=(S.ct.html||'')+'<td>LandLord Name</td>'.replace('<td>','<td>')+'<b>x</b>';S.ct.html=S.ct.html.replace('<b>x</b>','<i>>LandLord Name<</i>')}],
   ['ctsig',function(){S.ct.sgpos={l:{x:900,y:0}}}],['updsep',function(){S.upd={villas:[]}}],['ctsigorph',function(){S.ct.tsig='';S.ct.html=(S.ct.html||'')+'<img class="cttsig" src="data:image/png;base64,AAAA">'}],['ctsigrow',function(){S.ct.html=(S.ct.html||'<div class="fr"></div>').replace(/<div class="sg"[^>]*>[\s\S]*$/,'')+'<div class="sg"><div>Witness<small>الشاه</small>االختا Tenant</div><div>Landlord Signature<small>توقيع المؤجر</small></div></div></div>'}],['stray',function(){S.tab='home';var d=document.createElement('div');d.id='ctxl';document.body.appendChild(d)}],
+  ['ctsubpk',function(){S.tab='ct';render();var e=document.getElementById('ctsubpk');e&&e.remove()}],
   ['menu',function(){var hd=$('.hd');hd.classList.add('mopen');var o=document.createElement('div');o.className='ov';o.id='__rt';document.body.appendChild(o)}]];
  cases.forEach(function(c){try{c[1]();var res=runAll([c[0]]);var x=res.filter(function(y){return y.r.id===c[0]})[0];if(!x)bad.push(c[0]+': not detected');else if(!x.fixed)bad.push(c[0]+': detected but not fixed')}catch(e){bad.push(c[0]+': crashed '+e.message)}var o=document.getElementById('__rt');o&&o.remove()});
  S.tab=t;if(hc!=null)S.ct.html=hc;S.ct.sgpos=sp0||{};if(ts0)S.ct.tsig=ts0;S.monfix=(S.monfix||[]).filter(function(x){return !/^r:/.test(x.k)});return bad};
@@ -6914,5 +6923,39 @@ function add(){var el=document.getElementById('hdth');if(!el||el.querySelector('
 window.bnyCopyText=copy;
 try{new MutationObserver(add).observe(document.body,{childList:true})}catch(e){}setInterval(add,3000);
 })();</script>
+<style id="ctsubpickcss">#ctsubpk{width:100%;margin-top:6px;font-size:14px;padding:9px 10px;border-radius:10px;border:1.5px dashed var(--ac,#1a7f5a);background:color-mix(in srgb,var(--ac,#1a7f5a) 7%,var(--card,#fff));font-weight:700}</style>
+<script id="ctsubpick">(function(){
+/* «موضوع الإيجار»: pick the studio from the groups instead of typing; the rest of the wording stays as it is */
+var KM='bny_vEn',DIC={'الحمادي':'Al Hamadi','الحارثي':'Al Harthi','النقبي':'Al Naqbi','المصعبي':'Al Musabi','الظاهري':'Al Dhaheri','ابيكس':'Apex','أبيكس':'Apex','البريكي':'Al Breiki','الراشدي':'Al Rashdi','الكعبي':'Al Kaabi','المنصوري':'Al Mansouri','المزروعي':'Al Mazrouei','الشامسي':'Al Shamsi','العامري':'Al Ameri','السويدي':'Al Suwaidi','المهيري':'Al Muhairi','الهاملي':'Al Hameli','الرميثي':'Al Romaithi','القبيسي':'Al Qubaisi','الفلاسي':'Al Falasi','الشحي':'Al Shehhi','البلوشي':'Al Balushi','الزعابي':'Al Zaabi','العلي':'Al Ali','الجنيبي':'Al Junaibi','المرر':'Al Marar','الخييلي':'Al Khaili','الدرمكي':'Al Darmaki','الكتبي':'Al Ketbi','النعيمي':'Al Nuaimi','الرشيدي':'Al Rashidi','المري':'Al Marri','الأحبابي':'Al Ahbabi','الحبسي':'Al Habsi'};
+function mem(){try{return JSON.parse(localStorage.getItem(KM)||'{}')||{}}catch(e){return {}}}
+function tl(a){var L={'ا':'a','أ':'a','إ':'e','آ':'a','ب':'b','ت':'t','ث':'th','ج':'j','ح':'h','خ':'kh','د':'d','ذ':'dh','ر':'r','ز':'z','س':'s','ش':'sh','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'a','غ':'gh','ف':'f','ق':'q','ك':'k','ل':'l','م':'m','ن':'n','ه':'h','ة':'a','و':'o','ي':'i','ى':'a','ئ':'e','ؤ':'o','ء':''};
+ return String(a).split(/\s+/).map(function(w){var al=/^ال/.test(w);if(al)w=w.slice(2);var o=w.split('').map(function(c){return L[c]!=null?L[c]:c}).join('').replace(/([aeiou])\1+/g,'$1');o=o.charAt(0).toUpperCase()+o.slice(1);return (al?'Al ':'')+o}).join(' ')}
+function en(vn){if(!/[؀-ۿ]/.test(vn))return vn;var m=mem();return m[vn]||DIC[vn]||DIC[vn.replace(/^فيلا\s+/,'')]||tl(vn)}
+function parse(name){var s=String(name||'').trim().replace(/^فيلا\s+/,''),m=s.match(/^(.+?)\s+(\d+)(?:\s*[-،,]?\s*(?:رقم|استديو|استوديو|ستوديو|ستديو|غرفة|شقة|#|no\.?)?\s*(\d+))?\s*(.*)$/i);
+ if(!m)return {vn:s,vno:'',sno:''};return {vn:m[1].trim(),vno:m[2],sno:m[3]||'',rest:(m[4]||'').trim()}}
+function lang(){return (S.ct&&S.ct.lang)==='en'?'en':'ar'}
+window.ctSubBuild=function(name,lg,cur){lg=lg||lang();var f=(S.ct&&S.ct.f)||{},c=cur!=null?cur:String(f.sub||''),p=parse(name);
+ if(lg==='en'){var pre=(c.match(/^(.*?\bin)\s+Villa\b/i)||[])[1]||'Furnished Studio in',tail=(c.match(/Studio No\.?\s*\d+\s*(.*)$/i)||c.match(/Villa No\.?\s*\d+\s*(.*)$/i)||[])[1];if(tail==null||/[؀-ۿ]/.test(tail))tail='Riyadh City – Abu Dhabi';
+  return (pre+' Villa '+en(p.vn)+(p.vno?' Villa No. '+p.vno:'')+(p.sno?' Studio No. '+p.sno:'')+(tail?' '+tail:'')).replace(/\s+/g,' ').trim()}
+ var preA=(c.match(/^(.*?)\s+في\s+فيلا/)||[])[1]||'استوديو مفروش',tA=(c.match(/(?:استوديو|استديو) رقم\s*\d+\s*(.*)$/)||c.match(/فيلا رقم\s*\d+\s*(.*)$/)||[])[1];if(tA==null||!/[؀-ۿ]/.test(tA)&&tA)tA='مدينة الرياض – أبوظبي';
+ return (preA+' في فيلا '+p.vn+(p.vno?' فيلا رقم '+p.vno:'')+(p.sno?' استوديو رقم '+p.sno:'')+(tA?' '+tA:'')).replace(/\s+/g,' ').trim()};
+function setSub(v){var f=S.ct.f;f.sub=v;var el=document.getElementById('ct_sub');if(el)el.value=v;try{ctUpd('sub')}catch(e){document.querySelectorAll('#ctpaper [data-f="sub"]').forEach(function(x){x.textContent=v})}try{save()}catch(e){}}
+function units(){return (typeof S!=='undefined'&&S&&S.units||[]).filter(function(u){return u&&u.name})}
+window.ctSubPick=function(uid){var u=units().filter(function(x){return x.id===uid})[0];if(!u)return;S.ct.subU=u.name;setSub(ctSubBuild(u.name));toast('🏠 '+u.name+' — اتكتب في موضوع الإيجار، عدّل أي حاجة لو حابب')};
+/* learn the English villa name when you correct it once */
+document.addEventListener('change',function(e){if(!e.target||e.target.id!=='ct_sub'||!S.ct||!S.ct.subU)return;var v=e.target.value,p=parse(S.ct.subU),m=v.match(/Villa\s+(.+?)\s+Villa No\.?\s*(\d+)/i);if(m&&p.vn&&/[؀-ۿ]/.test(p.vn)&&m[2]===p.vno){var M=mem();if(m[1]!==en(p.vn)){M[p.vn]=m[1].trim();try{localStorage.setItem(KM,JSON.stringify(M))}catch(x){}}}},true);
+function put(){if(S.tab!=='ct')return;var i=document.getElementById('ct_sub');if(!i)return;var U=units();var old=document.getElementById('ctsubpk');if(!U.length){old&&old.remove();return}
+ var key=U.map(function(u){return u.id+u.name}).join('|');if(old&&old.getAttribute('data-k')===key&&old.previousElementSibling===i)return;if(old)old.remove();
+ var G=(S.groups||[]),gn=function(g){var x=G.filter(function(y){return y.id===g})[0];return x?x.name:'بدون مجموعة'},by={};U.forEach(function(u){(by[u.g||'']=by[u.g||'']||[]).push(u)});
+ var s=document.createElement('select');s.id='ctsubpk';s.setAttribute('data-k',key);s.innerHTML="<option value=''>🏠 اختار الاستديو من المجموعات…</option>"+Object.keys(by).map(function(g){return "<optgroup label='"+esc(gn(g))+"'>"+by[g].map(function(u){return "<option value='"+esc(u.id)+"'>"+esc(u.name)+"</option>"}).join('')+"</optgroup>"}).join('');
+ s.onchange=function(){if(s.value)ctSubPick(s.value);s.value=''};i.parentNode.insertBefore(s,i.nextSibling)}
+window.ctSubPut=put;
+var r0=render;render=function(){var o=r0.apply(this,arguments);if(S.tab==='ct'){put();[80,500,1000].forEach(function(t){setTimeout(put,t)})}return o};
+/* filling the contract from a lease uses the same wording */
+var fl=window.ctFromLease;if(typeof fl==='function')window.ctFromLease=function(u,L){var r=fl.apply(this,arguments);try{if(u&&u.name){S.ct.subU=u.name;S.ct.f.sub=ctSubBuild(u.name,lang(),'');save();render()}}catch(e){}return r};
+/* switching the language rewrites the picked studio in that language */
+var lg=window.ctLang;if(typeof lg==='function')window.ctLang=function(l){var r=lg.apply(this,arguments);var re=function(){try{if(S.ct&&S.ct.subU)setSub(ctSubBuild(S.ct.subU,lang()))}catch(e){}};Promise.resolve(r).then(re,re);return r};
+})();</script>
+
 </body>
 </html>
