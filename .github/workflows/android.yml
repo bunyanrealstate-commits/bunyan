@@ -120,6 +120,21 @@ jobs:
               } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
             }
             @PluginMethod
+            public void copyImage(PluginCall call) {
+              try {
+                String data = call.getString("data", ""); String name = call.getString("name", "update.jpg");
+                java.io.File dir = new java.io.File(getContext().getCacheDir(), "share"); dir.mkdirs();
+                java.io.File f = new java.io.File(dir, name.replaceAll("[^A-Za-z0-9._-]", "_"));
+                java.io.FileOutputStream fo = new java.io.FileOutputStream(f); fo.write(android.util.Base64.decode(data, android.util.Base64.DEFAULT)); fo.close();
+                Uri u = androidx.core.content.FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", f);
+                String[] pk = new String[]{"com.whatsapp", "com.whatsapp.w4b"};
+                for (String p : pk) { try { getContext().grantUriPermission(p, u, Intent.FLAG_GRANT_READ_URI_PERMISSION); } catch (Exception e) { } }
+                android.content.ClipboardManager cm = (android.content.ClipboardManager) getContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                cm.setPrimaryClip(android.content.ClipData.newUri(getContext().getContentResolver(), "Bunyan update", u));
+                call.resolve();
+              } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
+            }
+            @PluginMethod
             public void appInfo(PluginCall call) {
               try { Intent i = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getContext().getPackageName())); i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); getContext().startActivity(i); call.resolve(); } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
             }

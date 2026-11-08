@@ -5863,6 +5863,8 @@ var R=[
   check:function(){return window.updDirect?[]:['الإرسال للجروب مش موجود']},fix:null},
  {id:'updshare',area:'الأبديت',t:'موبايلات بتمنع إذن الإرسال الأوتوماتيك خالص (أوبو/ريلمي) — لازم يبقى فيه طريقة من غير إذن',
   check:function(){var C=window.Capacitor,W=C&&C.Plugins&&C.Plugins.WaBiz;return W&&W.sendGroup&&!W.shareSheet?['نسخة التطبيق قديمة ومفيهاش قايمة المشاركة — نزّل الجديدة']:[]},fix:null},
+ {id:'updcap',area:'الأبديت',t:'الصورة كانت بتتبعت من غير اللوكيشن تحتها',
+  check:function(){var d=window.updData&&updData();if(!d||!window.__updCaption)return [];var c=__updCaption(),miss=(d.villas||[]).filter(function(v){return v.loc&&(v.units||[]).some(function(a){return !a.hide})&&c.indexOf(v.loc)<0});return miss.length?['لوكيشن مش في الرسالة: '+miss.map(function(v){return v.name}).join('، ')]:[]},fix:null},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
   check:function(){if(S.tab!=='ct')return [];var seen={},o=[];[].slice.call(document.querySelectorAll('#app button')).filter(vis).forEach(function(b){var t=b.textContent.trim();if(t.length<5)return;seen[t]=(seen[t]||0)+1;if(seen[t]===2)o.push('«'+t.slice(0,25)+'»')});return o},fix:null},
  {id:'stray',area:'الشاشة',t:'شريط تعديل أو زرار رجوع كان ممكن يفضل ظاهر برّه صفحة العقد',
@@ -6125,15 +6127,27 @@ window.updDirect=direct;
 function txt(){var d=load(),o=['🏠 *'+(d.title||'')+'* — AVAILABLE NOW','🗓 '+new Date().toLocaleDateString('en-GB'),''];d.villas.forEach(function(v){var L=(v.units||[]).filter(shown);if(!L.length)return;o.push('🏡 *'+v.name+'*'+(v.area?' — '+v.area:''));if(v.note)o.push('📝 '+v.note);if(v.loc)o.push('📍 '+v.loc);
   L.forEach(function(a){o.push('• '+[lab(FL,a.floor,2),a.no&&('Flat '+a.no),typeEn(a)].filter(Boolean).join(' | ')+' — '+(a.booked?'❌ BOOKED':cols().filter(function(x){return x.v(a)}).map(function(x){return (x.mo?'Monthly':x.h)+' '+n(x.v(a))}).join(' / ')));if(a.note)o.push('   📝 '+a.note)});o.push('')});
  o.push('📝 Contract fee: '+n(d.fee)+' AED','🔐 Security deposit: '+(d.dep||''));if(d.notes)o.push(d.notes);o.push('📞 '+(d.phone||''));return o.join('\n')}
+function caption(){var d=load(),o=['🏠 *'+(d.title||'')+'* — AVAILABLE NOW'];d.villas.forEach(function(v){if(!(v.units||[]).some(shown))return;o.push('🏡 '+v.name+(v.loc?'\n📍 '+v.loc:''))});o.push('📝 Contract fee: '+n(d.fee)+' AED • 🔐 Deposit: '+(d.dep||''));o.push('📞 '+(d.phone||''));return o.join('\n')}
+window.__updCaption=caption;
 function openUrl(u){try{if(!(window.bnyOpenWa&&bnyOpenWa(u)))window.open(u,'_blank')}catch(e){}}
 window.updText=async function(){var t=txt(),d=load();if(await direct({text:t,mime:'text/plain'}))return;var go=function(){openUrl(d.group?d.group:'https://wa.me/?text='+encodeURIComponent(t))};try{navigator.clipboard.writeText(t).then(function(){toast(d.group?'📋 نسخت الأبديت — الجروب هيفتح، دوس مطوّل والصق وابعت':'📋 نسخت الأبديت وهفتح واتساب');setTimeout(go,600)},go)}catch(e){go()}};
 function h2c(){return new Promise(function(res,rej){if(window.html2canvas)return res(window.html2canvas);var s=document.createElement('script');s.src=(/\/(c|h)\//.test(location.pathname)?'../':'')+'vendor/html2canvas.min.js';s.onload=function(){res(window.html2canvas)};s.onerror=function(){var t=document.createElement('script');t.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';t.onload=function(){res(window.html2canvas)};t.onerror=rej;document.head.appendChild(t)};document.head.appendChild(s)})}
 async function image(){var p=document.getElementById('updposter');if(!p)throw new Error('no poster');var tr=p.style.transform;p.style.transform='none';try{try{await document.fonts.ready}catch(e){}return window.bnyNodeShot?await bnyNodeShot(p,3):await (await h2c())(p,{scale:3,backgroundColor:'#ffffff',logging:false})}finally{p.style.transform=tr;fit()}}
 async function file(){var cv=await image(),data=cv.toDataURL('image/jpeg',.95);return {data:data,name:'update-'+td()+'.jpg'}}
+/* no picking: copy the image (and then the locations) and open the group itself from its invite link */
+async function byLink(f){var d=load(),W=NW();if(!W||!W.copyImage||!d.group)return false;var on=false;try{on=!!(await W.accEnabled()).on}catch(e){}if(on&&d.gname)return false;
+ try{await W.copyImage({data:f.data.split(',')[1],name:f.name})}catch(e){return false}
+ openUrl(d.group);var cap=caption();
+ var back=function(){if(document.hidden)return;document.removeEventListener('visibilitychange',back);var o=document.createElement('div');o.className='ov';o.innerHTML="<div class='dlg'><h2>📍 كمّل باللوكيشن</h2><p>لو الصورة اتبعتت، دوس «انسخ اللوكيشن» وارجع للجروب والصقه وابعت.</p><div class='bt'><button class='p' id='lc1'>📋 انسخ اللوكيشن وافتح الجروب</button><button id='lc2'>خلاص</button></div></div>";document.body.appendChild(o);
+  o.querySelector('#lc1').onclick=function(){o.remove();try{bnyCopyText?bnyCopyText(cap):navigator.clipboard.writeText(cap)}catch(e){}setTimeout(function(){openUrl(d.group)},500)};o.querySelector('#lc2').onclick=function(){o.remove()}};
+ setTimeout(function(){document.addEventListener('visibilitychange',back)},1500);
+ var t=document.createElement('div');t.className='ov';t.innerHTML="<div class='dlg'><h2>📤 الجروب بيتفتح</h2><ol style='padding-inline-start:18px;line-height:1.9;margin:4px 0'><li>دوس مطوّل في خانة الكتابة ← <b>لصق</b> (أو دوس على الصورة اللي بتظهر فوق الكيبورد).</li><li>الصورة هتظهر — دوس <b>إرسال</b>.</li><li>ارجع لبنيان وهتلاقي زرار ينسخلك اللوكيشن تبعته تحتها.</li></ol><div class='bt'><button class='p' id='lcok'>تمام</button></div></div>";document.body.appendChild(t);t.querySelector('#lcok').onclick=function(){t.remove()};setTimeout(function(){try{t.remove()}catch(e){}},12000);
+ return true}
 window.updShare=async function(){toast('⏳ بجهّز صورة الأبديت…');var f;try{f=await file()}catch(e){toast('⚠️ مقدرتش أعمل الصورة');return}var d=load();
- if(await direct({data:f.data.split(',')[1],name:f.name,text:'🏠 '+(d.title||'')+' — 📞 '+(d.phone||''),mime:'image/jpeg'}))return;
- var C=window.Capacitor,W=C&&C.Plugins&&C.Plugins.WaBiz;if(W&&W.sendFile){try{await W.sendFile({data:f.data.split(',')[1],name:f.name,phone:'',text:'🏠 '+(d.title||'')+' — 📞 '+(d.phone||''),mime:'image/jpeg'});toast('📤 اختار الجروب في واتساب ودوس إرسال'+(NW()?' — اكتب اسم الجروب في «👥 الجروب» وهيتبعت لوحده':''));return}catch(e){}}
- try{var b=await (await fetch(f.data)).blob(),fl=new File([b],f.name,{type:'image/jpeg'});if(navigator.canShare&&navigator.canShare({files:[fl]})){await navigator.share({files:[fl],text:'🏠 '+(d.title||'')});return}}catch(e){if(e&&e.name==='AbortError')return}
+ if(await byLink(f))return;
+ if(await direct({data:f.data.split(',')[1],name:f.name,text:caption(),mime:'image/jpeg'}))return;
+ var C=window.Capacitor,W=C&&C.Plugins&&C.Plugins.WaBiz;if(W&&W.sendFile){try{await W.sendFile({data:f.data.split(',')[1],name:f.name,phone:'',text:caption(),mime:'image/jpeg'});toast('📤 اختار الجروب في واتساب ودوس إرسال'+(NW()?' — اكتب اسم الجروب في «👥 الجروب» وهيتبعت لوحده':''));return}catch(e){}}
+ try{var b=await (await fetch(f.data)).blob(),fl=new File([b],f.name,{type:'image/jpeg'});if(navigator.canShare&&navigator.canShare({files:[fl]})){await navigator.share({files:[fl],text:caption()});return}}catch(e){if(e&&e.name==='AbortError')return}
  try{saveFile(await (await fetch(f.data)).blob(),f.name)}catch(e){}if(d.group)setTimeout(function(){openUrl(d.group)},900);toast('🖼 نزّلت الصورة'+(d.group?' وفتحت الجروب — ارفقها':''))};
 window.updSave=async function(){toast('⏳ بجهّز الصورة…');try{var f=await file();saveFile(await (await fetch(f.data)).blob(),f.name);toast('🖼 اتحفظت الصورة')}catch(e){toast('⚠️ مقدرتش أحفظ الصورة')}};
 window.__updImage=image;window.__updText=txt;
