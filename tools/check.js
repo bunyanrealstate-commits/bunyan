@@ -52,6 +52,10 @@ const fails=[],notes=[];const F=m=>{fails.push(m);console.log('❌ '+m)},OK=m=>c
    if(typeof ctUndo!=='function'||typeof ctWSign!=='function')o.push(L+': undo / witness signature missing');{const h=document.querySelector('#ctpaper h1 small'),d=document.querySelector('#ctpaper .ctdate');if((h&&vis(h))||(d&&vis(d)))o.push(L+': title subtitle / date line should be hidden')}
    ['ct_ll','ct_tn','ct_tid','ct_nat','ct_ph','ct_sub','ct_st','ct_mo','ct_en','ct_due','ct_rent','ct_chq','ct_lid'].forEach(id=>{if(!document.getElementById(id))o.push(L+': form field missing '+id)})}
    S.tab='home';render();return o});r.forEach(x=>F('contract: '+x));if(!r.length)OK('contract tab: layout, buttons, labels in AR and EN')}catch(e){F('contract layout check crashed: '+e.message)}
+ // 5e) the monitor's rulebook: every known problem is caught AND fixed when broken on purpose; real data passes all rules
+ try{const r=await p.evaluate(async()=>{const o=[];if(typeof bnyRulesSelfTest!=='function')return ['rulebook missing'];bnyRulesSelfTest().forEach(x=>o.push('self-test '+x));
+   for(const t of ['home','units','acc','ct']){S.tab=t;render();await new Promise(r=>setTimeout(r,900));(bnyRulesRun()||[]).filter(x=>!x.fixed&&x.r.id!=='look').forEach(x=>o.push(t+': '+x.r.id+' '+x.f.join(' • ')))}S.tab='home';render();return o});
+  r.forEach(x=>F('monitor rules: '+x));if(!r.length)OK('monitor rulebook: catches + fixes every known problem')}catch(e){F('monitor rules check crashed: '+e.message)}
  // 5c) swipe left/right anywhere switches tabs
  try{await p.evaluate(()=>{S.tab='home';render();document.querySelectorAll('.ov,#hdth').forEach(x=>x.remove());scrollTo(0,300)});await p.waitForTimeout(300);const cd2=await ctx.newCDPSession(p);const t0=await p.evaluate(()=>S.tab);const x=200,y=500;
   await cd2.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:x-120,y}]});for(let i=1;i<=12;i++){await cd2.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x-120+i*20,y:y+i*0.5}]});await p.waitForTimeout(16)}await cd2.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await p.waitForTimeout(500);

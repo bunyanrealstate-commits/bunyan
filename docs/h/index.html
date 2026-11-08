@@ -5765,6 +5765,96 @@ window.__ctFromId=fromId;
 var r0=render;render=function(){var o=r0.apply(this,arguments);if(S.tab==='ct'){setTimeout(applyW,80);setTimeout(applyW,500);setTimeout(btn,100)}else{btn();cur=null;xl()}return o};
 try{new MutationObserver(function(){if(S.tab==='ct'){var p=P();if(p&&S.ct&&S.ct.wsig&&((S.ct.wsig[1]&&!p.querySelector('img.ctwsig1'))||(S.ct.wsig[2]&&!p.querySelector('img.ctwsig2'))))applyW()}}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true})}catch(e){}
 })();</script>
+<script id="menuclose2">(function(){
+/* any action inside the header menu (or its sub-menus) closes the menu — even buttons that stop the click from bubbling (sync, etc.) */
+var OPENERS='#hmb,#wsmi,#setmi,.umb,[data-sub]';
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('button,a,[onclick],label');if(!b)return;if(!b.closest('#hmp,#wsub,#setsub,.um,#lgm'))return;if(b.matches(OPENERS)||b.closest('.umb'))return;setTimeout(function(){try{window.bnyCloseMenus&&bnyCloseMenus();var w=document.getElementById('wsub');if(w)w.classList.remove('on','open');var hd=document.querySelector('.hd');if(hd)hd.classList.remove('mopen')}catch(x){}},120)},true);
+})();</script>
+<script id="monrules">(function(){
+/* The monitor's rulebook: every problem that happened before (and the ones that can happen) as a rule it checks by itself.
+   check() returns what's wrong now ([] = fine); fix() repairs it and returns what it did. Runs after every screen change and every minute. */
+function $(q){return document.querySelector(q)}
+function vis(e){if(!e)return false;var r=e.getBoundingClientRect(),c=getComputedStyle(e);return r.width>2&&r.height>2&&c.display!=='none'&&c.visibility!=='hidden'&&+c.opacity>0}
+function ct(){return S.ct||{}}
+var OLD=/>LandLord Name<|>LandLord ID<|>Mobile No\.<|>phone<|>رقم الموبايل<|>Tenant<small>المستأجر<\/small>/;
+var JUNK=/\b(SENT|RESIDENT|IDENTITY|CARD|UNITED|EMIRATES|NATIONALITY|SIGNATURE|BIRTH|EXPIRY)\b/;
+var R=[
+ {id:'menu',area:'القايمة',t:'القايمة اللي فوق كانت بتفضل مفتوحة بعد ما تدوس «مزامنة» أو أي اختيار فيها',
+  check:function(){var hd=$('.hd.mopen');return hd&&(document.querySelector('body>.ov')||Date.now()-(window.__mnLast||0)>15000&&window.__mnLast)?['القايمة لسه مفتوحة']:[]},
+  fix:function(){window.bnyCloseMenus&&bnyCloseMenus();var hd=$('.hd');hd&&hd.classList.remove('mopen');return 'قفلت القايمة'}},
+ {id:'toast',area:'الشاشة',t:'كان بيظهر شريط أزرق فاضي تحت الشاشة',
+  check:function(){var t=$('#toast');return t&&!t.textContent.trim()&&t.offsetHeight>0?['شريط الرسائل ظاهر وهو فاضي']:[]},
+  fix:function(){var t=$('#toast');t.style.display='none';return 'خفيت الشريط الفاضي'}},
+ {id:'sgmode',area:'العقد',t:'وضع تحريك التوقيع ممكن يفضل شغال ويثبّت الشاشة',
+  check:function(){return document.documentElement.classList.contains('sgmode')&&(S.tab!=='ct'||!$('#sgbar'))?['وضع تحريك التوقيع شغال من غير شريطه']:[]},
+  fix:function(){document.documentElement.classList.remove('sgmode');var b=$('#sgbar');b&&b.remove();return 'قفلت وضع تحريك التوقيع والشاشة رجعت تتحرك'}},
+ {id:'zoom',area:'الشاشة',t:'الشاشة كانت بتفضل مكبّرة بعد تكبير العقد',
+  check:function(){return S.tab!=='ct'&&window.visualViewport&&visualViewport.scale>1.08?['الشاشة مكبّرة ×'+visualViewport.scale.toFixed(1)]:[]},
+  fix:function(){window.bnyZoomReset&&bnyZoomReset();return 'رجّعت حجم الشاشة الطبيعي'}},
+ {id:'ctscroll',area:'العقد',t:'الصفحة كانت مش بتتحرك لما صباعك ييجي على العقد',
+  check:function(){var v=$('#ctview');return v&&(window.ctZ||1)<=1.01&&(v.style.overscrollBehavior==='contain'||getComputedStyle(v).touchAction==='none'&&!document.documentElement.classList.contains('sgmode'))?['العقد ماسك اللمس ومش سايب الصفحة تتحرك']:[]},
+  fix:function(){var v=$('#ctview');v.style.overscrollBehavior='';v.style.touchAction='';return 'سيبت الصفحة تتحرك فوق العقد'}},
+ {id:'ctblur',area:'العقد',t:'الأرقام في العقد كانت متغطية حتى والعين مفتوحة',
+  check:function(){var h=ct().html||'',p=$('#ctpaper');return /class="bq"|\bbq\b/.test(h)||(p&&p.querySelector('.bq'))?['فيه أرقام متغطية محفوظة جوه العقد']:[]},
+  fix:function(){var c=ct();c.html=String(c.html||'').replace(/<span class="bq">([^<]*)<\/span>/g,'$1').replace(/ class="bq"/g,'');var p=$('#ctpaper');if(p)[].slice.call(p.querySelectorAll('.bq')).forEach(function(x){if(x.tagName==='SPAN'&&!x.attributes[1])x.replaceWith(document.createTextNode(x.textContent));else x.classList.remove('bq')});try{save()}catch(e){}return 'شلت التغطية من أرقام العقد'}},
+ {id:'ctlabels',area:'العقد',t:'عناوين قديمة في ورقة العقد (LandLord، Mobile No. من غير ما يوضح موبايل مين)',
+  check:function(){return OLD.test(ct().html||'')?['ورقة العقد فيها عناوين قديمة']:[]},
+  fix:function(){var c=ct();c.html=c.html.replace(/>LandLord Name</g,'>Landlord Name<').replace(/>LandLord ID</g,'>Landlord ID<').replace(/>(Mobile No\.|phone)</g,'>Tenant Mobile No.<').replace(/>رقم الموبايل</g,'>رقم موبايل المستأجر<').replace(/>Tenant<small>المستأجر<\/small>/g,'>Tenant Signature<small>توقيع المستأجر</small>');try{save()}catch(e){}if(S.tab==='ct')render();return 'حدّثت عناوين ورقة العقد'}},
+ {id:'ctname',area:'العقد',t:'الاسم من الهوية كان بيدخل فيه كلام زيادة من الكارت (SENT) أو حرف غلط (Abdethakeem)',
+  check:function(){var f=ct().f||{},o=[];['tn','ll'].forEach(function(k){var v=f[k];if(!v)return;if(JUNK.test(v)||(window.ctCleanName&&ctCleanName(v)!==v))o.push((k==='tn'?'اسم المستأجر':'اسم المؤجر')+': «'+v+'»')});return o},
+  fix:function(){var f=ct().f||{},b=[f.tn,f.ll].join('|');window.ctNameFix&&ctNameFix();['tn','ll'].forEach(function(k){var v=f[k];if(v&&JUNK.test(v)){f[k]=v.split(/\s+/).filter(function(w){return !JUNK.test(w)}).join(' ');try{ctUpd(k)}catch(e){}}});try{save()}catch(e){}return [f.tn,f.ll].join('|')!==b?'نضّفت الأسماء: «'+(f.tn||'')+'» / «'+(f.ll||'')+'»':''}},
+ {id:'ctsync',area:'العقد',t:'حاجة مكتوبة في الفورم ومش ظاهرة في ورقة العقد (زي تاريخ الاستحقاق)',
+  check:function(){var p=$('#ctpaper'),f=ct().f||{},o=[];if(!p)return o;[].slice.call(p.querySelectorAll('[data-f]')).forEach(function(x){var k=x.getAttribute('data-f');if(f[k]&&!String(x.textContent).trim())o.push(k)});return o.length?['خانات فاضية في الورقة: '+o.join('، ')]:[]},
+  fix:function(){var p=$('#ctpaper'),f=ct().f||{},n=0;[].slice.call(p.querySelectorAll('[data-f]')).forEach(function(x){var k=x.getAttribute('data-f');if(f[k]&&!String(x.textContent).trim()){try{ctUpd(k)}catch(e){x.textContent=f[k]}n++}});return n?'رجّعت '+n+' خانة للورقة':''}},
+ {id:'ctlang',area:'العقد',t:'اخترت عربي والبيانات فضلت إنجليزي (أو العكس)',
+  check:function(){var c=ct(),f=c.f||{},to=c.lang==='en'?'en':'ar',o=[];['tn','ll','nat'].forEach(function(k){var v=f[k];if(v&&(/[\u0600-\u06ff]/.test(v)?'ar':'en')!==to)o.push(k)});return o.length&&S.tab==='ct'?['لغة العقد '+(to==='ar'?'عربي':'إنجليزي')+' بس فيه بيانات باللغة التانية']:[]},
+  fix:function(){var c=ct();if(window.ctConvertLang)ctConvertLang(c.lang==='en'?'en':'ar');return 'حوّلت بيانات العقد للغة اللي اخترتها'}},
+ {id:'ctsig',area:'العقد',t:'توقيع ممكن يتسحب لبرّه الورقة',
+  check:function(){var P=ct().sgpos||{},o=[];Object.keys(P).forEach(function(k){var v=P[k]||{};if(Math.abs(v.x||0)>420||(v.y||0)<-330||(v.y||0)>230||(v.w&&(v.w<40||v.w>300)))o.push(k)});return o.length?['توقيع طالع برّه مكانه']:[]},
+  fix:function(){var P=ct().sgpos||{};Object.keys(P).forEach(function(k){var v=P[k]||{};if(Math.abs(v.x||0)>420||(v.y||0)<-330||(v.y||0)>230||(v.w&&(v.w<40||v.w>300)))delete P[k]});try{window.ctSigApply&&ctSigApply();save()}catch(e){}return 'رجّعت التوقيع لمكانه'}},
+ {id:'ctfit',area:'العقد',t:'الكلام في ورقة العقد كان بيطلع برّه خانته ويركب على اللي جنبه',
+  check:function(){var p=$('#ctpaper');if(!p||!vis(p))return [];var o=[];[].slice.call(p.querySelectorAll('td')).forEach(function(td){if(o.length>3||!td.textContent.trim())return;var rg=document.createRange();rg.selectNodeContents(td);var a=rg.getBoundingClientRect(),b=td.getBoundingClientRect();if(a.width&&(a.left<b.left-2||a.right>b.right+2))o.push('«'+td.textContent.trim().slice(0,25)+'»')});return o},
+  fix:function(){var p=$('#ctpaper');[].slice.call(p.querySelectorAll('td')).forEach(function(td){td.style.whiteSpace='normal';td.style.overflowWrap='break-word'});try{window.ctFit&&ctFit();ct().html=p.innerHTML;save()}catch(e){}return 'خليت الكلام الطويل ينزل سطر جوه خانته'}},
+ {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
+  check:function(){if(S.tab!=='ct')return [];var seen={},o=[];[].slice.call(document.querySelectorAll('#app button')).filter(vis).forEach(function(b){var t=b.textContent.trim();if(t.length<5)return;seen[t]=(seen[t]||0)+1;if(seen[t]===2)o.push('«'+t.slice(0,25)+'»')});return o},fix:null},
+ {id:'stray',area:'الشاشة',t:'شريط تعديل أو زرار رجوع كان ممكن يفضل ظاهر برّه صفحة العقد',
+  check:function(){if(S.tab==='ct')return [];var o=[];['#ctundo','#ctxl','#sgbar'].forEach(function(q){if($(q))o.push(q)});return o},
+  fix:function(){['#ctundo','#ctxl','#sgbar'].forEach(function(q){var e=$(q);e&&e.remove()});return 'شلت أدوات العقد من الصفحات التانية'}},
+ {id:'swloop',area:'التحديث',t:'البرنامج كان بيعيد تحميل نفسه كل شوية بعد ما تسحب الشاشة لتحت',
+  check:function(){try{var L=JSON.parse(sessionStorage.getItem('bny_loads')||'[]').filter(function(t){return Date.now()-t<30000});return L.length>3?['اتحمّل '+L.length+' مرات في 30 ثانية']:[]}catch(e){return []}},
+  fix:function(){try{navigator.serviceWorker&&navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})});sessionStorage.setItem('bny_loads','[]')}catch(e){}return 'وقفت التحميل المتكرر (شلت نسخة التحديث القديمة)'}},
+ {id:'look',area:'الشاشة',t:'كلام مقطوع، حاجة طالعة برّه الشاشة، زراير راكبة على بعض، زراير كبيرة أو متبعترة',
+  check:function(){try{return (window.bnyUiCheck&&bnyUiCheck()||[]).filter(function(x){return !/الكلام طالع برّه خانته/.test(x)})}catch(e){return []}},fix:null}
+];
+try{var L0=JSON.parse(sessionStorage.getItem('bny_loads')||'[]');L0.push(Date.now());sessionStorage.setItem('bny_loads',JSON.stringify(L0.slice(-10)))}catch(e){}
+document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('#hmp'))window.__mnLast=Date.now()},true);
+var ST={};try{ST=JSON.parse(localStorage.getItem('bny_rules')||'{}')||{}}catch(e){}
+function keep(){try{localStorage.setItem('bny_rules',JSON.stringify(ST))}catch(e){}}
+function log(r,what,found){try{S.monfix=S.monfix||[];var last=S.monfix.filter(function(x){return x.k==='r:'+r.id&&Date.now()-x.at<6*36e5})[0];if(last)return;S.monfix.push({id:Math.random().toString(36).slice(2,9),at:Date.now(),k:'r:'+r.id,kind:r.area,why:r.t,how:what,d:[found.join(' • ').slice(0,160)],auto:true,st:'ok',res:'✅ اتصلح لوحده'});try{window.logEv&&logEv('🛠️ المراقب: '+what)}catch(e){}}catch(e){}}
+var busy=false;
+function runAll(only){if(busy||typeof S==='undefined')return[];busy=true;var out=[];try{R.forEach(function(r){if(only&&only.indexOf(r.id)<0)return;var f=[];try{f=r.check()||[]}catch(e){f=[]}var s=ST[r.id]=ST[r.id]||{};s.at=Date.now();
+  if(!f.length){s.ok=1;return}
+  if(r.fix){var what='';try{what=r.fix()}catch(e){what=''}var again=[];try{again=r.check()||[]}catch(e){}
+   if(what&&!again.length){s.ok=1;s.fx=(s.fx||0)+1;s.lf=Date.now();log(r,what,f);out.push({r:r,f:f,fixed:true,what:what});return}
+   if(what){s.fx=(s.fx||0)+1;s.lf=Date.now();log(r,what,f)}}
+  s.ok=0;s.lp=f.join(' • ').slice(0,200);out.push({r:r,f:again&&again.length?again:f,fixed:false})})}finally{busy=false;keep()}window.__rulesLast=out;return out}
+window.bnyRules=R;window.bnyRulesRun=runAll;
+try{monReg('قواعد المراقب',function(add){(window.__rulesLast||[]).forEach(function(x){if(!x.fixed)add('warn',x.r.area,x.r.t.replace(/كان|كانت/,'')+' — دلوقتي: '+x.f.join(' • ').slice(0,140))})})}catch(e){}
+var r0=render;render=function(){var o=r0.apply(this,arguments);clearTimeout(window.__rlT);window.__rlT=setTimeout(function(){runAll()},1500);return o};
+setInterval(function(){if(!document.hidden)runAll()},60000);
+/* self-test: break things on purpose and make sure every fixable rule catches and repairs it (used by tools/check.js) */
+window.bnyRulesSelfTest=function(){var bad=[],t=S.tab,hc=S.ct&&S.ct.html;S.ct=S.ct||{};
+ var cases=[['sgmode',function(){document.documentElement.classList.add('sgmode')}],['toast',function(){var x=$('#toast');x.textContent=' ';x.style.display='block'}],
+  ['ctblur',function(){S.ct.html=(S.ct.html||'<p>1</p>')+'<span class="bq">123</span>'}],['ctlabels',function(){S.ct.html=(S.ct.html||'')+'<td>LandLord Name</td>'.replace('<td>','<td>')+'<b>x</b>';S.ct.html=S.ct.html.replace('<b>x</b>','<i>>LandLord Name<</i>')}],
+  ['ctsig',function(){S.ct.sgpos={l:{x:900,y:0}}}],['stray',function(){S.tab='home';var d=document.createElement('div');d.id='ctxl';document.body.appendChild(d)}],
+  ['menu',function(){var hd=$('.hd');hd.classList.add('mopen');var o=document.createElement('div');o.className='ov';o.id='__rt';document.body.appendChild(o)}]];
+ cases.forEach(function(c){try{c[1]();var res=runAll([c[0]]);var x=res.filter(function(y){return y.r.id===c[0]})[0];if(!x)bad.push(c[0]+': not detected');else if(!x.fixed)bad.push(c[0]+': detected but not fixed')}catch(e){bad.push(c[0]+': crashed '+e.message)}var o=document.getElementById('__rt');o&&o.remove()});
+ S.tab=t;if(hc!=null)S.ct.html=hc;S.ct.sgpos={};S.monfix=(S.monfix||[]).filter(function(x){return !/^r:/.test(x.k)});return bad};
+/* what the monitor knows — shown in «السجل والحماية ← النسخ والمراقب» */
+var bk0=bkTab;bkTab=function(){var h=bk0.apply(this,arguments);try{if((S.bksub||'log')!=='bk')return h;var fx=0,bad=0;var rows=R.map(function(r){var s=ST[r.id]||{};if(s.lf&&Date.now()-s.lf<7*864e5)fx++;if(s.ok===0)bad++;var st=s.ok===0?"<b style='color:#b3261e'>⚠️ موجودة دلوقتي</b>"+(s.lp?"<br><small class='mu'>"+String(s.lp).replace(/[<>&]/g,'')+"</small>":""):(s.lf&&Date.now()-s.lf<7*864e5?"<b style='color:#17643f'>🛠️ اتصلحت لوحدها "+new Date(s.lf).toLocaleDateString('ar-EG')+"</b>":"<span style='color:#17643f'>✅ سليمة</span>");
+  return "<div class='li' style='display:block;padding:7px 0;border-bottom:1px dashed #dde'><div style='font-size:13px'>"+r.t+"</div><div style='font-size:12px;margin-top:2px'>"+st+(r.fix?"":" <small class='mu'>(بيبلّغ عنها بس)</small>")+"</div></div>"}).join('');
+  h+="<div class='card'><h2>📚 اللي المراقب عارفه ("+R.length+" قاعدة)</h2><p class='mu' style='margin:0 0 6px;font-size:12.5px'>كل مشكلة حصلت قبل كده بقت قاعدة المراقب بيفحصها لوحده بعد كل حركة وكل دقيقة، وبيصلّحها لو ينفع. آخر 7 أيام: صلّح "+fx+"، وموجود دلوقتي "+bad+".</p><details><summary style='cursor:pointer;font-weight:800'>اعرض القواعد</summary>"+rows+"</details><button type='button' onclick='bnyRulesRun();render();toast(\"✅ المراقب فحص كل القواعد\")' style='margin-top:8px'>🔎 افحص دلوقتي</button></div>"}catch(e){}return h};
+})();</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script><style id="hlogo">html body .hd{background:linear-gradient(120deg,#16653b 0%,#2a9d5c 55%,#3cc47c 100%)!important;border-bottom:0!important;box-shadow:0 4px 16px rgba(22,101,59,.28)!important;color:#fff!important}.hd h1.brand{display:inline-flex!important;flex-direction:column;align-items:center;justify-content:center;line-height:1;width:auto!important;background:none!important;padding:0!important}.hd h1.brand svg{height:30px!important;width:auto!important;filter:drop-shadow(0 1px 2px rgba(0,0,0,.18))}.hd h1.brand svg *{fill:#fff!important;stroke:none}.hd h1.brand::after{content:"حكيم";display:block;margin-top:-3px;background:#fff;color:#16653b;font-size:9.5px;font-weight:800;line-height:1;padding:2px 9px 3px;border-radius:999px;letter-spacing:0;box-shadow:0 1px 4px rgba(0,0,0,.15)}html body .hd #pvb,html body .hd #bell,html body .hd #hmb{background:rgba(255,255,255,.16)!important;border:1px solid rgba(255,255,255,.38)!important;color:#fff!important;box-shadow:none!important}html body .hd #hmb{color:#fff!important}html body .hd #bell:not(.al):not(.od){background:rgba(255,255,255,.16)!important;border:1px solid rgba(255,255,255,.38)!important;color:#fff!important}html body .hd #clk2{color:#fff!important}html body .hd #clk2 small{color:#d4f7e2!important}html body .hd #grpb button{background:rgba(255,255,255,.18)!important;border:1px solid rgba(255,255,255,.45)!important;box-shadow:0 2px 10px rgba(0,0,0,.12)!important;color:#fff!important}html body .hd #grpb button b,html body .hd #grpb button span{color:#fff!important}html body .hd #grpb button i{background:#ffc93c!important;box-shadow:0 0 0 2px rgba(255,201,60,.35),0 0 8px rgba(255,201,60,.6)!important}html body .hd{min-height:52px!important;padding-top:6px!important;padding-bottom:6px!important}.hd h1.brand svg{height:27px!important}.hd h1.brand::after{font-size:9px!important}html body .hd #clk2{font-size:15px!important}html body .hd #grpb button{min-height:30px!important;font-size:13px!important}html body .hd #pvb,html body .hd #bell,html body .hd #hmb{width:36px!important;height:36px!important;min-height:36px!important;font-size:17px!important}</style><script id="hguard">(function(){
 var D=["units","exp","dep","gp","gc","adj"];window._ug=0;["pointerdown","keydown","touchstart"].forEach(function(e){addEventListener(e,function(){window._ug=Date.now()},{capture:true,passive:true})});
 function pk(o){var r={};D.forEach(function(k){if(o&&o[k]!=null)r[k]=o[k]});return JSON.stringify(r)}
