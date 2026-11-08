@@ -13,3 +13,8 @@ Before every publish/push of `rental-tracker.html`:
    - If a number change is intended (an accounting rule changed on purpose), re-run with `ACCEPT=1` and say so in the commit.
    - New data in book.json => a new baseline is saved automatically.
 3. Commit + push main, publish the artifact, open it.
+
+## Every fix teaches the monitor
+When you fix a bug or a complaint, add it as a rule in the `monrules` script (rental-tracker.html):
+`{id, area, t:'<what happened, in Egyptian Arabic>', check(){return [findings]}, fix(){...; return '<what was done>'} }` (fix:null if it can only be reported).
+If the rule has a fix, add a case to `bnyRulesSelfTest` that breaks it on purpose. `tools/check.js` fails if any rule doesn't catch+fix its case.
