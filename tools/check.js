@@ -53,7 +53,7 @@ const fails=[],notes=[];const F=m=>{fails.push(m);console.log('❌ '+m)},OK=m=>c
    ['ct_ll','ct_tn','ct_tid','ct_nat','ct_ph','ct_sub','ct_st','ct_mo','ct_en','ct_due','ct_rent','ct_chq','ct_lid'].forEach(id=>{if(!document.getElementById(id))o.push(L+': form field missing '+id)})}
    S.tab='home';render();return o});r.forEach(x=>F('contract: '+x));if(!r.length)OK('contract tab: layout, buttons, labels in AR and EN')}catch(e){F('contract layout check crashed: '+e.message)}
  // 5e) the monitor's rulebook: every known problem is caught AND fixed when broken on purpose; real data passes all rules
- try{const r=await p.evaluate(async()=>{const o=[];if(typeof bnyRulesSelfTest!=='function')return ['rulebook missing'];bnyRulesSelfTest().forEach(x=>o.push('self-test '+x));
+ try{const r=await p.evaluate(async()=>{const o=[];if(typeof bnyRulesSelfTest!=='function')return ['rulebook missing'];if(typeof bnyComplain!=='function'||!document.getElementById('cpmi'))o.push('«مش عاجبني» button missing');bnyRulesSelfTest().forEach(x=>o.push('self-test '+x));
    for(const t of ['home','units','acc','ct']){S.tab=t;render();await new Promise(r=>setTimeout(r,900));(bnyRulesRun()||[]).filter(x=>!x.fixed&&x.r.id!=='look').forEach(x=>o.push(t+': '+x.r.id+' '+x.f.join(' • ')))}S.tab='home';render();return o});
   r.forEach(x=>F('monitor rules: '+x));if(!r.length)OK('monitor rulebook: catches + fixes every known problem')}catch(e){F('monitor rules check crashed: '+e.message)}
  // 5c) swipe left/right anywhere switches tabs
