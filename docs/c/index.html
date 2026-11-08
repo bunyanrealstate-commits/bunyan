@@ -2291,7 +2291,7 @@ window.ctPrint=function(){window.ctSave();var nat=false;try{nat=!!(window.Capaci
 window.ctTab=function(){var f=F(),ops='<option value="">— تعبئة من عقد مستأجر قائم (اختياري) —</option>';
  (S.units||[]).forEach(function(u,i){(u.leases||[]).forEach(function(L,j){ops+='<option value="'+i+'|'+j+'">'+esc((u.name||'')+' — '+(L.tenant||'مستأجر'))+'</option>'})});
  var inp=function(k,t,c){return '<div'+(c?' class="'+c+'"':'')+'><label>'+LB[k]+'</label><input id="ct_'+k+'" '+(t?'type="'+t+'" ':'')+'value="'+esc(f[k]==null?'':f[k])+'" oninput="ctUpd(\''+k+'\')"></div>'};
- setTimeout(function(){var v=document.getElementById('ctview');if(v){zbar();fit()}},30);
+ (window.queueMicrotask||setTimeout)(function(){var v=document.getElementById('ctview');if(v){zbar();fit()}});
  return '<div id="ctwrap"><div class="card"><h2>📝 عقد إيجار للعميل</h2><p class="mu" style="margin:0 0 10px">املأ بيانات العميل، أو اضغط على العقد مباشرة وعدّل أي كلمة فيه. التعديلات تتحفظ تلقائياً.</p><select onchange="ctFill(this.value);this.value=\'\'" style="width:100%;margin-bottom:10px">'+ops+'</select><div class="ctf">'+
  inp('ll','','w2')+inp('tn','','w2')+inp('tid')+inp('nat')+inp('ph')+inp('sub','','w2')+inp('st','date')+inp('mo','number')+inp('en','date')+inp('due','number')+inp('rent','number')+inp('chq','','w2')+
  '</div><div class="ctb"><button class="p" onclick="ctPdf()">📄 تنزيل PDF</button><button onclick="ctPrint()">🖨 طباعة</button><button onclick="ctNew()">➕ عقد جديد (مسح بيانات العميل)</button><button onclick="confirmM(\'استرجاع نص العقد الأصلي؟ سيُمسح أي تعديل يدوي على النص.\',ctReset)">↺ استرجاع النموذج الأصلي</button></div></div>'+
@@ -5262,7 +5262,7 @@ function paint(){if(S.tab!=='ct')return;var wrap=document.getElementById('ctwrap
  var tl=document.getElementById('ct_tid');if(tl){var lb=tl.previousElementSibling;if(lb&&lb.tagName==='LABEL')lb.textContent='رقم هوية المستأجر'}
  var sc=document.getElementById('sgcard'),h=sigCard();if(sc)sc.outerHTML=h;else{var first=wrap.querySelector('.card');if(first)first.insertAdjacentHTML('afterend',h)}
  ensurePaper()}
-var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(S.tab==='ct')setTimeout(paint,60)}catch(e){}return o};
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(S.tab==='ct')(window.queueMicrotask||setTimeout)(paint)}catch(e){}return o};
 })();</script>
 <style id="ct3css">.ctact{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}.ctact button{flex:1 1 140px}.ctmiss{background:#fff6e6;border:1px solid #f3d9ae;color:#7a4d0b;border-radius:12px;padding:8px 12px;font-size:13px;margin:8px 0}.ctmiss b{font-weight:800}#ctpaper .ctdate{text-align:center;font-size:13px;margin:-6px 0 10px;color:#333}#ctpaper .cttsig{display:block;max-width:150px;max-height:48px;margin:6px auto -50px;object-fit:contain}</style>
 <script id="ct3js">(function(){
@@ -5300,7 +5300,7 @@ function paint(){if(S.tab!=='ct')return;var v=document.getElementById('ctview');
  var m=missing(),box=document.getElementById('ctact');if(!box){box=document.createElement('div');box.id='ctact';v.parentNode.insertBefore(box,v.nextSibling)}
  box.innerHTML=(m.length?"<div class='ctmiss'>⚠️ <b>ناقص في العقد:</b> "+m.map(E).join('، ')+"</div>":"<div class='ctmiss' style='background:#e8f6ef;border-color:#bfe3cf;color:#17643f'>✅ بيانات العقد كاملة</div>")+
  "<div class='ctact'><button class='p' type='button' onclick='ctPdf()'>📄 تنزيل PDF</button><button type='button' onclick='ctSend()'>📤 ابعته للعميل واتساب</button><button type='button' onclick='ctTSign()'>✍️ "+(S.ct&&S.ct.tsig?'وقّع تاني (المستأجر)':'توقيع المستأجر')+"</button>"+(S.ct&&S.ct.tsig?"<button type='button' onclick='ctTSignDel()'>🗑 شيل توقيع المستأجر</button>":"")+"<button type='button' onclick='ctToday()'>📅 تاريخ النهارده</button></div>"}
-var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(S.tab==='ct')setTimeout(paint,120)}catch(e){}return o};
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(S.tab==='ct')(window.queueMicrotask||setTimeout)(paint)}catch(e){}return o};
 var u0=window.ctUpd;if(typeof u0==='function'){window.ctUpd=function(k){var r=u0.apply(this,arguments);try{if(k==='st'||k==='mo')autoEnd();clearTimeout(window.__ctP);window.__ctP=setTimeout(function(){var m=missing(),b=document.querySelector('#ctact .ctmiss');if(b)paint()},400)}catch(e){}return r}}
 })();</script>
 <script id="leasectjs">(function(){
@@ -5343,7 +5343,7 @@ function paintChq(){var q=document.getElementById('ct_chq');if(!q)return;S.ct=S.
  var n=S.ct.cq.n,mx=Math.max(24,months());var o='';for(var i=0;i<=mx;i++)o+='<option value="'+i+'"'+(i===+n?' selected':'')+'>'+i+'</option>';
  var one=!!S.ct.cq.one;b.innerHTML='<select onchange="ctCq(\'one\',this.value===\'1\')" style="width:auto"><option value="0"'+(one?'':' selected')+'>شيكات بعدد</option><option value="1"'+(one?' selected':'')+'>شيك واحد بإجمالي المدة</option></select>'+(one?'':'<select onchange="ctCq(\'n\',this.value)" style="width:auto;min-width:70px">'+o+'</select>')+'<label style="margin:0;display:inline-flex;gap:6px;align-items:center;font-weight:700"><input type="checkbox" '+(S.ct.cq.dep?'checked':'')+' onchange="ctCq(\'dep\',this.checked)" style="width:auto"> + شيك تأمين</label><small class="mu">'+(months()?'العقد '+months()+(months()>2&&months()<11?' شهور':' شهر'):'')+'</small>'}
 function paintDue(){var e=document.getElementById('ct_due');if(!e||document.getElementById('ctduehint'))return;var h=document.createElement('small');h.id='ctduehint';h.className='mu';h.style.display='block';h.textContent='بيتحسب لوحده: اليوم اللي قبل يوم بداية العقد (بداية 8 ← الدفع يوم 7) — تقدر تغيّره';e.parentNode.appendChild(h)}
-var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(S.tab==='ct')setTimeout(function(){paintChq();paintDue()},150)}catch(e){}return o};
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(S.tab==='ct')(window.queueMicrotask||setTimeout)(function(){paintChq();paintDue()})}catch(e){}return o};
 var lg=window.ctLang;if(typeof lg==='function')window.ctLang=function(l){var r=lg.apply(this,arguments);try{if(S.ct.cq)applyChq();refresh()}catch(e){}return r};
 var nw=window.ctNew;window.ctNew=function(){var r=nw.apply(this,arguments);try{S.ct.cq=null;S.ct.dueMan=false;save()}catch(e){}return r};
 })();</script>
