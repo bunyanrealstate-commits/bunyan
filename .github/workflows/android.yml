@@ -103,6 +103,23 @@ jobs:
               call.resolve(r);
             }
             @PluginMethod
+            public void shareSheet(PluginCall call) {
+              try {
+                String data = call.getString("data", ""); String name = call.getString("name", "file.jpg"); String text = call.getString("text", ""); String mime = call.getString("mime", "image/jpeg");
+                Intent i = new Intent(Intent.ACTION_SEND); i.setType(mime);
+                if (data != null && data.length() > 0) {
+                  java.io.File dir = new java.io.File(getContext().getCacheDir(), "share"); dir.mkdirs();
+                  java.io.File f = new java.io.File(dir, name.replaceAll("[^A-Za-z0-9._-]", "_"));
+                  java.io.FileOutputStream fo = new java.io.FileOutputStream(f); fo.write(android.util.Base64.decode(data, android.util.Base64.DEFAULT)); fo.close();
+                  Uri u = androidx.core.content.FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", f);
+                  i.putExtra(Intent.EXTRA_STREAM, u); i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                  i.setClipData(android.content.ClipData.newRawUri("", u));
+                }
+                if (text != null && text.length() > 0) i.putExtra(Intent.EXTRA_TEXT, text);
+                Intent ch = Intent.createChooser(i, call.getString("title", "ابعت لـ")); ch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION); getContext().startActivity(ch); call.resolve();
+              } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
+            }
+            @PluginMethod
             public void appInfo(PluginCall call) {
               try { Intent i = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getContext().getPackageName())); i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); getContext().startActivity(i); call.resolve(); } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
             }
