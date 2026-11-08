@@ -1832,7 +1832,7 @@ var NUM=/^[\s\-+−−,.\d%٠-٩٫٬\/]+$/,DATE=/\d{4}-\d{2}-\d{2}|\d{1,2}:\d{2}
 function nmRe(){var a=[];try{(S.units||[]).forEach(function(u){var n=(u.name||'').trim();if(n.length>1&&a.indexOf(n)<0)a.push(n)})}catch(e){}a.sort(function(x,y){return y.length-x.length});var k=a.join('|');if(k!==NMK){NMK=k;NMR=a.length?new RegExp(a.map(function(x){return x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}).join('|'),'g'):null}return NMR}
 function names(root){var R=nmRe();if(!R)return;var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),list=[],n;while(n=w.nextNode())list.push(n);
  list.forEach(function(n){if(skip(n))return;var s=n.nodeValue;R.lastIndex=0;if(!R.test(s))return;R.lastIndex=0;var f=document.createDocumentFragment(),last=0,m;while(m=R.exec(s)){f.appendChild(document.createTextNode(s.slice(last,m.index)));var sp=document.createElement('span');sp.className='bq';sp.textContent=m[0];f.appendChild(sp);last=m.index+m[0].length}if(last){f.appendChild(document.createTextNode(s.slice(last)));n.parentNode.replaceChild(f,n)}})}
-function skip(n){var e=n.parentElement;return !e||e.closest('.bq,script,style,textarea,#pvb,#syq,#clk,#bio,.nav')}
+function skip(n){var e=n.parentElement;return !e||e.closest('.bq,script,style,textarea,#pvb,#syq,#clk,#bio,.nav,#ctview,#ctpaper,#ctwrap,#sgbar')||(document.body.classList.contains('onct')&&!!e.closest('#app'))}
 function scan(root){if(!on||!root)return;busy=true;try{names(root)}catch(e){}try{var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),list=[],n;while(n=w.nextNode())list.push(n);
  list.forEach(function(n){if(skip(n))return;var s=n.nodeValue;if(!/\d/.test(s))return;var p=n.parentElement;
   if(NUM.test(s)&&!DATE.test(s)&&p.childNodes.length===1){p.classList.add('bq');return}
@@ -5466,6 +5466,9 @@ var bk0=bkTab;bkTab=function(){var h=bk0.apply(this,arguments);try{if((S.bksub||
 #ctzb .zr{display:flex;gap:6px;flex-wrap:nowrap;align-items:center;min-width:0}
 #ctzb .zr1 .ctid{flex:1 1 0;min-width:0;justify-content:center;gap:3px;min-height:32px;padding:4px 6px;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #ctzb .zr2{justify-content:space-between}
+#ctzb .zcap{font-size:12px;font-weight:800;color:#3d5568;text-align:center;padding:2px 0 0}
+#ctzb .zr1 .ctid{font-size:11.5px!important;padding:4px 4px!important}
+body.onct.pv #app .bq,body.onct.pv .ov .bq{filter:none!important;pointer-events:auto!important;user-select:auto!important;-webkit-user-select:auto!important}body.onct.pv #app input{filter:none!important}
 #ctzb .zg{display:inline-flex;align-items:center;border:1.5px solid #cfe0e6;border-radius:999px;overflow:hidden;background:#fff}
 #ctzb .zg button,#ctzb.tidy .ctlang button{border:0!important;border-radius:0!important;box-shadow:none!important;min-height:30px!important;padding:3px 12px!important;font-size:13px!important}
 #ctzb .zg #ctzl{min-width:0;border-inline:1px solid #e3edf1!important}
@@ -5480,14 +5483,16 @@ function tidy(){var z=document.getElementById('ctzb');if(!z)return;var ll=z.quer
  var r1=z.querySelector('.zr1');if(!r1){r1=document.createElement('div');r1.className='zr zr1';var r2=document.createElement('div');r2.className='zr zr2';var g=document.createElement('span');g.className='zg';
   [].slice.call(z.querySelectorAll(':scope>button')).forEach(function(b){g.appendChild(b)});
   [tn,ll,ph].forEach(function(x){if(x)r1.appendChild(x)});if(lg)r2.appendChild(lg);r2.appendChild(g);z.appendChild(r1);z.appendChild(r2);z.classList.add('tidy')}
- var T=[[tn,'🪪 المستأجر','اقرأ بيانات المستأجر من صورة هويته'],[ll,'🪪 المؤجر','اقرأ بيانات المؤجر من صورة هويته'],[ph,'📱 الموبايل','اقرأ رقم الموبايل من صورة']];
+ var T=[[tn,'🪪 هوية المستأجر','صوّر هوية المستأجر: يتكتب اسمه ورقم هويته وجنسيته'],[ll,'🪪 هوية المؤجر','صوّر هوية المؤجر: يتكتب اسمه ورقم هويته'],[ph,'📱 رقم الموبايل','صوّر أي حاجة فيها رقم موبايل العميل (كارت، شات واتساب…) ويتكتب في العقد']];
+ if(!z.querySelector('.zcap')){var cp=document.createElement('div');cp.className='zcap';cp.textContent='📷 املا العقد من صورة — دوس وصوّر:';z.insertBefore(cp,z.querySelector('.zr1'))}
  T.forEach(function(t){if(t[0]&&t[0].firstChild&&t[0].firstChild.nodeType===3){if(t[0].firstChild.textContent!==t[1])t[0].firstChild.textContent=t[1];t[0].title=t[2]}});
  [].slice.call(z.querySelectorAll('.zg button')).forEach(function(b){var o=b.getAttribute('onclick')||'';if(/-0\.5/.test(o)&&b.textContent!=='−')b.textContent='−';else if(/\(0\.5/.test(o)&&b.textContent!=='+')b.textContent='+'})}
 function tidyB(){var b=document.querySelector('#app .ctb');if(!b)return;b.classList.add('tidy');[].slice.call(b.children).forEach(function(x){var t=x.textContent.trim();if(/^➕ عقد جديد \(/.test(t)){x.title=t;x.textContent='➕ عقد جديد'}else if(/^↺ استرجاع النموذج/.test(t)){x.title=t;x.textContent='↺ النموذج الأصلي'}})}
 var t0=tidy;tidy=function(){t0();tidyB();[].slice.call(document.querySelectorAll('input[id^="ct_"]:not([dir])')).forEach(function(i){if(!/^[\d\s,.+\-\/]*$/.test(i.value)||/[a-z]/i.test(i.value))i.setAttribute('dir','auto')})};
 var pend=0;try{new MutationObserver(function(){if(pend||S.tab!=='ct')return;pend=1;requestAnimationFrame(function(){pend=0;try{tidy()}catch(e){}})}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true})}catch(e){}
 window.ctTidyBar=tidy;
-var r0=render;render=function(){var o=r0.apply(this,arguments);if(S.tab==='ct'){tidy();setTimeout(tidy,0);setTimeout(tidy,120);setTimeout(tidy,400)}return o};
+function unbq(){try{if(S.ct&&S.ct.html&&/\bbq\b/.test(S.ct.html)){S.ct.html=S.ct.html.replace(/<span class="bq">([^<]*)<\/span>/g,'$1').replace(/ class="bq"/g,'').replace(/(class="[^"]*?)\s*\bbq\b/g,'$1');try{save()}catch(e){}}}catch(e){}}
+var r0=render;render=function(){document.body.classList.toggle('onct',S.tab==='ct');if(S.tab==='ct')unbq();var o=r0.apply(this,arguments);if(S.tab==='ct'){tidy();setTimeout(tidy,0);setTimeout(tidy,120);setTimeout(tidy,400)}return o};
 /* monitor: button bars spilling into many rows, and contract text running over the next cell */
 var c0=window.bnyUiCheck;if(typeof c0==='function')window.bnyUiCheck=function(){var out=c0.apply(this,arguments)||[];try{var app=document.getElementById('app');if(app){
  var vis=function(e){var r=e.getBoundingClientRect();return r.width>2&&r.height>2&&getComputedStyle(e).visibility!=='hidden'};
