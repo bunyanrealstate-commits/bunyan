@@ -666,16 +666,17 @@ function sched(o){const n=Math.max(1,o.n|0),cm=o.cm||12,tot=o.total||0,r=[];if(!
  const first=o.first||Math.round(tot/n),rest=n>1?Math.round((tot-first)/(n-1)):0;
  const P0=o.pstart||o.start;r.push({d:P0,a:first,p:false});for(let i=1;i<n;i++)r.push({d:iso(addM(pd(P0),Math.round(i*cm/n))),a:rest,p:false});
  if(n>1&&tot)r[n-1].a+=tot-r.reduce((s,x)=>s+x.a,0);for(let i=0;i<Math.min(o.paidN|0,n);i++)r[i].p=true;return r}
+const FSO2=[['cash','من الرصيد النقدي في البرنامج'],['me','من أموالي الخاصة (رأس مال يُسترد من الإيجار)'],['mix','جزء من الرصيد النقدي وجزء من أموالي الخاصة'],['gp','من فلوس الشراكة (دعم الشركاء)'],['old','دُفع سابقاً (دون خصم من أي رصيد)'],['','لم يُدفع بعد']];
 const FSO=[['me','من أموالي الخاصة (رأس مال يُسترد من الإيجار)'],['cash','من الرصيد النقدي في البرنامج'],['gp','من فلوس الشراكة (دعم الشركاء)'],['old','دُفع سابقاً (دون خصم من أي رصيد)'],['','لم يُدفع بعد']];
 const fsrcOf=u=>u.fsrc!=null?u.fsrc:(!u.fp?'':(u.fat>0?'cash':((S.tx||[]).some(x=>x.c==='تمويل استديو'&&x.w==='تمويل استديو '+u.name)?'me':'old')));
-const fsrcLbl=u=>({me:'من أموالي الخاصة',cash:'من الرصيد النقدي',gp:'من فلوس الشراكة',old:'دُفع سابقاً'})[fsrcOf(u)]||'';
+const fsrcLbl=u=>fsrcOf(u)==='cash'&&(+u.capF||0)>0?'جزء من النقدي ('+$((+u.furn||0)*sh(u)-u.capF)+') وجزء من أموالي ('+$(u.capF)+')':({me:'من أموالي الخاصة',cash:'من الرصيد النقدي',gp:'من فلوس الشراكة',old:'دُفع سابقاً'})[fsrcOf(u)]||'';
 function setF(u,a,b,oldAmt){const f=sh(u),amt=(+u.furn||0)*f,oa=(oldAmt==null?(+u.furn||0):oldAmt)*f;S.tx=S.tx||[];
  if(a==='me'&&b==='me'){if(Math.abs(amt-oa)>=0.5)S.tx.push({id:uid(),k:'me',d:td(),w:'تعديل أثاث '+u.name,a:oa-amt,c:'تمويل استديو',u:u.id})}
  else{if(a==='me'&&oa)S.tx.push({id:uid(),k:'me',d:td(),w:'إلغاء دفع أثاث '+u.name+' من أموالي الخاصة',a:oa,c:'تمويل استديو',u:u.id});
   if(b==='me'&&amt)S.tx.push({id:uid(),k:'me',d:td(),w:'أثاث '+u.name+' من أموالي الخاصة',a:-amt,c:'تمويل استديو',u:u.id})}
  u.fat=b==='cash'?(a==='cash'&&u.fat?u.fat:Date.now()):0;u.fsrc=b;u.fp=!!b}
 function capOf(u){const f=sh(u),t=today(),b=pd(u.start),e=addM(b,u.cm),fe=Math.max(0,Math.min(1,(t-b)/((e-b)||1)));
- const cF=fsrcOf(u)==='me'?(+u.furn||0)*f:0,sv=Math.min(+u.salv||0,+u.furn||0)*f,rF=Math.min(cF,cF/(u.cm||1)*furMo(u));
+ const cF=fsrcOf(u)==='me'?(+u.furn||0)*f:Math.min(+u.capF||0,(+u.furn||0)*f),sv=Math.min(+u.salv||0,+u.furn||0)*f,rF=Math.min(cF,cF/(u.cm||1)*furMo(u));
  const cI=+u.capI||0,P=u.inst.filter(i=>i.p).reduce((s,i)=>s+(+i.a||0),0),C=(u.total||isumOf(u))*fe,rI=cI&&P?cI*Math.min(1,C/P):0;
  return {cap:cF+cI,rec:Math.min(cF+cI,rF+rI)}}
 function furMo(u){let m=0;u.leases.forEach(L=>(L.rcv||[]).forEach(i=>{if(i<L.months)m+=lf(L,i)}));return m}
@@ -685,15 +686,20 @@ function capLine(u){const c=capOf(u);if(c.cap<0.5)return '';return `<div class='
 function mUnit(id){if(!id&&LICMAX&&S.units.length>=LICMAX){toast('باقتك تسمح بـ '+LICMAX+' وحدة فقط — للترقية تواصل مع المالك');return}const u=id?U(id):{};
  const A1=[{k:'name',l:'اسم الاستديو',v:u.name},{k:'g',l:'المجموعة (الشراكة)',t:'s',o:[['','بدون مجموعة'],...grps().map(g=>[g.id,g.name])],v:u.g??(WS==='all'||WS==='-'?'':WS)},{k:'company',l:'اسم الشركة',v:u.company},{k:'start',l:'بداية العقد (مع الشركة)',t:'d',v:u.start||td()},{k:'grace',l:'أيام السماح: عدد الأيام التي تسمح لك الشركة بالتسكين فيها قبل بداية العقد (0 إن لم يوجد)',t:'n',v:u.grace||0},{k:'cm',l:'المدة بالشهور (12 أو 15...)',t:'n',v:u.cm??12},{k:'total',l:'المبلغ الإجمالي',t:'n',v:u.total||0}],
  N=id?[]:[{k:'pstart',l:'ميعاد أول دفعة للشركة (شاغر = بداية العقد)',t:'d',v:''},{k:'first',l:'مبلغ أول دفعة (شاغر = إجمالي ÷ عدد الدفعات)',t:'n',v:''},{k:'mo',l:'الدفع شهرياً للشركة (دفعة كل شهر — عدد الدفعات = عدد الشهور)',t:'c',v:false},{k:'n',l:'عدد الدفعات على مدة العقد (يُتجاهل إذا اخترت الدفع شهرياً)',t:'n',v:4},{k:'paidN',l:'كم دفعة تم دفعها حتى الآن؟',t:'n',v:1}],
- Fu=[{k:'furn',l:'الأثاث: التكلفة',t:'n',v:u.furn||0},{k:'fsrc',l:'الأثاث: من أين تم دفعه؟',t:'s',o:FSO,v:id?fsrcOf(u):'me'}],
+ Fu=[{k:'furn',l:'الأثاث: التكلفة',t:'n',v:u.furn||0},{k:'fsrc',l:'الأثاث: من أين تم دفعه؟',t:'s',o:FSO2,v:id?(fsrcOf(u)==='cash'&&(+u.capF||0)>0?'mix':fsrcOf(u)):'cash'},{k:'fmx',l:'الأثاث جزء وجزء: المبلغ من أموالي الخاصة (والباقي من الرصيد النقدي)',t:'n',v:id?(+u.capF||0):0}],
+ PE=id&&u.inst.some(i=>i.p&&i.at>0)?[{k:'pmx',l:'دفعات الشركة اللي اتدفعت من الرصيد النقدي: كام منها كان من أموالي الخاصة؟ (0 = كلها من النقدي)',t:'n',v:+u.capI||0}]:[],
  SR=id?[]:[{k:'src',l:'دفعات الشركة المدفوعة الآن (حصتك): من أين دُفعت؟ حصة الشركاء تُحسب من نسبة المجموعة',t:'s',o:[['cash','من الرصيد النقدي في البرنامج'],['me','من أموالي الخاصة'],['mix','جزء من الرصيد النقدي وجزء من أموالي الخاصة'],['','دُفعت سابقاً (دون خصم من أي رصيد)']],v:'cash'},{k:'mx',l:'إن كان جزءاً وجزءاً: المبلغ من أموالي الخاصة (والباقي من الرصيد النقدي)',t:'n',v:0}];
- openM(id?'تعديل استديو':'استديو جديد',[...A1,...N,...Fu,...SR],o=>{o.share=100;o.partner='';o.name=(o.name||'').trim()||(id&&u.name)||'استديو '+(S.units.length+1);const src=o.src,mx=+o.mx||0,fs=o.fsrc==null?'':o.fsrc;delete o.src;delete o.mx;delete o.fsrc;
-  if(id){const oT=u.total,oC=u.cm,oS=u.start,oF=fsrcOf(u),oA=+u.furn||0;Object.assign(u,o);recalcInst(u,oT,oC,oS);setF(u,oF,fs,oA);return}
+ openM(id?'تعديل استديو':'استديو جديد',[...A1,...N,...Fu,...PE,...SR],o=>{o.share=100;o.partner='';o.name=(o.name||'').trim()||(id&&u.name)||'استديو '+(S.units.length+1);const src=o.src,mx=+o.mx||0,fmx=+o.fmx||0,pmx=o.pmx,fsM=o.fsrc==='mix',fs=o.fsrc==null?'':(fsM?'cash':o.fsrc);delete o.src;delete o.mx;delete o.fsrc;delete o.fmx;delete o.pmx;
+  if(id){const oT=u.total,oC=u.cm,oS=u.start,oF=fsrcOf(u),oA=+u.furn||0;Object.assign(u,o);recalcInst(u,oT,oC,oS);setF(u,oF,fs,oA);ownF(u,fsM?fmx:0);if(pmx!=null&&pmx!=='')ownI(u,+pmx||0);return}
   if(o.mo)o.n=Math.max(1,Math.round(o.cm||12));delete o.mo;const inst=sched(o).map(x=>({...x,at:x.p&&(src==='cash'||src==='mix')?Date.now():0}));['first','n','paidN'].forEach(k=>delete o[k]);
   S.units.push({id:uid(),inst,leases:[],...o,fp:false,fat:0,fsrc:''});const nu=S.units[S.units.length-1],f=sh(nu),pI=inst.filter(i=>i.p).reduce((s,i)=>s+i.a,0)*f,cI=src==='me'?pI:src==='mix'?Math.min(Math.max(0,mx),pI):0;nu.capI=cI;
   if(src==='mix'&&cI){S.adj=S.adj||[];S.adj.push({id:uid(),at:Date.now(),a:cI,w:'تمويل '+nu.name+' من أموالي الخاصة',g:nu.g||''})}
   if(cI){S.tx=S.tx||[];S.tx.push({id:uid(),k:'me',d:td(),w:'دفعات شركة '+nu.name+' من أموالي الخاصة',a:-cI,c:'تمويل استديو',u:nu.id})}
-  setF(nu,'',fs);setTimeout(function(){try{if(!(nu.leases||[]).length&&U(nu.id)){toast('✅ اتضاف «'+nu.name+'» — اكتب عقد المستأجر');mLease(nu.id)}}catch(e){}},700)})}
+  setF(nu,'',fs);ownF(nu,fsM?fmx:0);setTimeout(function(){try{if(!(nu.leases||[]).length&&U(nu.id)){toast('✅ اتضاف «'+nu.name+'» — اكتب عقد المستأجر');mLease(nu.id)}}catch(e){}},700)});setTimeout(function(){try{fundBox(!!id)}catch(e){}},0)}
+/* own money that covered part of what was paid from the cash balance: it goes back into the cash and counts as my capital */
+function ownMv(u,d,w){if(Math.abs(d)<0.5)return;S.adj=S.adj||[];S.adj.push({id:uid(),at:Date.now(),a:d,w:'تمويل '+w+' '+u.name+' من أموالي الخاصة',g:u.g||''});S.tx=S.tx||[];S.tx.push({id:uid(),k:'me',d:td(),w:w+' '+u.name+' من أموالي الخاصة',a:-d,c:'تمويل استديو',u:u.id})}
+function ownF(u,v){const max=(u.fsrc==='cash'?(+u.furn||0)*sh(u):0),n=Math.min(Math.max(0,+v||0),max),o=+u.capF||0;ownMv(u,n-o,'أثاث');if(n>0)u.capF=n;else delete u.capF}
+function ownI(u,v){const max=u.inst.filter(i=>i.p&&i.at>0).reduce((s,i)=>s+(+i.a||0),0)*sh(u),n=Math.min(Math.max(0,+v||0),max),o=+u.capI||0;ownMv(u,n-o,'دفعات شركة');u.capI=n}
 function unitCard(u){const a=ua(u),t=today(),end=addM(pd(u.start),u.cm),rem=Math.max(0,Math.ceil((end-t)/2629800000)),tot=u.total||isumOf(u),pdd=paidOf(u);
  let h=`<div class='card'><div class='li' style='border:0'><b style='font-size:18px'>${esc(u.name)}</b> <span class='mu'>• ${esc(u.company||'بدون شركة — اضغط ✎ عدّل واكتب اسمها')}</span><span><button onclick="mUnit('${u.id}')">✎ تعديل</button> <button class='x' onclick="delU('${u.id}')">🗑 حذف الاستديو</button></span></div></div>`;
  h+=`<div class='card'><h2>📄 عقد الشركة (${esc(u.company||'')})</h2><div class='kv'><div><small>المدة</small><b>${u.cm} شهر</b></div><div><small>من</small><b>${u.start}</b></div><div><small>حتى</small><b>${iso(end)}</b></div><div><small>${pd(u.start)>t?'يبدأ بعد':'المتبقي'}</small><b>${pd(u.start)>t?Math.ceil((pd(u.start)-t)/864e5)+' يوم':rem+' شهر'}</b></div></div><div class='kv'><div><small>الإجمالي</small><b>${$(tot)}</b></div><div><small>مدفوع</small><b class='pos'>${$(pdd)}</b></div><div><small>المتبقي</small><b class='neg'>${$(tot-pdd)}</b></div></div>${u.total&&u.total!==isumOf(u)?`<p class='neg'>الدفعات المسجلة ${$(isumOf(u))} من ${$(u.total)} — أضف المتبقي</p>`:''}`;
@@ -6589,6 +6595,8 @@ var R=[
    try{render()}catch(e){}return did.length?did.join(' • '):'رسمت الداشبورد من تاني'}},
  {id:'moncut',area:'الداشبورد',t:'لما المراقب كان عنده تنبيه (زي فشل مزامنة حكيم) كارته كان بيتشال من الداشبورد ومعاه الرصيد النقدي والربح والدفعات والإيجارات',
   check:function(){if(!window.__cutDiv)return [];var t='<div class="card" id="moncard"><div>x</div></div><div class=\'grid\'><div class=\'stat\'>1</div></div><div class="card">c</div>';var r=__cutDiv(t,0);return /class='stat'/.test(r)&&!/moncard/.test(r)?[]:['شيل كارت المراقب بيشيل معاه كروت الداشبورد']},fix:null},
+ {id:'fundsrc',area:'الاستديوهات',t:'لما بتضيف استديو مكنش واضح الفرش والدفعات اتدفعوا منين (النقدي ولا فلوسك ولا جزء وجزء) ولا هيفضل كام في النقدي',
+  check:function(){var o=[];(S.units||[]).forEach(function(u){var f=sh(u),fu=(+u.furn||0)*f;if((+u.capF||0)>fu+0.5)o.push('«'+u.name+'»: جزء الأثاث من فلوسك أكبر من تمنه');if((+u.capF||0)>0&&u.fsrc!=='cash')o.push('«'+u.name+'»: الأثاث متسجل جزء وجزء بس مش من النقدي')});if(typeof window.fundBox!=='function')o.push('حساب التمويل مش موجود في «استديو جديد»');return o},fix:null},
  {id:'updlong',area:'الأبديت',t:'صفحة الأبديت كانت طويلة جداً (كل الشقق مفتوحة والمعاينة كبيرة)',
   check:function(){if(S.tab!=='upd')return [];var o=document.querySelectorAll('#updwrap .uvl.open').length;return o>1?['أكتر من فيلا مفتوحة في نفس الوقت']:[]},fix:function(){window.__updOpen='';render();return 'قفلت الفلل المفتوحة'}},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
@@ -7004,6 +7012,25 @@ window.__bnyNewsKind=kind;var o=window.bnyAsk;window.bnyAsk=function(q){var k=ki
 /* clean questions that were saved by mistake as "facts" */
 function clean(){try{if(typeof BNYMEM==='undefined'||!window.__bnyIsStmt)return 0;var F=BNYMEM.facts()||[],n=0;for(var i=F.length-1;i>=0;i--){var t=String(F[i]&&F[i].t||'');if(!__bnyIsStmt(t)&&!/[.،]$/.test(t)){BNYMEM.delFact(i);n++}}return n}catch(e){return 0}}
 window.bnyFactClean=clean;setTimeout(clean,3000);
+})();</script>
+<style id="fundcss">#fundbx{margin:10px 0 4px;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--ac,#1a7f5a) 8%,var(--card,#fff));border:1.5px solid color-mix(in srgb,var(--ac,#1a7f5a) 35%,transparent);font-size:13.5px;line-height:1.7}#fundbx b{font-variant-numeric:tabular-nums}#fundbx .neg{color:#c0392b}#fundbx .pos{color:#13734b}#fundbx button{margin-top:6px;width:100%}</style>
+<script id="fundjs">(function(){
+/* «استديو جديد»: shows how much is paid now, how much cash the group has, and what stays — and lets you split between the cash and your own money */
+window.fundBox=function(edit){if(!M||!/استديو/.test(M.title||''))return;var F=M.fields,ix={};F.forEach(function(f,i){ix[f.k]=i});var el=function(k){return ix[k]==null?null:document.getElementById('f'+ix[k])},val=function(k){var e=el(k);return !e?null:e.type==='checkbox'?e.checked:e.value},num=function(k){return +val(k)||0};
+ var dlg=document.querySelector('#modal .dlg');if(!dlg)return;var box=document.getElementById('fundbx');if(!box){box=document.createElement('div');box.id='fundbx';var a=el(edit?'furn':'furn');var lb=a&&a.previousElementSibling;dlg.insertBefore(box,lb||dlg.querySelector('.bt'))}
+ function show(k,on){var e=el(k);if(!e)return;e.style.display=on?'':'none';var l=e.previousElementSibling;if(l&&l.tagName==='LABEL')l.style.display=on?'':'none'}
+ function paidNow(){if(edit)return 0;try{var o={name:val('name'),start:val('start'),grace:num('grace'),cm:num('cm')||12,total:num('total'),pstart:val('pstart'),first:num('first'),n:num('n'),paidN:num('paidN')};if(val('mo'))o.n=Math.max(1,Math.round(o.cm));return sched(o).filter(function(i){return i.p}).reduce(function(s,i){return s+(+i.a||0)},0)}catch(e){return 0}}
+ function avail(){var g=val('g')||'-',w=WS;try{WS=g;return Math.round(cashNow())}catch(e){return 0}finally{WS=w}}
+ function gname(){var g=val('g');var x=(S.groups||[]).filter(function(y){return y.id===g})[0];return x?x.name:'بدون مجموعة'}
+ function upd(){var fs=val('fsrc'),src=val('src');show('fmx',fs==='mix');show('mx',src==='mix');if(edit){box.style.display='none';return}
+  var P=paidNow(),Fu=num('furn'),A=avail();
+  var pc=src==='cash'?P:src==='mix'?Math.max(0,P-Math.min(num('mx'),P)):0,pm=src==='me'?P:src==='mix'?Math.min(num('mx'),P):0;
+  var fc=fs==='cash'?Fu:fs==='mix'?Math.max(0,Fu-Math.min(num('fmx'),Fu)):0,fm=fs==='me'?Fu:fs==='mix'?Math.min(num('fmx'),Fu):0;
+  var left=A-pc-fc,f=function(n){return Math.round(n).toLocaleString('en-US')};
+  var h="<b>💰 التمويل — «"+esc(gname())+"»</b><br>💵 الرصيد النقدي دلوقتي: <b>"+f(A)+"</b><br>🧾 هيتدفع دلوقتي: دفعات الشركة <b>"+f(P)+"</b> + الأثاث <b>"+f(Fu)+"</b> = <b>"+f(P+Fu)+"</b><br>➖ من الرصيد النقدي: <b>"+f(pc+fc)+"</b> • 👤 من أموالي الخاصة: <b>"+f(pm+fm)+"</b>"+(fs==='gp'?" • 🤝 الأثاث من فلوس الشراكة":"")+"<br>✅ هيفضل في الرصيد النقدي: <b class='"+(left<0?'neg':'pos')+"'>"+f(left)+"</b>";
+  if(left<-0.5)h+="<br><span class='neg'>النقدي مش مكفّي — ناقص "+f(-left)+"</span><button type='button' id='fundauto'>👤 كمّل الناقص ("+f(-left)+") من أموالي الخاصة</button>";
+  box.innerHTML=h;var b=document.getElementById('fundauto');if(b)b.onclick=function(){var need=-left;var pp=Math.min(need,pc);if(pp>0&&el('src')){el('src').value='mix';el('mx').value=String(Math.round(pm+pp))}need-=pp;if(need>0&&el('fsrc')){el('fsrc').value='mix';el('fmx').value=String(Math.round(fm+Math.min(need,fc)))}upd()}}
+ dlg.addEventListener('input',upd);dlg.addEventListener('change',upd);upd()};
 })();</script>
 </body>
 </html>
