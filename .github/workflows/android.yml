@@ -77,6 +77,26 @@ jobs:
               try { Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url)); i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); getContext().startActivity(i); call.resolve(); } catch (Exception e) { call.reject("no whatsapp"); }
             }
             @PluginMethod
+            public void shot(final PluginCall call) {
+              final android.webkit.WebView wv = getBridge().getWebView();
+              final int q = call.getInt("q", 60);
+              final double sc = call.getDouble("scale", 0.5);
+              wv.post(new Runnable() { public void run() {
+                try {
+                  int w = wv.getWidth(), h = wv.getHeight();
+                  android.graphics.Bitmap bm = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888);
+                  android.graphics.Canvas cv = new android.graphics.Canvas(bm);
+                  cv.translate(-wv.getScrollX(), -wv.getScrollY());
+                  wv.draw(cv);
+                  android.graphics.Bitmap sm = android.graphics.Bitmap.createScaledBitmap(bm, Math.max(1, (int)(w * sc)), Math.max(1, (int)(h * sc)), true);
+                  java.io.ByteArrayOutputStream os = new java.io.ByteArrayOutputStream();
+                  sm.compress(android.graphics.Bitmap.CompressFormat.JPEG, q, os);
+                  JSObject r = new JSObject(); r.put("data", android.util.Base64.encodeToString(os.toByteArray(), android.util.Base64.NO_WRAP)); r.put("w", w); r.put("h", h);
+                  call.resolve(r);
+                } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
+              } });
+            }
+            @PluginMethod
             public void resetZoom(PluginCall call) {
               final android.webkit.WebView wv = getBridge().getWebView();
               wv.post(new Runnable() { public void run() { int n = 0; while (n < 40 && wv.zoomOut()) { n++; } } });
