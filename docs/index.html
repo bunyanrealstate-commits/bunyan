@@ -722,7 +722,8 @@ function occ(u){const cs=pd(u.start),ce=addM(cs,u.cm),t=today(),D=Math.max(1,dy(
  iv.forEach(x=>{const l=m[m.length-1];if(l&&x[0]<=l[1])l[1]=new Date(Math.max(l[1],x[1]));else m.push([new Date(x[0]),new Date(x[1])])});
  let free=0;m.forEach(x=>{const a=Math.max(x[0],lo),b=Math.min(x[1],cs);if(b>a)free+=dy(a,b)});
  let preVal=0;u.leases.forEach(L=>{const a=new Date(Math.max(pd(L.start),lo)),b=new Date(Math.min(L.exit?pd(L.exit):lend(L),cs));for(let d=new Date(a);d<b;d.setDate(d.getDate()+1))preVal+=(L.rent||0)/new Date(d.getFullYear(),d.getMonth()+1,0).getDate()});
- const gaps=[];let cur=cs;m.forEach(x=>{const a=Math.max(x[0],cs),b=Math.min(x[1],ce);if(b<=a)return;if(a>cur)gaps.push([cur,new Date(a)]);cur=new Date(Math.max(cur,b))});if(cur<ce)gaps.push([cur,ce]);
+ /* a studio added while already running (onb): days before its first recorded tenant are neither loss nor profit */
+ const gaps=[];let cur=u.onb&&m.length?new Date(Math.max(cs,m[0][0])):cs;m.forEach(x=>{const a=Math.max(x[0],cs),b=Math.min(x[1],ce);if(b<=a)return;if(a>cur)gaps.push([cur,new Date(a)]);cur=new Date(Math.max(cur,b))});if(cur<ce)gaps.push([cur,ce]);
  const G=gaps.map(([a,b])=>{const dys=dy(a,b),past=Math.max(0,Math.min(dys,dy(a,Math.min(b,t))));return{a:iso(a),b:iso(b),dys,past,fut:dys-past,loss:dys*c,lossPast:past*c,lossFut:(dys-past)*c}});
  const f=sh(u);return{D,c:c*f,free,freeVal:preVal*f,gaps:G,vac:G.reduce((s,x)=>s+x.dys,0),lossPast:G.reduce((s,x)=>s+x.lossPast,0)*f,lossFut:G.reduce((s,x)=>s+x.lossFut,0)*f}}
 function occCard(u){const o=occ(u);
@@ -7287,6 +7288,8 @@ function gi(u){var g=+u.grace||0,cs=pd(u.start),ce=addM(cs,u.cm),H=new Date(cs.g
  var iv=(u.leases||[]).map(function(L){return [pd(L.start),L.exit?pd(L.exit):lend(L),L]}).filter(function(x){return x[1]>x[0]}).sort(function(a,b){return a[0]-b[0]}),m=[];
  iv.forEach(function(x){var l=m[m.length-1];if(l&&x[0]<=l[1])l[1]=new Date(Math.max(l[1],x[1]));else m.push([new Date(x[0]),new Date(x[1])])});
  var occ=function(a,b){var n=0;m.forEach(function(x){var p=Math.max(x[0],a),q=Math.min(x[1],b);if(q>p)n+=dy(p,q)});return n};
+ /* studio added while already running: count only from its first recorded tenant */
+ if(u.onb){if(m.length&&m[0][0]>H)H=new Date(m[0][0]);else if(!m.length)H=new Date(Math.max(t,H))}
  var tc=new Date(Math.min(Math.max(t,H),ce)),vp=Math.max(0,dy(H,tc)-occ(H,tc)),vf=Math.max(0,dy(tc,ce)-occ(tc,ce));
  var now=t>=H&&t<ce&&!m.some(function(x){return x[0]<=t&&t<x[1]}),since=null;if(now){var prev=m.filter(function(x){return x[1]<=t}).slice(-1)[0];since=prev?prev[1]:H}
  var nextIn=m.filter(function(x){return x[0]>t})[0],lastOut=m.length?m[m.length-1][1]:null,rent=0;(u.leases||[]).forEach(function(L){if(+L.rent)rent=+L.rent});
