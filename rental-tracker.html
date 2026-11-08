@@ -1138,6 +1138,8 @@ function snap(node){return new Promise(function(res,rej){
  img=new Image();img.onload=function(){var sc=Math.min(window._sc||2,15000/Hh),cv=document.createElement('canvas');cv.width=Math.round(W*sc);cv.height=Math.round(Hh*sc);var cx=cv.getContext('2d');cx.fillStyle=bg;cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(img,0,0,cv.width,cv.height);res(cv)};
  img.onerror=function(){rej(new Error('img'))};img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)})}
 function toPdf(cv,name){var PW=595,PH=842,M=24,cw=PW-2*M,k=cw/cv.width,sh=Math.floor((PH-2*M)/k),pg=[];
+ /* the contract is always ONE A4 page: shrink it to fit instead of splitting */
+ if(/^contract-/.test(name||'')){var kk=Math.min(cw/cv.width,(PH-2*M)/cv.height),dw=cv.width*kk,dh=cv.height*kk;var b0=atob(cv.toDataURL('image/jpeg',window._sc?.97:.92).split(',')[1]),u0=new Uint8Array(b0.length);for(var j=0;j<b0.length;j++)u0[j]=b0.charCodeAt(j);return buildPdf([{jpg:u0,iw:cv.width,ih:cv.height,dw:dw,dh:dh,x:(PW-dw)/2,y:PH-M-dh}],PW,PH)}
  for(var y=0;y<cv.height;y+=sh){var hh=Math.min(sh,cv.height-y),c=document.createElement('canvas');c.width=cv.width;c.height=hh;var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,hh);x.drawImage(cv,0,y,cv.width,hh,0,0,cv.width,hh);
   var b=atob(c.toDataURL('image/jpeg',window._sc?.97:.92).split(',')[1]),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);
   pg.push({jpg:u,iw:c.width,ih:hh,dw:cw,dh:hh*k,x:M,y:PH-M-hh*k})}
@@ -6530,6 +6532,8 @@ var R=[
   check:function(){return window.__tabJump&&Date.now()-window.__tabJump.at<120000?['تبويب «'+window.__tabJump.tab+'» اتحرك بعد ما ظهر: '+window.__tabJump.what]:[]},fix:null},
  {id:'ctchain',area:'العقد',t:'لما العقد متكبّر وتسحبه لآخره، الصفحة نفسها ما كانتش بتتحرك',
   check:function(){return window.__ctStuck&&Date.now()-window.__ctStuck<600000?['سحبت العقد لآخره والصفحة ما اتحركتش']:[]},fix:null},
+ {id:'ctonepage',area:'العقد',t:'العقد كان بيطلع صفحتين في الـ PDF',
+  check:function(){var p=$('#ctpaper');return p&&vis(p)&&p.scrollHeight>1130?['ورقة العقد أطول من صفحة A4 ('+p.scrollHeight+'px) — الـ PDF بيصغّرها عشان تبقى صفحة واحدة']:[]},fix:null},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
   check:function(){if(S.tab!=='ct')return [];var seen={},o=[];[].slice.call(document.querySelectorAll('#app button')).filter(vis).forEach(function(b){var t=b.textContent.trim();if(t.length<5)return;seen[t]=(seen[t]||0)+1;if(seen[t]===2)o.push('«'+t.slice(0,25)+'»')});return o},fix:null},
  {id:'stray',area:'الشاشة',t:'شريط تعديل أو زرار رجوع كان ممكن يفضل ظاهر برّه صفحة العقد',
@@ -6629,5 +6633,12 @@ function watch(ms,cb,tab){var a=sig(),t0=Date.now(),y0=scrollY;(function f(){if(
 var iv=setInterval(function(){if(document.documentElement.classList.contains('bny-ready')){clearInterval(iv);setTimeout(function(){watch(2500,function(w){window.__bootJump=w})},50)}},50);
 var r0=render;render=function(){var y=scrollY,t=S.tab,o=r0.apply(this,arguments);if(y<5)setTimeout(function(){if(S.tab===t&&scrollY<5)watch(1200,function(w){window.__tabJump={at:Date.now(),tab:t,what:w}},t)},30);return o};
 })();</script>
+<style id="ctonepage">
+#ctpaper{min-height:1123px!important}#ctpaper .fr{min-height:1079px!important;padding:14px 16px 18px!important}
+#ctpaper table{margin:8px 0!important}#ctpaper td{padding:5px 8px!important}
+#ctpaper h2{margin:10px 0 4px!important}#ctpaper .tm>div{line-height:1.6!important;padding:6px 12px 6px 16px!important}
+#ctpaper .sg{margin-top:20px!important}#ctpaper .sg div{padding-bottom:44px!important}
+@media print{body.ctp #ctpaper{zoom:.93}}
+</style>
 </body>
 </html>
