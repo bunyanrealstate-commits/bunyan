@@ -97,6 +97,28 @@ jobs:
               } });
             }
             @PluginMethod
+            public void sendFile(PluginCall call) {
+              try {
+                String data = call.getString("data"); String name = call.getString("name", "file.pdf"); String phone = call.getString("phone", ""); String text = call.getString("text", ""); String mime = call.getString("mime", "application/pdf");
+                java.io.File dir = new java.io.File(getContext().getCacheDir(), "share"); dir.mkdirs();
+                java.io.File f = new java.io.File(dir, name.replaceAll("[^A-Za-z0-9._-]", "_"));
+                java.io.FileOutputStream fo = new java.io.FileOutputStream(f); fo.write(android.util.Base64.decode(data, android.util.Base64.DEFAULT)); fo.close();
+                Uri u = androidx.core.content.FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", f);
+                String[] order = new String[]{"com.whatsapp.w4b", "com.whatsapp"};
+                for (String p : order) {
+                  try {
+                    Intent i = new Intent(Intent.ACTION_SEND); i.setType(mime); i.putExtra(Intent.EXTRA_STREAM, u);
+                    if (text != null && text.length() > 0) i.putExtra(Intent.EXTRA_TEXT, text);
+                    if (phone != null && phone.length() > 0) i.putExtra("jid", phone + "@s.whatsapp.net");
+                    i.setPackage(p); i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    getContext().startActivity(i); JSObject r = new JSObject(); r.put("app", p); call.resolve(r); return;
+                  } catch (Exception e) { }
+                }
+                Intent i = new Intent(Intent.ACTION_SEND); i.setType(mime); i.putExtra(Intent.EXTRA_STREAM, u); i.putExtra(Intent.EXTRA_TEXT, text); i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                Intent ch = Intent.createChooser(i, name); ch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION); getContext().startActivity(ch); call.resolve();
+              } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
+            }
+            @PluginMethod
             public void resetZoom(PluginCall call) {
               final android.webkit.WebView wv = getBridge().getWebView();
               wv.post(new Runnable() { public void run() { int n = 0; while (n < 40 && wv.zoomOut()) { n++; } } });

@@ -1143,7 +1143,7 @@ function toPdf(cv,name){var PW=595,PH=842,M=24,cw=PW-2*M,k=cw/cv.width,sh=Math.f
   pg.push({jpg:u,iw:c.width,ih:hh,dw:cw,dh:hh*k,x:M,y:PH-M-hh*k})}
  return buildPdf(pg,PW,PH)}
 window.exportPdf=function(node,label){node=node||gi('app');toast('جاري إنشاء PDF…');
- return snap(node).then(function(cv){var b=toPdf(cv,label);saveFile(b,(label&&label.indexOf('contract-')===0?'Tenancy-Contract-'+label.slice(9):'bunyan-'+(label||S.tab||'page'))+'-'+td()+'.pdf');toast('تم إنشاء PDF')}).catch(function(e){toast('تعذر إنشاء PDF')})};
+ return snap(node).then(function(cv){var b=toPdf(cv,label);var cap=window.__pdfCap;if(cap){window.__pdfCap=null;cap(b);return}saveFile(b,(label&&label.indexOf('contract-')===0?'Tenancy-Contract-'+label.slice(9):'bunyan-'+(label||S.tab||'page'))+'-'+td()+'.pdf');toast('تم إنشاء PDF')}).catch(function(e){toast('تعذر إنشاء PDF')})};
 window.exportCard=function(b){var c=b.closest('.card');try{c.querySelectorAll('.trm button').forEach(function(x){x.click()})}catch(e){}exportPdf(c,(S.tab||'page')+'-card')};
 var r1=render;render=function(){r1();try{document.querySelectorAll('#app .pdfr').forEach(function(x){x.remove()});return;document.querySelectorAll('#app .card:not(#rob)').forEach(function(c){if(!c.querySelector(':scope>.pdfr')){var d=document.createElement('div');d.className='pdfr';var b=document.createElement('button');b.className='pdfb';b.title='PDF';b.textContent='📄 PDF';b.setAttribute('onclick','exportCard(this)');d.appendChild(b);c.appendChild(d)}})}catch(e){}};
 
@@ -6203,6 +6203,57 @@ function keep(k,fl){return new Promise(function(res){try{var im=new Image(),u=UR
 ['ctIdRead:tn','ctLlRead:ll'].forEach(function(p){var n=p.split(':')[0],k=p.split(':')[1],o=window[n];if(typeof o!=='function')return;window[n]=async function(inp){var fl=inp&&inp.files&&inp.files[0];if(fl)await keep(k,fl);var r=await o.apply(this,arguments);fix();return r}});
 var r0=render;render=function(){var o=r0.apply(this,arguments);if(S.tab==='ct')setTimeout(fix,50);return o};
 setTimeout(fix,1500);
+})();</script>
+<style id="sgmovecss">
+#ctpaper img.ctsig,#ctpaper img.cttsig{position:relative;touch-action:none;cursor:grab;-webkit-user-drag:none;user-select:none}
+#ctpaper img.sgsel{outline:2px dashed #1473e6;outline-offset:3px;border-radius:4px}
+#sgbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:2147483000;display:flex;gap:6px;align-items:center;background:#0f2742;color:#fff;padding:8px 10px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:13px;font-weight:800;white-space:nowrap}
+#sgbar button{min-height:34px;min-width:38px;border-radius:999px;border:0;background:#ffffff1f;color:#fff;font-size:15px;font-weight:800;padding:0 10px}
+#sgbar button.ok{background:#22a06b}
+.sndw .bt{flex-direction:column}.sndw .bt button{width:100%}
+</style>
+<script id="sgmovejs">(function(){
+function P(){S.ct=S.ct||{};return S.ct.sgpos=S.ct.sgpos||{}}
+function key(im){return im.classList.contains('cttsig')?'t':'l'}
+function apply(){var p=document.getElementById('ctpaper');if(!p)return;['ctsig','cttsig'].forEach(function(c){var im=p.querySelector('img.'+c);if(!im)return;var o=P()[c==='cttsig'?'t':'l'];if(o){im.style.left=(o.x||0)+'px';im.style.top=(o.y||0)+'px';if(o.w){im.style.width=o.w+'px';im.style.maxWidth='none';im.style.maxHeight='none';im.style.height='auto'}}else{im.style.left='';im.style.top='';im.style.width='';im.style.maxWidth='';im.style.maxHeight='';im.style.height=''}im.draggable=false;im.setAttribute('contenteditable','false')})}
+function store(){var p=document.getElementById('ctpaper');if(p&&S.ct){[].slice.call(p.querySelectorAll('.sgsel')).forEach(function(x){x.classList.remove('sgsel')});S.ct.html=p.innerHTML;if(sel)sel.classList.add('sgsel')}try{save()}catch(e){}}
+var sel=null;
+function bar(){var b=document.getElementById('sgbar');if(!sel){if(b)b.remove();return}if(!b){b=document.createElement('div');b.id='sgbar';b.innerHTML="<span>✍️ اسحبه بصباعك</span><button type='button' data-a='-' title='أصغر'>−</button><button type='button' data-a='+' title='أكبر'>+</button><button type='button' data-a='r' title='رجّعه مكانه'>↺</button><button type='button' class='ok' data-a='ok'>تمام</button>";document.body.appendChild(b);
+ b.addEventListener('click',function(e){var a=e.target.closest('button');if(!a||!sel)return;var k=key(sel),o=P()[k]||{x:0,y:0},act=a.getAttribute('data-a');
+  if(act==='ok'){unsel();return}if(act==='r'){delete P()[k];apply();store();return}
+  var w=o.w||sel.getBoundingClientRect().width/scale();w=Math.max(40,Math.min(320,w*(act==='+'?1.15:1/1.15)));o.w=Math.round(w);P()[k]=o;apply();store()})}}
+function unsel(){if(sel)sel.classList.remove('sgsel');sel=null;bar();store()}
+function scale(){var p=document.getElementById('ctpaper');if(!p||!p.offsetWidth)return 1;return p.getBoundingClientRect().width/p.offsetWidth||1}
+var drag=null;
+document.addEventListener('pointerdown',function(e){var im=e.target&&e.target.closest&&e.target.closest('#ctpaper img.ctsig,#ctpaper img.cttsig');if(!im){if(sel&&!e.target.closest('#sgbar'))unsel();return}
+ e.preventDefault();e.stopPropagation();if(sel!==im){if(sel)sel.classList.remove('sgsel');sel=im;im.classList.add('sgsel');bar()}
+ var o=P()[key(im)]||{x:0,y:0};drag={id:e.pointerId,sx:e.clientX,sy:e.clientY,x:o.x||0,y:o.y||0,k:key(im),moved:false};try{im.setPointerCapture(e.pointerId)}catch(x){}},true);
+document.addEventListener('pointermove',function(e){if(!drag||e.pointerId!==drag.id)return;e.preventDefault();var s=scale(),o=P()[drag.k]||{};o.x=Math.round(drag.x+(e.clientX-drag.sx)/s);o.y=Math.round(drag.y+(e.clientY-drag.sy)/s);o.x=Math.max(-400,Math.min(400,o.x));o.y=Math.max(-300,Math.min(200,o.y));P()[drag.k]=o;drag.moved=true;apply()},{passive:false,capture:true});
+document.addEventListener('pointerup',function(e){if(!drag||e.pointerId!==drag.id)return;var m=drag.moved;drag=null;if(m)store()},true);
+document.addEventListener('touchmove',function(e){if(drag){e.preventDefault();e.stopPropagation()}},{passive:false,capture:true});['touchstart','touchend'].forEach(function(ev){document.addEventListener(ev,function(e){if(drag||(e.target&&e.target.closest&&e.target.closest('#ctpaper img.ctsig,#ctpaper img.cttsig')))e.stopPropagation()},{capture:true,passive:true})});
+var r0=render;render=function(){var o=r0.apply(this,arguments);if(S.tab!=='ct'){sel=null;bar()}else{apply();setTimeout(apply,60);setTimeout(apply,400)}return o};
+try{new MutationObserver(function(){if(S.tab==='ct')apply()}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true})}catch(e){}
+window.ctSigApply=apply;
+function hint(){var c=document.getElementById('sgcard');if(c&&!c.querySelector('.sghint')){var h=document.createElement('p');h.className='mu sghint';h.style.cssText='margin:8px 0 0;font-size:12.5px';h.textContent='👆 دوس على أي توقيع في العقد (بتاعك أو بتاع المستأجر) واسحبه لمكانه، وكبّره أو صغّره من الشريط اللي هيظهر تحت.';c.appendChild(h)}}
+var r1=render;render=function(){var o=r1.apply(this,arguments);if(S.tab==='ct'){setTimeout(hint,80);setTimeout(hint,450)}return o};
+
+/* send the contract PDF to the tenant's WhatsApp, with or without signatures */
+function phone(){var ph=String((S.ct&&S.ct.f&&S.ct.f.ph)||'').replace(/[^\d]/g,'');if(/^05\d{8}$/.test(ph))ph='971'+ph.slice(1);if(/^00/.test(ph))ph=ph.slice(2);return ph}
+function b64(blob){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(String(r.result).split(',')[1])};r.onerror=rej;r.readAsDataURL(blob)})}
+function makePdf(withSig){return new Promise(function(res,rej){var p=document.getElementById('ctpaper');var hid=[];if(p&&!withSig)[].slice.call(p.querySelectorAll('img.ctsig,img.cttsig')).forEach(function(x){hid.push([x,x.style.visibility]);x.style.visibility='hidden'});if(sel){sel.classList.remove('sgsel')}
+ var back=function(){hid.forEach(function(h){h[0].style.visibility=h[1]})},t=setTimeout(function(){window.__pdfCap=null;back();rej(new Error('PDF اتأخر'))},30000);
+ window.__pdfCap=function(b){clearTimeout(t);back();res(b)};try{ctPdf()}catch(e){clearTimeout(t);window.__pdfCap=null;back();rej(e)}})}
+async function go(withSig){var F=(S.ct&&S.ct.f)||{},ph=phone(),nm='Tenancy-Contract-'+((F.tn||'contract').trim().replace(/\s+/g,'-'))+(withSig?'':'-unsigned')+'.pdf';
+ var msg='مرحبا '+(F.tn||'')+' 👋\nده عقد الإيجار'+(F.sub?' — '+F.sub:'')+'\nمن '+(F.st||'')+' إلى '+(F.en||'')+'\nالإيجار الشهري: '+(F.rent||'')+' درهم';
+ var blob;try{blob=await makePdf(withSig)}catch(e){toast('⚠️ مقدرتش أعمل الـ PDF');return}
+ var C=window.Capacitor,W=C&&C.Plugins&&C.Plugins.WaBiz;
+ if(W&&W.sendFile){try{await W.sendFile({data:await b64(blob),name:nm,phone:ph,text:msg,mime:'application/pdf'});toast(ph?'📤 فتحت واتساب على شات العميل والعقد جاهز — دوس إرسال':'📤 اختار العميل في واتساب ودوس إرسال');return}catch(e){}}
+ try{var file=new File([blob],nm,{type:'application/pdf'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text:msg});return}}catch(e){if(e&&e.name==='AbortError')return}
+ try{saveFile(blob,nm)}catch(e){}if(ph){var u='https://wa.me/'+ph+'?text='+encodeURIComponent(msg+'\n(هبعتلك ملف العقد PDF هنا)');setTimeout(function(){try{if(!(window.bnyOpenWa&&bnyOpenWa(u)))window.open(u,'_blank')}catch(e){}},900)}
+ toast('📄 نزّلت الـ PDF وفتحت واتساب — ارفق الملف في الشات')}
+window.ctSend=function(){var ph=phone(),F=(S.ct&&S.ct.f)||{},hasSig=!!(S.ct&&(S.ct.sig||S.ct.tsig));var o=document.createElement('div');o.className='ov sndw';
+ o.innerHTML="<div class='dlg'><h2>📤 ابعت العقد للعميل</h2><p class='mu' style='margin:0 0 8px'>"+(ph?"هيتبعت PDF على واتساب <b dir='ltr'>+"+ph+"</b>":"⚠️ مفيش رقم موبايل في العقد — هتختار العميل من واتساب")+"</p><div class='bt'><button type='button' class='p' data-s='1'"+(hasSig?'':' disabled')+">✍️ PDF بالتوقيع"+(hasSig?'':' (مفيش توقيع)')+"</button><button type='button' class='p' data-s='0' style='background:#1b6a8a!important'>📄 PDF من غير توقيع</button><button type='button' data-s='x'>إلغاء</button></div></div>";
+ document.body.appendChild(o);o.addEventListener('click',function(e){var b=e.target.closest('button');if(e.target===o||(b&&b.getAttribute('data-s')==='x')){o.remove();return}if(!b||b.disabled)return;o.remove();toast('⏳ بجهّز الـ PDF…');go(b.getAttribute('data-s')==='1')})};
 })();</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
