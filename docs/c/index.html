@@ -622,9 +622,11 @@ function units(){const t=today();
 <div class='card'>${tbl(['الاستديو','الشركة','المستأجر الحالي','الإيجار','ينتهي عقد الشركة','ربح شهري','الحالة',''],rows.slice(UV.pg*PG,UV.pg*PG+PG).map(r=>`<tr onclick='UV.open="${r.u.id}";render()' style='cursor:pointer'><td><b>${esc(r.u.name)}</b></td><td>${esc(r.u.company||'—')}</td><td>${r.L?esc(r.L.tenant||'مستأجر'):'—'}</td><td>${r.L?$((r.L.rent||0)+(r.L.inet||0)):'—'}</td><td>${iso(r.e)}</td><td class='${cls(r.pf)}'>${$(r.pf)}</td><td>${bd(r)}</td><td><button onclick='event.stopPropagation();mLease("${r.u.id}")'>+ عقد</button></td></tr>`).join('')||`<tr><td colspan='8' class='mu'>لا توجد استديوهات</td></tr>`)}
 <div class='li' style='border:0'><button onclick='UV.pg=Math.max(0,UV.pg-1);render()'>→ السابق</button><span class='mu'>صفحة ${UV.pg+1} من ${pages} (${rows.length} استديو)</span><button onclick='UV.pg=Math.min(${pages-1},UV.pg+1);render()'>التالي ←</button></div><p class='mu'>اضغط على أي استديو لفتح تفاصيلها وتعديلها.</p></div>`}
 const dd=d=>Math.round((pd(d)-today())/864e5),whenTxt=n=>n===0?'اليوم':n===1?'غداً':n===2?'بعد يومين':n===7?'بعد أسبوع':n===14?'بعد أسبوعين':n===21?'بعد 3 أسابيع':n===30?'بعد شهر':'بعد '+n+' يوم';
+/* «(2 من 4)» / «(الأخيرة 4/4)» after each company payment and rent */
+function nthT(n,of,last){of=Math.ceil(+of||0);if(!(of>1))return '';return n>=of?' ('+last+' '+n+'/'+of+')':' ('+n+' من '+of+')'}
 function items(){const t=today(),r=[],P=(ty,id,d,label,amt,offs)=>r.push({ty,id,d,label,amt,offs});
- SU().forEach(u=>{u.inst.forEach((i,k)=>{if(!i.p)P('inst',u.id+'i'+k,i.d,'دفعة '+(u.company||'الشركة')+' - '+u.name,i.a,[30,21,14,7,2,0])});
-  u.leases.forEach((L,k)=>{for(let i=0;i<L.months;i++)if(!L.rcv.includes(i))P('rent',u.id+'l'+k+'_'+i,iso(payD(L,i)),'إيجار '+(L.tenant||'مستأجر')+' - '+u.name,la(L,i),[1,0]);P('end',u.id+'e'+k,iso(lend(L)),'انتهاء عقد '+(L.tenant||'المستأجر')+' - '+u.name,0,(function(){var dl=(lend(L)-pd(L.start))/864e5;return dl<45?[3,1,0]:dl<100?[10,3,0]:[30,7,0]})())});
+ SU().forEach(u=>{u.inst.forEach((i,k)=>{if(!i.p)P('inst',u.id+'i'+k,i.d,'دفعة '+(u.company||'الشركة')+' - '+u.name+nthT(k+1,u.inst.length,'الأخيرة'),i.a,[30,21,14,7,2,0])});
+  u.leases.forEach((L,k)=>{for(let i=0;i<L.months;i++)if(!L.rcv.includes(i))P('rent',u.id+'l'+k+'_'+i,iso(payD(L,i)),'إيجار '+(L.tenant||'مستأجر')+' - '+u.name+nthT(i+1,L.months,'آخر إيجار'),la(L,i),[1,0]);P('end',u.id+'e'+k,iso(lend(L)),'انتهاء عقد '+(L.tenant||'المستأجر')+' - '+u.name,0,(function(){var dl=(lend(L)-pd(L.start))/864e5;return dl<45?[3,1,0]:dl<100?[10,3,0]:[30,7,0]})())});
   P('cend',u.id+'c',iso(addM(pd(u.start),u.cm)),'انتهاء عقد الشركة - '+u.name,0,[0])});
  S.debts.forEach((x,k)=>P('debt','d'+k,x.d,'دفعة مستحقة عليّ: '+x.w,x.a,[0]));S.recv.forEach((x,k)=>P('recv','r'+k,x.d,'مستحقات لي: '+x.w,x.a,[0]));
  SE().forEach((x,k)=>{for(let i=0;i<(x.n||1);i++){const d=iso(addM(pd(x.d),i));if(pd(d)>=t)P('exp','x'+k+'_'+i,d,'مصروف: '+x.w,x.a,[0])}});return r}
@@ -5932,6 +5934,8 @@ var R=[
   check:function(){if(S.tab!=='ct'||!document.getElementById('ctacts'))return [];return document.getElementById('ct2lb')?[]:['زرار «سجّله عقد مستأجر» مش ظاهر']},fix:function(){window.ct2Put&&ct2Put();return 'رجّعت الزرار'}},
  {id:'wplan',area:'الداشبورد',t:'مكانش فيه حاجة تقولك تسحب كام وامتى من غير ما يحصل عجز',
   check:function(){if(S.tab!=='home'||typeof AUTH==='undefined'||!AUTH)return [];var c=document.getElementById('wpcard');if(!c)return ['كارت «خطة السحب» مش ظاهر في الداشبورد'];return /NaN|undefined/.test(c.textContent)?['خطة السحب فيها أرقام بايظة']:[]},fix:null},
+ {id:'nthlbl',area:'الدفعات',t:'الدفعات والإيجارات الجاية مكانش مكتوب عليها رقم كام من كام ولا إذا كانت الأخيرة',
+  check:function(){try{var it=items().filter(function(x){return x.ty==='inst'||x.ty==='rent'});var u=it.filter(function(x){var o=SU().filter(function(y){return x.id.indexOf(y.id)===0})[0];return o&&(x.ty==='inst'?o.inst.length>1:true)&&!/\((\d+ من \d+|الأخيرة \d+\/\d+|آخر إيجار \d+\/\d+)\)/.test(x.label)});return u.length>3?['فيه '+u.length+' دفعة/إيجار من غير رقمها']:[]}catch(e){return []}},fix:null},
  {id:'updlong',area:'الأبديت',t:'صفحة الأبديت كانت طويلة جداً (كل الشقق مفتوحة والمعاينة كبيرة)',
   check:function(){if(S.tab!=='upd')return [];var o=document.querySelectorAll('#updwrap .uvl.open').length;return o>1?['أكتر من فيلا مفتوحة في نفس الوقت']:[]},fix:function(){window.__updOpen='';render();return 'قفلت الفلل المفتوحة'}},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
