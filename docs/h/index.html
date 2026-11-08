@@ -4612,7 +4612,8 @@ M.nearAns=near;var sa0=M.setAns;M.setAns=function(q,t){var n=near(q);if(n&&n.v>=
 M.alias=function(q,x){if(!x)return;var s=ks(q).join(' ');if(!s||s===x.s)return;x.alt=(x.alt||[]).filter(function(a){return a!==s});x.alt.push(s);x.alt=x.alt.slice(-12);x.ok=(x.ok||0)+1;sv()};
 M.dropAns=function(x){var a=mem().a||[];var i=a.indexOf(x);if(i>=0){a.splice(i,1);sv()}};
 function isQ(q){var z=nz(q);return /[؟?]/.test(q)||/(^|\s)(ايه|إيه|كام|امتي|امتى|فين|ازاي|إزاي|مين|ليه|هل|ممكن|عايز|عاوز|قولي|اعرف|احسب|وريني|فاكر|بكام|اد ايه|قد ايه|انهي|إنهي|هو|هي)(\s|$)/.test(' '+z+' ')}
-function isStatement(q){var w=String(q).trim().split(/\s+/);return w.length>=3&&w.length<=40&&!isQ(q)}
+function askMe(q){var z=' '+nz(q)+' ';return /^\s*(انت|إنت|انتي|إنتي|أنت|حضرتك|عندك|تعرف|تعرفي|عارف|عارفه|شفت|شوفت|سمعت|لاحظت|خدت بالك|يا ترى|طب|طيب)(\s|$)/.test(z)||/(\s)(علي علم|على علم|تعرف|عارف|شفت|شوفت|سمعت|لاحظت|خدت بالك|فهمت|ينفع|اشرح|اشرحلي|وضحلي|فهمني|ساعدني|علمني)(\s|$)/.test(z)}
+function isStatement(q){var w=String(q).trim().split(/\s+/);return w.length>=3&&w.length<=40&&!isQ(q)&&!askMe(q)}window.__bnyIsStmt=isStatement;
 var o=window.bnyAsk;
 window.bnyAsk=function(q){var n=near(q);if(n&&n.v>=0.7){n.x.used=(n.x.used||0)+1;return {t:'📝 **الإجابة اللي علمتهالي:**\n'+n.x.t,i:'custom'}}
  var r=o(q);if(r&&r.then)return r;
@@ -5881,6 +5882,10 @@ var R=[
   check:function(){if(S.tab!=='ct'||!window.ctLayout)return [];var i=document.getElementById('ct_sub');if(!i)return [];var a=document.activeElement;try{i.focus({preventScroll:true});ctLayout();var ok=document.activeElement===i;i.blur();if(a&&a!==document.body&&a.focus)a.focus({preventScroll:true});return ok?[]:['الكتابة في خانات العقد بتقفل الكيبورد']}catch(e){return []}},fix:null},
  {id:'ctsubpk',area:'العقد',t:'موضوع الإيجار كان لازم يتكتب بإيدك؛ دلوقتي فيه اختيار الاستديو من المجموعات',
   check:function(){if(S.tab!=='ct'||!(S.units||[]).length||!document.getElementById('ct_sub'))return [];return document.getElementById('ctsubpk')?[]:['اختيار الاستديو في موضوع الإيجار مش ظاهر']},fix:function(){window.ctSubPut&&ctSubPut();return 'رجّعت اختيار الاستديو'}},
+ {id:'aiqfact',area:'المساعد',t:'المساعد كان بيحفظ سؤال زي «انت على علم بالتحديث…» على إنه معلومة ويرد «خدت بالي وهفتكرها» بدل ما يجاوب',
+  check:function(){var o=[];if(window.__bnyIsStmt&&__bnyIsStmt('انت علي علم بالتحديث اللي حصل للبرنامج'))o.push('بيعتبر الأسئلة معلومات');try{(BNYMEM.facts()||[]).forEach(function(f){if(window.__bnyIsStmt&&!__bnyIsStmt(f.t))o.push('سؤال متحفظ كمعلومة: «'+String(f.t).slice(0,40)+'»')})}catch(e){}return o},fix:function(){var n=window.bnyFactClean?bnyFactClean():0;return 'شلت '+n+' سؤال اتحفظ غلط'}},
+ {id:'ainews',area:'المساعد',t:'المساعد مكانش عارف آخر تحديثات البرنامج ولا تبويب الأبديت',
+  check:function(){try{var r=window.bnyAsk&&bnyAsk('انت علي علم بالتحديث اللي حصل للبرنامج من تبويب ابديت');return r&&r.i==='help'?[]:['المساعد مش بيرد على سؤال التحديثات']}catch(e){return []}},fix:null},
  {id:'updlong',area:'الأبديت',t:'صفحة الأبديت كانت طويلة جداً (كل الشقق مفتوحة والمعاينة كبيرة)',
   check:function(){if(S.tab!=='upd')return [];var o=document.querySelectorAll('#updwrap .uvl.open').length;return o>1?['أكتر من فيلا مفتوحة في نفس الوقت']:[]},fix:function(){window.__updOpen='';render();return 'قفلت الفلل المفتوحة'}},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
@@ -5915,6 +5920,7 @@ window.bnyRulesSelfTest=function(){var bad=[],t=S.tab,hc=S.ct&&S.ct.html,ts0=S.c
  var cases=[['sgmode',function(){document.documentElement.classList.add('sgmode')}],['toast',function(){var x=$('#toast');x.textContent=' ';x.style.display='block'}],
   ['ctblur',function(){S.ct.html=(S.ct.html||'<p>1</p>')+'<span class="bq">123</span>'}],['ctlabels',function(){S.ct.html=(S.ct.html||'')+'<td>LandLord Name</td>'.replace('<td>','<td>')+'<b>x</b>';S.ct.html=S.ct.html.replace('<b>x</b>','<i>>LandLord Name<</i>')}],
   ['ctsig',function(){S.ct.sgpos={l:{x:900,y:0}}}],['updsep',function(){S.upd={villas:[]}}],['ctsigorph',function(){S.ct.tsig='';S.ct.html=(S.ct.html||'')+'<img class="cttsig" src="data:image/png;base64,AAAA">'}],['ctsigrow',function(){S.ct.html=(S.ct.html||'<div class="fr"></div>').replace(/<div class="sg"[^>]*>[\s\S]*$/,'')+'<div class="sg"><div>Witness<small>الشاه</small>االختا Tenant</div><div>Landlord Signature<small>توقيع المؤجر</small></div></div></div>'}],['stray',function(){S.tab='home';var d=document.createElement('div');d.id='ctxl';document.body.appendChild(d)}],
+  ['aiqfact',function(){BNYMEM.addFact('انت تعرف الجديد في البرنامج')}],
   ['ctsubpk',function(){S.tab='ct';render();var e=document.getElementById('ctsubpk');e&&e.remove()}],
   ['menu',function(){var hd=$('.hd');hd.classList.add('mopen');var o=document.createElement('div');o.className='ov';o.id='__rt';document.body.appendChild(o)}]];
  cases.forEach(function(c){try{c[1]();var res=runAll([c[0]]);var x=res.filter(function(y){return y.r.id===c[0]})[0];if(!x)bad.push(c[0]+': not detected');else if(!x.fixed)bad.push(c[0]+': detected but not fixed')}catch(e){bad.push(c[0]+': crashed '+e.message)}var o=document.getElementById('__rt');o&&o.remove()});
@@ -6269,6 +6275,29 @@ var fl=window.ctFromLease;if(typeof fl==='function')window.ctFromLease=function(
 var lg=window.ctLang;if(typeof lg==='function')window.ctLang=function(l){var r=lg.apply(this,arguments);var re=function(){try{if(S.ct&&S.ct.subU)setSub(ctSubBuild(S.ct.subU,lang()))}catch(e){}};Promise.resolve(r).then(re,re);return r};
 })();</script>
 
+<script id="bnynews">(function(){
+/* the assistant knows what changed in the app and how each new part works — answers on its own, no Claude/Gemini needed */
+var NEWS=[
+ ['2026-11-08','العقد: الكتابة في خانات بيانات العقد (زي موضوع الإيجار) مبقتش تقفل الكيبورد ولا تحرّك الصفحة.'],
+ ['2026-11-08','العقد: تحت «موضوع الإيجار» فيه قايمة «🏠 اختار الاستديو من المجموعات» — بتكتب اسم الفيلا ورقمها ورقم الاستديو لوحدها، وباقي الجملة بيفضل زي ما هو حتى مع «➕ عقد جديد».'],
+ ['2026-11-08','الأبديت: الصفحة بقت قصيرة — كل فيلا سطر واحد تدوس عليه يفتح شققها، والصورة مستخبية لحد ما تدوس «👀 شوف الصورة».'],
+ ['2026-11-07','الأبديت: تصميم جديد للصورة (عدد المتاح فوق، المتاح قبل المحجوز، علامة NEW للشقة الجديدة 3 أيام، الأسعار بـ AED).'],
+ ['2026-11-07','الأبديت: الإرسال لجروب الواتساب (من لينك الجروب أو قايمة المشاركة) وزرار «🔓 فك الحظر» عشان يتبعت لوحده.'],
+ ['2026-11-06','الأبديت: تبويب لوحده منفصل عن حسابات المجموعات — فلل وشقق، الدور والنوع، مفروشة، BOOKED، ملاحظات، اللوكيشن QR على الصورة، ونظام الدفعات (عمود لكل دفعة / من دفعة لـ كذا / عدد ثابت) + عمود شهري وملاحظات.'],
+ ['2026-11-06','الأحاديث: زرار «📋 نسخ» على كارت الحديث.']];
+var GUIDE="📢 **تبويب الأبديت** — بتعمل بيه صورة الشقق المتاحة وتبعتها للجروب:\n• «➕ فيلا»: اسمها ورقمها والمنطقة ولينك اللوكيشن (بيطلع QR على الصورة).\n• دوس على الفيلا تفتح شققها ← «➕ شقة»: الدور، رقم الشقة، النوع، مفروشة، السعر، الشهري، ملاحظة.\n• زرار BOOKED قصاد كل شقة يعلّمها محجوزة، و✕ يلغيها (وفيه ↩️ ترجّعها).\n• ⚙️ فوق: العنوان، رقم التواصل، رسوم العقد، التأمين، ونظام الدفعات.\n• «📤 ابعت الصورة على الواتساب» و«💬 ابعت نص» و«👥 اربط الجروب» و«💾 احفظ الصورة» و«👀 شوف الصورة».\n• الأبديت متخزن لوحده ومش داخل في حسابات المجموعات.";
+function news(n){return NEWS.slice(0,n||6).map(function(x){return '• '+x[0].slice(5).split('-').reverse().join('/')+' — '+x[1]}).join('\n')}
+window.bnyNews=NEWS;
+function nz(t){return String(t||'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').toLowerCase()}
+var o=window.bnyAsk;window.bnyAsk=function(q){var z=nz(q);
+ var upd=/(ابديت|ابدات|update)/.test(z),neu=/(تحديث|اتحدث|الجديد|جديد|اتغير|اتعدل|تعديلات|التعديلات|اخر حاجه|اللي اتضاف|اتضاف|نسخه)/.test(z);
+ if(upd&&!neu&&!/(شقه|فيلا|محجوز|متاح)\s*\d/.test(z))return {t:GUIDE+"\n\n🆕 **آخر تعديلات الأبديت:**\n"+news(6).split('\n').filter(function(l){return /الأبديت/.test(l)}).join('\n'),i:'help'};
+ if(neu&&(upd||/(برنامج|بنيان|التطبيق|البرنامج|ايه الجديد|الجديد)/.test(z)))return {t:'🆕 **آخر التحديثات في بنيان:**\n'+news(7)+(upd?'\n\n'+GUIDE:''),i:'help'};
+ return o.apply(this,arguments)};
+/* clean questions that were saved by mistake as "facts" */
+function clean(){try{if(typeof BNYMEM==='undefined'||!window.__bnyIsStmt)return 0;var F=BNYMEM.facts()||[],n=0;for(var i=F.length-1;i>=0;i--){var t=String(F[i]&&F[i].t||'');if(!__bnyIsStmt(t)&&!/[.،]$/.test(t)){BNYMEM.delFact(i);n++}}return n}catch(e){return 0}}
+window.bnyFactClean=clean;setTimeout(clean,3000);
+})();</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script><style id="hlogo">html body .hd{background:linear-gradient(120deg,#16653b 0%,#2a9d5c 55%,#3cc47c 100%)!important;border-bottom:0!important;box-shadow:0 4px 16px rgba(22,101,59,.28)!important;color:#fff!important}.hd h1.brand{display:inline-flex!important;flex-direction:column;align-items:center;justify-content:center;line-height:1;width:auto!important;background:none!important;padding:0!important}.hd h1.brand svg{height:30px!important;width:auto!important;filter:drop-shadow(0 1px 2px rgba(0,0,0,.18))}.hd h1.brand svg *{fill:#fff!important;stroke:none}.hd h1.brand::after{content:"حكيم";display:block;margin-top:-3px;background:#fff;color:#16653b;font-size:9.5px;font-weight:800;line-height:1;padding:2px 9px 3px;border-radius:999px;letter-spacing:0;box-shadow:0 1px 4px rgba(0,0,0,.15)}html body .hd #pvb,html body .hd #bell,html body .hd #hmb{background:rgba(255,255,255,.16)!important;border:1px solid rgba(255,255,255,.38)!important;color:#fff!important;box-shadow:none!important}html body .hd #hmb{color:#fff!important}html body .hd #bell:not(.al):not(.od){background:rgba(255,255,255,.16)!important;border:1px solid rgba(255,255,255,.38)!important;color:#fff!important}html body .hd #clk2{color:#fff!important}html body .hd #clk2 small{color:#d4f7e2!important}html body .hd #grpb button{background:rgba(255,255,255,.18)!important;border:1px solid rgba(255,255,255,.45)!important;box-shadow:0 2px 10px rgba(0,0,0,.12)!important;color:#fff!important}html body .hd #grpb button b,html body .hd #grpb button span{color:#fff!important}html body .hd #grpb button i{background:#ffc93c!important;box-shadow:0 0 0 2px rgba(255,201,60,.35),0 0 8px rgba(255,201,60,.6)!important}html body .hd{min-height:52px!important;padding-top:6px!important;padding-bottom:6px!important}.hd h1.brand svg{height:27px!important}.hd h1.brand::after{font-size:9px!important}html body .hd #clk2{font-size:15px!important}html body .hd #grpb button{min-height:30px!important;font-size:13px!important}html body .hd #pvb,html body .hd #bell,html body .hd #hmb{width:36px!important;height:36px!important;min-height:36px!important;font-size:17px!important}</style><script id="hguard">(function(){
 var D=["units","exp","dep","gp","gc","adj"];window._ug=0;["pointerdown","keydown","touchstart"].forEach(function(e){addEventListener(e,function(){window._ug=Date.now()},{capture:true,passive:true})});
 function pk(o){var r={};D.forEach(function(k){if(o&&o[k]!=null)r[k]=o[k]});return JSON.stringify(r)}
