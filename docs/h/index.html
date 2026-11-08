@@ -5849,6 +5849,8 @@ var R=[
   check:function(){var p=$('#ctpaper');return p&&vis(p)&&p.scrollHeight>1130?['ورقة العقد أطول من صفحة A4 ('+p.scrollHeight+'px) — الـ PDF بيصغّرها عشان تبقى صفحة واحدة']:[]},fix:null},
  {id:'updposter',area:'الأبديت',t:'جدول صورة الأبديت كان بيتلخبط (BOOKED نازلة تحت بعض والعناوين من غير لون)',
   check:function(){var p=$('#updposter');if(!p)return [];var o=[];[].slice.call(p.querySelectorAll('td,th')).some(function(c){if(getComputedStyle(c).display!=='table-cell'){o.push('خانات الجدول مش مترصصة');return true}});var th=p.querySelector('th.vl');if(th&&!/gradient/.test(getComputedStyle(th).backgroundImage))o.push('عنوان الفيلا من غير اللون الأخضر');return o},fix:null},
+ {id:'updqr',area:'الأبديت',t:'فيلا ليها لوكيشن والـ QR بتاعه مش ظاهر على صورة الأبديت',
+  check:function(){var p=$('#updposter');if(!p||!S.upd)return [];var need=(S.upd.villas||[]).filter(function(v){return v.loc&&(v.units||[]).some(function(a){return !a.hide&&!(S.upd.hideBooked&&a.booked)})}).length,has=p.querySelectorAll('img.uqr').length;return need>has?['فيه '+(need-has)+' لوكيشن من غير QR']:[]},fix:null},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
   check:function(){if(S.tab!=='ct')return [];var seen={},o=[];[].slice.call(document.querySelectorAll('#app button')).filter(vis).forEach(function(b){var t=b.textContent.trim();if(t.length<5)return;seen[t]=(seen[t]||0)+1;if(seen[t]===2)o.push('«'+t.slice(0,25)+'»')});return o},fix:null},
  {id:'stray',area:'الشاشة',t:'شريط تعديل أو زرار رجوع كان ممكن يفضل ظاهر برّه صفحة العقد',
@@ -5955,6 +5957,43 @@ var r0=render;render=function(){var y=scrollY,t=S.tab,o=r0.apply(this,arguments)
 #ctpaper .sg{margin-top:20px!important}#ctpaper .sg div{padding-bottom:44px!important}
 @media print{body.ctp #ctpaper{zoom:.93}}
 </style>
+<script id="qrgen">(function(){
+/* small QR code maker (byte mode, error level M) — used to print scannable links (like a villa's location) on images */
+var ECC=[-1,10,16,26,18,24,16,18,22,22,26,30,22,22,24,24,28,28,26,26,26,26,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28],
+    BLK=[-1,1,1,1,2,2,4,4,4,5,5,5,8,9,9,10,10,11,13,14,16,17,17,18,20,21,23,25,26,28,29,31,33,35,37,38,40,43,45,47,49];
+function raw(v){var r=(16*v+128)*v+64;if(v>=2){var n=Math.floor(v/7)+2;r-=(25*n-10)*n-55;if(v>=7)r-=36}return r}
+function dcw(v){return Math.floor(raw(v)/8)-ECC[v]*BLK[v]}
+function mul(x,y){var z=0;for(var i=7;i>=0;i--){z=(z<<1)^((z>>>7)*0x11D);z^=((y>>>i)&1)*x}return z&255}
+function rsDiv(d){var r=[];for(var i=0;i<d-1;i++)r.push(0);r.push(1);var root=1;for(i=0;i<d;i++){for(var j=0;j<r.length;j++){r[j]=mul(r[j],root);if(j+1<r.length)r[j]^=r[j+1]}root=mul(root,2)}return r}
+function rsRem(data,div){var r=div.map(function(){return 0});data.forEach(function(b){var f=b^r.shift();r.push(0);div.forEach(function(c,i){r[i]^=mul(c,f)})});return r}
+function make(text){var bytes=Array.from(new TextEncoder().encode(String(text)));var ver=0;for(var v=1;v<=40;v++){var bits=4+(v<=9?8:16)+8*bytes.length;if(bits<=dcw(v)*8){ver=v;break}}if(!ver)throw new Error('too long');
+ var bb=[],put=function(val,len){for(var i=len-1;i>=0;i--)bb.push((val>>>i)&1)};put(4,4);put(bytes.length,ver<=9?8:16);bytes.forEach(function(b){put(b,8)});
+ var cap=dcw(ver)*8;put(0,Math.min(4,cap-bb.length));put(0,(8-bb.length%8)%8);for(var pad=0xEC;bb.length<cap;pad^=0xEC^0x11)put(pad,8);
+ var data=[];for(var i=0;i<bb.length;i+=8){var x=0;for(var j=0;j<8;j++)x=(x<<1)|bb[i+j];data.push(x)}
+ var nb=BLK[ver],el=ECC[ver],rc=Math.floor(raw(ver)/8),ns=nb-rc%nb,sl=Math.floor(rc/nb),blocks=[],div=rsDiv(el),k=0;
+ for(i=0;i<nb;i++){var dat=data.slice(k,k+sl-el+(i<ns?0:1));k+=dat.length;var ec=rsRem(dat,div);if(i<ns)dat.push(0);blocks.push(dat.concat(ec))}
+ var cw=[];for(i=0;i<blocks[0].length;i++)blocks.forEach(function(b,j){if(i!==sl-el||j>=ns)cw.push(b[i])});
+ var N=ver*4+17,M=[],F=[];for(i=0;i<N;i++){M.push(new Array(N).fill(false));F.push(new Array(N).fill(false))}
+ function sf(x,y,d){M[y][x]=d;F[y][x]=true}
+ for(i=0;i<N;i++){sf(6,i,i%2===0);sf(i,6,i%2===0)}
+ [[3,3],[N-4,3],[3,N-4]].forEach(function(p){for(var dy=-4;dy<=4;dy++)for(var dx=-4;dx<=4;dx++){var d=Math.max(Math.abs(dx),Math.abs(dy)),xx=p[0]+dx,yy=p[1]+dy;if(xx>=0&&xx<N&&yy>=0&&yy<N)sf(xx,yy,d!==2&&d!==4)}});
+ var al=[];if(ver>1){var na=Math.floor(ver/7)+2,st=ver===32?26:Math.ceil((ver*4+4)/(na*2-2))*2;al=[6];for(var pos=N-7;al.length<na;pos-=st)al.splice(1,0,pos)}
+ al.forEach(function(a,ii){al.forEach(function(b,jj){if((ii===0&&jj===0)||(ii===0&&jj===al.length-1)||(ii===al.length-1&&jj===0))return;for(var dy=-2;dy<=2;dy++)for(var dx=-2;dx<=2;dx++)sf(a+dx,b+dy,Math.max(Math.abs(dx),Math.abs(dy))!==1)})});
+ function fmt(mask){var d=(0<<3)|mask,r=d;for(var i=0;i<10;i++)r=(r<<1)^((r>>>9)*0x537);var b=((d<<10)|r)^0x5412,g=function(i){return ((b>>>i)&1)!==0};
+  for(i=0;i<=5;i++)sf(8,i,g(i));sf(8,7,g(6));sf(8,8,g(7));sf(7,8,g(8));for(i=9;i<15;i++)sf(14-i,8,g(i));
+  for(i=0;i<8;i++)sf(N-1-i,8,g(i));for(i=8;i<15;i++)sf(8,N-15+i,g(i));sf(8,N-8,true)}
+ fmt(0);
+ if(ver>=7){var r=ver;for(i=0;i<12;i++)r=(r<<1)^((r>>>11)*0x1F25);var vb=(ver<<12)|r;for(i=0;i<18;i++){var bt=((vb>>>i)&1)!==0,a=N-11+i%3,b=Math.floor(i/3);sf(a,b,bt);sf(b,a,bt)}}
+ var bi=0;for(var right=N-1;right>=1;right-=2){if(right===6)right=5;for(var vert=0;vert<N;vert++)for(j=0;j<2;j++){var x=right-j,up=((right+1)&2)===0,y=up?N-1-vert:vert;if(!F[y][x]&&bi<cw.length*8){M[y][x]=((cw[bi>>>3]>>>(7-(bi&7)))&1)!==0;bi++}}}
+ /* pick the mask with the lowest penalty */
+ var MF=[function(x,y){return (x+y)%2===0},function(x,y){return y%2===0},function(x){return x%3===0},function(x,y){return (x+y)%3===0},function(x,y){return (Math.floor(x/3)+Math.floor(y/2))%2===0},function(x,y){return x*y%2+x*y%3===0},function(x,y){return (x*y%2+x*y%3)%2===0},function(x,y){return ((x+y)%2+x*y%3)%2===0}];
+ function app(m){for(var y=0;y<N;y++)for(var x=0;x<N;x++)if(!F[y][x]&&MF[m](x,y))M[y][x]=!M[y][x]}
+ function pen(){var p=0,y,x,run,c;for(y=0;y<N;y++){run=1;for(x=1;x<N;x++){if(M[y][x]===M[y][x-1]){run++;if(run===5)p+=3;else if(run>5)p++}else run=1}}for(x=0;x<N;x++){run=1;for(y=1;y<N;y++){if(M[y][x]===M[y-1][x]){run++;if(run===5)p+=3;else if(run>5)p++}else run=1}}
+  for(y=0;y<N-1;y++)for(x=0;x<N-1;x++){c=M[y][x];if(c===M[y][x+1]&&c===M[y+1][x]&&c===M[y+1][x+1])p+=3}var dk=0;for(y=0;y<N;y++)for(x=0;x<N;x++)if(M[y][x])dk++;p+=Math.floor(Math.abs(dk*20-N*N*10)/(N*N))*10;return p}
+ var best=0,bp=1e9;for(var m=0;m<8;m++){app(m);fmt(m);var pp=pen();if(pp<bp){bp=pp;best=m}app(m)}app(best);fmt(best);return M}
+window.bnyQR=make;
+window.bnyQRData=function(text,px){var M=make(text),N=M.length,q=4,s=Math.max(2,Math.floor((px||200)/(N+2*q))),c=document.createElement('canvas');c.width=c.height=(N+2*q)*s;var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.fillStyle='#0f2742';for(var y=0;y<N;y++)for(var x=0;x<N;x++)if(M[y][x])g.fillRect((x+q)*s,(y+q)*s,s,s);return c.toDataURL('image/png')};
+})();</script>
 <style id="updcss">
 #updwrap .uvl{border:1px solid var(--bd,#d6dde3);border-radius:14px;padding:10px;margin:10px 0;background:var(--card,#fff)}
 #updwrap .uvh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}#updwrap .uvh b{font-size:15px;flex:1;min-width:0}
@@ -5980,6 +6019,7 @@ var r0=render;render=function(){var y=scrollY,t=S.tab,o=r0.apply(this,arguments)
 #updposter .ft div{background:#f1f8f4;border:1px solid #cfe3d7;border-radius:10px;padding:8px 10px;font-weight:800;font-size:13.5px;text-align:center}
 #updposter .ct{margin-top:12px;text-align:center;font-size:20px;font-weight:900;color:#17643f}
 #updposter .ct small{display:block;font-size:12px;color:#47606f;font-weight:700}
+#updposter .vh{display:flex;align-items:center;justify-content:space-between;gap:10px}#updposter .vt{flex:1;text-align:center}#updposter .qs{width:78px;flex:0 0 78px}#updposter .qw{flex:0 0 78px;width:78px;text-align:center}#updposter .uqr{width:72px;height:72px;display:block;margin:0 auto;border-radius:6px;background:#fff;padding:2px}#updposter .qw small{display:block;font-size:9.5px;font-weight:800;margin-top:2px;letter-spacing:.3px}
 </style>
 <script id="updjs">(function(){
 /* 📢 الأبديت: a list of flats to offer (villa → flats), editable, with BOOKED toggles, exported as an image or WhatsApp text */
@@ -5994,7 +6034,7 @@ function id(){return Math.random().toString(36).slice(2,9)}
 function V(i){return U().villas.filter(function(v){return v.id===i})[0]}
 function poster(){var u=U(),L=u.villas.filter(function(v){return (v.units||[]).some(function(a){return !a.hide&&!(u.hideBooked&&a.booked)})});
  var h="<div id='updposter'><div class='ph'><div><div class='tt'>"+E(u.title||'AVAILABLE UNITS')+"</div><div class='sub'>Updated "+new Date().toLocaleDateString('en-GB')+"</div></div><div class='badge'>AVAILABLE NOW</div></div>";
- L.forEach(function(v){h+="<table><colgroup><col class='c1'><col class='c2'><col class='c3'><col class='cp'><col class='cp'><col class='cp'><col class='cm'></colgroup><tr><th class='vl' colspan='7'>"+E(v.name)+(v.area?"<small>📍 "+E(v.area)+"</small>":"")+"</th></tr><tr class='hd2'><td></td><td>FLAT NO</td><td>TYPE</td><td>1 PAYMENT</td><td>2 PAYMENT</td><td>3 PAYMENT</td><td>MONTHLY</td></tr>";
+ L.forEach(function(v){h+="<table><colgroup><col class='c1'><col class='c2'><col class='c3'><col class='cp'><col class='cp'><col class='cp'><col class='cm'></colgroup><tr><th class='vl' colspan='7'><div class='vh'>"+(v.loc?"<span class='qs'></span>":"")+"<div class='vt'>"+E(v.name)+(v.area?"<small>📍 "+E(v.area)+"</small>":"")+"</div>"+(v.loc?(function(){try{return "<div class='qw'><img class='uqr' src='"+bnyQRData(v.loc,240)+"'><small>📍 LOCATION</small></div>"}catch(e){return ''}})():"")+"</div></th></tr><tr class='hd2'><td></td><td>FLAT NO</td><td>TYPE</td><td>1 PAYMENT</td><td>2 PAYMENT</td><td>3 PAYMENT</td><td>MONTHLY</td></tr>";
   (v.units||[]).filter(function(a){return !a.hide&&!(u.hideBooked&&a.booked)}).forEach(function(a){h+="<tr class='r'><td>"+E(a.floor)+"</td><td>"+E(a.no)+"</td><td>"+E(a.type)+"</td>"+(a.booked?"<td class='ubkd'>BOOKED</td><td class='ubkd'>BOOKED</td><td class='ubkd'>BOOKED</td><td class='ubkd'>BOOKED</td>":"<td>"+n(a.p1)+"</td><td>"+n(a.p2)+"</td><td>"+n(a.p3)+"</td><td class='mo'>"+n(a.mo)+"</td>")+"</tr>"});h+="</table>"});
  if(!L.length)h+="<p style='text-align:center;color:#47606f;margin:30px 0'>Add villas and flats to show them here</p>";
  h+="<div class='ft'><div>📝 Contract fee: "+n(u.fee)+" AED</div><div>🔐 Security deposit: "+E(u.dep||'')+"</div></div><div class='ct'>📞 "+E(u.phone||'')+"<small>Call / WhatsApp</small></div></div>";return h}
