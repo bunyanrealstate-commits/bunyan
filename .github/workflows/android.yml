@@ -97,6 +97,38 @@ jobs:
               } });
             }
             @PluginMethod
+            public void accEnabled(PluginCall call) {
+              JSObject r = new JSObject();
+              try { String v = android.provider.Settings.Secure.getString(getContext().getContentResolver(), android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES); r.put("on", v != null && v.contains(getContext().getPackageName() + "/") && v.contains("BnySendService")); } catch (Exception e) { r.put("on", false); }
+              call.resolve(r);
+            }
+            @PluginMethod
+            public void accOpen(PluginCall call) {
+              try { Intent i = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS); i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); getContext().startActivity(i); call.resolve(); } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
+            }
+            @PluginMethod
+            public void sendGroup(PluginCall call) {
+              try {
+                String group = call.getString("group", ""); String data = call.getString("data", ""); String name = call.getString("name", "file.jpg"); String text = call.getString("text", ""); String mime = call.getString("mime", "image/jpeg");
+                Intent i = new Intent(Intent.ACTION_SEND); i.setType(mime);
+                if (data != null && data.length() > 0) {
+                  java.io.File dir = new java.io.File(getContext().getCacheDir(), "share"); dir.mkdirs();
+                  java.io.File f = new java.io.File(dir, name.replaceAll("[^A-Za-z0-9._-]", "_"));
+                  java.io.FileOutputStream fo = new java.io.FileOutputStream(f); fo.write(android.util.Base64.decode(data, android.util.Base64.DEFAULT)); fo.close();
+                  Uri u = androidx.core.content.FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", f);
+                  i.putExtra(Intent.EXTRA_STREAM, u); i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                }
+                if (text != null && text.length() > 0) i.putExtra(Intent.EXTRA_TEXT, text);
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                String[] order = new String[]{"com.whatsapp.w4b", "com.whatsapp"}; String pk = call.getString("pkg", "");
+                if (pk != null && pk.length() > 0) order = new String[]{pk};
+                for (String p : order) {
+                  try { i.setPackage(p); BnySendService.arm(group, (data != null && data.length() > 0) ? 3 : 2); getContext().startActivity(i); JSObject r = new JSObject(); r.put("app", p); call.resolve(r); return; } catch (Exception e) { }
+                }
+                call.reject("no whatsapp");
+              } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
+            }
+            @PluginMethod
             public void sendFile(PluginCall call) {
               try {
                 String data = call.getString("data"); String name = call.getString("name", "file.pdf"); String phone = call.getString("phone", ""); String text = call.getString("text", ""); String mime = call.getString("mime", "application/pdf");
@@ -127,6 +159,75 @@ jobs:
           }
           JEOF
           sed -i 's/^          //' "$D/WaBizPlugin.java"
+          cat > "$D/BnySendService.java" <<JEOF
+          package $PK;
+          import android.accessibilityservice.AccessibilityService;
+          import android.view.accessibility.AccessibilityEvent;
+          import android.view.accessibility.AccessibilityNodeInfo;
+          import java.util.List;
+          /* Only acts for ~40 seconds after the owner taps "send to group" in Bunyan, and only inside WhatsApp:
+             picks the group by its exact name in WhatsApp's share list and presses Send. */
+          public class BnySendService extends AccessibilityService {
+            public static volatile String target = null;
+            public static volatile long until = 0;
+            public static volatile int stage = 0;
+            public static volatile int steps = 3;
+            static volatile long lastAct = 0;
+            static volatile int scrolls = 0;
+            public static void arm(String name, int st) { target = name; steps = st; stage = 0; scrolls = 0; lastAct = 0; until = System.currentTimeMillis() + 40000; }
+            @Override public void onInterrupt() { }
+            @Override public void onAccessibilityEvent(AccessibilityEvent e) {
+              try {
+                if (target == null) return;
+                long now = System.currentTimeMillis();
+                if (now > until) { target = null; return; }
+                CharSequence pkg = e.getPackageName();
+                if (pkg == null || !pkg.toString().startsWith("com.whatsapp")) return;
+                if (now - lastAct < 650) return;
+                AccessibilityNodeInfo root = getRootInActiveWindow();
+                if (root == null) return;
+                if (stage == 0) {
+                  List<AccessibilityNodeInfo> L = root.findAccessibilityNodeInfosByText(target);
+                  for (AccessibilityNodeInfo n : L) {
+                    CharSequence t = n.getText();
+                    if (t == null || !t.toString().trim().equalsIgnoreCase(target.trim())) continue;
+                    AccessibilityNodeInfo c = n;
+                    while (c != null && !c.isClickable()) c = c.getParent();
+                    if (c != null && c.performAction(AccessibilityNodeInfo.ACTION_CLICK)) { stage = 1; lastAct = now; return; }
+                  }
+                  if (scrolls < 10) { AccessibilityNodeInfo sc = scrollable(root); if (sc != null) { sc.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD); scrolls++; lastAct = now; } }
+                  return;
+                }
+                AccessibilityNodeInfo s = send(root);
+                if (s != null && s.performAction(AccessibilityNodeInfo.ACTION_CLICK)) { stage++; lastAct = now; if (stage >= steps) target = null; }
+              } catch (Exception ex) { }
+            }
+            AccessibilityNodeInfo scrollable(AccessibilityNodeInfo n) {
+              if (n == null) return null;
+              if (n.isScrollable()) return n;
+              for (int i = 0; i < n.getChildCount(); i++) { AccessibilityNodeInfo r = scrollable(n.getChild(i)); if (r != null) return r; }
+              return null;
+            }
+            AccessibilityNodeInfo send(AccessibilityNodeInfo root) {
+              String[] ids = new String[]{"com.whatsapp.w4b:id/send", "com.whatsapp:id/send", "com.whatsapp.w4b:id/send_media_btn", "com.whatsapp:id/send_media_btn"};
+              for (String id : ids) { List<AccessibilityNodeInfo> L = root.findAccessibilityNodeInfosByViewId(id); for (AccessibilityNodeInfo n : L) if (n.isVisibleToUser() && n.isEnabled()) return n; }
+              return byDesc(root);
+            }
+            AccessibilityNodeInfo byDesc(AccessibilityNodeInfo n) {
+              if (n == null) return null;
+              CharSequence d = n.getContentDescription();
+              if (d != null && n.isClickable() && n.isVisibleToUser()) { String x = d.toString().trim(); if (x.equalsIgnoreCase("Send") || x.equals("إرسال") || x.equals("ارسال")) return n; }
+              for (int i = 0; i < n.getChildCount(); i++) { AccessibilityNodeInfo r = byDesc(n.getChild(i)); if (r != null) return r; }
+              return null;
+            }
+          }
+          JEOF
+          sed -i 's/^          //' "$D/BnySendService.java"
+          mkdir -p android/app/src/main/res/xml android/app/src/main/res/values
+          printf '%s\n' '<?xml version="1.0" encoding="utf-8"?>' '<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android" android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged" android:packageNames="com.whatsapp,com.whatsapp.w4b" android:accessibilityFeedbackType="feedbackGeneric" android:notificationTimeout="150" android:canRetrieveWindowContent="true" android:accessibilityFlags="flagReportViewIds|flagRetrieveInteractiveWindows" android:description="@string/bny_acc_desc" />' > android/app/src/main/res/xml/bny_access.xml
+          printf '%s\n' '<?xml version="1.0" encoding="utf-8"?>' '<resources><string name="bny_acc_desc">بيبعت الأبديت لجروب الواتساب اللي انت اخترته لما تدوس «ابعت للجروب» في بنيان — بيشتغل جوه واتساب بس ولمدة ثواني.</string><string name="bny_acc_label">بنيان — الإرسال للجروب</string></resources>' > android/app/src/main/res/values/bny_strings.xml
+          sed -i 's#</application>#    <service android:name=".BnySendService" android:label="@string/bny_acc_label" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported="false"><intent-filter><action android:name="android.accessibilityservice.AccessibilityService" /></intent-filter><meta-data android:name="android.accessibilityservice" android:resource="@xml/bny_access" /></service>\n    </application>#' android/app/src/main/AndroidManifest.xml
+          grep -n "BnySendService" android/app/src/main/AndroidManifest.xml
           cat > "$MA" <<JEOF
           package $PK;
           import android.os.Bundle;
