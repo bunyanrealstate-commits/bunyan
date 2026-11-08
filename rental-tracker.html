@@ -1208,7 +1208,7 @@ var bar=document.createElement('div');bar.id='ptr';bar.innerHTML='<span class="a
 var lab=bar.querySelector('b'),ar=bar.querySelector('.ar'),x0=0,vl=0,y0=0,pull=0,on=false,busy=false,TH=64;
 function top(){return (document.scrollingElement||document.documentElement).scrollTop<=0}
 function blocked(t){return !!(t.closest&&t.closest('.dlg,#modal .ov,#vcp,.sc,input,select,textarea,.ump'))}
-addEventListener('touchstart',function(e){if(window.visualViewport&&visualViewport.scale>1.05){on=false;return}if(busy||e.touches.length!==1||!top()||blocked(e.target)){on=false;return}y0=e.touches[0].clientY;x0=e.touches[0].clientX;vl=0;pull=0;on=true},{passive:true});
+addEventListener('touchstart',function(e){if(window.visualViewport&&visualViewport.scale>1.05){on=false;return}if(busy||e.touches.length!==1||!top()||blocked(e.target)||(e.target&&e.target.closest&&e.target.closest('#ctview')&&(window.ctZ||1)>1.01)){on=false;return}y0=e.touches[0].clientY;x0=e.touches[0].clientX;vl=0;pull=0;on=true},{passive:true});
 addEventListener('touchmove',function(e){if(!on||busy)return;var d=e.touches[0].clientY-y0,dx=e.touches[0].clientX-x0;if(!vl){if(Math.abs(d)<10&&Math.abs(dx)<10)return;if(d>0&&d>Math.abs(dx)*1.3){vl=1;window._ptrOn=1}else{on=false;return}}d-=10;if(d<=0||!top()){if(d<=0){pull=0;bar.style.transform='translateY(-100%)'}return}
  pull=Math.min(d*.55,110);bar.style.transition='none';bar.style.transform='translateY('+(pull-100)+'%)';bar.style.transform='translateY('+(pull-56)+'px)';ar.style.transform='rotate('+(pull>=TH?180:0)+'deg)';lab.textContent=pull>=TH?'اترك للتحديث':'اسحب للتحديث'},{passive:true});
 function end(){window._ptrOn=0;if(!on)return;on=false;bar.style.transition='transform .25s';
@@ -5605,11 +5605,13 @@ function dist(a,b){return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)}
 document.addEventListener('touchstart',function(e){var v=V();if(!v||!v.contains(e.target)||/^(INPUT|TEXTAREA|SELECT|BUTTON|LABEL)$/.test(e.target.tagName)){T=null;return}
  if(e.touches.length===2){T={m:'pz',d0:dist(e.touches[0],e.touches[1]),z0:window.ctZ||1};return}
  var t=e.touches[0],now=Date.now();if(T&&T.m==='tap'&&now-T.t<300&&Math.abs(t.clientX-T.x)<30&&Math.abs(t.clientY-T.y)<30){T={m:'dbl'};return}
- T={m:'pan',x:t.clientX,y:t.clientY,sl:v.scrollLeft,st:v.scrollTop,t:now,mv:0}},{passive:true,capture:true});
+ T={m:'pan',x:t.clientX,y:t.clientY,sl:v.scrollLeft,st:v.scrollTop,wy:scrollY,t:now,mv:0}},{passive:true,capture:true});
 document.addEventListener('touchmove',function(e){var v=V();if(!T||!v)return;
  if(T.m==='pz'&&e.touches.length===2){var r=dist(e.touches[0],e.touches[1])/(T.d0||1),Z=Math.max(1,Math.min(3,T.z0*r));if(e.cancelable)e.preventDefault();if(Math.abs(Z-(window.ctZ||1))>0.04){window.ctZ=Z;try{window.ctZoom(0.0001)}catch(x){}}return}
  if(T.m!=='pan'||e.touches.length!==1||(window.ctZ||1)<=1.01)return;var t=e.touches[0],dx=t.clientX-T.x,dy=t.clientY-T.y;if(!T.mv&&Math.abs(dx)<4&&Math.abs(dy)<4)return;T.mv=1;
- var maxT=v.scrollHeight-v.clientHeight,nt=T.st-dy;if(e.cancelable&&!((nt<0&&dy>0&&v.scrollTop<=0)||(nt>maxT&&dy<0&&v.scrollTop>=maxT-1)))e.preventDefault();v.scrollLeft=T.sl-dx;v.scrollTop=nt},{passive:false,capture:true});
+ /* move the contract; once it reaches its top/bottom, the rest of the finger movement scrolls the page itself */var maxT=v.scrollHeight-v.clientHeight,nt=T.st-dy,cl=Math.max(0,Math.min(maxT,nt)),over=nt-cl;if(e.cancelable)e.preventDefault();v.scrollLeft=T.sl-dx;v.scrollTop=cl;var want=Math.max(0,Math.min(document.documentElement.scrollHeight-innerHeight,T.wy+over));window.scrollTo(scrollX,want);if(over&&Math.abs(scrollY-want)>40)window.__ctStuck=Date.now();var nw=performance.now(),CV=window.__ctV;if(CV&&nw-CV.t<100){var dt=Math.max(1,nw-CV.t);CV.vy=0.6*CV.vy+0.4*((t.clientY-CV.y)/dt)}else CV={vy:0};CV.y=t.clientY;CV.t=nw;window.__ctV=CV},{passive:false,capture:true});
+document.addEventListener('touchend',function(e){var CV=window.__ctV;window.__ctV=null;if(!CV||e.touches.length||performance.now()-CV.t>80||Math.abs(CV.vy)<0.25)return;var v=document.getElementById('ctview');if(!v||(window.ctZ||1)<=1.01)return;var vy=-CV.vy*16,last=performance.now();
+ (function f(){var now=performance.now(),k=(now-last)/16;last=now;var d=vy*k,maxT=v.scrollHeight-v.clientHeight,nt=v.scrollTop+d,cl=Math.max(0,Math.min(maxT,nt));v.scrollTop=cl;if(nt!==cl)window.scrollBy(0,nt-cl);vy*=Math.pow(0.95,k);if(Math.abs(vy)>0.4)requestAnimationFrame(f)})()},{passive:true,capture:true});
 document.addEventListener('touchend',function(e){if(!T)return;if(T.m==='dbl'){T=null;try{window.ctZoom((window.ctZ||1)>1.01?0:1)}catch(x){}if(e.cancelable)e.preventDefault();return}if(T.m==='pan'&&!T.mv&&e.touches.length===0){var c=e.changedTouches[0];T={m:'tap',t:Date.now(),x:c.clientX,y:c.clientY};return}if(e.touches.length===0)T=null},{passive:false,capture:true});
 })();</script>
 <style id="monaicss">.mx{padding:9px 0;border-bottom:1px dashed var(--bd,#dde);font-size:13.5px}.mx:last-child{border-bottom:0}.mx .mt{font-weight:800}.mx .mw{margin:4px 0 0;font-size:12.8px;line-height:1.6}.mx .mw b{font-weight:800}.mx .mb{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.mx .mb button{padding:5px 10px!important;font-size:12.5px!important;min-height:0!important}.mx .gx{margin-top:6px;background:rgba(20,115,230,.07);border-radius:10px;padding:8px 10px;font-size:12.8px;white-space:pre-wrap}.mfx{border-top:5px solid #2a9d6b!important}.mfx .st{font-size:12px;font-weight:800;border-radius:999px;padding:2px 8px}.mfx .ok{background:#e8f6ef;color:#17643f}.mfx .no{background:#fdecec;color:#b42318}</style>
@@ -6526,6 +6528,8 @@ var R=[
   check:function(){return window.__bootJump?['بعد ما البرنامج ظهر اتحرك: '+window.__bootJump]:[]},fix:null},
  {id:'tabjump',area:'الشاشة',t:'الصفحة كانت بتتنطّ بعد ما تفتح تبويب (حاجة بتتحط متأخر فوق)',
   check:function(){return window.__tabJump&&Date.now()-window.__tabJump.at<120000?['تبويب «'+window.__tabJump.tab+'» اتحرك بعد ما ظهر: '+window.__tabJump.what]:[]},fix:null},
+ {id:'ctchain',area:'العقد',t:'لما العقد متكبّر وتسحبه لآخره، الصفحة نفسها ما كانتش بتتحرك',
+  check:function(){return window.__ctStuck&&Date.now()-window.__ctStuck<600000?['سحبت العقد لآخره والصفحة ما اتحركتش']:[]},fix:null},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
   check:function(){if(S.tab!=='ct')return [];var seen={},o=[];[].slice.call(document.querySelectorAll('#app button')).filter(vis).forEach(function(b){var t=b.textContent.trim();if(t.length<5)return;seen[t]=(seen[t]||0)+1;if(seen[t]===2)o.push('«'+t.slice(0,25)+'»')});return o},fix:null},
  {id:'stray',area:'الشاشة',t:'شريط تعديل أو زرار رجوع كان ممكن يفضل ظاهر برّه صفحة العقد',
