@@ -40,6 +40,17 @@ const fails=[],notes=[];const F=m=>{fails.push(m);console.log('❌ '+m)},OK=m=>c
   const cd=await ctx.newCDPSession(p);const r=await p.evaluate(()=>{const v=document.getElementById('ctview').getBoundingClientRect();return {x:v.left+v.width/2,y:Math.min(innerHeight-100,v.top+200)}});const y0=await p.evaluate(()=>scrollY);
   await cd.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:r.x,y:r.y}]});for(let i=1;i<=12;i++){await cd.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:r.x,y:r.y-i*20}]});await p.waitForTimeout(16)}await cd.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await p.waitForTimeout(400);
   const y1=await p.evaluate(()=>scrollY);if(Math.abs(y1-y0)<40)F('contract: finger scroll over the contract does not move the page');else OK('contract: finger scroll works');await p.evaluate(()=>{S.tab='home';render()})}catch(e){F('contract scroll check crashed: '+e.message)}
+ // 5d) contract tab: one clear layout, no duplicate buttons, both languages render right
+ try{const r=await p.evaluate(async()=>{const o=[];setW((S.groups[0]||{}).id);for(const L of ['ar','en']){S.ct.lang=L;S.tab='ct';render();await new Promise(r=>setTimeout(r,1300));
+   const vis=e=>{const r=e.getBoundingClientRect();return r.width>2&&r.height>2&&getComputedStyle(e).visibility!=='hidden'};
+   const btns=[...document.querySelectorAll('#app button,#app label')].filter(vis).map(b=>b.textContent.trim());
+   [/تنزيل PDF/,/ابعت العقد/,/طباعة/,/عقد جديد/,/النموذج الأصلي/,/^🪪 هوية المستأجر/,/^🪪 هوية المؤجر/].forEach(re=>{const n=btns.filter(t=>re.test(t)).length;if(n!==1)o.push(L+': button '+re+' x'+n)});
+   const sigMove=btns.filter(t=>/حرّك/.test(t)).length;if(sigMove>1)o.push(L+': move-signature button x'+sigMove);
+   const pt=(document.getElementById('ctpaper')||{}).innerText||'';['Landlord Name','Tenant Mobile No.','رقم موبايل المستأجر','Tenant Signature','Date / تاريخ العقد'].forEach(k=>{if(pt.indexOf(k)<0)o.push(L+': paper missing «'+k+'»')});
+   if(/LandLord|Mobile No\.\s*\n|• تاريخ العقد/.test(pt))o.push(L+': old paper labels still there');
+   const ui=bnyUiCheck();ui.forEach(x=>o.push(L+' ui: '+x));
+   ['ct_ll','ct_tn','ct_tid','ct_nat','ct_ph','ct_sub','ct_st','ct_mo','ct_en','ct_due','ct_rent','ct_chq','ct_lid'].forEach(id=>{if(!document.getElementById(id))o.push(L+': form field missing '+id)})}
+   S.tab='home';render();return o});r.forEach(x=>F('contract: '+x));if(!r.length)OK('contract tab: layout, buttons, labels in AR and EN')}catch(e){F('contract layout check crashed: '+e.message)}
  // 5c) swipe left/right anywhere switches tabs
  try{await p.evaluate(()=>{S.tab='home';render();document.querySelectorAll('.ov,#hdth').forEach(x=>x.remove());scrollTo(0,300)});await p.waitForTimeout(300);const cd2=await ctx.newCDPSession(p);const t0=await p.evaluate(()=>S.tab);const x=200,y=500;
   await cd2.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:x-120,y}]});for(let i=1;i<=12;i++){await cd2.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x-120+i*20,y:y+i*0.5}]});await p.waitForTimeout(16)}await cd2.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await p.waitForTimeout(500);
