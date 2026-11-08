@@ -103,6 +103,10 @@ jobs:
               call.resolve(r);
             }
             @PluginMethod
+            public void appInfo(PluginCall call) {
+              try { Intent i = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getContext().getPackageName())); i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); getContext().startActivity(i); call.resolve(); } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
+            }
+            @PluginMethod
             public void accOpen(PluginCall call) {
               try { Intent i = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS); i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); getContext().startActivity(i); call.resolve(); } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
             }
