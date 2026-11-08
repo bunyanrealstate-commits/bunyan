@@ -6147,7 +6147,8 @@ if(window.monReg)monReg('مراجعة البيانات',function(add){var T=toda
  U().forEach(function(u){(u.leases||[]).forEach(function(L){var s=pd(L.start),e=lend2(L);if(!s||!e)return;var live=e>T&&s-T<45*864e5;
   if(live&&!String(L.phone||'').replace(/\D/g,''))add('warn','مراجعة البيانات','مستأجر «'+(L.tenant||'')+'» في '+name(u)+' مالوش رقم موبايل — مش هيوصله تذكير الإيجار');
   if(!(+L.rent>0))add('err','مراجعة البيانات','عقد «'+(L.tenant||'')+'» في '+name(u)+' إيجاره صفر أو مش رقم — الربح هيطلع غلط');
-  if(u.start&&s<pd(u.start)-864e5&&!u.onb)add('warn','مراجعة البيانات','عقد «'+(L.tenant||'')+'» بيبدأ '+L.start+' قبل عقد الشركة في '+name(u)+' ('+u.start+')');
+  /* the company moves its contract a few days ahead (أيام السماح) so a tenant can move in before it starts — only warn if he starts before those days */
+  if(u.start&&s<pd(u.start)-((+u.grace||0)+1)*864e5&&!u.onb)add('warn','مراجعة البيانات','عقد «'+(L.tenant||'')+'» بيبدأ '+L.start+' قبل أيام السماح في '+name(u)+' (عقد الشركة '+u.start+(u.grace?' — السماح '+u.grace+' يوم':' — لو الشركة إدتك أيام سماح اكتبها في تعديل الاستديو')+')');
   if(live)act.push({u:u,L:L,s:s,e:e})});
   var ce=cEnd(u);if(ce&&ce<T&&!u.renew){var cur=(u.leases||[]).some(function(L){var e=lend2(L);return e&&e>T&&pd(L.start)<=T});if(cur)add('err','مراجعة البيانات','عقد الشركة في '+name(u)+' خلص '+iso(ce)+' ولسه فيه مستأجر ساكن — جدّد عقد الشركة أو حدّث تاريخه')}});
  for(var i=0;i<act.length;i++)for(var j=i+1;j<act.length;j++){var a=act[i],b=act[j];if(a.u===b.u)continue;var na=String(a.L.tenant||'').trim().toLowerCase(),nb=String(b.L.tenant||'').trim().toLowerCase();if(na&&na===nb&&a.s<b.e&&b.s<a.e)add('warn','مراجعة البيانات','المستأجر «'+a.L.tenant+'» مسجّل في '+name(a.u)+' و'+name(b.u)+' في نفس الوقت — اتأكد إنه مش متكرر')}});
@@ -6630,6 +6631,8 @@ var R=[
  {id:'cardsep',area:'الشاشة',t:'الكروت كانت شبه بعض ولازقة في بعض والعين مش بتفصل بينهم',
   check:function(){var a=document.getElementById('app');if(!a)return [];var c=[].slice.call(a.querySelectorAll('.card')).filter(function(x){return !(x.parentElement&&x.parentElement.closest('.card'))&&x.getBoundingClientRect().height>2});var m=c.filter(function(x){return !x.getAttribute('data-cc')});return m.length?[m.length+' كارت من غير لون مميز']:[]},
   fix:function(){var n=window.cardPaint?cardPaint():0;return 'لوّنت '+n+' كارت'}},
+ {id:'gracew',area:'الاستديوهات',t:'المستأجر اللي بيدخل في أيام السماح (قبل بداية عقد الشركة) كان بيطلع تحذير غلط، ومكانش فيه حساب لأيام السماح اللي بتتخصم منها الأيام الفاضية',
+  check:function(){var o=[];try{(S.units||[]).forEach(function(u){var g=+u.grace||0;(u.leases||[]).forEach(function(L){if(u.start&&L.start&&pd(L.start)>=pd(u.start)-(g+1)*864e5&&pd(L.start)<pd(u.start)-864e5){/* inside grace: fine */}})});if(typeof window.graceInfo!=='function')o.push('حساب أيام السماح مش موجود')}catch(e){}return o},fix:null},
  {id:'updlong',area:'الأبديت',t:'صفحة الأبديت كانت طويلة جداً (كل الشقق مفتوحة والمعاينة كبيرة)',
   check:function(){if(S.tab!=='upd')return [];var o=document.querySelectorAll('#updwrap .uvl.open').length;return o>1?['أكتر من فيلا مفتوحة في نفس الوقت']:[]},fix:function(){window.__updOpen='';render();return 'قفلت الفلل المفتوحة'}},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
@@ -7274,6 +7277,34 @@ function paint(){var a=document.getElementById('app');if(!a)return 0;var i=0,n=0
 window.cardPaint=paint;
 var r0=render;render=function(){var o=r0.apply(this,arguments);try{paint();setTimeout(paint,60);setTimeout(paint,600)}catch(e){}return o};
 try{new MutationObserver(function(){if(!paint.q){paint.q=1;requestAnimationFrame(function(){paint.q=0;paint()})}}).observe(document.getElementById('app'),{childList:true,subtree:false})}catch(e){}
+})();</script>
+<style id="gracecss">.grb{border-radius:14px;padding:10px 12px;margin:8px 0 10px;line-height:1.8;background:color-mix(in srgb,#0d9488 9%,var(--card,#fff));border:1.5px solid color-mix(in srgb,#0d9488 35%,transparent)}.grb.lo{background:color-mix(in srgb,#f59e0b 11%,var(--card,#fff));border-color:#f59e0b}.grb.neg{background:color-mix(in srgb,#dc2626 9%,var(--card,#fff));border-color:#dc2626}.grb .gbar{height:10px;border-radius:6px;background:color-mix(in srgb,currentColor 10%,transparent);overflow:hidden;margin:6px 0}.grb .gbar i{display:block;height:100%;background:#0d9488}.grb.lo .gbar i{background:#f59e0b}.grb.neg .gbar i{background:#dc2626}</style>
+<script id="gracejs">(function(){
+/* 🎁 أيام السماح — your way of working:
+   the company moves its contract start a few days ahead (grace). Any day the studio is empty — before the first tenant, or between two tenants —
+   is taken from those days first. While some are left nothing is lost (what's left is extra profit); once they run out, every empty day is a loss (company cost per day). */
+function gi(u){var g=+u.grace||0,cs=pd(u.start),ce=addM(cs,u.cm),H=new Date(cs.getTime()-g*864e5),t=today(),D=Math.max(1,dy(cs,ce)),tot=u.total||(typeof isumOf==='function'?isumOf(u):0),c=tot/D*sh(u);
+ var iv=(u.leases||[]).map(function(L){return [pd(L.start),L.exit?pd(L.exit):lend(L),L]}).filter(function(x){return x[1]>x[0]}).sort(function(a,b){return a[0]-b[0]}),m=[];
+ iv.forEach(function(x){var l=m[m.length-1];if(l&&x[0]<=l[1])l[1]=new Date(Math.max(l[1],x[1]));else m.push([new Date(x[0]),new Date(x[1])])});
+ var occ=function(a,b){var n=0;m.forEach(function(x){var p=Math.max(x[0],a),q=Math.min(x[1],b);if(q>p)n+=dy(p,q)});return n};
+ var tc=new Date(Math.min(Math.max(t,H),ce)),vp=Math.max(0,dy(H,tc)-occ(H,tc)),vf=Math.max(0,dy(tc,ce)-occ(tc,ce));
+ var now=t>=H&&t<ce&&!m.some(function(x){return x[0]<=t&&t<x[1]}),since=null;if(now){var prev=m.filter(function(x){return x[1]<=t}).slice(-1)[0];since=prev?prev[1]:H}
+ var nextIn=m.filter(function(x){return x[0]>t})[0],lastOut=m.length?m[m.length-1][1]:null,rent=0;(u.leases||[]).forEach(function(L){if(+L.rent)rent=+L.rent});
+ var B=g-vp,Bend=B-vf;return {g:g,H:H,cs:cs,ce:ce,c:c,vp:vp,vf:vf,B:B,Bend:Bend,now:now,since:since,nextIn:nextIn?nextIn[0]:null,lastOut:lastOut,dr:rent?rent*12/365*sh(u):0}}
+window.graceInfo=gi;
+function box(u){var o=gi(u);if(!o.g&&!o.now&&!o.vp)return '';var F=function(n){return $(Math.round(n))},cls=o.B<0?'neg':o.B<=3?'lo':'',pct=o.g?Math.max(0,Math.min(100,o.B/o.g*100)):0;
+ var h="<div class='grb "+cls+"'><b>🎁 أيام السماح من الشركة: "+o.g+" يوم</b>"+(o.g?" <small class='mu'>(الشركة رحّلت عقدها من "+dfmt(iso(o.H))+" لـ "+dfmt(iso(o.cs))+")</small>":" <small class='mu'>— لو الشركة إدتك أيام اكتبها من ✎ تعديل</small>");
+ if(o.g)h+="<div class='gbar'><i style='width:"+pct+"%'></i></div>";
+ h+="<br>📭 أيام فاضية لحد النهارده: <b>"+o.vp+"</b> يوم (قبل أول مستأجر وبين المستأجرين)"+(o.g?" — اتخصمت من أيام السماح":"");
+ h+=o.B>=0?"<br>✅ فاضلك <b>"+o.B+"</b> يوم سماح"+(o.B&&o.dr?" — لو مااتصرفوش = مكسب زيادة ≈ <b class='pos'>"+F(o.B*o.dr)+"</b>":""):"<br>❌ <b>"+(o.g?'خلصت أيام السماح':'مفيش أيام سماح')+"</b> — "+(-o.B)+" يوم فاضي"+(o.g?' زيادة':'')+" = خسارة ≈ <b class='neg'>"+F(-o.B*o.c)+"</b> ("+F(o.c)+" في اليوم)";
+ if(o.now&&o.nextIn)h+="<br>🟡 فاضي من "+dfmt(iso(o.since))+" لحد ما المستأجر الجاي يدخل يوم <b>"+dfmt(iso(o.nextIn))+"</b> ("+dy(today(),o.nextIn)+" يوم كمان)"+(o.c?" — "+F(o.c)+" في اليوم":"");
+ else if(o.now)h+="<br>🔴 <b>الاستديو فاضي من "+dfmt(iso(o.since))+"</b>"+(o.B>0?" — قدامك <b>"+o.B+" يوم</b> (لحد "+dfmt(iso(new Date(today().getTime()+o.B*864e5)))+") وبعدها كل يوم فاضي خسارة "+F(o.c):" — كل يوم فاضي دلوقتي خسارة "+F(o.c));
+ else if(o.vf>0&&o.lastOut&&o.lastOut<o.ce)h+="<br>⏳ بعد ما عقد المستأجر يخلص ("+dfmt(iso(o.lastOut))+") لو مالقيتش مستأجر: "+(o.B>0?"معاك "+o.B+" يوم سماح، وبعدها ":"")+"كل يوم خسارة "+F(o.c)+" — آخر عقد الشركة "+dfmt(iso(o.ce));
+ return h+"</div>"}
+window.graceBox=box;
+var uc=unitCard;unitCard=function(u){var r=uc.apply(this,arguments);try{return box(u)+r}catch(e){return r}};
+/* alert when the grace days of an empty studio are about to run out */
+var it0=items;items=function(){var r=it0.apply(this,arguments);try{SU().forEach(function(u){var o=gi(u);if(!o.now||o.nextIn||!(o.c>0))return;var d=new Date(today().getTime()+Math.max(0,o.B)*864e5);r.push({ty:'grace',id:u.id+'gr',d:iso(d),label:(o.B>0?'⏳ أيام السماح بتاعة «'+u.name+'» بتخلص — بعدها كل يوم فاضي خسارة '+$(Math.round(o.c)):'🔴 «'+u.name+'» فاضي وخلصت أيام السماح — كل يوم خسارة '+$(Math.round(o.c))),amt:0,offs:[3,2,1,0]})})}catch(e){}return r};
 })();</script>
 </body>
 </html>
