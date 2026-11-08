@@ -6543,6 +6543,8 @@ var R=[
   check:function(){return S&&S.upd?['قايمة الأبديت لسه جوه بيانات المجموعة']:[]},fix:function(){window.updData&&updData();return S.upd?'':'نقلت الأبديت لمكانه المنفصل'}},
  {id:'updgroup',area:'الأبديت',t:'الأبديت ما كانش بيتبعت للجروب على طول',
   check:function(){var d=window.updData&&updData();return d&&d.group&&!d.gname&&S.tab==='upd'?['لينك الجروب متسجل بس اسم الجروب مش مكتوب — من غيره مش هيتبعت على طول']:[]},fix:null},
+ {id:'hdcopy',area:'الشاشة',t:'الأحاديث والرقائق ما كانش ينفع تتنسخ',
+  check:function(){var el=$('#hdth');return el&&el.classList.contains('on')&&!el.querySelector('.hcp')?['كارت الحديث ظاهر من غير زرار نسخ']:[]},fix:function(){var el=$('#hdth');var b=document.createElement('button');b.type='button';b.className='hcp';b.textContent='📋 نسخ';b.onclick=function(e){e.stopPropagation();bnyCopyText&&bnyCopyText(el.querySelector('.hx').textContent)};el.appendChild(b);return 'حطيت زرار النسخ على كارت الحديث'}},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
   check:function(){if(S.tab!=='ct')return [];var seen={},o=[];[].slice.call(document.querySelectorAll('#app button')).filter(vis).forEach(function(b){var t=b.textContent.trim();if(t.length<5)return;seen[t]=(seen[t]||0)+1;if(seen[t]===2)o.push('«'+t.slice(0,25)+'»')});return o},fix:null},
  {id:'stray',area:'الشاشة',t:'شريط تعديل أو زرار رجوع كان ممكن يفضل ظاهر برّه صفحة العقد',
@@ -6809,5 +6811,19 @@ window.updSave=async function(){toast('⏳ بجهّز الصورة…');try{var 
 window.__updImage=image;window.__updText=txt;
 })();</script>
 
+<style id="hdcopycss">
+#hdth .hx,#hdth .hs,#hdth .ht{-webkit-user-select:text!important;user-select:text!important}
+#hdth button.hcp{left:auto!important;right:2px!important;top:2px!important;width:auto!important;height:28px!important;font-size:12px!important;font-weight:800;background:rgba(255,255,255,.18)!important;border-radius:999px!important;padding:0 10px!important}
+#hdth .ht{padding-right:72px}
+</style>
+<script id="hdcopy">(function(){
+/* 📋 copy button on the hadith / raqaiq card (and the text can be selected by long-press) */
+function copy(t){var ok=function(){toast('📋 اتنسخ')},fb=function(){try{var a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;top:-100px;opacity:0';document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();ok()}catch(e){toast('مقدرتش أنسخ — دوس مطوّل على الكلام واختار نسخ')}};try{navigator.clipboard.writeText(t).then(ok,fb)}catch(e){fb()}}
+function add(){var el=document.getElementById('hdth');if(!el||el.querySelector('.hcp'))return;var b=document.createElement('button');b.type='button';b.className='hcp';b.textContent='📋 نسخ';
+ ['click','dblclick','pointerdown','touchstart'].forEach(function(ev){b.addEventListener(ev,function(e){e.stopPropagation()},ev==='touchstart'?{passive:true}:false)});
+ b.addEventListener('click',function(){var g=function(q){var x=el.querySelector(q);return x&&x.style.display!=='none'?x.textContent.trim():''};copy([g('.hx'),g('.hs')?'— '+g('.hs'):''].filter(Boolean).join('\n'))});el.appendChild(b)}
+window.bnyCopyText=copy;
+try{new MutationObserver(add).observe(document.body,{childList:true})}catch(e){}setInterval(add,3000);
+})();</script>
 </body>
 </html>
