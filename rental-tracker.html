@@ -6627,6 +6627,9 @@ var R=[
   check:function(){try{var it=items().filter(function(x){return x.ty==='inst'||x.ty==='rent'});var u=it.filter(function(x){var o=SU().filter(function(y){return x.id.indexOf(y.id)===0})[0];return o&&(x.ty==='inst'?o.inst.length>1:true)&&!/\((\d+ من \d+|الأخيرة \d+\/\d+|آخر إيجار \d+\/\d+)\)/.test(x.label)});return u.length>3?['فيه '+u.length+' دفعة/إيجار من غير رقمها']:[]}catch(e){return []}},fix:null},
  {id:'renew',area:'الدفعات',t:'عقد الشركة كان بيخلص من غير ما البرنامج ينبهك إنك هتجدد وتدفع دفعة جديدة',
   check:function(){var o=[];try{var it=items();SU().forEach(function(u){if(u.ren==='no')return;var n=Math.round((addM(pd(u.start),u.cm)-today())/864e5);if(n<=60&&n>=-45){var x=it.filter(function(y){return y.id===u.id+'rn'})[0];if(!x)o.push('«'+u.name+'»: عقد الشركة بيخلص ومفيش تنبيه تجديد');else if(!x.amt&&n<=30)o.push('«'+u.name+'»: عقد الشركة بيخلص بعد '+n+' يوم ومبلغ التجديد مش متسجل')}})}catch(e){}return o},fix:null},
+ {id:'cardsep',area:'الشاشة',t:'الكروت كانت شبه بعض ولازقة في بعض والعين مش بتفصل بينهم',
+  check:function(){var a=document.getElementById('app');if(!a)return [];var c=[].slice.call(a.querySelectorAll('.card')).filter(function(x){return !(x.parentElement&&x.parentElement.closest('.card'))&&x.getBoundingClientRect().height>2});var m=c.filter(function(x){return !x.getAttribute('data-cc')});return m.length?[m.length+' كارت من غير لون مميز']:[]},
+  fix:function(){var n=window.cardPaint?cardPaint():0;return 'لوّنت '+n+' كارت'}},
  {id:'updlong',area:'الأبديت',t:'صفحة الأبديت كانت طويلة جداً (كل الشقق مفتوحة والمعاينة كبيرة)',
   check:function(){if(S.tab!=='upd')return [];var o=document.querySelectorAll('#updwrap .uvl.open').length;return o>1?['أكتر من فيلا مفتوحة في نفس الوقت']:[]},fix:function(){window.__updOpen='';render();return 'قفلت الفلل المفتوحة'}},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
@@ -6673,6 +6676,7 @@ window.bnyRulesSelfTest=function(){var bad=[],t=S.tab,hc=S.ct&&S.ct.html,ts0=S.c
   ['lsbrow',function(){var e=document.getElementById('lsbcss');e&&e.remove();var d=document.createElement('div');d.id='__rt';d.className='li lse';d.innerHTML="<div class='lsb'><button>a</button><button style='margin:14px 0 0'>b</button><button>c</button></div>";document.getElementById('app').appendChild(d)}],
   ['delorph',function(){S.dep=(S.dep||[]).concat([{k:'t',w:'اختبار',a:1,d:'2026-01-01',uid:'zz_deleted'}])}],
   ['ct2lb',function(){S.tab='ct';render();var e=document.getElementById('ct2lb');e&&e.remove()}],
+  ['cardsep',function(){S.tab='home';render();var c=document.querySelector('#app .card[data-cc]');if(c){c.removeAttribute('data-cc');c.style.removeProperty('--cc')}}],
   ['ctsubpk',function(){S.tab='ct';render();var e=document.getElementById('ctsubpk');e&&e.remove()}],
   ['menu',function(){var hd=$('.hd');hd.classList.add('mopen');var o=document.createElement('div');o.className='ov';o.id='__rt';document.body.appendChild(o)}]];
  cases.forEach(function(c){try{c[1]();var res=runAll([c[0]]);var x=res.filter(function(y){return y.r.id===c[0]})[0];if(!x)bad.push(c[0]+': not detected');else if(!x.fixed)bad.push(c[0]+': detected but not fixed')}catch(e){bad.push(c[0]+': crashed '+e.message)}var o=document.getElementById('__rt');o&&o.remove()});
@@ -7254,6 +7258,22 @@ window.renDo=function(id){var u=U(id);if(!u)return;var ce=cend(u),nr=(u.inst||[]
   sc.forEach(function(x){u.inst.push({d:x.d,a:x.a,p:false,at:0,rn:1})});u.renHist=u.renHist||[];u.renHist.push({at:Date.now(),start:iso(ce),cm:cm,total:T,n:N});u.cm=(+u.cm||0)+cm;u.total=(+u.total||0)+T;delete u.renA;delete u.renD;delete u.ren;
   toast('✅ اتجدد لحد '+dfmt(iso(addM(pd(u.start),u.cm)))+' — '+N+' دفعات اتضافت. لما تدفع الأولى دوس ✓ عليها واختار دفعتها منين')})};
 var uc=unitCard;unitCard=function(u){var r=uc.apply(this,arguments);try{return box(u)+r}catch(e){return r}};
+})();</script>
+<style id="cardsepcss">
+/* every card has its own color: a thick colored top, a light tint of the same color, a colored title and a clear gap — so the eye separates them easily */
+#app .card[data-cc]{border:1.5px solid color-mix(in srgb,var(--cc) 30%,var(--bd,#d8dee6))!important;border-top:6px solid var(--cc)!important;background:linear-gradient(180deg,color-mix(in srgb,var(--cc) 9%,var(--card,#fff)) 0,var(--card,#fff) 110px)!important;box-shadow:0 8px 22px -8px color-mix(in srgb,var(--cc) 35%,transparent),0 1px 2px rgba(15,39,66,.06)!important;margin-bottom:20px!important}
+#app .card[data-cc]>h2,#app .card[data-cc]>details>summary h2,#app .card[data-cc] h2:first-child{color:color-mix(in srgb,var(--cc) 80%,var(--tx,#1f2937))!important}
+#app .card[data-cc]::before,#app .card[data-cc]::after{border-top-color:transparent}
+#app .stat[data-cc]{border:1.5px solid color-mix(in srgb,var(--cc) 28%,var(--bd,#d8dee6))!important;border-inline-start:6px solid var(--cc)!important;background:color-mix(in srgb,var(--cc) 8%,var(--card,#fff))!important;box-shadow:0 6px 16px -8px color-mix(in srgb,var(--cc) 40%,transparent)!important}
+#app .grid{gap:12px!important}#app .grid+.grid,#app .grid+.card,#app .card+.grid{margin-top:4px}
+</style>
+<script id="cardsepjs">(function(){
+var PAL=['#2563eb','#16a34a','#7c3aed','#ea580c','#0d9488','#db2777','#b45309','#0891b2'],SP=['#16a34a','#2563eb','#ea580c','#7c3aed','#0d9488','#db2777'];
+function paint(){var a=document.getElementById('app');if(!a)return 0;var i=0,n=0;[].slice.call(a.querySelectorAll('.card')).forEach(function(c){if(c.parentElement&&c.parentElement.closest('.card'))return;var col=PAL[i++%PAL.length];if(c.getAttribute('data-cc')!==col){c.setAttribute('data-cc',col);c.style.setProperty('--cc',col);n++}});
+ [].slice.call(a.querySelectorAll('.grid')).forEach(function(g){var j=0;[].slice.call(g.children).forEach(function(c){if(!c.classList.contains('stat'))return;var col=SP[j++%SP.length];if(c.getAttribute('data-cc')!==col){c.setAttribute('data-cc',col);c.style.setProperty('--cc',col);n++}})});return n}
+window.cardPaint=paint;
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{paint();setTimeout(paint,60);setTimeout(paint,600)}catch(e){}return o};
+try{new MutationObserver(function(){if(!paint.q){paint.q=1;requestAnimationFrame(function(){paint.q=0;paint()})}}).observe(document.getElementById('app'),{childList:true,subtree:false})}catch(e){}
 })();</script>
 </body>
 </html>
