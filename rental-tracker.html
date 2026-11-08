@@ -5926,7 +5926,7 @@ async function readId(file){var c=await img(file),o=null;
  try{o=await gem(c,'This is an ID card or passport (often UAE Emirates ID, which has Arabic and English). Return ONLY JSON {"ar":"full name in Arabic as printed (or transliterate the English name to Arabic if no Arabic)","en":"full name in English as printed","id":"ID or passport number exactly as printed (Emirates ID like 784-XXXX-XXXXXXX-X)","nat_ar":"nationality in Arabic","nat_en":"nationality in English"}. Use "" if not visible.')}catch(e){o=null}
  if(!o||!(o.en||o.ar||o.id)){o=idText(await tess(c,'eng+ara'))}
  if(o&&!o.nat_ar&&o.nat_en){o.nat_ar=NAT[o.nat_en.toLowerCase()]||''}return o}
-function pick(o,k){var L=lang();return L==='en'?(o[k+'_en']||o[k==='nat'?'nat_en':'en']||o[k+'_ar']||o.ar):(o[k+'_ar']||o[k==='nat'?'nat_ar':'ar']||o[k+'_en']||o.en)}
+window.__ctReadId=readId;function pick(o,k){var L=lang();return L==='en'?(o[k+'_en']||o[k==='nat'?'nat_en':'en']||o[k+'_ar']||o.ar):(o[k+'_ar']||o[k==='nat'?'nat_ar':'ar']||o[k+'_en']||o.en)}
 window.ctIdRead=async function(inp){var fl=inp.files&&inp.files[0];inp.value='';if(!fl)return;toast('⏳ بقرأ هوية المستأجر…');try{var o=await readId(fl);try{S.ct.alt=S.ct.alt||{};if(o){S.ct.alt.tn={ar:o.ar||'',en:o.en||''};S.ct.alt.nat={ar:o.nat_ar||'',en:o.nat_en||''}}}catch(x){}if(!o||!(o.en||o.ar||o.id)){toast('⚠️ مقدرتش أقرأ الهوية — صوّرها أوضح');return}
  var nm=lang()==='en'?(o.en||o.ar):(o.ar||o.en),nat=lang()==='en'?(o.nat_en||o.nat_ar):(o.nat_ar||o.nat_en);setF('tn',nm);setF('tid',o.id);setF('nat',nat);toast('✅ '+(nm||'')+(o.id?' • '+o.id:'')+(nat?' • '+nat:''))}catch(e){toast('⚠️ '+(e.message||e))}};
 window.ctLlRead=async function(inp){var fl=inp.files&&inp.files[0];inp.value='';if(!fl)return;toast('⏳ بقرأ هوية المؤجر…');try{var o=await readId(fl);try{S.ct.alt=S.ct.alt||{};if(o)S.ct.alt.ll={ar:o.ar||'',en:o.en||''}}catch(x){}if(!o||!(o.en||o.ar||o.id)){toast('⚠️ مقدرتش أقرأ الهوية');return}var nm=lang()==='en'?(o.en||o.ar):(o.ar||o.en);setF('ll',nm);setF('lid',o.id);toast('✅ المؤجر: '+(nm||'')+(o.id?' • '+o.id:''))}catch(e){toast('⚠️ '+(e.message||e))}};
@@ -6210,8 +6210,9 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);if(S.tab==='ct')s
 setTimeout(fix,1500);
 })();</script>
 <style id="sgmovecss">
-#ctpaper img.ctsig,#ctpaper img.cttsig{position:relative;pointer-events:none;-webkit-user-drag:none;user-select:none}
-html.sgmode,html.sgmode body{overscroll-behavior:none;touch-action:none}html.sgmode #ctview{touch-action:none}html.sgmode #ctpaper img.ctsig,html.sgmode #ctpaper img.cttsig{opacity:.55}html.sgmode #ctpaper img.sgsel{opacity:1}
+#ctpaper img.ctwsig1,#ctpaper img.ctwsig2{display:block;max-width:150px;max-height:48px;margin:6px auto -50px;object-fit:contain}
+#ctpaper img.ctsig,#ctpaper img.cttsig,#ctpaper img.ctwsig1,#ctpaper img.ctwsig2{position:relative;pointer-events:none;-webkit-user-drag:none;user-select:none}
+html.sgmode,html.sgmode body{overscroll-behavior:none;touch-action:none}html.sgmode #ctview{touch-action:none}html.sgmode #ctpaper img.ctsig,html.sgmode #ctpaper img.cttsig,html.sgmode #ctpaper img.ctwsig1,html.sgmode #ctpaper img.ctwsig2{opacity:.55}html.sgmode #ctpaper img.sgsel{opacity:1}
 #sgbar{gap:4px!important;padding:8px!important}#sgbar>button{min-width:34px!important;padding:0 8px!important}#sgbar .sgt{display:inline-flex;border-radius:999px;overflow:hidden;background:#ffffff1f}#sgbar .sgt button{border-radius:0;background:transparent;font-size:12.5px}#sgbar .sgt button.on{background:#1473e6}#sgbar small{flex-basis:100%;text-align:center;font-size:11.5px;font-weight:600;opacity:.85}
 #ctpaper img.sgsel{outline:2px dashed #1473e6;outline-offset:3px;border-radius:4px}
 #sgbar{flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 24px);border-radius:22px!important;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:2147483000;display:flex;gap:6px;align-items:center;background:#0f2742;color:#fff;padding:8px 10px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:13px;font-weight:800;white-space:nowrap}
@@ -6221,24 +6222,24 @@ html.sgmode,html.sgmode body{overscroll-behavior:none;touch-action:none}html.sgm
 </style>
 <script id="sgmovejs">(function(){
 function P(){S.ct=S.ct||{};return S.ct.sgpos=S.ct.sgpos||{}}
-function key(im){return im.classList.contains('cttsig')?'t':'l'}
-function apply(){var p=document.getElementById('ctpaper');if(!p)return;['ctsig','cttsig'].forEach(function(c){var im=p.querySelector('img.'+c);if(!im)return;var o=P()[c==='cttsig'?'t':'l'];if(o){im.style.left=(o.x||0)+'px';im.style.top=(o.y||0)+'px';if(o.w){im.style.width=o.w+'px';im.style.maxWidth='none';im.style.maxHeight='none';im.style.height='auto'}}else{im.style.left='';im.style.top='';im.style.width='';im.style.maxWidth='';im.style.maxHeight='';im.style.height=''}im.draggable=false;im.setAttribute('contenteditable','false')})}
+function key(im){return im.classList.contains('cttsig')?'t':im.classList.contains('ctwsig1')?'w1':im.classList.contains('ctwsig2')?'w2':'l'}
+function apply(){var p=document.getElementById('ctpaper');if(!p)return;['ctsig','cttsig','ctwsig1','ctwsig2'].forEach(function(c){var im=p.querySelector('img.'+c);if(!im)return;var o=P()[{ctsig:'l',cttsig:'t',ctwsig1:'w1',ctwsig2:'w2'}[c]];if(o){im.style.left=(o.x||0)+'px';im.style.top=(o.y||0)+'px';if(o.w){im.style.width=o.w+'px';im.style.maxWidth='none';im.style.maxHeight='none';im.style.height='auto'}}else{im.style.left='';im.style.top='';im.style.width='';im.style.maxWidth='';im.style.maxHeight='';im.style.height=''}im.draggable=false;im.setAttribute('contenteditable','false')})}
 function store(){var p=document.getElementById('ctpaper');if(p&&S.ct){[].slice.call(p.querySelectorAll('.sgsel')).forEach(function(x){x.classList.remove('sgsel')});S.ct.html=p.innerHTML;if(sel)sel.classList.add('sgsel')}try{save()}catch(e){}}
 /* Signature edit MODE: outside it the signatures are inert (the contract pans/zooms normally);
    inside it the contract is frozen and every touch goes to the chosen signature only:
    one finger = move, two fingers = resize. Listeners sit on window (capture) so they run before
    the contract's own pan/zoom handlers and swallow the event. */
 var sel=null,mode=false;
-function sigs(){var p=document.getElementById('ctpaper');return p?[].slice.call(p.querySelectorAll('img.ctsig,img.cttsig')):[]}
+function sigs(){var p=document.getElementById('ctpaper');return p?[].slice.call(p.querySelectorAll('img.ctsig,img.cttsig,img.ctwsig1,img.ctwsig2')):[]}
 function pick(im){if(sel)sel.classList.remove('sgsel');sel=im||null;if(sel)sel.classList.add('sgsel');bar()}
 function bar(){var b=document.getElementById('sgbar');if(!mode){if(b)b.remove();return}
  var L=sigs(),has=function(c){return L.some(function(x){return x.classList.contains(c)})};
  if(!b){b=document.createElement('div');b.id='sgbar';document.body.appendChild(b);
   b.addEventListener('click',function(e){var a=e.target.closest('button');if(!a)return;var act=a.getAttribute('data-a');
-   if(act==='ok'){exit();return}if(act==='l'||act==='t'){pick(sigs().filter(function(x){return x.classList.contains(act==='t'?'cttsig':'ctsig')})[0]);return}
+   if(act==='ok'){exit();return}if(/^(l|t|w1|w2)$/.test(act)){pick(sigs().filter(function(x){return key(x)===act})[0]);return}
    if(!sel)return;var k=key(sel),o=P()[k]||{x:0,y:0};if(act==='r'){delete P()[k];apply();store();return}
    resize(k,act==='+'?1.15:1/1.15)})}
- b.innerHTML="<div class='sgt'>"+(has('ctsig')?"<button type='button' data-a='l' class='"+(sel&&key(sel)==='l'?'on':'')+"'>المؤجر</button>":"")+(has('cttsig')?"<button type='button' data-a='t' class='"+(sel&&key(sel)==='t'?'on':'')+"'>المستأجر</button>":"")+"</div><button type='button' data-a='-' title='أصغر'>−</button><button type='button' data-a='+' title='أكبر'>+</button><button type='button' data-a='r' title='رجّعه مكانه'>↺</button><button type='button' class='ok' data-a='ok'>✓ تمام</button><small>صباع واحد يحرّك • صباعين يكبّر/يصغّر</small>"}
+ b.innerHTML="<div class='sgt'>"+(has('ctsig')?"<button type='button' data-a='l' class='"+(sel&&key(sel)==='l'?'on':'')+"'>المؤجر</button>":"")+(has('cttsig')?"<button type='button' data-a='t' class='"+(sel&&key(sel)==='t'?'on':'')+"'>المستأجر</button>":"")+(has('ctwsig1')?"<button type='button' data-a='w1' class='"+(sel&&key(sel)==='w1'?'on':'')+"'>شاهد 1</button>":"")+(has('ctwsig2')?"<button type='button' data-a='w2' class='"+(sel&&key(sel)==='w2'?'on':'')+"'>شاهد 2</button>":"")+"</div><button type='button' data-a='-' title='أصغر'>−</button><button type='button' data-a='+' title='أكبر'>+</button><button type='button' data-a='r' title='رجّعه مكانه'>↺</button><button type='button' class='ok' data-a='ok'>✓ تمام</button><small>صباع واحد يحرّك • صباعين يكبّر/يصغّر</small>"}
 function resize(k,f,base){var im=sel;if(!im)return;var o=P()[k]||{x:0,y:0};var w=base||o.w||im.getBoundingClientRect().width/scale();o.w=Math.round(Math.max(40,Math.min(300,w*f)));P()[k]=o;apply();store()}
 function scale(){var p=document.getElementById('ctpaper');if(!p||!p.offsetWidth)return 1;return p.getBoundingClientRect().width/p.offsetWidth||1}
 function enter(){var L=sigs();if(!L.length){toast('حط توقيع الأول من «✍️ توقيع المؤجر» أو «توقيع المستأجر»');return}mode=true;document.documentElement.classList.add('sgmode');
@@ -6268,7 +6269,7 @@ var r1=render;render=function(){var o=r1.apply(this,arguments);if(S.tab==='ct'){
 /* send the contract PDF to the tenant's WhatsApp, with or without signatures */
 function phone(){var ph=String((S.ct&&S.ct.f&&S.ct.f.ph)||'').replace(/[^\d]/g,'');if(/^05\d{8}$/.test(ph))ph='971'+ph.slice(1);if(/^00/.test(ph))ph=ph.slice(2);return ph}
 function b64(blob){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(String(r.result).split(',')[1])};r.onerror=rej;r.readAsDataURL(blob)})}
-function makePdf(withSig){return new Promise(function(res,rej){var p=document.getElementById('ctpaper');var hid=[];if(p&&!withSig)[].slice.call(p.querySelectorAll('img.ctsig,img.cttsig')).forEach(function(x){hid.push([x,x.style.visibility]);x.style.visibility='hidden'});if(sel){sel.classList.remove('sgsel')}
+function makePdf(withSig){return new Promise(function(res,rej){var p=document.getElementById('ctpaper');var hid=[];if(p&&!withSig)[].slice.call(p.querySelectorAll('img.ctsig,img.cttsig,img.ctwsig1,img.ctwsig2')).forEach(function(x){hid.push([x,x.style.visibility]);x.style.visibility='hidden'});if(sel){sel.classList.remove('sgsel')}
  var back=function(){hid.forEach(function(h){h[0].style.visibility=h[1]})},t=setTimeout(function(){window.__pdfCap=null;back();rej(new Error('PDF اتأخر'))},30000);
  window.__pdfCap=function(b){clearTimeout(t);back();res(b)};try{ctPdf()}catch(e){clearTimeout(t);window.__pdfCap=null;back();rej(e)}})}
 async function go(withSig){var F=(S.ct&&S.ct.f)||{},ph=phone(),nm='Tenancy-Contract-'+((F.tn||'contract').trim().replace(/\s+/g,'-'))+(withSig?'':'-unsigned')+'.pdf';
@@ -6279,7 +6280,7 @@ async function go(withSig){var F=(S.ct&&S.ct.f)||{},ph=phone(),nm='Tenancy-Contr
  try{var file=new File([blob],nm,{type:'application/pdf'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text:msg});return}}catch(e){if(e&&e.name==='AbortError')return}
  try{saveFile(blob,nm)}catch(e){}if(ph){var u='https://wa.me/'+ph+'?text='+encodeURIComponent(msg+'\n(هبعتلك ملف العقد PDF هنا)');setTimeout(function(){try{if(!(window.bnyOpenWa&&bnyOpenWa(u)))window.open(u,'_blank')}catch(e){}},900)}
  toast('📄 نزّلت الـ PDF وفتحت واتساب — ارفق الملف في الشات')}
-window.ctSend=function(){var ph=phone(),F=(S.ct&&S.ct.f)||{},hasSig=!!(S.ct&&(S.ct.sig||S.ct.tsig));var o=document.createElement('div');o.className='ov sndw';
+window.ctSend=function(){var ph=phone(),F=(S.ct&&S.ct.f)||{},hasSig=!!(S.ct&&(S.ct.sig||S.ct.tsig||(S.ct.wsig&&(S.ct.wsig[1]||S.ct.wsig[2]))));var o=document.createElement('div');o.className='ov sndw';
  o.innerHTML="<div class='dlg'><h2>📤 ابعت العقد للعميل</h2><p class='mu' style='margin:0 0 8px'>"+(ph?"هيتبعت PDF على واتساب <b dir='ltr'>+"+ph+"</b>":"⚠️ مفيش رقم موبايل في العقد — هتختار العميل من واتساب")+"</p><div class='bt'><button type='button' class='p' data-s='1'"+(hasSig?'':' disabled')+">✍️ PDF بالتوقيع"+(hasSig?'':' (مفيش توقيع)')+"</button><button type='button' class='p' data-s='0' style='background:#1b6a8a!important'>📄 PDF من غير توقيع</button><button type='button' data-s='x'>إلغاء</button></div></div>";
  document.body.appendChild(o);o.addEventListener('click',function(e){var b=e.target.closest('button');if(e.target===o||(b&&b.getAttribute('data-s')==='x')){o.remove();return}if(!b||b.disabled)return;o.remove();toast('⏳ بجهّز الـ PDF…');go(b.getAttribute('data-s')==='1')})};
 })();</script>
@@ -6307,9 +6308,11 @@ function chqConv(v,to){var m;if(to==='ar'&&(m=String(v).match(/^(\d+) Cheques?( 
 async function convert(to){if(!S.ct||!S.ct.f)return;var f=S.ct.f,A=S.ct.alt=S.ct.alt||{},need={},done=0;
  K.forEach(function(k){var v=String(f[k]||'').trim();if(!v)return;var cur=isAr(v)?'ar':'en';if(cur===to)return;A[k]=A[k]||{};A[k][cur]=v;
   if(A[k][to]){setV(k,A[k][to]);done++;return}
+  if((k==='tn'||k==='ll')&&S.ct.ids&&S.ct.ids[k]&&S.ct.ids[k].img){need['@'+k]=1;return}
   if(k==='nat'){var n=natTr(v,to);if(n){A[k][to]=n;setV(k,n);done++;return}}
   if(k==='chq'){var c=chqConv(v,to);if(c){A[k][to]=c;setV(k,c);done++}return}
   need[k]=v});
+ var idk=Object.keys(need).filter(function(k){return k[0]==='@'});for(var ii=0;ii<idk.length;ii++){var kk=idk[ii].slice(1);delete need[idk[ii]];toast('⏳ بقرأ '+(kk==='ll'?'اسم المؤجر':'اسم المستأجر')+' من صورة الهوية المحفوظة…');var ok=window.__ctFromId&&await window.__ctFromId(kk,to);if(ok){done++;if(kk==='tn')delete need.nat}else need[kk]=f[kk]}
  var ks=Object.keys(need);if(ks.length){toast('⏳ بحوّل البيانات لل'+(to==='ar'?'عربي':'إنجليزي')+'…');var o=null;try{o=await gemTr(need,to)}catch(e){o=null}
   if(o){ks.forEach(function(k){var v=String(o[k]||'').trim();if(v&&(to==='ar')===isAr(v)){A[k][to]=v;setV(k,v);done++}})}
   else if(to==='ar'){ks.forEach(function(k){var v=k==='sub'?subAr(need[k]):nameAr(need[k]);if(v){A[k][to]=v;setV(k,v);done++}});if(done){try{save()}catch(e){}toast('✅ اتحولت بالعربي — راجع كتابة الأسماء (اتعملت من غير Gemini)');return}}
@@ -6345,7 +6348,7 @@ function lay(){if(S.tab!=='ct')return;var w=document.getElementById('ctwrap');if
  var zb=document.getElementById('ctzb');if(zb&&zb.querySelector('.zr1')){var zg=zb.querySelector('.zg');var zm=document.getElementById('ctzoom');var v=document.getElementById('ctview');
   if(zg&&v){if(!zm){zm=document.createElement('div');zm.id='ctzoom';v.parentNode.insertBefore(zm,v)}if(zg.parentNode!==zm)zm.appendChild(zg)}
   if(zb.parentNode!==c1){var sel=c1.querySelector('select');c1.insertBefore(zb,sel||ctf)}zb.classList.add('inform');var cap=zb.querySelector('.zcap');if(cap&&cap.textContent.indexOf('اختياري')<0)cap.textContent='📷 املا البيانات من صورة (اختياري) — دوس وصوّر:';
-  var r2=zb.querySelector('.zr2');if(r2){r2.style.justifyContent='center';var lg=r2.querySelector('.ctlang');if(lg&&!r2.querySelector('.lglab')){var s=document.createElement('span');s.className='lglab';s.style.cssText='font-weight:800;font-size:12.5px;color:#3d5568';s.textContent='لغة بيانات العميل في العقد:';r2.insertBefore(s,lg)}}}
+  var r2=zb.querySelector('.zr2');if(r2&&zb.firstElementChild!==r2)zb.insertBefore(r2,zb.firstChild);var r1=zb.querySelector('.zr1');if(r1){['ll','','ph'].forEach(function(){});var a1=r1.querySelector('.ctid.ll'),a3=r1.querySelector('.ctid.ph'),a2=[].slice.call(r1.querySelectorAll('.ctid')).filter(function(x){return x!==a1&&x!==a3})[0];[a1,a2,a3].forEach(function(x){if(x)r1.appendChild(x)})}if(r2){r2.style.justifyContent='center';var lg=r2.querySelector('.ctlang');if(lg&&!r2.querySelector('.lglab')){var s=document.createElement('span');s.className='lglab';s.style.cssText='font-weight:800;font-size:12.5px;color:#3d5568';s.textContent='لغة بيانات العميل في العقد:';r2.insertBefore(s,lg)}}}
  /* grouped fields */
  var order=[['👤 المؤجر',['ll','lid']],['🧑 المستأجر',['tn','tid','nat','ph']],['🏠 الإيجار',['sub','st','mo','en','due','rent','chq']]];
  order.forEach(function(g){var first=null;g[1].forEach(function(k){var b=box(k);if(!b)return;if(!first)first=b;ctf.appendChild(b)});if(first)sec(g[0],first)});
@@ -6356,7 +6359,7 @@ function lay(){if(S.tab!=='ct')return;var w=document.getElementById('ctwrap');if
  if(!acts&&(ca||v)){acts=document.createElement('div');acts.id='ctacts';acts.innerHTML="<button type='button' class='p wide' onclick='ctSend()'>📤 ابعت العقد للعميل على واتساب</button><button type='button' onclick='ctPdf()'>📄 تنزيل PDF</button><button type='button' onclick='ctPrint()'>🖨 طباعة</button><button type='button' onclick='ctNew()'>➕ عقد جديد</button><button type='button' onclick=\"confirmM('ترجّع نص العقد الأصلي؟ أي تعديل كتبته بإيدك على ورقة العقد هيتمسح (البيانات اللي في الفورم مش هتتمسح).',ctReset)\">↺ النموذج الأصلي</button>"}
  if(acts){var anchor=ca||v;if(acts.previousElementSibling!==anchor)anchor.parentNode.insertBefore(acts,anchor.nextSibling)}
  var sg=document.getElementById('sgcard');if(sg){var sa=sg.querySelector('.sgacts');if(!sa){sa=document.createElement('div');sa.className='sgacts';sg.appendChild(sa)}
-  var ts=!!(S.ct&&S.ct.tsig),hs=!!(S.ct&&(S.ct.sig||S.ct.tsig)),key=(ts?1:0)+''+(hs?1:0);if(sa.getAttribute('data-k')!==key){sa.setAttribute('data-k',key);sa.innerHTML="<button type='button' onclick='ctTSign()'>✍️ "+(ts?'المستأجر يوقّع تاني':'توقيع المستأجر')+"</button>"+(ts?"<button type='button' onclick='ctTSignDel()'>🗑 شيل توقيع المستأجر</button>":"")+(hs?"<button type='button' class='p wide' onclick='ctSigMode()'>✋ حرّك أو كبّر التوقيعات</button>":"")}
+  var ts=!!(S.ct&&S.ct.tsig),hs=!!(S.ct&&(S.ct.sig||S.ct.tsig||(S.ct.wsig&&(S.ct.wsig[1]||S.ct.wsig[2])))),key=(ts?1:0)+''+(hs?1:0);if(sa.getAttribute('data-k')!==key){sa.setAttribute('data-k',key);sa.innerHTML="<button type='button' onclick='ctTSign()'>✍️ "+(ts?'المستأجر يوقّع تاني':'توقيع المستأجر')+"</button>"+(ts?"<button type='button' onclick='ctTSignDel()'>🗑 شيل توقيع المستأجر</button>":"")+"<button type='button' onclick='ctWSign()'>✍️ توقيع الشهود</button>"+(hs?"<button type='button' class='p"+(ts?" wide":"")+"' onclick='ctSigMode()'>✋ حرّك / كبّر</button>":"")}
   [].slice.call(sg.querySelectorAll('.sghint')).forEach(function(x){x.remove()});var h2=sg.querySelector('h2');if(h2&&h2.textContent.indexOf('التوقيعات')<0)h2.textContent='✍️ التوقيعات';
   var p=sg.querySelector('p.mu');if(p&&p.textContent.indexOf('توقيعك كمؤجر')<0)p.textContent='توقيعك كمؤجر: اختاره من تحت أو اعمل جديد. توقيع المستأجر: يوقّع بصباعه على موبايلك.'}
  try{var rs=document.querySelector('#ctpaper [data-f="rent"]');if(rs&&S.ct.f.rent&&!/AED|درهم/.test(rs.textContent))ctUpd('rent')}catch(e){}
@@ -6367,6 +6370,78 @@ var r0=render;render=function(){if(S.tab==='ct')migrate();var o=r0.apply(this,ar
 var pend=0;try{new MutationObserver(function(){if(pend||S.tab!=='ct')return;pend=1;setTimeout(function(){pend=0;try{lay()}catch(e){}},30)}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true})}catch(e){}
 /* switching the language also rewrites rent/months/due wording in the paper */
 var lg=window.ctLang;if(typeof lg==='function')window.ctLang=function(l){var r=lg.apply(this,arguments);try{ctUpd('rent')}catch(e){}return r};
+})();</script>
+<style id="ctpluscss">
+#ctpaper h1 small,#ctpaper .ctdate{display:none!important}
+#sgcard{padding:10px 12px!important}#sgcard h2{font-size:15px!important;margin:0 0 6px!important;padding-bottom:6px!important}#sgcard>p.mu{display:none!important}
+#sgcard .sgbox{gap:6px!important}#sgcard .sgit{min-height:0!important;padding:4px 6px!important}#sgcard .sgit img{max-height:34px!important}#sgcard .sgit small{font-size:11px!important}
+#sgcard .sgit[onclick="ctSigNew()"],#sgcard .sgit[onclick="ctSig('')"]{min-height:44px!important;font-size:13px!important}
+#sgcard .sgacts{gap:6px!important;margin-top:8px!important}#sgcard .sgacts>button{min-height:34px!important;padding:4px 8px!important;font-size:12.5px!important}
+#ctundo{position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:900;display:flex;gap:6px}
+#ctundo{opacity:.9}#ctundo button{width:44px;height:44px;border-radius:50%;border:0;background:#0f2742;color:#fff;font-size:22px;font-weight:800;box-shadow:0 6px 18px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;padding:0}
+#ctundo button:disabled{opacity:.35}#ctundo small{position:absolute;top:-6px;left:-4px;background:#e5484d;color:#fff;border-radius:999px;font-size:10px;padding:1px 5px;font-weight:800}
+#ctxl{width:min(96vw,440px);box-sizing:border-box;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:950;background:#0f2742;color:#fff;border-radius:16px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.3);display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-width:calc(100vw - 20px)}
+#ctxl button{flex:1 1 auto;min-height:32px;min-width:34px;border:0;border-radius:10px;background:#ffffff1f;color:#fff;font-size:12.5px;font-weight:800;padding:0 8px}
+#ctxl button.x{background:#e5484d}#ctxl .t{flex-basis:100%;text-align:center;font-size:11px;opacity:.8}
+#ctpaper td.xlsel,#ctpaper li.xlsel{outline:2px solid #1473e6;outline-offset:-2px}
+.wsdlg .wsw{display:flex;gap:6px;margin:0 0 8px}.wsdlg .wsw button{flex:1}.wsdlg .wsw button.on{background:#1473e6!important;color:#fff!important}
+</style>
+<script id="ctplusjs">(function(){
+function P(){return document.getElementById('ctpaper')}
+function keepHtml(){var p=P();if(p&&S.ct){var c=p.cloneNode(true);[].slice.call(c.querySelectorAll('.xlsel,.sgsel')).forEach(function(x){x.classList.remove('xlsel','sgsel')});S.ct.html=c.innerHTML}try{save()}catch(e){}}
+/* ---------- witness signatures ---------- */
+function applyW(){var p=P();if(!p)return;var cells=p.querySelectorAll('.sg > div');var W=(S.ct&&S.ct.wsig)||{};[1,2].forEach(function(n){var c=cells[n-1];if(!c)return;var im=c.querySelector('img.ctwsig'+n);if(W[n]){if(!im){im=document.createElement('img');im.className='ctwsig'+n;im.setAttribute('contenteditable','false');c.insertBefore(im,c.firstChild)}if(im.getAttribute('src')!==W[n])im.src=W[n]}else if(im)im.remove()});try{window.ctSigApply&&ctSigApply()}catch(e){}}
+window.ctWSign=function(){var w=1,W=(S.ct&&S.ct.wsig)||{};var o=document.createElement('div');o.className='ov wsdlg';
+ o.innerHTML="<div class='dlg'><h2>✍️ توقيع الشهود</h2><div class='wsw'><button type='button' data-w='1' class='on'>الشاهد الأول</button><button type='button' data-w='2'>الشاهد التاني</button></div><canvas id='wspad' style='width:100%;height:180px;border:2px dashed #b8c8d4;border-radius:12px;background:#fff;touch-action:none;display:block'></canvas><div class='bt'><button type='button' id='wsx'>إلغاء</button><button type='button' id='wsc'>🧽 امسح</button><button type='button' id='wsd'>🗑 شيل توقيعه</button><button type='button' class='p' id='wsok'>✅ حط التوقيع</button></div></div>";document.body.appendChild(o);
+ var cv=o.querySelector('#wspad'),r=cv.getBoundingClientRect(),dpr=Math.max(2,window.devicePixelRatio||1);cv.width=r.width*dpr;cv.height=r.height*dpr;var g=cv.getContext('2d');g.scale(dpr,dpr);g.lineWidth=2.6;g.lineCap='round';g.lineJoin='round';g.strokeStyle='#0d2a6b';var dn=false,lx=0,ly=0,drawn=false;
+ function pt(e){var b=cv.getBoundingClientRect();return [e.clientX-b.left,e.clientY-b.top]}
+ cv.addEventListener('pointerdown',function(e){dn=true;try{cv.setPointerCapture(e.pointerId)}catch(x){}var q=pt(e);lx=q[0];ly=q[1];drawn=true});
+ cv.addEventListener('pointermove',function(e){if(!dn)return;var q=pt(e);g.beginPath();g.moveTo(lx,ly);g.lineTo(q[0],q[1]);g.stroke();lx=q[0];ly=q[1]});
+ ['pointerup','pointercancel','pointerleave'].forEach(function(t){cv.addEventListener(t,function(){dn=false})});
+ [].slice.call(o.querySelectorAll('.wsw button')).forEach(function(b){b.onclick=function(){w=+b.getAttribute('data-w');[].slice.call(o.querySelectorAll('.wsw button')).forEach(function(x){x.classList.toggle('on',x===b)})}});
+ o.querySelector('#wsx').onclick=function(){o.remove()};o.querySelector('#wsc').onclick=function(){g.clearRect(0,0,cv.width,cv.height);drawn=false};
+ o.querySelector('#wsd').onclick=function(){S.ct.wsig=S.ct.wsig||{};delete S.ct.wsig[w];o.remove();applyW();keepHtml();render();toast('اتشال توقيع الشاهد '+(w===1?'الأول':'التاني'))};
+ o.querySelector('#wsok').onclick=function(){if(!drawn){toast('محتاج توقيع الأول');return}var d=g.getImageData(0,0,cv.width,cv.height).data,Wd=cv.width,H=cv.height,x0=Wd,y0=H,x1=0,y1=0;for(var y=0;y<H;y+=2)for(var x=0;x<Wd;x+=2){if(d[(y*Wd+x)*4+3]>10){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}}var pad=8,ww=Math.max(10,x1-x0+pad*2),h=Math.max(10,y1-y0+pad*2),k=Math.min(1,360/ww),t=document.createElement('canvas');t.width=Math.round(ww*k);t.height=Math.round(h*k);t.getContext('2d').drawImage(cv,x0-pad,y0-pad,ww,h,0,0,t.width,t.height);
+  S.ct.wsig=S.ct.wsig||{};S.ct.wsig[w]=t.toDataURL('image/png');o.remove();applyW();keepHtml();render();toast('✅ توقيع الشاهد '+(w===1?'الأول':'التاني')+' اتحط على العقد')}};
+/* ---------- undo (step back) ---------- */
+var H=[],RD=[],last=null,busy=false,ign=0,wasCt=false;
+function snap(){var c=S.ct||{},o={};Object.keys(c).forEach(function(k){if(k!=='ids')o[k]=c[k]});return JSON.stringify(o)}
+function tick(){if(S.tab!=='ct'){wasCt=false;return}if(busy||!S.ct)return;var s=snap();if(!wasCt){wasCt=true;ign=Date.now()+2500}if(Date.now()<ign){last=s;return}if(last===null){last=s;return}if(s!==last){H.push(last);if(H.length>60)H.shift();RD=[];last=s;btn()}}
+function restore(s){busy=true;try{var o=JSON.parse(s),ids=S.ct&&S.ct.ids;S.ct=o;if(ids)S.ct.ids=ids;last=s;try{save()}catch(e){}render()}catch(e){}setTimeout(function(){busy=false;last=snap();btn()},600)}
+window.ctUndo=function(){if(!H.length){toast('مفيش خطوات ترجعها');return}RD.push(snap());restore(H.pop());toast('↶ رجعت خطوة'+(H.length?' — فاضل '+H.length:''))};
+window.ctRedo=function(){if(!RD.length)return;H.push(snap());restore(RD.pop());toast('↷ رجّعت الخطوة')};
+function btn(){var b=document.getElementById('ctundo');if(S.tab!=='ct'){if(b)b.remove();return}if(!b){b=document.createElement('div');b.id='ctundo';b.innerHTML="<button type='button' id='ctrd' title='ترجيع الخطوة اللي رجعتها' onclick='ctRedo()'>↷</button><button type='button' id='ctud' title='رجوع خطوة' onclick='ctUndo()' style='position:relative'>↶<small></small></button>";document.body.appendChild(b)}
+ var u=b.querySelector('#ctud'),r=b.querySelector('#ctrd');u.disabled=!H.length;u.querySelector('small').textContent=H.length?H.length:'';u.querySelector('small').style.display=H.length?'':'none';r.style.display=RD.length?'':'none'}
+setInterval(tick,700);
+/* ---------- Excel-like editing of the contract paper ---------- */
+var cur=null;
+function xl(){var b=document.getElementById('ctxl');if(!cur||S.tab!=='ct'||document.documentElement.classList.contains('sgmode')){if(b)b.remove();[].slice.call(document.querySelectorAll('#ctpaper .xlsel')).forEach(function(x){x.classList.remove('xlsel')});return}
+ if(!b){b=document.createElement('div');b.id='ctxl';document.body.appendChild(b);b.addEventListener('mousedown',function(e){e.preventDefault()});b.addEventListener('pointerdown',function(e){if(e.target.closest('button'))e.preventDefault()});b.addEventListener('click',function(e){var a=e.target.closest('button');if(a)act(a.getAttribute('data-a'))})}
+ var li=cur.tagName==='LI';b.innerHTML="<span class='t'>"+(li?'بند في العقد':'خانة في الجدول')+" — اكتب جوه العقد عادي</span>"+(li?"<button data-a='lia'>➕ بند تحت</button><button data-a='lid'>🗑 امسح البند</button><button data-a='liu'>⬆</button><button data-a='lidn'>⬇</button>":"<button data-a='rb'>➕ صف تحت</button><button data-a='ra'>➕ صف فوق</button><button data-a='rd'>🗑 امسح الصف</button><button data-a='ru'>⬆</button><button data-a='rdn'>⬇</button><button data-a='clr'>🧽 فضّي الخانة</button>")+"<button data-a='b'>B</button><button data-a='fp'>A+</button><button data-a='fm'>A−</button><button data-a='al'>⇆ محاذاة</button><button data-a='x' class='x'>✕</button>"}
+function plain(tr){var c=tr.cloneNode(true);[].slice.call(c.querySelectorAll('[data-f]')).forEach(function(s){s.removeAttribute('data-f');s.className=''});[].slice.call(c.querySelectorAll('td')).forEach(function(td){td.textContent=''});[].slice.call(c.querySelectorAll('img')).forEach(function(i){i.remove()});[].slice.call(c.children).forEach(function(td){td.removeAttribute('rowspan');td.classList.remove('xlsel')});return c}
+function act(a){if(!cur)return;var tr=cur.closest('tr'),li=cur.tagName==='LI'?cur:null,fs=parseFloat(getComputedStyle(cur).fontSize)||13;
+ if(a==='x'){cur=null;xl();return}
+ if(a==='rb'||a==='ra'){if(!tr)return;var n=plain(tr);if(a==='rb')tr.parentNode.insertBefore(n,tr.nextSibling);else tr.parentNode.insertBefore(n,tr);sel(n.querySelector('td'))}
+ else if(a==='rd'){if(!tr)return;if(tr.querySelector('[data-f]')){toast('⚠️ الصف ده فيه بيانات من الفورم ('+tr.querySelector('td').textContent.trim()+') — امسح البيانات من الفورم، أو استعمل «فضّي الخانة»');return}var nx=tr.nextElementSibling||tr.previousElementSibling;tr.remove();sel(nx&&nx.querySelector('td'))}
+ else if(a==='ru'&&tr&&tr.previousElementSibling&&!tr.querySelector('[rowspan]')&&!tr.previousElementSibling.querySelector('[rowspan]'))tr.parentNode.insertBefore(tr,tr.previousElementSibling);
+ else if(a==='rdn'&&tr&&tr.nextElementSibling&&!tr.querySelector('[rowspan]')&&!tr.nextElementSibling.querySelector('[rowspan]'))tr.parentNode.insertBefore(tr.nextElementSibling,tr);
+ else if(a==='clr'){if(cur.querySelector('[data-f]')){toast('الخانة دي بتتملى من الفورم — فضّيها من الفورم');return}cur.textContent=''}
+ else if(a==='lia'&&li){var nl=document.createElement('li');nl.textContent=li.closest('[dir=ltr],.tm>div:first-child')?'New term':'بند جديد';li.parentNode.insertBefore(nl,li.nextSibling);sel(nl);try{var rg=document.createRange();rg.selectNodeContents(nl);var s=getSelection();s.removeAllRanges();s.addRange(rg)}catch(e){}}
+ else if(a==='lid'&&li){var nx2=li.nextElementSibling||li.previousElementSibling;li.remove();sel(nx2)}
+ else if(a==='liu'&&li&&li.previousElementSibling)li.parentNode.insertBefore(li,li.previousElementSibling);
+ else if(a==='lidn'&&li&&li.nextElementSibling)li.parentNode.insertBefore(li.nextElementSibling,li);
+ else if(a==='b')cur.style.fontWeight=(getComputedStyle(cur).fontWeight>=600)?'400':'800';
+ else if(a==='fp'||a==='fm')cur.style.fontSize=Math.max(8,Math.min(24,fs+(a==='fp'?1:-1)))+'px';
+ else if(a==='al'){var c=getComputedStyle(cur).textAlign,nxt={center:'right',right:'left',left:'center',start:'center',end:'center'}[c]||'center';cur.style.textAlign=nxt}
+ keepHtml();xl()}
+function sel(e){[].slice.call(document.querySelectorAll('#ctpaper .xlsel')).forEach(function(x){x.classList.remove('xlsel')});cur=e||null;if(cur)cur.classList.add('xlsel');xl()}
+document.addEventListener('selectionchange',function(){if(S.tab!=='ct')return;var s=getSelection();if(!s||!s.anchorNode)return;var n=s.anchorNode.nodeType===1?s.anchorNode:s.anchorNode.parentElement;var p=P();if(!p||!n||!p.contains(n))return;var c=n.closest('td,li');if(c&&c!==cur)sel(c)});
+document.addEventListener('pointerdown',function(e){if(!cur)return;if(e.target.closest('#ctxl,#ctpaper'))return;sel(null)},true);
+/* ---------- names from the saved ID photo when switching language ---------- */
+async function fromId(k,to){try{var im=S.ct&&S.ct.ids&&S.ct.ids[k];if(!im||!im.img)return false;var bl=await (await fetch(im.img)).blob();var f=new File([bl],'id.jpg',{type:'image/jpeg'});var fn=k==='ll'?window.ctLlRead:window.ctIdRead;if(typeof fn!=='function')return false;await fn({files:[f],value:''});return true}catch(e){return false}}
+window.__ctFromId=fromId;
+var r0=render;render=function(){var o=r0.apply(this,arguments);if(S.tab==='ct'){setTimeout(applyW,80);setTimeout(applyW,500);setTimeout(btn,100)}else{btn();cur=null;xl()}return o};
+try{new MutationObserver(function(){if(S.tab==='ct'){var p=P();if(p&&S.ct&&S.ct.wsig&&((S.ct.wsig[1]&&!p.querySelector('img.ctwsig1'))||(S.ct.wsig[2]&&!p.querySelector('img.ctwsig2'))))applyW()}}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true})}catch(e){}
 })();</script>
 </body>
 </html>
