@@ -2109,7 +2109,7 @@ function draw(){var f=LN.f,edit=LN.k!=null,h='<div class="dlg ln"><h2>📄 '+(ed
  h+='<div class="bt"><button class="p" onclick="lnSave()">حفظ العقد</button><button onclick="lnClose()">إلغاء</button></div></div>';
  var m=g('modal');m.innerHTML='<div class="ov" onclick="if(event.target===this)lnClose()">'+h+'</div>';
  drawRows();depUI()}
-window.lnClose=function(){LN=null;var m=g('modal');if(m)m.innerHTML=''};
+window.lnClose=function(){LN=null;var m=g('modal');if(m)m.innerHTML=''};window.lnRowsGet=function(){return LN?LN.rows:null};
 window.lnF=function(k,v){var f=LN.f;
  if(k==='start'||k==='day'||k==='cmo'||k==='rent'||k==='m0'){
   f[k]=(k==='start')?v:(v===''?'':+v);
@@ -6613,6 +6613,10 @@ var R=[
   fix:function(){var ids={};(S.units||[]).forEach(function(u){ids[u.id]=1});var n=0;S.tx=(S.tx||[]).filter(function(x){var k=!(x.u&&x.c==='تمويل استديو'&&!ids[x.u]);if(!k)n++;return k});S.adj=(S.adj||[]).filter(function(x){var k=!(x.u&&!ids[x.u]);if(!k)n++;return k});S.dep=(S.dep||[]).filter(function(x){var k=!(x.uid&&!ids[x.uid]);if(!k)n++;return k});if(n){try{save()}catch(e){}}return n?'شلت '+n+' حركة لاستديوهات اتحذفت':''}},
  {id:'gpneg',area:'المجموعات',t:'لما بتضيف استديو وجزء منه من فلوس الشراكة، فلوس الشراكة ممكن تطلع بالسالب لو ما اتكتبش اللي الشركاء حطوه',
   check:function(){if(!window.spFund)return [];var o=[];(S.groups||[]).forEach(function(g){var b=spFund(g.id);if(b<-0.5)o.push('فلوس الشراكة «'+g.name+'» بالسالب '+Math.round(b)+' — سجّل الدعم اللي اتحط')});return o},fix:null},
+ {id:'lsdoc',area:'الاستديوهات',t:'وانت بتضيف عقد مستأجر مكنش ينفع تملاه من صورة العقد ولا من تبويب «عقد العميل»',
+  check:function(){var d=document.querySelector('#modal .dlg.ln #lsct');if(!d)return [];return d.querySelector('#lsdocb')&&d.querySelector('#lsctb')?[]:['زراير «من صورة العقد» و«من عقد العميل» مش ظاهرة']},fix:null},
+ {id:'ct2lb',area:'العقد',t:'مكنش فيه طريقة تنقل عقد العميل لعقد مستأجر في الاستديوهات',
+  check:function(){if(S.tab!=='ct'||!document.getElementById('ctacts'))return [];return document.getElementById('ct2lb')?[]:['زرار «سجّله عقد مستأجر» مش ظاهر']},fix:function(){window.ct2Put&&ct2Put();return 'رجّعت الزرار'}},
  {id:'updlong',area:'الأبديت',t:'صفحة الأبديت كانت طويلة جداً (كل الشقق مفتوحة والمعاينة كبيرة)',
   check:function(){if(S.tab!=='upd')return [];var o=document.querySelectorAll('#updwrap .uvl.open').length;return o>1?['أكتر من فيلا مفتوحة في نفس الوقت']:[]},fix:function(){window.__updOpen='';render();return 'قفلت الفلل المفتوحة'}},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
@@ -6650,6 +6654,7 @@ window.bnyRulesSelfTest=function(){var bad=[],t=S.tab,hc=S.ct&&S.ct.html,ts0=S.c
   ['aiqfact',function(){BNYMEM.addFact('انت تعرف الجديد في البرنامج')}],
   ['dashmiss',function(){S.tab='home';render();var x=document.createElement('style');x.className='bnycf';x.textContent='#app .stat{display:none!important}';document.head.appendChild(x)}],
   ['delorph',function(){S.dep=(S.dep||[]).concat([{k:'t',w:'اختبار',a:1,d:'2026-01-01',uid:'zz_deleted'}])}],
+  ['ct2lb',function(){S.tab='ct';render();var e=document.getElementById('ct2lb');e&&e.remove()}],
   ['ctsubpk',function(){S.tab='ct';render();var e=document.getElementById('ctsubpk');e&&e.remove()}],
   ['menu',function(){var hd=$('.hd');hd.classList.add('mopen');var o=document.createElement('div');o.className='ov';o.id='__rt';document.body.appendChild(o)}]];
  cases.forEach(function(c){try{c[1]();var res=runAll([c[0]]);var x=res.filter(function(y){return y.r.id===c[0]})[0];if(!x)bad.push(c[0]+': not detected');else if(!x.fixed)bad.push(c[0]+': detected but not fixed')}catch(e){bad.push(c[0]+': crashed '+e.message)}var o=document.getElementById('__rt');o&&o.remove()});
@@ -7076,6 +7081,49 @@ window.fundBox=function(edit){if(!M||!/استديو/.test(M.title||''))return;va
    nu.inst.forEach(function(i,k){if(!i.p)return;var x=take(+i.a||0);if(sum(x)>0)msg=msg.concat(spApply('inst',nu.id,k,x)||[])});
    if(+nu.furn>0){var x=take(+nu.furn);if(sum(x)>0)msg=msg.concat(spApply('furn',nu.id,0,x)||[])}
    save();setTimeout(function(){try{render();toast('✅ اتسجل التمويل: '+msg.join(' + '))}catch(e){}},50)}catch(e){console.error(e)}return r}};
+})();</script>
+<script id="lsdoc">(function(){
+/* «عقد مستأجر»: fill the lease from a photo of the signed tenancy contract (Gemini, free) or from the «عقد العميل» tab */
+function set(id,v,ev){var e=document.getElementById(id);if(!e||v==null||v==='')return;e.value=String(v);var t=ev||(e.tagName==='SELECT'?'change':'input');e.dispatchEvent(new Event(t,{bubbles:true}));if(t==='change'&&e.onchange)try{e.onchange()}catch(x){}}
+function iso(s){s=String(s||'').trim();var m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return m[1]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[3]).slice(-2);m=s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})/);if(m)return m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2);return ''}
+function mdiff(a,b){var x=new Date(a+'T00:00'),y=new Date(b+'T00:00');if(isNaN(x)||isNaN(y))return 0;y.setDate(y.getDate()+1);var m=(y.getFullYear()-x.getFullYear())*12+(y.getMonth()-x.getMonth())+(y.getDate()-x.getDate())/30;return Math.max(0,Math.round(m*2)/2)}
+function ph(p){p=String(p||'').replace(/[^\d+]/g,'').replace(/^\+/,'').replace(/^00/,'');if(/^05\d{8}$/.test(p))p='971'+p.slice(1);return p}
+/* o: {tenant, id, nat, phone, start, end, months, rent, day, deposit, deposit_type, fee, cheques:[{no,date,amount}]} */
+window.lsFill=function(o){if(!o||!document.querySelector('#modal .dlg.ln'))return 0;var n=0,st=iso(o.start),en=iso(o.end),mo=+o.months||(st&&en?mdiff(st,en):0);
+ var put=function(id,v,k){if(v==null||v==='')return;set(id,v);if(k&&window.lsX)lsX(k,v);n++};
+ put('ln_t',o.tenant);put('ln_p',ph(o.phone));put('ln_tid',o.id,'tid');put('ln_nat',o.nat,'nat');
+ if(st)put('ln_s',st);if(mo)put('ln_c',mo);if(+o.rent>0)put('ln_r',Math.round(+o.rent));var dd=+o.day||(st?+st.slice(8,10):0);if(dd>=1&&dd<=31)put('ln_d',dd);
+ if(+o.deposit>0){set('ln_dk',/chq|cheque|check|شيك/i.test(o.deposit_type||'')?'chq':'cash');put('ln_da',Math.round(+o.deposit))}
+ if(+o.fee>0)put('ln_fe',Math.round(+o.fee));
+ var C=(o.cheques||[]).filter(function(c){return c&&c.no}).sort(function(x,y){return String(iso(x.date)).localeCompare(String(iso(y.date)))});if(C.length&&window.lnF){try{var ck=document.getElementById('ln_ck');if(ck&&!ck.checked){ck.checked=true;lnT('ck',true)}lnF('cno',String(C[0].no).replace(/\s/g,''));n++}catch(x){}}
+ return n};
+function shrink(fl){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,1800/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.85).split(',')[1])};im.onerror=rej;im.src=r.result};r.onerror=rej;r.readAsDataURL(fl)})}
+var P='These images are pages of a signed residential tenancy (rent) contract, usually from Abu Dhabi/UAE, in English and/or Arabic. Read the TENANT side (not the landlord) and return ONLY JSON:\n{"tenant":"tenant full name as written","id":"tenant Emirates ID / passport number","nat":"tenant nationality","phone":"tenant mobile with country code","start":"contract start date YYYY-MM-DD","end":"contract end date YYYY-MM-DD","months":number of months,"rent":MONTHLY rent amount in AED (if only a total/annual is written divide by the months),"day":day of month the rent is due (number),"deposit":security deposit amount,"deposit_type":"cash" or "cheque","fee":contract/agency fee paid by tenant,"cheques":[{"no":"cheque number","date":"YYYY-MM-DD","amount":number}]}\nUse null for anything not written. Dates written as DD/MM/YYYY are day first.';
+window.lsDoc=async function(el){var fs=[].slice.call(el.files||[]);el.value='';if(!fs.length)return;var g=window.bnyGem,cf=g&&g.cfg&&g.cfg();if(!cf||!cf.key){toast('📄 عشان أقرا العقد من الصورة اربط Gemini المجاني من زرار ✨ في المساعد');return}
+ toast('⏳ بقرا العقد ('+fs.length+' صورة)…');try{var parts=[{text:P}];for(var i=0;i<fs.length&&i<4;i++)parts.push({inline_data:{mime_type:'image/jpeg',data:await shrink(fs[i])}});
+  var model=(cf.models&&cf.models[0])||'gemini-2.5-flash';var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':cf.key},body:JSON.stringify({contents:[{parts:parts}],generationConfig:{temperature:0,responseMimeType:'application/json'}})});
+  var j=await r.json();if(!r.ok)throw new Error((j.error&&j.error.message)||('خطأ '+r.status));var t=(((j.candidates||[])[0]||{}).content||{}).parts;t=t&&t.map(function(p){return p.text||''}).join('');var m=t&&t.match(/\{[\s\S]*\}/);var o=m?JSON.parse(m[0]):null;
+  var n=lsFill(o);toast(n?'✅ اتملى من العقد ('+n+' خانة) — راجع الأرقام وجدول الدفعات قبل الحفظ':'⚠️ مقدرتش أقرا بيانات من الصورة — صوّرها أوضح')}catch(e){toast('⚠️ '+(e.message||e))}};
+window.lsCt=function(){var f=S.ct&&S.ct.f;if(!f||!(f.tn||f.rent||f.st)){toast('تبويب «عقد العميل» فاضي — املاه الأول أو صوّر العقد');return}
+ var n=lsFill({tenant:f.tn,id:f.tid,nat:f.nat,phone:f.ph,start:f.st,end:f.en,months:f.mo,rent:f.rent,day:f.due});toast(n?'✅ اتملى من «عقد العميل»: '+(f.tn||'')+' — راجع وحفظ':'مفيش بيانات تتنقل')};
+function add(){var w=document.querySelector('#modal .dlg.ln #lsct');if(!w||w.querySelector('#lsdocb'))return;var row=w.firstElementChild;if(!row)return;
+ var c='display:inline-flex;align-items:center;padding:7px 12px;border-radius:999px;font-weight:800;font-size:13px;cursor:pointer;';
+ var a=document.createElement('label');a.id='lsdocb';a.setAttribute('style',c+'background:#e9f0ff;border:1.5px solid #c3d4f7;color:#24479a');a.innerHTML='📄 من صورة العقد<input type="file" accept="image/*" multiple hidden onchange="lsDoc(this)">';
+ var b=document.createElement('button');b.type='button';b.id='lsctb';b.setAttribute('style',c+'background:#f3ecff;border:1.5px solid #d9c8f5;color:#5b2d9e');b.textContent='📝 من «عقد العميل»';b.onclick=function(){lsCt()};
+ row.insertBefore(b,row.firstChild);row.insertBefore(a,row.firstChild)}
+window.lsAddDoc=add;
+new MutationObserver(function(){if(document.querySelector('#modal .dlg.ln #lsct'))add()}).observe(document.getElementById('modal'),{childList:true,subtree:true});
+})();</script>
+<script id="ct2lease">(function(){
+/* «عقد العميل» → register it as a tenant lease on the studio (opens «عقد مستأجر» already filled) */
+function nz(t){return String(t||'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/\s+/g,' ').trim()}
+function guess(){var f=(S.ct&&S.ct.f)||{},U_=(S.units||[]);if(S.ct&&S.ct.subU){var u=U_.filter(function(x){return x.name===S.ct.subU})[0];if(u)return u.id}
+ var sub=nz(f.sub);var best=null;U_.forEach(function(u){var m=String(u.name).match(/(\d+)\D+(\d+)/);if(m&&new RegExp('No\\.?\\s*'+m[1]+'\\b[\\s\\S]*No\\.?\\s*'+m[2]+'\\b','i').test(f.sub||''))best=best||u.id;if(sub.indexOf(nz(u.name))>=0)best=u.id});return best}
+window.ct2Lease=function(){var f=(S.ct&&S.ct.f)||{};if(!f.tn&&!f.rent){toast('املا بيانات العقد الأول');return}var U_=(S.units||[]);if(!U_.length){toast('مفيش استديوهات');return}
+ var go=function(id){S.tab='units';try{UV.open=id}catch(e){}render();setTimeout(function(){mLease(id);var t=0,iv=setInterval(function(){if(document.querySelector('#modal .dlg.ln #lsct')||++t>30){clearInterval(iv);try{lsCt()}catch(e){}}},100)},150)};
+ var g=guess();openM('🏠 سجّل العقد في الاستديوهات',[{k:'u',l:'العقد ده لأنهي استديو؟',t:'s',o:U_.map(function(u){var gr=(S.groups||[]).filter(function(x){return x.id===u.g})[0];return [u.id,u.name+(gr?' — '+gr.name:'')]}),v:g||U_[0].id}],function(o){if(o.u)setTimeout(function(){go(o.u)},50)})};
+function put(){if(S.tab!=='ct')return;var a=document.getElementById('ctacts');if(!a||document.getElementById('ct2lb'))return;var b=document.createElement('button');b.type='button';b.id='ct2lb';b.textContent='🏠 سجّله عقد مستأجر في الاستديوهات';b.onclick=function(){ct2Lease()};a.appendChild(b)}
+window.ct2Put=put;var r0=render;render=function(){var o=r0.apply(this,arguments);if(S.tab==='ct'){put();setTimeout(put,300);setTimeout(put,1200)}return o};
 })();</script>
 </body>
 </html>
