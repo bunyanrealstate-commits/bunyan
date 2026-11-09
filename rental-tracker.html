@@ -6652,6 +6652,8 @@ var R=[
   check:function(){if(S.tab!=='upd')return [];var o=[];if(typeof window.updCols!=='function')o.push('زرار ترتيب الأعمدة مش موجود');var t=document.querySelector('#updposter td.ty');if(t&&!/214, 40, 40|d62828/i.test(getComputedStyle(t).color))o.push('نوع الشقة مش باللون الأحمر');return o},fix:null},
  {id:'cttpl2',area:'العقد',t:'مكانش فيه غير شكل واحد للعقد — اتضاف «عقد فاضي» جنب «عقد مفروش» زي ورقتك (جدول الدفعات والإجمالي والتأمين) بالعربي والإنجليزي',
   check:function(){if(S.tab!=='ct')return [];var o=[];if(!document.getElementById('ct2tpl'))o.push('زرار عقد مفروش / عقد فاضي مش ظاهر');if((S.ct&&S.ct.tpl)==='b'){var p=document.getElementById('ctpaper');if(p&&!p.querySelector('.t2,.t2b'))o.push('«عقد فاضي» مختار بس العقد ظاهر بشكل «عقد مفروش»');if(!document.getElementById('ct2box'))o.push('خانات الدفعات بتاعة «عقد فاضي» مش ظاهرة')}return o},fix:function(){window.ct2Box&&ct2Box();return 'رجّعت زراير عقد مفروش / عقد فاضي'}},
+ {id:'scrlock',area:'الشاشة',t:'لما تكون صفحة/نافذة مفتوحة (زي إعداد Gemini) وتسحب لفوق أو لتحت، الشاشة اللي ورا كانت هي اللي بتتحرك',
+  check:function(){var o=[];if(!document.getElementById('scrlockcss'))o.push('قفل سكرول الخلفية مش شغال');else if(window.bnyOpenOv&&bnyOpenOv()&&!document.documentElement.classList.contains('bnylock'))o.push('في نافذة مفتوحة والخلفية مش مقفولة');return o},fix:function(){window.bnyScrLock&&bnyScrLock();return 'قفلت سكرول الخلفية وقت ما النافذة مفتوحة'}},
  {id:'undopos',area:'العقد',t:'زرار الرجوع في العقد كان دايرة كبيرة عايمة فوق ورقة العقد وراكبة على التوقيع، والتنبيه اللي تحت كان شريط عريض راكب على زرار المساعد',
   check:function(){if(S.tab!=='ct')return [];var u=document.getElementById('ctundo'),o=[];if(u&&!u.classList.contains('inz'))o.push('زرار الرجوع عايم فوق العقد');return o},fix:function(){window.ctUndoPlace&&ctUndoPlace();var u=document.getElementById('ctundo');if(u&&!u.classList.contains('inz')){var z=document.querySelector('#ctzoom,#ctzb');if(z)z.appendChild(u);u.classList.add('inz')}return 'رجّعت زرار الرجوع جنب شريط التكبير'}},
  {id:'updlong',area:'الأبديت',t:'صفحة الأبديت كانت طويلة جداً (كل الشقق مفتوحة والمعاينة كبيرة)',
@@ -6705,6 +6707,7 @@ window.bnyRulesSelfTest=function(){var bad=[],t=S.tab,hc=S.ct&&S.ct.html,ts0=S.c
   ['ct2lb',function(){S.tab='ct';render();var e=document.getElementById('ct2lb');e&&e.remove()}],
   ['cardsep',function(){S.tab='home';render();var c=document.querySelector('#app .card[data-cc]');if(c){c.removeAttribute('data-cc');c.style.removeProperty('--cc')}}],
   ['cttpl2',function(){S.tab='ct';render();var e=document.getElementById('ct2tpl');e&&e.remove()}],
+  ['scrlock',function(){var e=document.getElementById('scrlockcss');e&&e.remove()}],
   ['undopos',function(){S.tab='ct';render();var u=document.getElementById('ctundo');if(!u){u=document.createElement('div');u.id='ctundo';u.innerHTML='<button>↶</button>';document.body.appendChild(u)}else{document.body.appendChild(u)}u.classList.remove('inz')}],
   ['ctsubpk',function(){S.tab='ct';render();var e=document.getElementById('ctsubpk');e&&e.remove()}],
   ['rowtxt',function(){var e=document.getElementById('rowtxtcss');e&&e.remove();var d=document.createElement('div');d.id='__rt';d.className='tri';d.innerHTML="<div class='bd'><b>عقد مستأجر «اختبار اسم طويل جداً جداً جداً جداً جداً جداً»</b></div><button>↩️</button>";document.getElementById('app').appendChild(d)}],
@@ -7499,5 +7502,32 @@ window.ctUndoPlace=moveUndo;
 var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(S.tab==='ct'){moveUndo();setTimeout(moveUndo,150);setTimeout(moveUndo,800)}else{var u=document.getElementById('ctundo');if(u&&u.classList.contains('inz'))u.remove()}}catch(e){}return o};
 setInterval(function(){try{if(S.tab==='ct')moveUndo()}catch(e){}},1500);
 })();</script>
+<script id="scrlock">
+(function(){
+var CSS="html.bnylock,html.bnylock body{overflow:hidden!important;overscroll-behavior:none!important;touch-action:pan-x pan-y}"+
+".ov,#gemx,.gb,.ov *,#gemx *{overscroll-behavior:contain}";
+function css(){if(!document.getElementById('scrlockcss')){var st=document.createElement('style');st.id='scrlockcss';st.textContent=CSS;document.head.appendChild(st)}}
+function vis(e){if(!e||!e.getBoundingClientRect)return false;var c=getComputedStyle(e);if(c.position!=='fixed'||c.display==='none'||c.visibility==='hidden'||c.pointerEvents==='none'||+c.opacity===0)return false;
+ var r=e.getBoundingClientRect(),W=innerWidth,H=innerHeight;return r.width>=W*.85&&r.height>=H*.85&&r.top<=H*.1}
+function openOv(){var c=document.querySelectorAll('body>*,#modal>*,#modal .ov,.ov,#gemx');for(var i=0;i<c.length;i++){var e=c[i];if(e.id==='app'||e.tagName==='SCRIPT'||e.tagName==='STYLE')continue;if(vis(e))return e}return null}
+window.bnyOpenOv=openOv;
+var cur=null;
+function upd(){css();var o=openOv(),h=document.documentElement;cur=o;if(o){if(!h.classList.contains('bnylock')){h.dataset.sy=scrollY;h.classList.add('bnylock')}}else if(h.classList.contains('bnylock')){h.classList.remove('bnylock');var y=+h.dataset.sy||0;if(Math.abs(scrollY-y)>2)scrollTo(0,y)}}
+window.bnyScrLock=upd;
+var t=0;function sch(){if(t)return;t=requestAnimationFrame(function(){t=0;upd()})}
+new MutationObserver(sch).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class','hidden']});
+// امنع سحب الخلفية: لو اللمسة مش جوه حاجة بتسكرول جوه الصفحة المفتوحة
+var y0=0;addEventListener('touchstart',function(e){y0=e.touches[0].clientY},{passive:true});
+addEventListener('touchmove',function(e){if(!cur||!document.documentElement.classList.contains('bnylock'))return;if(e.touches.length>1)return;
+ var dy=e.touches[0].clientY-y0,n=e.target;
+ while(n&&n!==document.body){if(n.nodeType===1){var c=getComputedStyle(n);if(/(auto|scroll)/.test(c.overflowY)&&n.scrollHeight>n.clientHeight+1){
+   var top=n.scrollTop<=0,bot=n.scrollTop+n.clientHeight>=n.scrollHeight-1;if((dy>0&&top)||(dy<0&&bot)){e.preventDefault()}return}
+  if(/INPUT|TEXTAREA|SELECT/.test(n.tagName)&&n.scrollHeight>n.clientHeight+1)return}
+  if(n===cur)break;n=n.parentNode}
+ if(e.cancelable)e.preventDefault()},{passive:false});
+addEventListener('wheel',function(e){if(!cur)return;var n=e.target;while(n&&n!==document.body){if(n.nodeType===1){var c=getComputedStyle(n);if(/(auto|scroll)/.test(c.overflowY)&&n.scrollHeight>n.clientHeight+1)return}if(n===cur)break;n=n.parentNode}e.preventDefault()},{passive:false});
+css();setTimeout(upd,0);
+})();
+</script>
 </body>
 </html>
