@@ -2911,10 +2911,12 @@ function tg(){var a=tgs();return a.length?{id:a.map(function(g){return g.id}).jo
 function pack(G){var gs=G.all,gid={};gs.forEach(function(g){gid[g.id]=1});var U=(S.units||[]).filter(function(u){return gid[u.g]}),ids={};U.forEach(function(u){ids[u.id]=1});
  var o={units:U,groups:gs,exp:(S.exp||[]).filter(function(x){return x.u?ids[x.u]:gid[x.g]}),dep:(S.dep||[]).filter(function(x){return ids[x.uid]}),gp:{},gc:{},cos:S.cos||[],cash:0,res:S.res||0,tp:S.tp,pmode:S.pmode,debts:[],recv:[],tx:[],adj:(S.adj||[]).filter(function(a){return gid[a.g]}),
   hist:[{id:'exp'+Date.now(),t:Date.now(),by:'owner',d:'تحديث من برنامج المالك',ch:'[]',rev:false,ev:false}],from:'owner',at:Date.now()};
- gs.forEach(function(g){o.gp[g.id]=(S.gp||{})[g.id]||[];o.gc[g.id]=(S.gc||{})[g.id]||0});return o}
+ gs.forEach(function(g){o.gp[g.id]=(S.gp||{})[g.id]||[];o.gc[g.id]=(S.gc||{})[g.id]||0});
+ /* shared with Hakim (he can edit these two): the client contract and the update list */
+ try{o.ct=S.ct||null;o.updx=window.updData?updData():null}catch(e){}return o}
 var busy=false,last='',tm=null;
 function dec(b){return JSON.parse(decodeURIComponent(escape(atob(String(b).replace(/\s/g,'')))))}
-function kOf(o,gid){return hsh(JSON.stringify([o.units||[],o.gp||{},o.exp||[],o.dep||[],o.adj||[],(o.groups||[]).map(function(x){return [x.id,x.name,x.n,x.share]}),o.gc||{},o.cos||[]]))}
+function kOf(o,gid){return hsh(JSON.stringify([o.units||[],o.gp||{},o.exp||[],o.dep||[],o.adj||[],(o.groups||[]).map(function(x){return [x.id,x.name,x.n,x.share]}),o.gc||{},o.cos||[],o.ct||null,(o.updx&&o.updx.at)||0]))}
 function hsh(t){var h=5381;for(var i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return t.length+':'+(h>>>0).toString(36)}
 function lastK(){try{return (JSON.parse(localStorage.getItem('bny_hkexp')||'{}').key)||''}catch(e){return ''}}
 async function exp(){var c=cfg(),g=tg();if(!c||!c.token||!c.repo||!g||busy||navigator.onLine===false)return;var o=pack(g),key=kOf(o,g.id);if(key===last||key===lastK()){last=key;return}busy=true;
@@ -5956,6 +5958,8 @@ var R=[
   check:function(){var o=[];try{(S.units||[]).forEach(function(u){if(u.onb&&(+u.furn||0)>0&&fsrcOf(u)==='cash'&&!u.fat)o.push('«'+u.name+'»: قيمة الفرش متسجلة من النقدي من غير ميعاد')});if(typeof window.onbFurn!=='function')o.push('زرار قيمة الفرش مش موجود')}catch(e){}return o},fix:null},
  {id:'uastale',area:'الحسابات',t:'بعد ما تعدّل استديو (زي قيمة الفرش) ربحه كان بيفضل بالرقم القديم لأن الحساب كان متخزن ومش بيتجدد',
   check:function(){try{var u=(S.units||[])[0];if(!u)return [];var a=ua(u).full,c=JSON.parse(JSON.stringify(u)),b=ua(c).full;return Math.abs(a-b)>0.5?['ربح «'+u.name+'» متخزن بقيمة قديمة']:[]}catch(e){return []}},fix:null},
+ {id:'hkshare',area:'حكيم',t:'حكيم كان مش قادر يعدّل في «عقد العميل» و«الأبديت» — تعديله كان بيتمسح أول ما المزامنة تيجي',
+  check:function(){return window.hkShare&&window.updPut?[]:['مشاركة العقد والأبديت مع حكيم مش شغالة']},fix:null},
  {id:'updlong',area:'الأبديت',t:'صفحة الأبديت كانت طويلة جداً (كل الشقق مفتوحة والمعاينة كبيرة)',
   check:function(){if(S.tab!=='upd')return [];var o=document.querySelectorAll('#updwrap .uvl.open').length;return o>1?['أكتر من فيلا مفتوحة في نفس الوقت']:[]},fix:function(){window.__updOpen='';render();return 'قفلت الفلل المفتوحة'}},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
@@ -6218,6 +6222,7 @@ function mig(){if(typeof S==='undefined'||!S||!S.upd)return;var have={};D.villas
     return {id:a.id||id(),floor:/ROOF/.test(f)?'R':/^G/.test(f)?'G':/^F|1ST/.test(f)?'1':/2ND|S FLOOR/.test(f)?'2':'G',no:a.no||'',type:/^(FURNISHED )?STUDIO$/.test(t)?'st':/^(FURNISHED )?1 BHK$/.test(t)?'1bk':/^(FURNISHED )?2 BHK$/.test(t)?'2bk':'x',tx:/STUDIO|^(FURNISHED )?[12] BHK$/.test(t)?'':t.replace(/^FURNISHED /,''),furn:/FURNISHED/.test(t),price:a.p1||a.p2||a.p3||0,pays:a.p3?3:a.p2?2:1,mo:a.mo||0,note:'',booked:!!a.booked,hide:!!a.hide}})}}));delete S.upd;try{save()}catch(e){}}}catch(e){}keep(1)}}
 var pT=0;function keep(local){D.at=Date.now();try{localStorage.setItem(KS,JSON.stringify(D))}catch(e){}if(!local){clearTimeout(pT);pT=setTimeout(push,2500)}}
 window.updData=function(){return load()};
+window.updPut=function(x,bk){if(!x||!x.villas)return;D=x;try{localStorage.setItem(KS,JSON.stringify(D))}catch(e){}if(bk){clearTimeout(pT);pT=setTimeout(push,2500)}try{if(S.tab==='upd')render()}catch(e){}};
 /* backup to the data repo (owner only) so it is not lost with the phone */
 function cfg(){try{var c=JSON.parse(localStorage.getItem('bny_sync')||'null');return c&&c.token&&c.repo&&!window.__notOwner?c:null}catch(e){return null}}
 function api(c){return {u:'https://api.github.com/repos/'+c.repo+'/contents/upd.json',H:{'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}}
@@ -6639,6 +6644,48 @@ var it0=items;items=function(){var r=it0.apply(this,arguments);try{SU().forEach(
 var uc=unitCard;unitCard=function(u){var r=uc.apply(this,arguments);try{var p=onbPre(u);if(p.m>0){var b="<div class='grb' style='background:color-mix(in srgb,#2563eb 8%,var(--card,#fff));border-color:color-mix(in srgb,#2563eb 35%,transparent)'><b>🏠 الاستديو كان شغال لما ضفته</b><br>«"+esc(p.L.tenant||'المستأجر')+"» ساكن بالفعل ودفع إيجار الفترة لحد <b>"+dfmt(p.to)+"</b> — الإيجار ده دخل في رأس مال المجموعة (النقدي) قبل ما تضيف الاستديو.<br>✅ محسوب في الربح كإيجار متحصّل (≈ <b class='pos'>"+$(Math.round(p.a*sh(u)))+"</b>) ومش متحسب تاني في النقدي • الأيام دي مش فاضية ولا خسارة."+furnLine(u)+"</div>";return b+r}if(u.onb)return "<div class='grb' style='background:color-mix(in srgb,#2563eb 8%,var(--card,#fff));border-color:color-mix(in srgb,#2563eb 35%,transparent)'><b>🏠 الاستديو كان شغال لما ضفته</b>"+furnLine(u)+"</div>"+r}catch(e){}return r};
 function furnLine(u){var fu=+u.furn||0;return "<br>🛋️ قيمة الفرش: <b>"+(fu?$(fu):'—')+"</b> "+(fu?"<small class='mu'>(اتدفعت قبل كده — بتتخصم من الربح على "+(u.cm||0)+" شهر، مش من النقدي)</small>":"<small class='mu'>مش متسجلة</small>")+"<div class='rbt' style='display:flex;gap:8px;margin-top:6px'><button onclick=\"onbFurn('"+u.id+"')\">🛋️ "+(fu?'عدّل':'أضف')+" قيمة الفرش</button></div>"}
 window.onbFurn=function(id){var u=U(id);if(!u)return;openM('🛋️ قيمة الفرش — '+u.name,[{k:'f',l:'قيمة الفرش اللي في الاستديو (اتدفعت قبل ما تضيفه)',t:'n',v:+u.furn||''}],function(o){var oF=fsrcOf(u),oA=+u.furn||0,v=Math.max(0,+o.f||0);u.furn=v;if(oF==='old'||oF===''||!oF)setF(u,oF,v?'old':'',oA);else setF(u,oF,oF,oA);toast(v?'✅ اتسجلت — بتتخصم من الربح مش من النقدي':'اتشالت قيمة الفرش')})};
+})();</script>
+<script id="hkshare">(function(){
+/* «عقد العميل» + «الأبديت» are shared both ways between the main app and Hakim's app.
+   Everything else in Hakim's app still needs the owner's approval. Newest edit wins (each side stamps its edit time). */
+var H=!!window.HBUILD,KL='bny_share';
+function hs(t){var h=5381;for(var i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return t.length+':'+(h>>>0).toString(36)}
+function strip(c){var o={};for(var k in (c||{}))if(k!=='_t')o[k]=c[k];return JSON.stringify(o)}
+function LG(){try{return JSON.parse(localStorage.getItem(KL)||'{}')||{}}catch(e){return {}}}function LS(v){try{localStorage.setItem(KL,JSON.stringify(v))}catch(e){}}
+function cfg(){try{if(!H)return window.hkCfg?hkCfg():null;return JSON.parse(localStorage.getItem('bny_sync'))||null}catch(e){return null}}
+function hdr(c){return {'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}
+function url(c){return 'https://api.github.com/repos/'+c.repo+'/contents/hakim-live.json'}
+function enc(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))}function dec(b){return JSON.parse(decodeURIComponent(escape(atob(String(b).replace(/\s/g,'')))))}
+var RF=function(){return (window._rf||window.fetch).apply(window,arguments)};
+var dirty=false,pT=0;
+function tick(){try{if(typeof AUTH==='undefined'||!AUTH||typeof S==='undefined'||!S)return;var L=LG();L.ct=L.ct||{t:0,h:''};
+ /* contract */
+ if(S.ct){var c=S.ct,h=hs(strip(c)),t=+c._t||0;
+  if(!L.ct.h&&!L.ct.t){L.ct={t:t,h:h,d:H?c:null}}
+  else if(t>L.ct.t){L.ct={t:t,h:h,d:H?c:null}}
+  else if(t<L.ct.t){if(H&&L.ct.d){if(h!==hs(strip(L.ct.d))){S.ct=JSON.parse(JSON.stringify(L.ct.d));try{save()}catch(e){}try{if(S.tab==='ct')render()}catch(e){}}else S.ct._t=L.ct.t}else{c._t=Date.now();L.ct={t:c._t,h:h};try{save()}catch(e){}mark()}}
+  else if(h!==L.ct.h){c._t=Date.now();L.ct={t:c._t,h:h,d:H?c:null};try{save()}catch(e){}mark()}}
+ /* update list */
+ if(window.updData){var u=updData(),ut=+u.at||0;L.upd=L.upd||{t:0};
+  if(H&&S.updx&&((+S.updx.at>(L.upd.t||0)&&(+S.updx.at>ut||!L.upd.t))||(!(u.villas||[]).length&&(S.updx.villas||[]).length&&!L.upd.mine))){updPut(S.updx);L.upd.t=+S.updx.at}
+  else if(!L.upd.t){L.upd.t=ut}
+  else if(ut>L.upd.t){L.upd.t=ut;if(H)L.upd.mine=1;mark()}}
+ LS(L)}catch(e){}}
+function mark(){dirty=true;clearTimeout(pT);pT=setTimeout(H?push:function(){dirty=false;try{window.hakimExport&&hakimExport()}catch(e){}},H?2500:1500)}
+/* Hakim → main */
+var pb=false;async function push(){var c=cfg();if(!dirty||!c||!c.token||!c.repo||pb||navigator.onLine===false)return;pb=true;
+ try{var r=await RF(url(c)+'?t='+Date.now(),{headers:hdr(c),cache:'no-store'}),sha='';if(r.ok)sha=(await r.json()).sha;
+  var b={message:'hakim live '+new Date().toISOString(),content:enc({ct:S.ct||null,upd:window.updData?updData():null,at:Date.now(),by:(typeof A!=='undefined'&&A&&A.u)||'hakim'})};if(sha)b.sha=sha;
+  var w=await RF(url(c),{method:'PUT',headers:hdr(c),body:JSON.stringify(b)});if(w.ok){dirty=false;try{toast('✅ اتبعت للبرنامج الأساسي')}catch(e){}}}catch(e){}finally{pb=false;if(dirty)setTimeout(push,8000)}}
+/* main ← Hakim */
+var ET='',pl=false;async function pull(){var c=cfg();if(H||!c||!c.token||!c.repo||pl||document.hidden||navigator.onLine===false||typeof AUTH==='undefined'||!AUTH)return;pl=true;
+ try{var hh=hdr(c);if(ET)hh['If-None-Match']=ET;var r=await RF(url(c),{headers:hh,cache:'no-store'});if(r.status!==200)return;ET=r.headers.get('ETag')||'';var x=dec((await r.json()).content)||{},L=LG(),ch=0;
+  if(x.ct&&+x.ct._t>(+(S.ct&&S.ct._t)||0)&&+x.ct._t>(L.ct&&L.ct.t||0)){S.ct=x.ct;L.ct={t:+x.ct._t,h:hs(strip(x.ct))};try{save()}catch(e){}ch=1}
+  if(x.upd&&window.updData&&+x.upd.at>(+updData().at||0)){updPut(x.upd,1);L.upd={t:+x.upd.at};ch=1}
+  if(ch){LS(L);try{render();toast('✏️ حكيم عدّل '+(x.ct?'العقد':'')+(x.ct&&x.upd?' / ':'')+(x.upd?'الأبديت':''))}catch(e){}try{window.hakimExport&&setTimeout(hakimExport,1500)}catch(e){}}}catch(e){}finally{pl=false}}
+window.hkShare={tick:tick,push:push,pull:pull};
+setInterval(tick,2500);setTimeout(tick,3000);if(!H){setTimeout(pull,6000);setInterval(pull,20000);document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(pull,1000)})}else{addEventListener('online',function(){if(dirty)push()})}
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{setTimeout(tick,50);if(H&&(S.tab==='ct'||S.tab==='upd')){var b=document.getElementById('hkedit');if(!b){var a=document.getElementById('app');if(a){a.insertAdjacentHTML('afterbegin',"<div id='hkedit' style='margin:0 0 10px;padding:8px 12px;border-radius:12px;background:#e7f7ee;border:1.5px solid #2a9d5c;color:#16653b;font-weight:700;font-size:13px'>✏️ التبويب ده مفتوح ليك تعدّل فيه — التعديل بيتبعت للبرنامج الأساسي على طول من غير موافقة</div>")}}}}catch(e){}return o};
 })();</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script><style id="hlogo">html body .hd{background:linear-gradient(120deg,#16653b 0%,#2a9d5c 55%,#3cc47c 100%)!important;border-bottom:0!important;box-shadow:0 4px 16px rgba(22,101,59,.28)!important;color:#fff!important}.hd h1.brand{display:inline-flex!important;flex-direction:column;align-items:center;justify-content:center;line-height:1;width:auto!important;background:none!important;padding:0!important}.hd h1.brand svg{height:30px!important;width:auto!important;filter:drop-shadow(0 1px 2px rgba(0,0,0,.18))}.hd h1.brand svg *{fill:#fff!important;stroke:none}.hd h1.brand::after{content:"حكيم";display:block;margin-top:-3px;background:#fff;color:#16653b;font-size:9.5px;font-weight:800;line-height:1;padding:2px 9px 3px;border-radius:999px;letter-spacing:0;box-shadow:0 1px 4px rgba(0,0,0,.15)}html body .hd #pvb,html body .hd #bell,html body .hd #hmb{background:rgba(255,255,255,.16)!important;border:1px solid rgba(255,255,255,.38)!important;color:#fff!important;box-shadow:none!important}html body .hd #hmb{color:#fff!important}html body .hd #bell:not(.al):not(.od){background:rgba(255,255,255,.16)!important;border:1px solid rgba(255,255,255,.38)!important;color:#fff!important}html body .hd #clk2{color:#fff!important}html body .hd #clk2 small{color:#d4f7e2!important}html body .hd #grpb button{background:rgba(255,255,255,.18)!important;border:1px solid rgba(255,255,255,.45)!important;box-shadow:0 2px 10px rgba(0,0,0,.12)!important;color:#fff!important}html body .hd #grpb button b,html body .hd #grpb button span{color:#fff!important}html body .hd #grpb button i{background:#ffc93c!important;box-shadow:0 0 0 2px rgba(255,201,60,.35),0 0 8px rgba(255,201,60,.6)!important}html body .hd{min-height:52px!important;padding-top:6px!important;padding-bottom:6px!important}.hd h1.brand svg{height:27px!important}.hd h1.brand::after{font-size:9px!important}html body .hd #clk2{font-size:15px!important}html body .hd #grpb button{min-height:30px!important;font-size:13px!important}html body .hd #pvb,html body .hd #bell,html body .hd #hmb{width:36px!important;height:36px!important;min-height:36px!important;font-size:17px!important}</style><script id="hguard">(function(){
 var D=["units","exp","dep","gp","gc","adj"];window._ug=0;["pointerdown","keydown","touchstart"].forEach(function(e){addEventListener(e,function(){window._ug=Date.now()},{capture:true,passive:true})});
