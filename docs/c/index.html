@@ -2275,9 +2275,9 @@ function dm(iso){if(!iso)return '';var p=String(iso).split('-');return p.length=
 function nf(v){var n=+v;return n?n.toLocaleString('en-US'):(v||'')}
 function F(){S.ct=S.ct||{};S.ct.f=S.ct.f||{ll:'عبد الحكيم أحمد عبد الحكيم أحمد الرفاعي',lid:'',nat:'',tn:'',tid:'',ph:'',sub:'',st:'',en:'',due:'',rent:'',mo:'',chq:'',cx:''};return S.ct.f}
 function disp(k,f){var v=f[k];if(v==null)v='';
- if(k==='st'||k==='en')return dm(v);if(k==='due')return v?(+v>=31?((S.ct&&S.ct.lang)==='en'?'Last day of every month':'آخر يوم من كل شهر'):((S.ct&&S.ct.lang)==='en'?'Day '+v+' of every month':'يوم '+v+' من كل شهر')):'';var EN=(S.ct&&S.ct.lang)==='en';if(k==='rent')return v?nf(v)+(EN?' AED':' درهم'):'';if(k==='mo'){var m=+v;return v?(EN?(m===1?'1 Month':v+' Months'):(m===1?'شهر واحد':m===2?'شهرين':v+' أشهر')):''}return String(v)}
+ if(k==='st'||k==='en')return dm(v);if(k==='due')return v?(+v>=31?((S.ct&&S.ct.lang)==='en'?'Last day of every month':'آخر يوم من كل شهر'):((S.ct&&S.ct.lang)==='en'?'Day '+v+' of every month':'يوم '+v+' من كل شهر')):'';var EN=(S.ct&&S.ct.lang)==='en';if(k==='rent'||k==='tot')return v?nf(v)+(EN?' AED':' درهم'):'';var pm=/^pay_(\d+)_([adm])$/.exec(k);if(pm){var P=(f.pays||[])[+pm[1]]||{},w=pm[2];if(w==='a')return P.a?nf(P.a)+(EN?' AED':' درهم'):'';if(w==='d')return P.d?String(P.d).replace(/-/g,'/'):'';var MM={'تحويل':'Transfer','شيك':'Cheque','كاش':'Cash','نقدي':'Cash'};return EN?(MM[P.m]||P.m||''):(P.m||'')}if(k==='dep2'){return EN?(f.depT==='cash'?'Cash':'Cheque')+(f.dep?' of AED '+nf(f.dep):''):(f.depT==='cash'?'كاش':'شيك')+(f.dep?' بقيمة '+nf(f.dep)+' درهم':'')}if(k==='mo'){var m=+v;return v?(EN?(m===1?'1 Month':v+' Months'):(m===1?'شهر واحد':m===2?'شهرين':m>=11?v+' شهر':v+' أشهر')):''}return String(v)}
 function sp(k,f){return '<span class="fv" data-f="'+k+'">'+esc(disp(k,f))+'</span>'}
-function paper(f){var r=function(en,k,ar,x){return '<tr><td class="en">'+en+'</td><td colspan="3">'+(x||sp(k,f))+'</td><td class="ar">'+ar+'</td></tr>'};
+function paper(f){if((S.ct&&S.ct.tpl)==='b'&&window.ctPaper2)return ctPaper2(f,sp,disp);var r=function(en,k,ar,x){return '<tr><td class="en">'+en+'</td><td colspan="3">'+(x||sp(k,f))+'</td><td class="ar">'+ar+'</td></tr>'};
  return '<div class="fr"><h1>Tenancy Contract<small>عقد إيجار</small></h1><table>'+
  r('Landlord Name','ll','اسم المؤجر')+r('Landlord ID','lid','رقم هوية المؤجر')+r('Tenant Name','tn','اسم المستأجر')+r('Tenant ID','tid','رقم هوية المستأجر')+r("Tenant's Nationality",'nat','جنسية المستأجر')+r('Tenant Mobile No.','ph','رقم موبايل المستأجر')+r('Tenancy Subject','sub','موضوع الإيجار')+
  '<tr><td class="en" rowspan="2">Tenancy Period</td><td class="en" style="width:15%">Start Date</td><td style="width:22%">'+sp('st',f)+'</td><td style="width:14%">من تاريخ</td><td class="ar" rowspan="2">مدة الإيجار</td></tr><tr><td class="en">End Date</td><td>'+sp('en',f)+'</td><td>إلى تاريخ</td></tr>'+
@@ -2297,13 +2297,13 @@ function upd(k){var f=F(),el=document.getElementById('ct_'+k);if(!el)return;f[k]
  if(k==='rent'&&!f.cx){f.cx=f.rent;var c=document.getElementById('ct_cx');if(c)c.value=f.cx}
  document.querySelectorAll('#ctpaper [data-f]').forEach(function(s){s.textContent=disp(s.getAttribute('data-f'),f)});
  S.ct.html=document.getElementById('ctpaper').innerHTML;save();fit()}
-window.ctUpd=upd;
+window.ctUpd=upd;window.ctDisp=function(k){return disp(k,F())};window.ctF=F;
 window.ctSave=function(){var p=document.getElementById('ctpaper');if(!p)return;S.ct=S.ct||{};S.ct.html=p.innerHTML;save()};
 var tmr=null;window.ctInput=function(){clearTimeout(tmr);tmr=setTimeout(window.ctSave,500)};
 window.ctFill=function(v){if(v==='')return;var q=v.split('|'),u=S.units[+q[0]],L=u&&u.leases[+q[1]];if(!L)return;var f=F();
  f.tn=L.tenant||'';f.ph=L.phone||'';if(L.tid)f.tid=L.tid;if(L.nat)f.nat=L.nat;f.sub='إيجار استديو مفروش — '+(u.name||'');f.st=L.start||'';f.en=L.end||endOf(L.start,L.cmo);f.due=L.day||'';f.rent=L.rent||'';f.mo=L.cmo||'';f.cx=L.rent||'';f.chq=(L.chq&&L.chq.length?L.chq.length:Math.ceil(L.cmo||0))+' شيكات شامل شيك تأمين بقيمة شهر';
  S.ct.html='';save();render()};
-window.ctNew=function(){var f=F(),ll=f.ll,sub0=f.sub||'';S.ct={sig:(S.ct&&S.ct.sig)||'',lang:(S.ct&&S.ct.lang)||'ar',f:{ll:ll,lid:F().lid||'',nat:'',tn:'',tid:'',ph:'',sub:sub0,st:'',en:'',due:'',rent:'',mo:'',chq:'',cx:''},html:''};save();render()};
+window.ctNew=function(){var f=F(),ll=f.ll,sub0=f.sub||'';S.ct={sig:(S.ct&&S.ct.sig)||'',lang:(S.ct&&S.ct.lang)||'ar',tpl:(S.ct&&S.ct.tpl)||'a',f:{ll:ll,lid:F().lid||'',nat:'',tn:'',tid:'',ph:'',sub:sub0,st:'',en:'',due:'',rent:'',mo:'',chq:'',cx:''},html:''};save();render()};
 window.ctReset=function(){S.ct.html='';save();render()};
 function rdy(cb){var done=function(){var v=document.getElementById('ctview'),p=document.getElementById('ctpaper');if(!p)return;var t=p.style.transform,h=v.style.height,z=p.style.zoom,mh=v.style.maxHeight,ov=v.style.overflow;p.style.transform='none';p.style.zoom='';v.style.height='auto';v.style.maxHeight='';v.style.overflow='hidden';var fin=function(){p.style.transform=t;p.style.zoom=z;v.style.height=h;v.style.maxHeight=mh;v.style.overflow=ov;fit()};cb(p,fin)};done()}
 window.ctPdf=function(){window.ctSave();rdy(function(p,fin){var nm=(F().tn||'').trim().replace(/\s+/g,'-')||'contract',done=function(){window._sc=0;window._bg='';fin()};window._sc=innerWidth<700?2.4:3;window._bg='#fff';exportPdf(p,'contract-'+nm).then(done,done)})};
@@ -5962,6 +5962,8 @@ var R=[
   check:function(){return window.hkShare&&window.updPut?[]:['مشاركة العقد والأبديت مع حكيم مش شغالة']},fix:null},
  {id:'updcols',area:'الأبديت',t:'مكانش ينفع تغيّر ترتيب أعمدة صورة الأبديت، والسعر والنوع كانوا مش بارزين',
   check:function(){if(S.tab!=='upd')return [];var o=[];if(typeof window.updCols!=='function')o.push('زرار ترتيب الأعمدة مش موجود');var t=document.querySelector('#updposter td.ty');if(t&&!/214, 40, 40|d62828/i.test(getComputedStyle(t).color))o.push('نوع الشقة مش باللون الأحمر');return o},fix:null},
+ {id:'cttpl2',area:'العقد',t:'مكانش فيه غير شكل واحد للعقد — اتضاف «النموذج 2» زي ورقتك (جدول الدفعات والإجمالي والتأمين) بالعربي والإنجليزي',
+  check:function(){if(S.tab!=='ct')return [];var o=[];if(!document.getElementById('ct2tpl'))o.push('زرار النموذج 1 / 2 مش ظاهر');if((S.ct&&S.ct.tpl)==='b'){var p=document.getElementById('ctpaper');if(p&&!p.querySelector('.t2'))o.push('النموذج 2 مختار بس العقد ظاهر بالشكل القديم');if(!document.getElementById('ct2box'))o.push('خانات الدفعات بتاعة النموذج 2 مش ظاهرة')}return o},fix:function(){window.ct2Box&&ct2Box();return 'رجّعت زراير النموذج'}},
  {id:'updlong',area:'الأبديت',t:'صفحة الأبديت كانت طويلة جداً (كل الشقق مفتوحة والمعاينة كبيرة)',
   check:function(){if(S.tab!=='upd')return [];var o=document.querySelectorAll('#updwrap .uvl.open').length;return o>1?['أكتر من فيلا مفتوحة في نفس الوقت']:[]},fix:function(){window.__updOpen='';render();return 'قفلت الفلل المفتوحة'}},
  {id:'dupbtn',area:'الشاشة',t:'زراير كانت متكررة مرتين في نفس الصفحة (زي تنزيل PDF)',
@@ -6012,6 +6014,7 @@ window.bnyRulesSelfTest=function(){var bad=[],t=S.tab,hc=S.ct&&S.ct.html,ts0=S.c
   ['delorph',function(){S.dep=(S.dep||[]).concat([{k:'t',w:'اختبار',a:1,d:'2026-01-01',uid:'zz_deleted'}])}],
   ['ct2lb',function(){S.tab='ct';render();var e=document.getElementById('ct2lb');e&&e.remove()}],
   ['cardsep',function(){S.tab='home';render();var c=document.querySelector('#app .card[data-cc]');if(c){c.removeAttribute('data-cc');c.style.removeProperty('--cc')}}],
+  ['cttpl2',function(){S.tab='ct';render();var e=document.getElementById('ct2tpl');e&&e.remove()}],
   ['ctsubpk',function(){S.tab='ct';render();var e=document.getElementById('ctsubpk');e&&e.remove()}],
   ['rowtxt',function(){var e=document.getElementById('rowtxtcss');e&&e.remove();var d=document.createElement('div');d.id='__rt';d.className='tri';d.innerHTML="<div class='bd'><b>عقد مستأجر «اختبار اسم طويل جداً جداً جداً جداً جداً جداً»</b></div><button>↩️</button>";document.getElementById('app').appendChild(d)}],
   ['menu',function(){var hd=$('.hd');hd.classList.add('mopen');var o=document.createElement('div');o.className='ov';o.id='__rt';document.body.appendChild(o)}]];
@@ -6699,5 +6702,76 @@ setInterval(tick,2500);setTimeout(tick,3000);if(!H){setTimeout(pull,6000);setInt
 var r0=render;render=function(){var o=r0.apply(this,arguments);try{setTimeout(tick,50);if(H&&(S.tab==='ct'||S.tab==='upd')){var b=document.getElementById('hkedit');if(!b){var a=document.getElementById('app');if(a){a.insertAdjacentHTML('afterbegin',"<div id='hkedit' style='margin:0 0 10px;padding:8px 12px;border-radius:12px;background:#e7f7ee;border:1.5px solid #2a9d5c;color:#16653b;font-weight:700;font-size:13px'>✏️ التبويب ده مفتوح ليك تعدّل فيه — التعديل بيتبعت للبرنامج الأساسي على طول من غير موافقة</div>")}}}}catch(e){}return o};
 })();</script>
 <style id="updred">#updposter.v2 td.ty,#updposter td.ty{color:#d62828!important}#updposter.v2 td.yr,#updposter.v2 td.mo,#updposter td.yr,#updposter td.mo{color:#d62828!important}#updposter td.yr .aed,#updposter td.mo .aed{color:#d62828!important;opacity:.85}</style>
+<style id="ct2css">
+#ctpaper .fr.t2{border:0;padding:6px 10px 20px;direction:rtl}
+#ctpaper .t2 table{display:table!important;width:100%!important}#ctpaper .t2 tbody{display:table-row-group!important}#ctpaper .t2 tr{display:table-row!important}#ctpaper .t2 td{display:table-cell!important}
+#ctpaper .fr.t2.en{direction:ltr}
+#ctpaper .t2 h1{font-size:22px;text-decoration:underline;margin:4px 0 14px;direction:inherit}
+#ctpaper .t2 table.kv td{font-size:14.5px;padding:8px 10px;text-align:center}
+#ctpaper .t2 table.kv td.k{font-weight:800}
+#ctpaper .t2 table.kv td.k2{font-weight:800}
+#ctpaper .t2 h2{font-size:16px;margin:10px 0 6px;text-decoration:underline}
+#ctpaper .t2 table.ptb td{font-size:14px;padding:5px 8px}
+#ctpaper .t2 table.ptb tr:first-child td{font-weight:800}
+#ctpaper .t2 .nl{font-weight:800;text-decoration:underline;margin:18px 0 6px;font-size:15px}
+#ctpaper .t2 .tm{display:grid;grid-template-columns:1fr 1fr;border:1px solid #111;min-height:240px}
+#ctpaper .t2 .tm>div{padding:10px 14px;font-size:14px;line-height:1.55;font-weight:700;direction:inherit!important;text-align:start!important;font-family:inherit!important}
+#ctpaper .t2 .tm>div:first-child{border-left:1px solid #111;border-right:0}
+#ctpaper .t2.en .tm>div:first-child{border-right:1px solid #111;border-left:0}
+#ctpaper .t2 .tm ul{padding:0 18px 0 0!important;list-style:'-  '}
+#ctpaper .t2.en .tm ul{padding:0 0 0 18px!important}
+#ctpaper .t2 .sg{direction:ltr;margin-top:10px}
+#ctpaper .t2 .sg div{padding-bottom:46px}
+#ct2tpl{display:flex;gap:6px;margin:0 0 10px}#ct2tpl button{flex:1;margin:0!important;padding:9px!important;border-radius:12px!important;font-weight:800}#ct2tpl button.on{background:var(--ac,#1473e6)!important;color:#fff!important;border-color:transparent!important}
+#ct2box{border:1.5px dashed var(--bd,#cfd8e3);border-radius:14px;padding:10px;margin:10px 0}#ct2box h4{margin:0 0 8px;font-size:14px}
+#ct2box .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}#ct2box label{font-size:12px;font-weight:700;display:block;margin-bottom:3px}#ct2box input,#ct2box select{width:100%;box-sizing:border-box;margin:0!important}
+#ct2box .pr{display:grid;grid-template-columns:28px 1fr 1.1fr .9fr 30px;gap:6px;align-items:center;margin:6px 0}#ct2box .pr b{text-align:center}
+#ct2box .rw{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}#ct2box .rw button{margin:0!important}
+</style>
+<script id="ct2js">(function(){
+/* «النموذج 2» — the second contract layout (like the paper you use): landlord/tenant table, contract period, total rent, deposit,
+   a payments table (number, amount, due date, method) and the notes box. Arabic or English (the عربي/EN switch), same tools as the first one. */
+function E(x){return esc(String(x==null?'':x))}
+function en(){return (S.ct&&S.ct.lang)==='en'}
+var TA=['السكن عائلي فقط','العقد شامل المياة والكهرباء والصيانة','في حالة إلغاء العقد قبل انتهاء مدته من قبل المستأجر يتم خصم شهر عليه .','يجب علي المستأجر اخطار المؤجر في حالة عدم التجديد قبل نهاية العقد بشهر'],
+ TB=['يسترد المستأجر شيك التأمين في حالة تسليم السكن في حالة جيده','في حالة وجود أي تلفيات في الشقة كما تم تسليمها للعميل، تقدر التلفيات ويخصم من شيك التأمين أو يدفع كاش في وقت الخروج من المكان .','في حالة إخلاء الشقة يتعهد المستأجر بالإخلاء في نفس يوم تاريخ الانتهاء وفي حالة تأخر الإخلاء عن الموعد المحدد يتحمل المستأجر 300 درهم عن كل يوم غرامة تأخير .'],
+ EA=['Family housing only.','The contract includes water, electricity and maintenance.','If the tenant cancels the contract before the end of its term, one month will be deducted.','The tenant must notify the landlord one month before the end of the contract in case of non-renewal.'],
+ EB=['The tenant gets the security deposit cheque back if the apartment is handed over in good condition.','Any damage to the apartment, compared to how it was handed over, will be assessed and deducted from the deposit cheque or paid in cash on check-out.','The tenant must vacate on the contract end date; any delay costs AED 300 per day as a late fee.'];
+window.ctPaper2=function(f,sp,disp){var e=en(),L=e?{t:'Tenancy Contract',ll:'Landlord Name',lid:'Landlord ID No.',tn:'Tenant Name',tid:'Tenant ID No.',nat:'Tenant Nationality',ph:'Tenant Mobile No.',sub:'Tenancy Subject',mo:'Contract Period',per:'Tenancy Dates',st:'Start Date',en:'End Date',tot:'Total Rent',dep:'Security Deposit',pt:'Payments Schedule',pn:'Payment No.',pa:'Amount',pd:'Due Date',pm:'Payment Method',nl:'Notes :',s1:'Landlord',s2:'Tenant Signature',s3:'Witness'}:
+  {t:'عقـــد الإيجــــار',ll:'اسم المؤجر',lid:'رقم هوية المؤجر',tn:'اسم المستأجر',tid:'رقم هوية المستأجر',nat:'جنسية المستأجر',ph:'رقم موبايل المستأجر',sub:'مــــــوضوع الإيجار',mo:'مدة العقد',per:'تاريخ الإيجار',st:'بداية العقد',en:'نهاية العقد',tot:'إجمالي الإيجار',dep:'التأمين',pt:'جــدول الدفعـات',pn:'رقم الدفعة',pa:'المبلغ',pd:'تاريخ الإستحقاق',pm:'طريقة الدفع',nl:'ملاحظات :',s1:'المؤجر',s2:'توقيع المستأجر',s3:'شاهد'};
+ var r=function(k,lab){return '<tr><td class="k">'+lab+'</td><td colspan="2">'+sp(k,f)+'</td></tr>'};
+ var h='<div class="fr t2'+(e?' en':'')+'"><h1>'+L.t+'</h1><table class="kv"><colgroup><col style="width:30%"><col style="width:20%"><col style="width:50%"></colgroup>'+r('ll',L.ll)+r('lid',L.lid)+r('tn',L.tn)+r('tid',L.tid)+r('nat',L.nat)+r('ph',L.ph)+r('sub',L.sub)+r('mo',L.mo)+
+  '<tr><td class="k" rowspan="2">'+L.per+'</td><td class="k2">'+L.st+'</td><td>'+sp('st',f)+'</td></tr><tr><td class="k2">'+L.en+'</td><td>'+sp('en',f)+'</td></tr>'+r('tot',L.tot)+r('dep2',L.dep)+'</table>'+
+  '<h2>'+L.pt+'</h2><table class="ptb">'+ptb(f,sp,L)+'</table><div class="nl">'+L.nl+'</div><div class="tm"><div><ul>'+(e?EA:TA).map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul></div><div><ul>'+(e?EB:TB).map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul></div></div>'+
+  '<div class="sg"><div>'+L.s3+'</div><div>'+L.s3+'</div><div>'+L.s2+'</div><div>'+L.s1+'</div></div></div>';
+ return h};
+function ptb(f,sp,L){var P=f.pays||[],h='<colgroup><col style="width:25%"><col style="width:25%"><col style="width:25%"><col style="width:25%"></colgroup><tr><td>'+L.pn+'</td><td>'+L.pa+'</td><td>'+L.pd+'</td><td>'+L.pm+'</td></tr>';for(var i=0;i<Math.max(1,P.length);i++)h+='<tr><td>'+(i+1)+'</td><td>'+sp('pay_'+i+'_a',f)+'</td><td>'+sp('pay_'+i+'_d',f)+'</td><td>'+sp('pay_'+i+'_m',f)+'</td></tr>';return h}
+function tpl(){return (S.ct&&S.ct.tpl)==='b'?'b':'a'}
+/* switch between the two layouts — each keeps its own hand edits */
+window.ctTpl=function(t){S.ct=S.ct||{};var o=tpl();if(t===o)return;S.ct['h_'+o]=S.ct.html||'';S.ct.tpl=t;S.ct.html=S.ct['h_'+t]||'';if(t==='b'){var f=ctF();if(!f.pays||!f.pays.length)autoPays(true);if(!f.dep&&f.rent)f.dep=f.rent;if(!f.tot&&f.rent&&f.mo)f.tot=Math.round(+f.rent*+f.mo)}try{save()}catch(e){}render();toast(t==='b'?'📄 النموذج 2':'📄 النموذج 1')};
+function addM2(iso,m){var d=pd(iso);var x=new Date(d.getFullYear(),d.getMonth()+m,d.getDate());return x.getFullYear()+'-'+('0'+(x.getMonth()+1)).slice(-2)+'-'+('0'+x.getDate()).slice(-2)}
+function autoPays(quiet){var f=ctF(),n=Math.max(1,Math.min(12,+f.pn||(f.pays&&f.pays.length)||3)),T=+f.tot||(+f.rent*+f.mo)||0,mo=+f.mo||12,st=f.st||'';var each=Math.ceil(T/n/500)*500,P=[];for(var i=0;i<n;i++){var a=i<n-1?each:Math.max(0,T-each*(n-1));P.push({a:a||'',d:st?addM2(st,Math.round(i*mo/n)):'',m:i===0?'تحويل':'شيك'})}f.pn=n;f.pays=P;if(!quiet)refresh()}
+window.ct2Auto=function(){autoPays();toast('✅ اتوزعت الدفعات على '+ctF().pays.length)};
+function refresh(){var p=document.getElementById('ctpaper');if(!p)return;var t=p.querySelector('table.ptb');if(t){var e=en();t.innerHTML=ptb(ctF(),function(k){return '<span class="fv" data-f="'+k+'">'+E(ctDisp(k))+'</span>'},e?{pn:'Payment No.',pa:'Amount',pd:'Due Date',pm:'Payment Method'}:{pn:'رقم الدفعة',pa:'المبلغ',pd:'تاريخ الإستحقاق',pm:'طريقة الدفع'})}
+ p.querySelectorAll('[data-f]').forEach(function(s){s.textContent=ctDisp(s.getAttribute('data-f'))});S.ct.html=p.innerHTML;try{save()}catch(e){}box()}
+window.ct2Set=function(i,w,v){var f=ctF();f.pays=f.pays||[];if(i==='pn'){f.pn=Math.max(1,Math.min(12,+v||1));autoPays();return}if(i==='add'){f.pays.push({a:'',d:'',m:'شيك'});f.pn=f.pays.length;refresh();return}if(i==='del'){f.pays.splice(w,1);f.pn=f.pays.length;refresh();return}f.pays[i]=f.pays[i]||{};f.pays[i][w]=w==='a'?(+v||''):v;var p=document.getElementById('ctpaper');if(p)p.querySelectorAll('[data-f="pay_'+i+'_'+w+'"]').forEach(function(s){s.textContent=ctDisp('pay_'+i+'_'+w)});if(p){S.ct.html=p.innerHTML}try{save()}catch(e){}};
+window.ct2Fld=function(k,v){var f=ctF();f[k]=v;if(k==='depT'||k==='dep'){}var p=document.getElementById('ctpaper');if(p){p.querySelectorAll('[data-f]').forEach(function(s){s.textContent=ctDisp(s.getAttribute('data-f'))});S.ct.html=p.innerHTML}try{save()}catch(e){}};
+function box(){if(S.tab!=='ct')return;var wrap=document.querySelector('#ctwrap .card');if(!wrap)return;
+ var sw=document.getElementById('ct2tpl');if(!sw){sw=document.createElement('div');sw.id='ct2tpl';var h2=wrap.querySelector('h2');if(h2)h2.parentNode.insertBefore(sw,h2.nextSibling);else wrap.insertBefore(sw,wrap.firstChild)}
+ var t=tpl();sw.innerHTML="<button type='button' class='"+(t==='a'?'on':'')+"' onclick=\"ctTpl('a')\">📄 النموذج 1</button><button type='button' class='"+(t==='b'?'on':'')+"' onclick=\"ctTpl('b')\">📄 النموذج 2</button>";
+ var b=document.getElementById('ct2box');if(t!=='b'){if(b)b.remove();return}var f=ctF(),P=f.pays||[];
+ if(!b){b=document.createElement('div');b.id='ct2box';var ctf=wrap.querySelector('.ctf');if(ctf&&ctf.parentNode)ctf.parentNode.insertBefore(b,ctf.nextSibling);else wrap.appendChild(b)}
+ if(b.contains(document.activeElement))return;
+ b.innerHTML="<h4>📄 النموذج 2 — الإجمالي والتأمين والدفعات</h4><div class='g3'><div><label>إجمالي الإيجار</label><input type='number' inputmode='decimal' id='ct_tot' value='"+E(f.tot||'')+"' oninput=\"ctUpd('tot')\"></div><div><label>التأمين (مبلغ)</label><input type='number' inputmode='decimal' value='"+E(f.dep||'')+"' oninput=\"ct2Fld('dep',this.value)\"></div><div><label>التأمين بـ</label><select onchange=\"ct2Fld('depT',this.value)\"><option value='chq'"+(f.depT!=='cash'?' selected':'')+">شيك</option><option value='cash'"+(f.depT==='cash'?' selected':'')+">كاش</option></select></div></div>"
+  +"<div class='g3' style='margin-top:8px'><div><label>عدد الدفعات</label><input type='number' inputmode='numeric' min='1' max='12' value='"+E(f.pn||P.length||'')+"' onchange=\"ct2Set('pn',0,this.value)\"></div><div style='grid-column:span 2;display:flex;align-items:flex-end'><button type='button' onclick='ct2Auto()' style='width:100%;margin:0!important'>🧮 وزّع الإجمالي على الدفعات</button></div></div>"
+  +P.map(function(x,i){return "<div class='pr'><b>"+(i+1)+"</b><input type='number' inputmode='decimal' placeholder='المبلغ' value='"+E(x.a||'')+"' oninput=\"ct2Set("+i+",'a',this.value)\"><input type='date' value='"+E(x.d||'')+"' onchange=\"ct2Set("+i+",'d',this.value)\"><select onchange=\"ct2Set("+i+",'m',this.value)\">"+['تحويل','شيك','كاش'].map(function(m){return "<option"+(x.m===m?' selected':'')+">"+m+"</option>"}).join('')+"</select><button type='button' class='ubtn' style='margin:0!important;padding:4px!important' onclick=\"ct2Set('del',"+i+")\">✕</button></div>"}).join('')
+  +"<div class='rw'><button type='button' onclick=\"ct2Set('add')\">➕ دفعة</button></div>"}
+window.ct2Box=box;
+/* total follows rent × months until you type your own */
+var u0=window.ctUpd;window.ctUpd=function(k){var f=ctF(),auto=!f.tot||+f.tot===Math.round(+f._r*+f._m);var r=u0.apply(this,arguments);try{if(tpl()==='b'&&(k==='rent'||k==='mo')&&auto&&f.rent&&f.mo){f.tot=Math.round(+f.rent*+f.mo);f._r=f.rent;f._m=f.mo;var i=document.getElementById('ct_tot');if(i&&i!==document.activeElement)i.value=f.tot;refresh()}if(k==='rent'&&tpl()==='b'&&!f.dep){f.dep=f.rent;refresh()}}catch(e){}return r};
+/* EN/عربي rebuilds the second layout in that language */
+var lg=window.ctLang;if(typeof lg==='function')window.ctLang=function(l){var r=lg.apply(this,arguments);try{if(tpl()==='b'){S.ct.html='';S.ct.h_b='';save();render()}}catch(e){}return r};
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(S.tab==='ct'){box();setTimeout(box,120)}}catch(e){}return o};
+})();</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
