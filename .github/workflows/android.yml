@@ -51,7 +51,7 @@ jobs:
           const s2=s.replace(/<style name=\"AppTheme\.NoActionBarLaunch\"[^>]*>[\s\S]*?<\/style>/,nw);
           if(s2===s){console.error('launch theme not found');process.exit(1)}fs.writeFileSync(p,s2);console.log(s2)"
       - name: Notification tone
-        run: mkdir -p android/app/src/main/res/raw && cp assets/sounds/bny_tone.wav android/app/src/main/res/raw/bny_tone.wav
+        run: mkdir -p android/app/src/main/res/raw && cp assets/sounds/*.wav android/app/src/main/res/raw/
       - name: WhatsApp Business first (native helper)
         run: |
           MA=$(find android/app/src/main/java -name MainActivity.java | head -1); D=$(dirname "$MA"); PK=$(grep -m1 '^package' "$MA" | sed 's/package \(.*\);/\1/')
@@ -95,6 +95,12 @@ jobs:
                   call.resolve(r);
                 } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
               } });
+            }
+            @PluginMethod
+            public void ringer(PluginCall call) {
+              JSObject r = new JSObject();
+              try { android.media.AudioManager am = (android.media.AudioManager) getContext().getSystemService(android.content.Context.AUDIO_SERVICE); r.put("mode", am.getRingerMode()); } catch (Exception e) { r.put("mode", 2); }
+              call.resolve(r);
             }
             @PluginMethod
             public void accEnabled(PluginCall call) {
