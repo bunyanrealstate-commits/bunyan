@@ -5713,6 +5713,8 @@ var hm=home;home=function(){var o=hm.apply(this,arguments);try{var d=o.indexOf("
 var bk=bkTab;bkTab=function(){var o=bk.apply(this,arguments);try{var d=o.indexOf("<div class=\"card\" id=\"moncard\"");if(d>=0)o=cutDiv(o,d);o=fixCard()+issueCard(true)+o}catch(x){}return o};
 })();</script>
 <style id="trashcss">#trbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:470;background:#14232f;color:#fff;border-radius:14px;padding:8px 8px 8px 14px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 26px rgba(0,0,0,.3);font-size:13.5px;max-width:92vw}#trbar button{background:#f0b429!important;color:#14232f!important;border:0!important;border-radius:10px!important;padding:6px 12px!important;font-weight:900!important;min-height:0!important}.tri{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(120,140,160,.18)}.tri:last-child{border-bottom:0}.tri .bd{flex:1;min-width:0}</style>
+<style id="rowtxtcss">/* rows in trash/books/reminders use class "bd" for their text — reset the global .bd badge (white, nowrap) so the names show and wrap */
+.tri .bd,.bki .bd,.rmi .bd{display:block;padding:0;border-radius:0;font-weight:inherit;color:inherit;white-space:normal;overflow-wrap:anywhere}</style>
 <script id="trashjs">(function(){
 var C=['units','exp','groups','tx','dep','adj'];
 function cp(o){return o==null?o:JSON.parse(JSON.stringify(o))}
@@ -6658,6 +6660,9 @@ var R=[
  {id:'cfhide',area:'الداشبورد',t:'تعديل شكل اتعمل لوحده من «مش عاجبني» ممكن يخبّي حاجات (زي الرصيد النقدي في الداشبورد)',
   check:function(){if(!window.bnyCssHides)return [];var o=[];[].slice.call(document.querySelectorAll('style.bnycf')).forEach(function(x){if(bnyCssHides(x.textContent))o.push('تعديل شكل بيخبّي حاجات: '+x.textContent.slice(0,60))});return o},
   fix:function(){var n=0,ids={};[].slice.call(document.querySelectorAll('style.bnycf')).forEach(function(x){if(bnyCssHides(x.textContent)){ids[x.getAttribute('data-id')]=1;x.remove();n++}});try{var C=JSON.parse(localStorage.getItem('bny_cssfix')||'[]');C.forEach(function(f){if(ids[f.id])f.st='off'});localStorage.setItem('bny_cssfix',JSON.stringify(C))}catch(e){}try{render()}catch(e){}return n?'شلت '+n+' تعديل شكل كان بيخبّي حاجات':''}},
+ {id:'rowtxt',area:'السجل والحماية',t:'أسماء الحاجات في «سلة المحذوفات» (والكتب والتذكيرات) كانت مختفية — مكتوبة أبيض على أبيض وطالعة برّه الشاشة',
+  check:function(){var o=[];[].slice.call(document.querySelectorAll('#app .tri>.bd,#app .bki>.bd,#app .rmi>.bd')).forEach(function(b){if(o.length>2||!vis(b))return;var c=getComputedStyle(b),pc=getComputedStyle(b.parentElement);if(c.whiteSpace==='nowrap'||c.color!==pc.color)o.push('«'+(b.textContent||'').trim().slice(0,25)+'» مش ظاهر أو طالع برّه')});return o},
+  fix:function(){if(document.getElementById('rowtxtcss'))return '';var x=document.createElement('style');x.id='rowtxtcss';x.textContent='.tri .bd,.bki .bd,.rmi .bd{display:block;padding:0;border-radius:0;font-weight:inherit;color:inherit;white-space:normal;overflow-wrap:anywhere}';document.head.appendChild(x);return 'رجّعت أسماء السلة/الكتب/التذكيرات تظهر'}},
  {id:'look',area:'الشاشة',t:'كلام مقطوع، حاجة طالعة برّه الشاشة، زراير راكبة على بعض، زراير كبيرة أو متبعترة',
   check:function(){try{return (window.bnyUiCheck&&bnyUiCheck()||[]).filter(function(x){return !/الكلام طالع برّه خانته/.test(x)})}catch(e){return []}},fix:null}
 ];
@@ -6690,6 +6695,7 @@ window.bnyRulesSelfTest=function(){var bad=[],t=S.tab,hc=S.ct&&S.ct.html,ts0=S.c
   ['ct2lb',function(){S.tab='ct';render();var e=document.getElementById('ct2lb');e&&e.remove()}],
   ['cardsep',function(){S.tab='home';render();var c=document.querySelector('#app .card[data-cc]');if(c){c.removeAttribute('data-cc');c.style.removeProperty('--cc')}}],
   ['ctsubpk',function(){S.tab='ct';render();var e=document.getElementById('ctsubpk');e&&e.remove()}],
+  ['rowtxt',function(){var e=document.getElementById('rowtxtcss');e&&e.remove();var d=document.createElement('div');d.id='__rt';d.className='tri';d.innerHTML="<div class='bd'><b>عقد مستأجر «اختبار اسم طويل جداً جداً جداً جداً جداً جداً»</b></div><button>↩️</button>";document.getElementById('app').appendChild(d)}],
   ['menu',function(){var hd=$('.hd');hd.classList.add('mopen');var o=document.createElement('div');o.className='ov';o.id='__rt';document.body.appendChild(o)}]];
  cases.forEach(function(c){try{c[1]();var res=runAll([c[0]]);var x=res.filter(function(y){return y.r.id===c[0]})[0];if(!x)bad.push(c[0]+': not detected');else if(!x.fixed)bad.push(c[0]+': detected but not fixed')}catch(e){bad.push(c[0]+': crashed '+e.message)}var o=document.getElementById('__rt');o&&o.remove()});
  S.tab=t;if(hc!=null)S.ct.html=hc;S.ct.sgpos=sp0||{};if(ts0)S.ct.tsig=ts0;S.monfix=(S.monfix||[]).filter(function(x){return !/^r:/.test(x.k)});return bad};
