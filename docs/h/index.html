@@ -1140,7 +1140,7 @@ var r0=render;render=function(){var ro=role();document.documentElement.setAttrib
 <script>(function(){
 function saveFile(blob,name){
  var fb=function(){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},4000)};
- var C=window.Capacitor;if(C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.Filesystem&&C.Plugins.Share){var fr=new FileReader();fr.onload=function(){var b64=String(fr.result).split(',')[1];C.Plugins.Filesystem.writeFile({path:name,data:b64,directory:'CACHE'}).then(function(r){return C.Plugins.Share.share({title:name,dialogTitle:name,url:r.uri})}).catch(function(){toast('تعذر حفظ الملف')})};fr.readAsDataURL(blob);return}
+ var C=window.Capacitor;if(C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.Filesystem&&C.Plugins.Share){var fr=new FileReader();fr.onload=function(){var b64=String(fr.result).split(',')[1];if(window.__bnyShareBusy&&Date.now()-__bnyShareBusy<60000){toast('⏳ استنى — قايمة المشاركة لسه مفتوحة');return}window.__bnyShareBusy=Date.now();var done=function(){window.__bnyShareBusy=0};C.Plugins.Filesystem.writeFile({path:name,data:b64,directory:'CACHE'}).then(function(r){return C.Plugins.Share.share({title:name,dialogTitle:name,url:r.uri})}).then(done,function(e){done();var m=String(e&&(e.message||e)||'');if(!/cancel|in progress|abort/i.test(m))toast('تعذر حفظ الملف')})};fr.readAsDataURL(blob);return}
  if(window.claude){return claude.use('downloads').then(function(d){if(!d)return fb();return d.save({filename:name,data:blob}).catch(function(e){if(!e||e.code!=='declined')fb()})},fb)}
  fb()}
 window.saveFile=saveFile;
@@ -5848,6 +5848,7 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
 function $(q){return document.querySelector(q)}
 function vis(e){if(!e)return false;var r=e.getBoundingClientRect(),c=getComputedStyle(e);return r.width>2&&r.height>2&&c.display!=='none'&&c.visibility!=='hidden'&&+c.opacity>0}
 function ct(){return S.ct||{}}
+window.bnyIsRed=function(c){var m=String(c).match(/\d+/g);return !!m&&+m[0]>=150&&+m[1]<90&&+m[2]<90};
 var OLD=/>LandLord Name<|>LandLord ID<|>Mobile No\.<|>phone<|>رقم الموبايل<|>Tenant<small>المستأجر<\/small>/;
 var JUNK=/\b(SENT|RESIDENT|IDENTITY|CARD|UNITED|EMIRATES|NATIONALITY|SIGNATURE|BIRTH|EXPIRY)\b/;
 var R=[
@@ -5909,7 +5910,7 @@ var R=[
  {id:'updposter',area:'الأبديت',t:'جدول صورة الأبديت كان بيتلخبط (BOOKED نازلة تحت بعض والعناوين من غير لون)',
   check:function(){var p=$('#updposter');if(!p)return [];var o=[];[].slice.call(p.querySelectorAll('td,th')).some(function(c){if(getComputedStyle(c).display!=='table-cell'){o.push('خانات الجدول مش مترصصة');return true}});var th=p.querySelector('th.vl');if(th&&!/gradient/.test(getComputedStyle(th).backgroundImage))o.push('عنوان الفيلا من غير اللون الأخضر');return o},fix:null},
  {id:'updqr',area:'الأبديت',t:'فيلا ليها لوكيشن والـ QR بتاعه مش ظاهر على صورة الأبديت',
-  check:function(){var p=$('#updposter'),U=window.updData&&updData();if(!p||!U)return [];var need=(U.villas||[]).filter(function(v){return v.loc&&(v.units||[]).some(function(a){return !a.hide&&!(U.hideBooked&&a.booked)})}).length,has=p.querySelectorAll('img.uqr').length;return need>has?['فيه '+(need-has)+' لوكيشن من غير QR']:[]},fix:null},
+  check:function(){var p=$('#updposter'),U=window.updData&&updData();if(!p||!U||p.classList.contains('v4'))return [];var need=(U.villas||[]).filter(function(v){return v.loc&&(v.units||[]).some(function(a){return !a.hide&&!(U.hideBooked&&a.booked)})}).length,has=p.querySelectorAll('img.uqr').length;return need>has?['فيه '+(need-has)+' لوكيشن من غير QR']:[]},fix:null},
  {id:'updsep',area:'الأبديت',t:'الأبديت كان محفوظ جوه بيانات المجموعة وبيتلخبط مع الاستديوهات — لازم يبقى منفصل',
   check:function(){return S&&S.upd?['قايمة الأبديت لسه جوه بيانات المجموعة']:[]},fix:function(){window.updData&&updData();return S.upd?'':'نقلت الأبديت لمكانه المنفصل'}},
  {id:'updgroup',area:'الأبديت',t:'الأبديت ما كانش بيتبعت للجروب على طول',
@@ -5927,7 +5928,7 @@ var R=[
  {id:'restrict15',area:'الأبديت',t:'أندرويد 15 (زي هونر 400) بيمنع إذن الإرسال الأوتوماتيك لأي تطبيق متنزّل برّه المتجر — الحل إن بنيان يحدّث نفسه من جواه',
   check:function(){var C=window.Capacitor,W=C&&C.Plugins&&C.Plugins.WaBiz;return W&&W.sendGroup&&!W.selfUpdate?['نسخة الموبايل قديمة ومفيهاش «فك الحظر»']:[]},fix:null},
  {id:'updv2',area:'الأبديت',t:'شكل صورة الأبديت اتحسن (ملخص المتاح وأقل سعر، المتاح الأول، NEW للجديد) — لازم يفضل كده',
-  check:function(){var p=$('#updposter');return p&&!p.classList.contains('v2')?['صورة الأبديت رجعت للشكل القديم']:[]},fix:null},
+  check:function(){var p=$('#updposter');return p&&!p.classList.contains('v2')&&!p.classList.contains('v4')?['صورة الأبديت رجعت للشكل القديم']:[]},fix:null},
  {id:'updwide',area:'الأبديت',t:'معاينة الأبديت كانت بتطلع أعرض من الشاشة وطرفها مقطوع',
   check:function(){var w=$('#updprev'),p=$('#updposter');if(!w||!p||S.tab!=='upd')return [];var a=w.getBoundingClientRect(),b=p.getBoundingClientRect();return b.width>a.width+2||document.documentElement.scrollWidth>innerWidth+2?['معاينة الأبديت أعرض من الشاشة']:[]},fix:function(){var w=$('#updprev'),p=$('#updposter');var k=Math.min(1,w.clientWidth/720);p.style.transform='scale('+k+')';w.style.height=Math.ceil(p.offsetHeight*k)+'px';return 'صغّرت المعاينة على قد الشاشة'}},
  {id:'upddep',area:'الأبديت',t:'التأمين في الأبديت لازم يتكتب «1 Month (Cheque)» مش «ONE MONTH RENT»',
@@ -5982,13 +5983,18 @@ var R=[
  {id:'hkshare',area:'حكيم',t:'حكيم كان مش قادر يعدّل في «عقد العميل» و«الأبديت» — تعديله كان بيتمسح أول ما المزامنة تيجي',
   check:function(){return window.hkShare&&window.updPut?[]:['مشاركة العقد والأبديت مع حكيم مش شغالة']},fix:null},
  {id:'updcols',area:'الأبديت',t:'مكانش ينفع تغيّر ترتيب أعمدة صورة الأبديت، والسعر والنوع كانوا مش بارزين',
-  check:function(){if(S.tab!=='upd')return [];var o=[];if(typeof window.updCols!=='function')o.push('زرار ترتيب الأعمدة مش موجود');var t=document.querySelector('#updposter td.ty');if(t&&!/214, 40, 40|d62828/i.test(getComputedStyle(t).color))o.push('نوع الشقة مش باللون الأحمر');return o},fix:null},
+  check:function(){if(S.tab!=='upd')return [];var o=[];if(typeof window.updCols!=='function')o.push('زرار ترتيب الأعمدة مش موجود');var t=document.querySelector('#updposter tr.r:not(.rb) td.ty');if(t&&!bnyIsRed(getComputedStyle(t).color))o.push('نوع الشقة مش باللون الأحمر');return o},fix:null},
  {id:'cttpl2',area:'العقد',t:'مكانش فيه غير شكل واحد للعقد — اتضاف «عقد فاضي» جنب «عقد مفروش» زي ورقتك (جدول الدفعات والإجمالي والتأمين) بالعربي والإنجليزي',
   check:function(){if(S.tab!=='ct')return [];var o=[];if(!document.getElementById('ct2tpl'))o.push('زرار عقد مفروش / عقد فاضي مش ظاهر');if((S.ct&&S.ct.tpl)==='b'){var p=document.getElementById('ctpaper');if(p&&!p.querySelector('.t2,.t2b'))o.push('«عقد فاضي» مختار بس العقد ظاهر بشكل «عقد مفروش»');if(!document.getElementById('ct2box'))o.push('خانات الدفعات بتاعة «عقد فاضي» مش ظاهرة')}return o},fix:function(){window.ct2Box&&ct2Box();return 'رجّعت زراير عقد مفروش / عقد فاضي'}},
  {id:'ctbidi',area:'العقد',t:'لما بتكتب بالعربي رقم وكلمة زي «6 شيكات» كانت الكلمة بتيجي الأول والرقم بعدها',
   check:function(){if(S.tab!=='ct')return [];var o=[],e=document.querySelector('#ctpaper .fv');if(e&&getComputedStyle(e).unicodeBidi!=='plaintext')o.push('اتجاه الكتابة في خانات العقد مش تلقائي');return o},fix:null},
  {id:'editfund',area:'الاستديوهات',t:'لما عدّلت تمن فرش استديو اتضاف بالتقسيم (جزء من النقدي وجزء من جيبك) خانة «اتدفع منين» اتغيرت لوحدها لـ «من الرصيد النقدي» والحسابات باظت — والتعديل مكانش فيه نفس خانات الإضافة',
   check:function(){var o=[];(S.units||[]).forEach(function(u){if(u.fsplit&&u.fsrc&&u.fsrc!=='split')o.push('«'+u.name+'»: الأثاث متسجل مقسّم بس مصدره اتغير لـ «'+u.fsrc+'»');if(u.fsrc==='split'&&(+u.capF||0)>0)o.push('«'+u.name+'»: الأثاث مقسّم وعليه كمان «جزء من أموالي» — متسجل مرتين');if(u.fsrc==='split'&&u.g){var gq=((S.gp||{})[u.g]||[]).filter(function(x){return x.key==='f'+u.id}).reduce(function(t,x){return t-(+x.a||0)},0),want=+(u.fsplit&&u.fsplit.gp)||0;if(Math.abs(gq-want)>0.5)o.push('«'+u.name+'»: فلوس الشراكة مخصوم منها للأثاث '+Math.round(gq)+' بس التقسيم بيقول '+Math.round(want))}});return o},fix:null},
+ {id:'sharebusy',area:'الأبديت',t:'«احفظ الصورة» كان بيطلّع «تعذر حفظ الملف» لو دوست مرتين أو قايمة المشاركة لسه مفتوحة (Can\'t share while sharing is in progress)',
+  check:function(){var o=[];if(window.saveFile&&!/__bnyShareBusy/.test(String(window.saveFile)))o.push('حفظ الملف مش بيمنع مشاركتين في نفس الوقت');if(window.__bnyShareBusy&&Date.now()-__bnyShareBusy>90000)o.push('المشاركة متعلّقة من أكتر من دقيقة');return o},
+  fix:function(){window.__bnyShareBusy=0;return 'فكّيت المشاركة المتعلّقة'}},
+ {id:'updfalse',area:'قواعد المراقب',t:'المراقب كان بيقول غلط إن صورة الأبديت «رجعت للشكل القديم» و«ناقصها QR» و«نوع الشقة مش أحمر» وهي بالتصميم الجديد وسليمة',
+  check:function(){var p=$('#updposter');if(!p||!p.classList.contains('v4'))return [];var o=[],t=p.querySelector('tr.r:not(.rb) td.ty');if(t&&!bnyIsRed(getComputedStyle(t).color))o.push('نوع الشقة في التصميم الجديد مش أحمر');return o},fix:null},
  {id:'updv3',area:'الأبديت',t:'صورة الأبديت كان شكلها عادي (جدول تقيل وخط عريض في كل حتة و«NEW» على كل شقة) — اتعملت بتصميم جديد أشيك',
   check:function(){if(S.tab!=='upd')return [];var p=document.getElementById('updposter');return p&&!p.classList.contains('v4')?['صورة الأبديت بالتصميم القديم']:[]},fix:null},
  {id:'quiet',area:'الأصوات',t:'البرنامج كان بيعمل أصوات حتى والموبايل صامت، والأصوات كانت صفارات حادة',
@@ -6061,6 +6067,7 @@ window.bnyRulesSelfTest=function(){var bad=[],t=S.tab,hc=S.ct&&S.ct.html,ts0=S.c
   ['ctsubpk',function(){S.tab='ct';render();var e=document.getElementById('ctsubpk');e&&e.remove()}],
   ['rowtxt',function(){var e=document.getElementById('rowtxtcss');e&&e.remove();var d=document.createElement('div');d.id='__rt';d.className='tri';d.innerHTML="<div class='bd'><b>عقد مستأجر «اختبار اسم طويل جداً جداً جداً جداً جداً جداً»</b></div><button>↩️</button>";document.getElementById('app').appendChild(d)}],
   ['uidet',function(){window.bnyVisSkipClosed=false;var d=document.createElement('div');d.id='__rt';d.style.cssText='position:relative;height:50px';d.innerHTML="<details><summary>x</summary><button style='position:absolute;top:0;left:0;width:120px;height:40px'>✅ اختبار</button></details><button style='position:absolute;top:0;left:0;width:120px;height:40px'>➖</button>";document.getElementById('app').appendChild(d)}],
+  ['sharebusy',function(){window.__bnyShareBusy=Date.now()-120000}],
   ['menu',function(){var hd=$('.hd');hd.classList.add('mopen');var o=document.createElement('div');o.className='ov';o.id='__rt';document.body.appendChild(o)}]];
  cases.forEach(function(c){try{c[1]();var res=runAll([c[0]]);var x=res.filter(function(y){return y.r.id===c[0]})[0];if(!x)bad.push(c[0]+': not detected');else if(!x.fixed)bad.push(c[0]+': detected but not fixed')}catch(e){bad.push(c[0]+': crashed '+e.message)}var o=document.getElementById('__rt');o&&o.remove()});
  S.tab=t;if(hc!=null)S.ct.html=hc;S.ct.sgpos=sp0||{};if(ts0)S.ct.tsig=ts0;S.monfix=(S.monfix||[]).filter(function(x){return !/^r:/.test(x.k)});return bad};
