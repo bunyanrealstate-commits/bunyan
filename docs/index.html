@@ -4201,7 +4201,7 @@ window.BNYMEM={
  addFact:function(t){var m=mem();t=String(t).trim().slice(0,300);if(!t)return;m.f.push({t:t,at:Date.now()});persist()},
  facts:function(){return mem().f},
  delFact:function(ix){var m=mem();m.f.splice(ix,1);persist()},
- findFact:function(q){var m=mem(),s=toks(q).map(key),best=null,bs=0;if(s.length<2)return null;m.f.forEach(function(f){var a=toks(f.t).map(key),n=0;s.forEach(function(t){if(a.indexOf(t)>=0)n++});var v=n/s.length;if(v>bs){bs=v;best=f}});return bs>=0.6?best:null},
+ findFact:function(q){var m=mem(),s=toks(q).map(key),best=null,bs=0;if(s.length<2)return null;m.f.forEach(function(f){var a=toks(f.t).map(key),n=0;s.forEach(function(t){if(a.indexOf(t)>=0)n++});var v=n/s.length;var bk=0;a.forEach(function(t){if(s.indexOf(t)>=0)bk++});if(a.length&&bk/a.length>=0.8&&v>=0.8)v=0;if(v>bs){bs=v;best=f}});return bs>=0.6?best:null},
  setAns:function(q,t){var m=mem();m.a=m.a||[];var s=toks(q).map(key).join(' ');if(!s)return;m.a=m.a.filter(function(x){return x.s!==s});m.a.push({s:s,q:String(q).slice(0,120),t:String(t).slice(0,1500),at:Date.now()});m.a=m.a.slice(-200);persist()},
  findAns:function(q){var m=mem(),s=toks(q).map(key),best=null,bs=0;(m.a||[]).forEach(function(x){var a=x.s.split(' '),n=0;s.forEach(function(t){if(a.indexOf(t)>=0)n++});var v=n/Math.max(s.length,a.length,1);if(v>bs){bs=v;best=x}});return bs>=0.7?best:null},
  answers:function(){return mem().a||[]},delAns:function(ix){var m=mem();(m.a||[]).splice(ix,1);persist()},
@@ -5245,7 +5245,7 @@ M.findAns=function(q){var n=near(q);return n&&n.v>=0.7?n.x:null};
 M.nearAns=near;var sa0=M.setAns;M.setAns=function(q,t){var n=near(q);if(n&&n.v>=0.85)M.dropAns(n.x);return sa0.apply(this,arguments)};
 M.alias=function(q,x){if(!x)return;var s=ks(q).join(' ');if(!s||s===x.s)return;x.alt=(x.alt||[]).filter(function(a){return a!==s});x.alt.push(s);x.alt=x.alt.slice(-12);x.ok=(x.ok||0)+1;sv()};
 M.dropAns=function(x){var a=mem().a||[];var i=a.indexOf(x);if(i>=0){a.splice(i,1);sv()}};
-function isQ(q){var z=nz(q);return /[؟?]/.test(q)||/(^|\s)(ايه|إيه|كام|امتي|امتى|فين|ازاي|إزاي|مين|ليه|هل|ممكن|عايز|عاوز|قولي|اعرف|احسب|وريني|فاكر|بكام|اد ايه|قد ايه|انهي|إنهي|هو|هي)(\s|$)/.test(' '+z+' ')}
+function isQ(q){var z=nz(q);return /[؟?]/.test(q)||/(^|\s)(ولا|والا|وإلا|ولّا)\s*(لا|لأ|لاء|ايه|إيه|لسه|مش|انا|أنا)?\s*$/.test(String(q).trim())||/(^|\s)(شغال|شغاله|ماشي|مظبوط|صح|تمام)\s+(ولا|والا)(\s|$)/.test(z)||/(^|\s)(ايه|إيه|كام|كم|امتي|امتى|فين|ازاي|إزاي|مين|ليه|هل|ممكن|عايز|عاوز|قولي|اعرف|احسب|وريني|فاكر|بكام|اد ايه|قد ايه|انهي|إنهي|هو|هي)(\s|$)/.test(' '+z+' ')}
 function askMe(q){var z=' '+nz(q)+' ';return /^\s*(انت|إنت|انتي|إنتي|أنت|حضرتك|عندك|تعرف|تعرفي|عارف|عارفه|شفت|شوفت|سمعت|لاحظت|خدت بالك|يا ترى|طب|طيب)(\s|$)/.test(z)||/(\s)(علي علم|على علم|تعرف|عارف|شفت|شوفت|سمعت|لاحظت|خدت بالك|فهمت|ينفع|اشرح|اشرحلي|وضحلي|فهمني|ساعدني|علمني)(\s|$)/.test(z)}
 function isStatement(q){var w=String(q).trim().split(/\s+/);return w.length>=3&&w.length<=40&&!isQ(q)&&!askMe(q)}window.__bnyIsStmt=isStatement;function genStmt(q,i){return /^(totals|cash|profit|proj|summary|upcoming)$/.test(i)&&isStatement(q)&&String(q).trim().split(/\s+/).length>=5&&!/(اجمال|إجمال|مجموع|كاش|رصيد|ربح|ملخص|الوضع|حسابات|فلوس)/.test(q)}window.__bnyGenStmt=genStmt;
 var o=window.bnyAsk;
@@ -5256,7 +5256,7 @@ window.bnyAsk=function(q){var n=near(q);if(n&&n.v>=0.7){n.x.used=(n.x.used||0)+1
  if(r&&r.ask&&!r.i){
   if(n&&n.v>=0.4)return {t:'🤔 أعتقد قصدك «'+n.x.q+'»؟ اللي علمتهولي:\n'+n.x.t+'\n\nلو صح اضغط ✅ وهفهمها كده على طول، ولو غلط اضغط ✍️ واكتبلي الصح.',i:'custom'};
   if(isStatement(q)){M.addFact(q);return {t:'🧠 خدت بالي وهفتكرها: «'+String(q).trim()+'»\nهستخدمها لما تسألني عن حاجة قريبة. لو مكانتش معلومة اضغط ❌.',i:'autofact'}}}
- else if(r&&r.t&&isStatement(q)&&String(q).trim().split(/\s+/).length>=5&&!M.facts().some(function(f){return f.t===String(q).trim()})){M.addFact(q);r.t+='\n\n🧠 وخدت بالي من المعلومة دي وهفتكرها.'}
+ else if(r&&r.t&&r.i!=='fact'&&isStatement(q)&&String(q).trim().split(/\s+/).length>=5&&!M.facts().some(function(f){return f.t===String(q).trim()})){M.addFact(q);r.t+='\n\n🧠 وخدت بالي من المعلومة دي وهفتكرها.'}
  return r};
 var fb0=window.aiFb;window.aiFb=function(ix,ok){try{var H0=window.__aiH&&window.__aiH();var m=H0&&H0[ix];if(m&&(m.i==='custom'||m.i==='autofact')){
   if(m.i==='custom'){var n=near(m.q);if(ok){if(n)M.alias(m.q,n.x);m.fb='ok';toast('تمام 🌷 اتأكدت واتعلمت');}else{if(n&&n.v>=0.4)M.dropAns(n.x);m.fb='pick'}}
@@ -6652,6 +6652,8 @@ var R=[
   check:function(){if(S.tab!=='upd')return [];var o=[];if(typeof window.updCols!=='function')o.push('زرار ترتيب الأعمدة مش موجود');var t=document.querySelector('#updposter td.ty');if(t&&!/214, 40, 40|d62828/i.test(getComputedStyle(t).color))o.push('نوع الشقة مش باللون الأحمر');return o},fix:null},
  {id:'cttpl2',area:'العقد',t:'مكانش فيه غير شكل واحد للعقد — اتضاف «عقد فاضي» جنب «عقد مفروش» زي ورقتك (جدول الدفعات والإجمالي والتأمين) بالعربي والإنجليزي',
   check:function(){if(S.tab!=='ct')return [];var o=[];if(!document.getElementById('ct2tpl'))o.push('زرار عقد مفروش / عقد فاضي مش ظاهر');if((S.ct&&S.ct.tpl)==='b'){var p=document.getElementById('ctpaper');if(p&&!p.querySelector('.t2,.t2b'))o.push('«عقد فاضي» مختار بس العقد ظاهر بشكل «عقد مفروش»');if(!document.getElementById('ct2box'))o.push('خانات الدفعات بتاعة «عقد فاضي» مش ظاهرة')}return o},fix:function(){window.ct2Box&&ct2Box();return 'رجّعت زراير عقد مفروش / عقد فاضي'}},
+ {id:'aiecho',area:'المساعد',t:'المساعد كان بيحفظ السؤال («النسخ الاحتياطي شغال علي drive ولا لأ») كأنه معلومة وبعدين يرد بيه «من اللي قولتهولي» بدل ما يجاوب',
+  check:function(){var o=[];try{if(window.BNYMEM&&window.__bnyIsStmt){BNYMEM.facts().forEach(function(f){if(!__bnyIsStmt(f.t)&&!/[.،]$/.test(f.t))o.push('سؤال محفوظ كمعلومة: «'+String(f.t).slice(0,40)+'»')})}if(!window.bnyBkStatus)o.push('سؤال النسخ الاحتياطي ملوش رد')}catch(e){}return o},fix:function(){var n=window.bnyFactClean?bnyFactClean():0;return 'مسحت '+n+' سؤال كان محفوظ كمعلومة'}},
  {id:'scrlock',area:'الشاشة',t:'لما تكون صفحة/نافذة مفتوحة (زي إعداد Gemini) وتسحب لفوق أو لتحت، الشاشة اللي ورا كانت هي اللي بتتحرك',
   check:function(){var o=[];if(!document.getElementById('scrlockcss'))o.push('قفل سكرول الخلفية مش شغال');else if(window.bnyOpenOv&&bnyOpenOv()&&!document.documentElement.classList.contains('bnylock'))o.push('في نافذة مفتوحة والخلفية مش مقفولة');return o},fix:function(){window.bnyScrLock&&bnyScrLock();return 'قفلت سكرول الخلفية وقت ما النافذة مفتوحة'}},
  {id:'undopos',area:'العقد',t:'زرار الرجوع في العقد كان دايرة كبيرة عايمة فوق ورقة العقد وراكبة على التوقيع، والتنبيه اللي تحت كان شريط عريض راكب على زرار المساعد',
@@ -6707,6 +6709,7 @@ window.bnyRulesSelfTest=function(){var bad=[],t=S.tab,hc=S.ct&&S.ct.html,ts0=S.c
   ['ct2lb',function(){S.tab='ct';render();var e=document.getElementById('ct2lb');e&&e.remove()}],
   ['cardsep',function(){S.tab='home';render();var c=document.querySelector('#app .card[data-cc]');if(c){c.removeAttribute('data-cc');c.style.removeProperty('--cc')}}],
   ['cttpl2',function(){S.tab='ct';render();var e=document.getElementById('ct2tpl');e&&e.remove()}],
+  ['aiecho',function(){BNYMEM.addFact('النسخ الاحتياطي شغال علي drive ولا لأ')}],
   ['scrlock',function(){var e=document.getElementById('scrlockcss');e&&e.remove()}],
   ['undopos',function(){S.tab='ct';render();var u=document.getElementById('ctundo');if(!u){u=document.createElement('div');u.id='ctundo';u.innerHTML='<button>↶</button>';document.body.appendChild(u)}else{document.body.appendChild(u)}u.classList.remove('inz')}],
   ['ctsubpk',function(){S.tab='ct';render();var e=document.getElementById('ctsubpk');e&&e.remove()}],
@@ -7527,6 +7530,33 @@ addEventListener('touchmove',function(e){if(!cur||!document.documentElement.clas
  if(e.cancelable)e.preventDefault()},{passive:false});
 addEventListener('wheel',function(e){if(!cur)return;var n=e.target;while(n&&n!==document.body){if(n.nodeType===1){var c=getComputedStyle(n);if(/(auto|scroll)/.test(c.overflowY)&&n.scrollHeight>n.clientHeight+1)return}if(n===cur)break;n=n.parentNode}e.preventDefault()},{passive:false});
 css();setTimeout(upd,0);
+})();
+</script>
+<script id="aibkst">
+(function(){
+var NZ=function(t){return String(t||'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').toLowerCase()};
+function isBk(q){var z=NZ(q);if(!/(نسخ|باك ?اب|backup|احتياطي|درايف|drive)/.test(z))return 0;if(/(ارفع|اعمل|خد)\s.{0,14}(نسخ|باك ?اب|backup|احتياطي)/.test(z))return 2;if(/(اربط|ربط)/.test(z))return 3;return /(نسخ|باك ?اب|backup|احتياطي)/.test(z)?1:0}
+function ago(t){var m=Math.round((Date.now()-t)/60000);if(m<2)return 'من دقيقة';if(m<60)return 'من '+m+' دقيقة';var h=Math.round(m/60);if(h<24)return 'من '+h+' ساعة';var d=Math.round(h/24);return 'من '+d+' يوم'}
+window.bnyBkStatus=function(){var o={};try{o=JSON.parse(localStorage.getItem('bny_drv')||'{}')}catch(e){}
+ var web=window.claude||/claude|claudeusercontent/.test(location.host);
+ if(web)return '☁️ النسخة دي اللي فاتحها في المعاينة مش بترفع على Drive. الرفع بيشتغل من تطبيق الموبايل/الكمبيوتر — اسألني هناك وهقولك آخر رفع امتى.';
+ if(!o.u)return '❌ **النسخ الاحتياطي على Drive مش مربوط لسه.**\nادخل «السجل والحماية» ← «☁️ اربط Google Drive» واعمل الخطوات مرة واحدة، وبعدها كل يوم بيترفع ملف لوحده في فولدر Bunyan-Backups.';
+ var failed=o.err&&(!o.t||o.err>o.t);
+ if(!o.t)return '⚠️ Drive مربوط بس **لسه مفيش ولا رفع نجح**'+(failed?' (آخر محاولة فشلت)':'')+'.\nجرب «السجل والحماية» ← «☁️ ارفع دلوقتي». لو فشل اضغط «⚙️ الإعداد» وحدّث الربط.';
+ var old=Date.now()-o.t>2*864e5;
+ var l=(failed?'⚠️ **النسخ الاحتياطي مربوط بس آخر محاولة فشلت.**':old?'⚠️ **مربوط بس بقاله فترة مارفعش.**':'✅ **أيوه، النسخ الاحتياطي شغال على Drive.**')+
+  '\n• آخر رفع ناجح: '+ago(o.t)+' — '+new Date(o.t).toLocaleString('ar-EG',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+
+  (o.n?'\n• الملف: '+o.n:'')+'\n• الفولدر: Bunyan-Backups'+(o.email?' على '+o.email:'')+'\n• بيرفع كل يوم لوحده وبيحتفظ بآخر 60 يوم.';
+ if(failed||old)l+='\n\nجرب «السجل والحماية» ← «☁️ ارفع دلوقتي». لو فضل يفشل اضغط «⚙️ الإعداد» وحدّث الربط.';
+ return l};
+window.__bnyIsBk=isBk;
+var o0=window.bnyAsk;window.bnyAsk=function(q){var k=0;try{k=isBk(q)}catch(e){}
+ if(k===1)return {t:bnyBkStatus(),i:'backup'};
+ if(k===2&&window.drvUp){try{var st=JSON.parse(localStorage.getItem('bny_drv')||'{}');if(st.u){drvUp();return {t:'☁️ بدأت أرفع نسخة دلوقتي على Drive… اسألني «النسخ شغال؟» بعد شوية تتأكد.',i:'backup'}}}catch(e){}return {t:bnyBkStatus(),i:'backup'}}
+ if(k===3)return {t:bnyBkStatus(),i:'backup'};
+ return o0(q)};
+// امسح أي «معلومة» اتحفظت وهي في الحقيقة سؤال (زي «النسخ الاحتياطي شغال علي drive ولا لأ»)
+setTimeout(function(){try{window.bnyFactClean&&bnyFactClean()}catch(e){}},3500);
 })();
 </script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
