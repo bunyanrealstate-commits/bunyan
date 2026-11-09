@@ -6673,6 +6673,8 @@ var R=[
   check:function(){if(S.tab!=='upd')return [];var o=[];if(typeof window.updCols!=='function')o.push('زرار ترتيب الأعمدة مش موجود');var t=document.querySelector('#updposter td.ty');if(t&&!/214, 40, 40|d62828/i.test(getComputedStyle(t).color))o.push('نوع الشقة مش باللون الأحمر');return o},fix:null},
  {id:'cttpl2',area:'العقد',t:'مكانش فيه غير شكل واحد للعقد — اتضاف «عقد فاضي» جنب «عقد مفروش» زي ورقتك (جدول الدفعات والإجمالي والتأمين) بالعربي والإنجليزي',
   check:function(){if(S.tab!=='ct')return [];var o=[];if(!document.getElementById('ct2tpl'))o.push('زرار عقد مفروش / عقد فاضي مش ظاهر');if((S.ct&&S.ct.tpl)==='b'){var p=document.getElementById('ctpaper');if(p&&!p.querySelector('.t2,.t2b'))o.push('«عقد فاضي» مختار بس العقد ظاهر بشكل «عقد مفروش»');if(!document.getElementById('ct2box'))o.push('خانات الدفعات بتاعة «عقد فاضي» مش ظاهرة')}return o},fix:function(){window.ct2Box&&ct2Box();return 'رجّعت زراير عقد مفروش / عقد فاضي'}},
+ {id:'ctbidi',area:'العقد',t:'لما بتكتب بالعربي رقم وكلمة زي «6 شيكات» كانت الكلمة بتيجي الأول والرقم بعدها',
+  check:function(){if(S.tab!=='ct')return [];var o=[],e=document.querySelector('#ctpaper .fv');if(e&&getComputedStyle(e).unicodeBidi!=='plaintext')o.push('اتجاه الكتابة في خانات العقد مش تلقائي');return o},fix:null},
  {id:'editfund',area:'الاستديوهات',t:'لما عدّلت تمن فرش استديو اتضاف بالتقسيم (جزء من النقدي وجزء من جيبك) خانة «اتدفع منين» اتغيرت لوحدها لـ «من الرصيد النقدي» والحسابات باظت — والتعديل مكانش فيه نفس خانات الإضافة',
   check:function(){var o=[];(S.units||[]).forEach(function(u){if(u.fsplit&&u.fsrc&&u.fsrc!=='split')o.push('«'+u.name+'»: الأثاث متسجل مقسّم بس مصدره اتغير لـ «'+u.fsrc+'»');if(u.fsrc==='split'&&(+u.capF||0)>0)o.push('«'+u.name+'»: الأثاث مقسّم وعليه كمان «جزء من أموالي» — متسجل مرتين');if(u.fsrc==='split'&&u.g){var gq=((S.gp||{})[u.g]||[]).filter(function(x){return x.key==='f'+u.id}).reduce(function(t,x){return t-(+x.a||0)},0),want=+(u.fsplit&&u.fsplit.gp)||0;if(Math.abs(gq-want)>0.5)o.push('«'+u.name+'»: فلوس الشراكة مخصوم منها للأثاث '+Math.round(gq)+' بس التقسيم بيقول '+Math.round(want))}});return o},fix:null},
  {id:'updv3',area:'الأبديت',t:'صورة الأبديت كان شكلها عادي (جدول تقيل وخط عريض في كل حتة و«NEW» على كل شقة) — اتعملت بتصميم جديد أشيك',
@@ -7549,6 +7551,9 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);try{setTimeout(ti
 #updposter.v4.lt .ct3 .cb{display:none}
 #updposter.v4.lt .emp{color:#3c4a42!important}
 </style>
+<style id="ctbidi">/* Arabic mixed with numbers («6 شيكات») shows in the right order: the direction follows the text itself */
+#ctpaper .fv,#ctpaper .t2 td,#ctpaper .t2b td,#ctf input,#ctf textarea,#ct2box input,#ct2box textarea,[data-ct] input{unicode-bidi:plaintext}
+</style>
 <style id="updred">#updposter.v2 td.ty,#updposter td.ty{color:#d62828!important}#updposter.v2 td.yr,#updposter.v2 td.mo,#updposter td.yr,#updposter td.mo{color:#d62828!important}#updposter td.yr .aed,#updposter td.mo .aed{color:#d62828!important;opacity:.85}</style>
 <style id="ct2css">
 #ctpaper .fr.t2{border:0;padding:6px 10px 20px;direction:rtl}
@@ -7713,5 +7718,6 @@ setTimeout(function(){try{window.bnyFactClean&&bnyFactClean()}catch(e){}},3500);
 <script id="quietch">(function(){setTimeout(function(){try{if(!bnyNewApk())return;var N=Capacitor.Plugins.LocalNotifications;N&&N.createChannel&&N.createChannel({id:'bny_alerts3',name:'تنبيهات بنيان',description:'مواعيد الإيجار ودفعات الشركات وتنبيهاتك',importance:5,visibility:1,vibration:true,lights:true,lightColor:'#14b8a6',sound:'bny_tone2.wav'}).catch(function(){})}catch(e){}},1200);
 var shown=0;setTimeout(function(){try{var C=window.Capacitor;if(window.HBUILD||!C||!C.isNativePlatform||!C.isNativePlatform()||bnyNewApk()||!C.Plugins.WaBiz||!C.Plugins.WaBiz.selfUpdate)return;if(localStorage.getItem('bny_qup')===new Date().toISOString().slice(0,10))return;localStorage.setItem('bny_qup',new Date().toISOString().slice(0,10));
  confirmM('🔕 فيه نسخة جديدة من تطبيق الموبايل: البرنامج بيسكت لوحده لما الموبايل يبقى صامت، وأصوات أنعم. أنزّلها دلوقتي؟',function(){window.bnySelfUpdate&&bnySelfUpdate()},'نزّلها')}catch(e){}},6000)})();</script>
+<script id="ctbidijs">(function(){var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(S.tab==='ct')document.querySelectorAll('#app input[type=text],#app input:not([type]),#app textarea').forEach(function(e){if(!e.hasAttribute('dir'))e.setAttribute('dir','auto')})}catch(e){}return o}})();</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
