@@ -6302,10 +6302,9 @@ function poster(){var d=load(),P=PM(),U0=[];d.villas.forEach(function(v){(v.unit
  dt=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase(),
  hdTxt=function(x){return x.mo?"MONTHLY<small>AED / MONTH</small>":(PM().m==='sep'?(x.hh||x.h):"RENT / YEAR<small>"+E(x.h)+"</small>")};
  var h="<div id='updposter' class='v3"+(all.length>8?' cmp':'')+"'>"+
-  "<div class='h3'><div class='h3top'><div class='brand'><b>BUNYAN</b><span>FURNISHED</span></div><div class='dt'>UPDATED · "+dt+"</div></div>"+
-  "<div class='kick'>"+(allNew?"<i>JUST LISTED</i>":"")+(all.length&&all.every(function(a){return a.furn})?'FURNISHED UNITS FOR RENT':'UNITS FOR RENT')+"</div>"+
+  "<div class='h3'><div class='h3top'><div class='brand'><b>BUNYAN</b></div><div class='dt'>UPDATED "+dt+"</div></div>"+
   "<div class='tt'>"+E(d.title||'AVAILABLE UNITS')+"</div>"+
-  "<div class='stats'><div class='st'><b>"+av.length+"</b><span>AVAILABLE<br>NOW</span></div>"+(mn?"<div class='st'><span>FROM</span><b>"+n(mn)+"</b><span>AED / YEAR</span></div>":"")+(tys.length?"<div class='st tys'><span>UNIT TYPES</span><b>"+E(tys.slice(0,3).join(' · '))+"</b></div>":"")+"</div></div>";
+  "<div class='kick'>UNITS FOR RENT"+(allNew?"<i>JUST LISTED</i>":"")+"</div></div>";
  L.forEach(function(v){var U=(v.units||[]).filter(shown).slice().sort(function(x,y){return (x.booked?1:0)-(y.booked?1:0)});
   var qr='';if(v.loc){try{qr="<div class='qr'><img class='uqr' src='"+bnyQRData(v.loc,300)+"'><small>SCAN · LOCATION</small></div>"}catch(e){}}
   h+="<div class='vc'><div class='vh3'><div class='vt3'><div class='vn'>"+E(v.name)+"</div>"+(v.area?"<div class='va'>📍 "+E(v.area)+"</div>":"")+(v.note?"<div class='vnote'>"+E(v.note)+"</div>":"")+"</div>"+qr+"</div>"+
@@ -6317,7 +6316,7 @@ function poster(){var d=load(),P=PM(),U0=[];d.villas.forEach(function(v){(v.unit
  if(!L.length)h+="<p class='emp'>Add villas and flats to show them here</p>";
  h+="<div class='ft3'><div><small>CONTRACT FEE</small><b>"+n(d.fee)+" AED</b></div><div><small>SECURITY DEPOSIT</small><b>"+E(d.dep||'')+"</b></div>"+(PM().m!=='sep'?"<div><small>PAYMENTS</small><b>"+E(payTxt().replace(/ PAYMENTS?$/,'').replace('–','-'))+" "+(PM().n===1&&PM().m==='single'?'Cheque':'Cheques')+"</b></div>":"")+"</div>"+
   (d.notes?"<div class='gn'>"+E(d.notes).replace(/\n/g,'<br>')+"</div>":"")+
-  "<div class='ct3'><div class='wa'><svg viewBox='0 0 32 32' width='34' height='34'><path fill='#fff' d='M16 3C8.8 3 3 8.7 3 15.8c0 2.5.7 4.9 2 6.9L3 29l6.5-2c1.9 1 4.1 1.6 6.5 1.6 7.2 0 13-5.7 13-12.8S23.2 3 16 3zm0 23.3c-2.1 0-4.1-.6-5.8-1.7l-.4-.3-3.9 1.2 1.2-3.7-.3-.4a10.4 10.4 0 0 1-1.8-5.9C5 10 9.9 5.3 16 5.3S27 10 27 15.8 22.1 26.3 16 26.3zm6-7.8c-.3-.2-2-1-2.3-1.1-.3-.1-.5-.2-.8.2l-1 1.3c-.2.2-.4.3-.7.1-.3-.2-1.4-.5-2.7-1.7-1-.9-1.7-2-1.9-2.3-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6l-1-2.5c-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.9s1.2 3.4 1.4 3.6c.2.2 2.4 3.7 5.9 5.1 2.9 1.1 3.5.9 4.1.8.6-.1 2-.8 2.3-1.6.3-.8.3-1.5.2-1.6-.1-.1-.3-.2-.6-.4z'/></svg></div><div class='cx'><small>BOOK YOUR VIEWING · CALL OR WHATSAPP</small><b>"+E(d.phone||'')+"</b></div><div class='cb'>BUNYAN<span>FURNISHED</span></div></div></div>";return h}
+  "<div class='ct3'><div class='wa'><svg viewBox='0 0 32 32' width='34' height='34'><path fill='#fff' d='M16 3C8.8 3 3 8.7 3 15.8c0 2.5.7 4.9 2 6.9L3 29l6.5-2c1.9 1 4.1 1.6 6.5 1.6 7.2 0 13-5.7 13-12.8S23.2 3 16 3zm0 23.3c-2.1 0-4.1-.6-5.8-1.7l-.4-.3-3.9 1.2 1.2-3.7-.3-.4a10.4 10.4 0 0 1-1.8-5.9C5 10 9.9 5.3 16 5.3S27 10 27 15.8 22.1 26.3 16 26.3zm6-7.8c-.3-.2-2-1-2.3-1.1-.3-.1-.5-.2-.8.2l-1 1.3c-.2.2-.4.3-.7.1-.3-.2-1.4-.5-2.7-1.7-1-.9-1.7-2-1.9-2.3-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6l-1-2.5c-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.9s1.2 3.4 1.4 3.6c.2.2 2.4 3.7 5.9 5.1 2.9 1.1 3.5.9 4.1.8.6-.1 2-.8 2.3-1.6.3-.8.3-1.5.2-1.6-.1-.1-.3-.2-.6-.4z'/></svg></div><div class='cx'><small>BOOK YOUR VIEWING · CALL OR WHATSAPP</small><b>"+E(d.phone||'')+"</b></div><div class='cb'>BUNYAN</div></div></div>";return h}
 window.updTab=function(){var d=load();setTimeout(fit,0);var op=window.__updOpen||'';
  /* compact: each villa is one line; tap it to open its flats (one at a time) */
  var vh=d.villas.map(function(v,vi){var U=v.units||[],nb=U.filter(function(a){return a.booked}).length,isO=op===v.id;
@@ -6367,8 +6366,8 @@ window.__updCaption=caption;
 function openUrl(u){try{if(!(window.bnyOpenWa&&bnyOpenWa(u)))window.open(u,'_blank')}catch(e){}}
 window.updText=async function(){var t=txt(),d=load();if(await direct({text:t,mime:'text/plain'}))return;var go=function(){openUrl(d.group?d.group:'https://wa.me/?text='+encodeURIComponent(t))};try{navigator.clipboard.writeText(t).then(function(){toast(d.group?'📋 نسخت الأبديت — الجروب هيفتح، دوس مطوّل والصق وابعت':'📋 نسخت الأبديت وهفتح واتساب');setTimeout(go,600)},go)}catch(e){go()}};
 function h2c(){return new Promise(function(res,rej){if(window.html2canvas)return res(window.html2canvas);var s=document.createElement('script');s.src=(/\/(c|h)\//.test(location.pathname)?'../':'')+'vendor/html2canvas.min.js';s.onload=function(){res(window.html2canvas)};s.onerror=function(){var t=document.createElement('script');t.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';t.onload=function(){res(window.html2canvas)};t.onerror=rej;document.head.appendChild(t)};document.head.appendChild(s)})}
-async function image(){var p=document.getElementById('updposter');if(!p)throw new Error('no poster');var tr=p.style.transform;p.style.transform='none';try{try{await document.fonts.ready}catch(e){}return window.bnyNodeShot?await bnyNodeShot(p,3):await (await h2c())(p,{scale:3,backgroundColor:'#ffffff',logging:false})}finally{p.style.transform=tr;fit()}}
-async function file(){var cv=await image(),data=cv.toDataURL('image/jpeg',.95);return {data:data,name:'update-'+td()+'.jpg'}}
+async function image(){var p=document.getElementById('updposter');if(!p)throw new Error('no poster');var tr=p.style.transform;p.style.transform='none';try{try{await document.fonts.ready}catch(e){}return window.bnyNodeShot?await bnyNodeShot(p,4):await (await h2c())(p,{scale:4,backgroundColor:'#ffffff',logging:false})}finally{p.style.transform=tr;fit()}}
+async function file(){var cv=await image(),data=cv.toDataURL('image/jpeg',.98);return {data:data,name:'update-'+td()+'.jpg'}}
 /* no picking: copy the image (and then the locations) and open the group itself from its invite link */
 async function byLink(f){var d=load(),W=NW();if(!W||!W.copyImage||!d.group)return false;var on=false;try{on=!!(await W.accEnabled()).on}catch(e){}if(on&&d.gname)return false;
  try{await W.copyImage({data:f.data.split(',')[1],name:f.name})}catch(e){return false}
@@ -6808,6 +6807,27 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);try{setTimeout(ti
 #updposter.v3 tr.r td.ty,#updposter.v3 tr.r td.yr,#updposter.v3 tr.r td.mo,#updposter.v3 tr.r td small.aed{color:#d62828!important}#updposter.v3 tr.rb td.ty{color:#a9b3ad!important}
 #updposter.v3 .emp{text-align:center;color:#5f7268!important;margin:30px 20px!important}
 #updposter.v3.cmp tr.r td{padding:8px 4px!important}#updposter.v3.cmp td.yr,#updposter.v3.cmp td.mo{font-size:18px!important}#updposter.v3.cmp small.aed{display:inline;margin-left:3px}#updposter.v3.cmp .uqr{width:58px!important;height:58px!important}#updposter.v3.cmp .vh3{padding:12px 16px 10px}
+
+/* v3.1 — cleaner hero, everything readable */
+#updposter.v3 .h3{padding:24px 30px 26px!important}
+#updposter.v3 .brand b{font-size:22px!important;letter-spacing:6px}
+#updposter.v3 .dt{font-size:13px!important;color:#fff!important;border-color:rgba(255,255,255,.55)!important;letter-spacing:1px}
+#updposter.v3 .tt{font-size:46px!important;margin:22px 0 10px!important}
+#updposter.v3 .kick{margin-top:0!important;font-size:15px!important;letter-spacing:3px;color:#e9c46a!important}
+#updposter.v3 .kick i{font-size:12.5px!important;padding:4px 10px;margin-left:4px;color:#062b1d!important;background:#e9c46a}
+#updposter.v3 tr.hd2 td{color:#3c4a42!important;font-size:12px!important;letter-spacing:1px;background:#f3eee2!important}
+#updposter.v3 tr.hd2 td small{color:#3c4a42!important;font-size:10.5px!important}
+#updposter.v3 td.fl small{color:#3c4a42!important;font-size:10px!important}
+#updposter.v3 td.fl .fp{font-size:15px!important}
+#updposter.v3 tr.r td{font-size:16.5px!important}
+#updposter.v3 tr.r td.ntc{color:#1d2b24!important;font-size:14.5px!important}
+#updposter.v3 td.ty{font-size:17px!important}#updposter.v3 td.yr,#updposter.v3 td.mo{font-size:23px!important}#updposter.v3 small.aed{font-size:11px!important}
+#updposter.v3 .va{color:#2d3d35!important;font-size:15px!important}#updposter.v3 .vn{font-size:24px!important}
+#updposter.v3 .qr small{color:#2d3d35!important;font-size:10px!important}
+#updposter.v3 .ft3 small{color:#3c4a42!important;font-size:11.5px!important}#updposter.v3 .ft3 b{font-size:18px!important}
+#updposter.v3 .ct3 .cx small{color:#e9c46a!important;font-size:12px!important}#updposter.v3 .ct3 .cx b{font-size:34px!important}
+#updposter.v3 .ct3 .cb{font-size:16px!important}
+#updposter.v3 tr.rb td{color:#7d8a83!important}#updposter.v3 tr.rb td.ty{color:#7d8a83!important}
 </style>
 <style id="updred">#updposter.v2 td.ty,#updposter td.ty{color:#d62828!important}#updposter.v2 td.yr,#updposter.v2 td.mo,#updposter td.yr,#updposter td.mo{color:#d62828!important}#updposter td.yr .aed,#updposter td.mo .aed{color:#d62828!important;opacity:.85}</style>
 <style id="ct2css">
