@@ -6023,6 +6023,8 @@ var R=[
   check:function(){if(S.tab!=='ct')return [];var o=[];if(!document.getElementById('ct2tpl'))o.push('زرار عقد مفروش / عقد فاضي مش ظاهر');if((S.ct&&S.ct.tpl)==='b'){var p=document.getElementById('ctpaper');if(p&&!p.querySelector('.t2,.t2b'))o.push('«عقد فاضي» مختار بس العقد ظاهر بشكل «عقد مفروش»');if(!document.getElementById('ct2box'))o.push('خانات الدفعات بتاعة «عقد فاضي» مش ظاهرة')}return o},fix:function(){window.ct2Box&&ct2Box();return 'رجّعت زراير عقد مفروش / عقد فاضي'}},
  {id:'ctbidi',area:'العقد',t:'لما بتكتب بالعربي رقم وكلمة زي «6 شيكات» كانت الكلمة بتيجي الأول والرقم بعدها',
   check:function(){if(S.tab!=='ct')return [];var o=[],e=document.querySelector('#ctpaper .fv');if(e&&getComputedStyle(e).unicodeBidi!=='plaintext')o.push('اتجاه الكتابة في خانات العقد مش تلقائي');return o},fix:null},
+ {id:'autosec',area:'التصليح التلقائي',t:'التصليح التلقائي كان معتمد على Claude بس — لما التوكنز خلصت المشاكل فضلت. البرنامج بقى يجهّز التصليح المجاني (Gemini على GitHub) لوحده',
+  check:function(){var o=[];try{var a=JSON.parse(localStorage.getItem('bny_autosec')||'null');if(a&&a.err)o.push('تجهيز التصليح المجاني فشل: '+a.err);else if(a&&!a.gem)o.push('التصليح المجاني محتاج مفتاح Gemini في البرنامج')}catch(e){}return o},fix:null},
  {id:'hdbooks',area:'الأحاديث',t:'أسامه طلب كلام وأحاديث كتير وتظهر كل ما يفتح — اتضاف القرآن الكريم كله وكتب الحديث (البخاري، مسلم، والسنن الصحيح والحسن منها بس، والموطأ، والأربعين) أكتر من 30 ألف حديث بتتحمّل في الخلفية',
   check:function(){return typeof window.bnyHadithCount==='function'?[]:['كتب الحديث مش متوصلة']},fix:null},
  {id:'tidy',area:'الشاشة',t:'التبويبات كانت طويلة جداً (الداشبورد قرب 3000 بكسل وسجل النشاط 22000) — الكروت اللي مش محتاجها كل يوم بقت مقفولة وتفتح بلمسة، والسجل بيعرض آخر 40',
@@ -7111,6 +7113,31 @@ function tidy(){var a=document.getElementById('app');if(!a)return;var L=FD[S.tab
 var r0=render;render=function(){var o=r0.apply(this,arguments);try{tidy()}catch(e){}return o};
 /* الكارت الصغير «تقدر تسحب» يفتح خطة السحب لما تدوس عليه */
 document.addEventListener('click',function(e){var m=e.target.closest&&e.target.closest('.wpmini');if(m)bnyFoldOpen('wpcard',true)},true);
+})();
+</script>
+<script id="autosec">
+/* التصليح المجاني (Gemini على GitHub) محتاج مفتاحين في إعدادات GitHub — البرنامج بيحطهم لوحده من المفاتيح اللي متسجلة عليه (متشفرة، ومحدش يقدر يقراهم) */
+(function(){if(window.HBUILD||window.claude)return;
+function J(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}}
+function hs(t){var x=0;for(var i=0;i<t.length;i++)x=(x*31+t.charCodeAt(i))|0;return (x>>>0).toString(36)}
+function loadSeal(){if(window.bnySeal)return Promise.resolve();var U=['vendor/sealbox.js','../vendor/sealbox.js','https://bunyanrealstate-commits.github.io/bunyan/vendor/sealbox.js'],i=0;
+ return new Promise(function(ok,no){(function nx(){if(window.bnySeal)return ok();if(i>=U.length)return no(new Error('seal lib'));var sc=document.createElement('script');sc.src=U[i++];sc.onload=function(){window.bnySeal?ok():nx()};sc.onerror=nx;document.head.appendChild(sc)})()})}
+async function report(res,c){try{var repo=c.repo||'bunyanrealstate-commits/bunyan-data2',u='https://api.github.com/repos/'+repo+'/contents/autofix-setup.json',H={Authorization:'Bearer '+c.token,Accept:'application/vnd.github+json'};
+ var sha;try{var g=await fetch(u+'?t='+Date.now(),{headers:H,cache:'no-store'});if(g.ok)sha=(await g.json()).sha}catch(e){}
+ var o={at:new Date(res.at).toISOString(),ok:!!res.ok,gem:res.gem,secrets:res.secrets||0,err:res.err||''};
+ await fetch(u,{method:'PUT',headers:H,body:JSON.stringify({message:'autofix setup',content:btoa(unescape(encodeURIComponent(JSON.stringify(o)))),sha:sha})})}catch(e){}}
+async function run(){if(navigator.onLine===false)return;var c=J('bny_sync'),g=J('bny_gem');if(!c||!c.token)return;var gk=g&&g.key||'';
+ var st=J('bny_autosec')||{},sig=hs(c.token+'|'+gk);if(st.sig===sig&&(st.ok||(st.at&&Date.now()-st.at<6*3600e3)))return;
+ var res={at:Date.now(),sig:sig,gem:!!gk};
+ try{await loadSeal();var H={Authorization:'Bearer '+c.token,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},R='https://api.github.com/repos/bunyanrealstate-commits/bunyan/actions';
+  var r=await fetch(R+'/secrets/public-key',{headers:H});if(!r.ok)throw new Error('مفتاح GitHub مش مسموحله يحط إعدادات ('+r.status+')');var pk=await r.json();
+  var put=async function(n,v){var q=await fetch(R+'/secrets/'+n,{method:'PUT',headers:H,body:JSON.stringify({encrypted_value:bnySeal(pk.key,v),key_id:pk.key_id})});if(!(q.status===201||q.status===204))throw new Error(n+' '+q.status)};
+  await put('DATA_TOKEN',c.token);res.secrets=1;if(gk){await put('GEMINI_KEY',gk);res.secrets=2}res.ok=!!gk;
+  if(res.ok){try{await fetch(R+'/workflows/autofix.yml/dispatches',{method:'POST',headers:H,body:JSON.stringify({ref:'main'})})}catch(e){}}
+ }catch(e){res.err=String(e&&e.message||e)}
+ try{localStorage.setItem('bny_autosec',JSON.stringify(res))}catch(e){}report(res,c)}
+window.bnyAutoSec=run;
+setTimeout(function(){try{if(typeof AUTH!=='undefined'&&AUTH)run()}catch(e){}},20000);
 })();
 </script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script><style id="hlogo">html body .hd{background:linear-gradient(120deg,#16653b 0%,#2a9d5c 55%,#3cc47c 100%)!important;border-bottom:0!important;box-shadow:0 4px 16px rgba(22,101,59,.28)!important;color:#fff!important}.hd h1.brand{display:inline-flex!important;flex-direction:column;align-items:center;justify-content:center;line-height:1;width:auto!important;background:none!important;padding:0!important}.hd h1.brand svg{height:30px!important;width:auto!important;filter:drop-shadow(0 1px 2px rgba(0,0,0,.18))}.hd h1.brand svg *{fill:#fff!important;stroke:none}.hd h1.brand::after{content:"حكيم";display:block;margin-top:-3px;background:#fff;color:#16653b;font-size:9.5px;font-weight:800;line-height:1;padding:2px 9px 3px;border-radius:999px;letter-spacing:0;box-shadow:0 1px 4px rgba(0,0,0,.15)}html body .hd #pvb,html body .hd #bell,html body .hd #hmb{background:rgba(255,255,255,.16)!important;border:1px solid rgba(255,255,255,.38)!important;color:#fff!important;box-shadow:none!important}html body .hd #hmb{color:#fff!important}html body .hd #bell:not(.al):not(.od){background:rgba(255,255,255,.16)!important;border:1px solid rgba(255,255,255,.38)!important;color:#fff!important}html body .hd #clk2{color:#fff!important}html body .hd #clk2 small{color:#d4f7e2!important}html body .hd #grpb button{background:rgba(255,255,255,.18)!important;border:1px solid rgba(255,255,255,.45)!important;box-shadow:0 2px 10px rgba(0,0,0,.12)!important;color:#fff!important}html body .hd #grpb button b,html body .hd #grpb button span{color:#fff!important}html body .hd #grpb button i{background:#ffc93c!important;box-shadow:0 0 0 2px rgba(255,201,60,.35),0 0 8px rgba(255,201,60,.6)!important}html body .hd{min-height:52px!important;padding-top:6px!important;padding-bottom:6px!important}.hd h1.brand svg{height:27px!important}.hd h1.brand::after{font-size:9px!important}html body .hd #clk2{font-size:15px!important}html body .hd #grpb button{min-height:30px!important;font-size:13px!important}html body .hd #pvb,html body .hd #bell,html body .hd #hmb{width:36px!important;height:36px!important;min-height:36px!important;font-size:17px!important}</style><script id="hguard">(function(){
