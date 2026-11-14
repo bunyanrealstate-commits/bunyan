@@ -3103,7 +3103,15 @@ idb(function(st){var g=st.get('db');g.onsuccess=function(){useDB(g.result)}});
 function loadDB(){if(DB)return;var U=['hadith.json','../hadith.json','https://bunyanrealstate-commits.github.io/bunyan/hadith.json'],n=0;
  (function nx(){if(n>=U.length||DB)return;fetch(U[n++],{cache:'no-cache'}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){if(!d||!d.h)throw 0;if(!DB||d.h.length!==DB.h.length){useDB(d);idb(function(st){st.put(d,'db')})}}).catch(nx)})()}
 setTimeout(loadDB,6000);
-function pool(){var P={};H.forEach(function(h){(P['منتقيات']=P['منتقيات']||[]).push({id:'c'+hk(h[0]),t:'«'+h[0]+'»',s:h[1],k:'قال رسول الله ﷺ'})});
+/* كتب الحديث الكاملة (الصحيح والحسن بس): بتتحمّل كتاب كتاب في الخلفية وتتحفظ على الجهاز */
+var BK={},BKL=['bukhari','muslim','nasai','abudawud','tirmidhi','ibnmajah','malik','nawawi','qudsi'];
+function bkUse(b,d){if(d&&d.h&&d.h.length)BK[b]=d}
+idb(function(st){BKL.forEach(function(b){var g=st.get('bk_'+b);g.onsuccess=function(){bkUse(b,g.result)}})});
+function bkNext(){var b=BKL.filter(function(x){return !BK[x]})[0];if(!b)return;var U=['hd/','../hd/','https://bunyanrealstate-commits.github.io/bunyan/hd/'],n=0;
+ (function nx(){if(n>=U.length||BK[b])return;fetch(U[n++]+b+'.json',{cache:'force-cache'}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){if(!d||!d.h)throw 0;bkUse(b,d);idb(function(st){st.put(d,'bk_'+b)});setTimeout(bkNext,20000)}).catch(nx)})()}
+setTimeout(bkNext,12000);
+window.bnyHadithCount=function(){var n=0;Object.keys(BK).forEach(function(b){n+=BK[b].h.length});return n};
+function pool(){var P={};Object.keys(BK).forEach(function(b){var d=BK[b],k='📖 '+d.n;P[k]=d.h.map(function(h){return {id:b.slice(0,3)+h[1],t:h[0],s:d.n+' ('+h[1]+')',k:k}})});H.forEach(function(h){(P['منتقيات']=P['منتقيات']||[]).push({id:'c'+hk(h[0]),t:'«'+h[0]+'»',s:h[1],k:'قال رسول الله ﷺ'})});
  if(DB)DB.h.forEach(function(h,i){var k=DB.k[h[2]]||'رياض الصالحين';(P[k]=P[k]||[]).push({id:'r'+i,t:h[0],s:h[1]+' — رياض الصالحين',k:'📖 '+k})});return P}
 function pickQ(){var seen=[];try{seen=JSON.parse(localStorage.getItem('bny_q_seen')||'[]')||[]}catch(e){}var S0={};seen.forEach(function(x){S0[x]=1});var L=QQ.map(function(q,i){return i}).filter(function(i){return !S0['q'+hk(QQ[i][0])]});if(!L.length){seen=[];L=QQ.map(function(q,i){return i})}var P=L.filter(function(i){return QQ[i][5]===1});if(P.length&&Math.random()<0.7)L=P;var i=L[Math.floor(Math.random()*L.length)],q=QQ[i];seen.push('q'+hk(q[0]));try{localStorage.setItem('bny_q_seen',JSON.stringify(seen))}catch(e){}return q[3]?{id:'q'+hk(q[0]),t:q[0],s:q[4]||'',k:q[3]}:{id:'q'+hk(q[0]),t:'«'+q[0]+'»',s:'',k:'💬 قال '+q[1]+' '+q[2]}}
 (function(){if(!/^https?:/.test(location.protocol))return;var u=/\/(c|h)\//.test(location.pathname)?'../raqaiq.json':'raqaiq.json';setTimeout(function(){fetch(u).then(function(r){return r.ok?r.json():null}).then(function(d){if(!d||!d.q)return;var have={};QQ.forEach(function(q){have[hk(String(q[0]).replace(/[«»]/g,''))]=1});d.q.forEach(function(x){if(have[hk(x[0])])return;have[hk(x[0])]=1;var n=d.n[x[1]],h=d.h[x[1]];QQ.push([x[2]?x[0]:'«'+x[0]+'»',n,h,'📜 من أخبار '+n+' '+h,d.s[x[3]],x[4]])});window.__rqN=QQ.length}).catch(function(){})},2500)})();
@@ -6013,6 +6021,8 @@ var R=[
   check:function(){if(S.tab!=='ct')return [];var o=[];if(!document.getElementById('ct2tpl'))o.push('زرار عقد مفروش / عقد فاضي مش ظاهر');if((S.ct&&S.ct.tpl)==='b'){var p=document.getElementById('ctpaper');if(p&&!p.querySelector('.t2,.t2b'))o.push('«عقد فاضي» مختار بس العقد ظاهر بشكل «عقد مفروش»');if(!document.getElementById('ct2box'))o.push('خانات الدفعات بتاعة «عقد فاضي» مش ظاهرة')}return o},fix:function(){window.ct2Box&&ct2Box();return 'رجّعت زراير عقد مفروش / عقد فاضي'}},
  {id:'ctbidi',area:'العقد',t:'لما بتكتب بالعربي رقم وكلمة زي «6 شيكات» كانت الكلمة بتيجي الأول والرقم بعدها',
   check:function(){if(S.tab!=='ct')return [];var o=[],e=document.querySelector('#ctpaper .fv');if(e&&getComputedStyle(e).unicodeBidi!=='plaintext')o.push('اتجاه الكتابة في خانات العقد مش تلقائي');return o},fix:null},
+ {id:'hdbooks',area:'الأحاديث',t:'أسامه طلب كلام وأحاديث كتير — اتضافت كتب الحديث (البخاري، مسلم، والسنن الصحيح والحسن منها بس، والموطأ، والأربعين) أكتر من 30 ألف حديث بتتحمّل في الخلفية',
+  check:function(){return typeof window.bnyHadithCount==='function'?[]:['كتب الحديث مش متوصلة']},fix:null},
  {id:'tidy',area:'الشاشة',t:'التبويبات كانت طويلة جداً (الداشبورد قرب 3000 بكسل وسجل النشاط 22000) — الكروت اللي مش محتاجها كل يوم بقت مقفولة وتفتح بلمسة، والسجل بيعرض آخر 40',
   check:function(){var a=document.getElementById('app');if(!a)return [];if((S.tab==='log'||S.tab==='bk')&&a.scrollHeight>9000)return ['سجل النشاط طويل جداً ('+a.scrollHeight+'px)'];if(S.tab==='home'){var w=document.getElementById('wpcard');if(w&&!w.classList.contains('fd'))return ['خطة السحب مش متطبّقة في الداشبورد']}return []},fix:function(){render();return 'رجّعت تطبيق الكروت'}},
  {id:'syncmerge',area:'المزامنة',t:'لما الموبايل والسحابة يتعدلوا الاتنين، المزامنة كانت بتاخد نسخة كاملة وتمسح التانية (زي تصليح البريكي اللي اتمسح لما الموبايل رفع نسخته) — بقت تدمج التعديلات',
