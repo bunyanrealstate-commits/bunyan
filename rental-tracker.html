@@ -3945,7 +3945,7 @@ window.monthRep=function(y,m){var now=today();if(y==null){var p=new Date(now.get
  if(late.length){h+="<div class='fx-sec'>🔴 المتأخرات</div>";late.forEach(function(x){h+="<div class='fx-r'><span>"+E(x[1])+"<small>"+fd(x[0])+"</small></span><b class='neg'>"+$(x[2])+"</b></div>"})}
  h+="<div class='fx-sec'>🧾 حركة الفلوس</div>"+(list.length?list.map(function(x){return "<div class='fx-r'><span>"+E(x[1])+"<small>"+fd(x[0])+"</small></span><b class='"+(x[2]<0?'neg':'pos')+"'>"+(x[2]<0?'− ':'+ ')+$(Math.abs(x[2]))+"</b></div>"}).join(''):"<p class='mu'>مفيش حركة في الشهر ده.</p>");
  if(up.length){h+="<div class='fx-sec'>📅 الشهر الجاي</div>";up.slice(0,12).forEach(function(x){h+="<div class='fx-r'><span>"+E(x[1])+"<small>"+fd(x[0])+"</small></span><b class='"+(x[3]==='pay'?'neg':'pos')+"'>"+$(x[2])+"</b></div>"})}
- ov('mrx',h)};
+ window.__mr={rin:rin,oth:oth,out:out,drw:drw,prof:prof,earn:earn,cost:cost,exM:exM,per:per,occ:occ,tot:tot,late:late.reduce(function(q,x){return q+x[2]},0)};if(!window.__mrSilent)ov('mrx',h)};
 function autoRep(){try{if(!AUTH||!S.units||!S.units.length||window.HBUILD)return;var k=mKey(today()),o=localStorage.getItem('bny_mr');if(o===k)return;localStorage.setItem('bny_mr',k);if(!o)return;setTimeout(function(){if(!document.querySelector('body>.ov'))monthRep()},1800)}catch(e){}}
 
 /* ========== تنبيه التجديد ========== */
@@ -6711,6 +6711,8 @@ var R=[
   check:function(){if(S.tab!=='ct')return [];var o=[];if(!document.getElementById('ct2tpl'))o.push('زرار عقد مفروش / عقد فاضي مش ظاهر');if((S.ct&&S.ct.tpl)==='b'){var p=document.getElementById('ctpaper');if(p&&!p.querySelector('.t2,.t2b'))o.push('«عقد فاضي» مختار بس العقد ظاهر بشكل «عقد مفروش»');if(!document.getElementById('ct2box'))o.push('خانات الدفعات بتاعة «عقد فاضي» مش ظاهرة')}return o},fix:function(){window.ct2Box&&ct2Box();return 'رجّعت زراير عقد مفروش / عقد فاضي'}},
  {id:'ctbidi',area:'العقد',t:'لما بتكتب بالعربي رقم وكلمة زي «6 شيكات» كانت الكلمة بتيجي الأول والرقم بعدها',
   check:function(){if(S.tab!=='ct')return [];var o=[],e=document.querySelector('#ctpaper .fv');if(e&&getComputedStyle(e).unicodeBidi!=='plaintext')o.push('اتجاه الكتابة في خانات العقد مش تلقائي');return o},fix:null},
+ {id:'extras',area:'الاستديوهات',t:'كان ناقص: جرد الفرش لكل استديو، طلبات الصيانة، تقييم المستأجرين، وتقرير آخر السنة — اتضافوا',
+  check:function(){var o=[];if(!window.invOpen||!window.mntOpen||!window.yearRep||!window.bnyTenantHist)o.push('جزء من (الجرد / الصيانة / التقييم / تقرير السنة) مش متوصل');if(S.tab==='units'&&document.querySelector('#app button[onclick^="mUnit(\'"]')&&!document.querySelector('#app .xinv'))o.push('زرار «🛋 الجرد» مش ظاهر في الاستديو');(S.units||[]).forEach(function(u){(u.mnt||[]).forEach(function(x){if(x.eid&&!(S.exp||[]).some(function(e){return e.id===x.eid}))o.push('مصروف صيانة «'+x.t+'» اتمسح من المصاريف')})});return o},fix:function(){render();return 'رجّعت الزراير'}},
  {id:'remmenu',area:'القايمة',t:'«تذكيراتي» ماكانتش ظاهرة في القايمة الرئيسية (☰) — كانت مستخبية جوه قايمة الاسم',
   check:function(){var pn=document.getElementById('hmp');return pn&&window.remTab&&!document.getElementById('hmrem')&&pn.offsetParent?['«⏰ تذكيراتي» مش في القايمة']:[]},fix:function(){render();return 'رجّعت «تذكيراتي» للقايمة'}},
  {id:'autosec',area:'التصليح التلقائي',t:'التصليح التلقائي كان معتمد على Claude بس — لما التوكنز خلصت المشاكل فضلت. البرنامج بقى يجهّز التصليح المجاني (Gemini على GitHub) لوحده',
@@ -7835,5 +7837,90 @@ function add(){var pn=document.getElementById('hmp');if(!pn||document.getElement
  b.onclick=function(){try{bnyCloseMenus&&bnyCloseMenus()}catch(e){}S.tab='rem';render();scrollTo(0,0)};var c=document.getElementById('cpmi');c?pn.insertBefore(b,c):pn.appendChild(b)}
 var r0=render;render=function(){var o=r0.apply(this,arguments);try{add()}catch(e){}return o};document.addEventListener('click',function(){setTimeout(function(){try{add()}catch(e){}},30)},true);
 })();</script>
+<script id="extrasjs">
+/* 🛋 جرد الفرش • 🔧 الصيانة • ⭐ تقييم المستأجر • 📅 تقرير السنة */
+(function(){
+function E_(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function nid(){return Math.random().toString(36).slice(2,9)}
+function M(id,h){var d=document.getElementById(id);if(d)d.remove();d=document.createElement('div');d.id=id;d.className='ov xov';d.innerHTML="<div class='dlg xdl'>"+h+"</div>";d.onclick=function(e){if(e.target===d)d.remove()};document.body.appendChild(d);return d}
+function close(id){var d=document.getElementById(id);if(d)d.remove()}
+function sv(){try{save()}catch(e){}}
+function N(v){return Math.round((+v||0)*100)/100}
+var CND={n:'جديد',g:'كويس',f:'محتاج تصليح',x:'تالف'};
+
+/* ===== 🛋 جرد الفرش ===== */
+window.invOpen=function(id){var u=U(id);if(!u)return;u.inv=u.inv||[];var L=u.inv,tot=L.reduce(function(s,x){return s+N(x.v)*(+x.q||1)},0);
+ var h="<h2>🛋 جرد فرش «"+E_(u.name)+"»</h2><p class='mu' style='margin:0 0 8px'>كل حاجة في الاستديو وحالتها وقيمتها — ولما المستأجر يمشي تراجعها وتعرف تخصم كام من التأمين.</p>";
+ h+=L.length?"<div class='xl'>"+L.map(function(x,i){return "<div class='xr'><span><b>"+E_(x.n)+"</b>"+((+x.q||1)>1?" × "+(+x.q):"")+"<small>"+(CND[x.c]||'')+(x.v?" • "+$(N(x.v)*(+x.q||1)):"")+"</small></span><button onclick=\"invEdit('"+id+"',"+i+")\">✎</button><button class='x' onclick=\"invDel('"+id+"',"+i+")\">✕</button></div>"}).join('')+"</div><div class='xt'>القيمة الكلية: <b>"+$(tot)+"</b></div>":"<p class='mu'>مفيش حاجات متسجلة لسه.</p>";
+ if(u.invChk&&u.invChk.at)h+="<p class='mu' style='font-size:12.5px'>آخر مراجعة: "+new Date(u.invChk.at).toLocaleDateString('ar-EG')+(u.invChk.t?" — خروج «"+E_(u.invChk.t)+"»":"")+(u.invChk.ded?" — خصم مقترح "+$(u.invChk.ded):"")+"</p>";
+ h+="<div class='bt xb'><button class='p' onclick=\"invEdit('"+id+"')\">➕ حاجة جديدة</button>"+(L.length?"<button onclick=\"invCheck('"+id+"')\">✅ مراجعة عند خروج المستأجر</button>":"")+"<button onclick=\"invTpl('"+id+"')\">📋 قايمة جاهزة</button><button onclick=\"this.closest('.ov').remove()\">قفل</button></div>";
+ M('invx',h)};
+window.invEdit=function(id,i){var u=U(id),x=i==null?{}:u.inv[i];
+ var h="<h2>"+(i==null?'➕ حاجة جديدة':'✎ تعديل')+"</h2><label>الحاجة</label><input id='iv_n' value='"+E_(x.n||'')+"' placeholder='مثال: سرير، تكييف، تلاجة'><div style='display:flex;gap:8px'><div style='flex:1'><label>العدد</label><input id='iv_q' type='number' inputmode='numeric' value='"+(x.q||1)+"'></div><div style='flex:1'><label>القيمة (للواحدة)</label><input id='iv_v' type='number' inputmode='decimal' value='"+(x.v||'')+"'></div></div><label>الحالة</label><select id='iv_c'>"+Object.keys(CND).map(function(k){return "<option value='"+k+"'"+((x.c||'n')===k?' selected':'')+">"+CND[k]+"</option>"}).join('')+"</select>"
+ +"<div class='bt xb'><button class='p' id='iv_ok'>💾 حفظ</button><button onclick=\"invOpen('"+id+"')\">رجوع</button></div>";
+ var d=M('invx',h);d.querySelector('#iv_ok').onclick=function(){var n=d.querySelector('#iv_n').value.trim();if(!n){toast('اكتب اسم الحاجة');return}var o={id:x.id||nid(),n:n,q:Math.max(1,+d.querySelector('#iv_q').value||1),v:N(d.querySelector('#iv_v').value),c:d.querySelector('#iv_c').value};if(i==null)u.inv.push(o);else u.inv[i]=o;sv();invOpen(id)}};
+window.invDel=function(id,i){var u=U(id);u.inv.splice(i,1);sv();invOpen(id)};
+window.invTpl=function(id){var u=U(id);u.inv=u.inv||[];var have={};u.inv.forEach(function(x){have[x.n]=1});['سرير','مرتبة','دولاب','تكييف','تلاجة','غسالة','تلفزيون','كنبة','ترابيزة','كراسي','ستاير','بوتاجاز / بوتجاز','ميكروويف','سخان'].forEach(function(n){if(!have[n])u.inv.push({id:nid(),n:n,q:1,v:0,c:'n'})});sv();invOpen(id);toast('✅ ضفت القايمة الجاهزة — عدّل القيم وشيل اللي مش موجود')};
+window.invCheck=function(id){var u=U(id),L=u.inv||[],cur=(u.leases||[]).filter(function(l){return !l.exit})[0]||(u.leases||[])[u.leases.length-1]||{};var st={};
+ var h="<h2>✅ مراجعة الفرش"+(cur.tenant?" — «"+E_(cur.tenant)+"»":"")+"</h2><p class='mu' style='margin:0 0 8px'>علّم على كل حاجة: موجودة سليمة، ناقصة، أو اتلفت.</p><div class='xl'>"+L.map(function(x,i){return "<div class='xr'><span><b>"+E_(x.n)+"</b>"+((+x.q||1)>1?" × "+x.q:"")+"<small>"+(x.v?$(N(x.v)*(+x.q||1)):'')+"</small></span><select data-i='"+i+"'><option value='ok'>✅ سليمة</option><option value='miss'>❌ ناقصة</option><option value='dmg'>⚠️ اتلفت</option></select></div>"}).join('')+"</div><div class='xt' id='iv_sum'></div><div class='bt xb'><button class='p' id='iv_save'>💾 احفظ المراجعة</button><button onclick=\"invOpen('"+id+"')\">رجوع</button></div>";
+ var d=M('invx',h);function calc(){var ded=0;[].forEach.call(d.querySelectorAll('select[data-i]'),function(s){var x=L[+s.dataset.i];st[x.id]=s.value;if(s.value!=='ok')ded+=N(x.v)*(+x.q||1)});d.querySelector('#iv_sum').innerHTML=ded?"خصم مقترح من التأمين: <b class='neg'>"+$(ded)+"</b>":"كله سليم ✅";return ded}
+ d.addEventListener('change',calc);calc();d.querySelector('#iv_save').onclick=function(){var ded=calc();u.invChk={at:Date.now(),t:cur.tenant||'',st:st,ded:ded};L.forEach(function(x){if(st[x.id]==='dmg')x.c='x'});u.inv=L.filter(function(x){return st[x.id]!=='miss'}).concat(L.filter(function(x){return st[x.id]==='miss'}).map(function(x){return Object.assign({},x,{c:'x',n:x.n+' (ناقصة)'})}));sv();invOpen(id);toast(ded?'✅ اتسجلت — الخصم المقترح '+$(ded):'✅ اتسجلت — كله سليم')}};
+
+/* ===== 🔧 الصيانة ===== */
+function mOpen(u){return (u.mnt||[]).filter(function(x){return x.st!=='done'}).length}
+window.mntOpen=function(id){var u=U(id);if(!u)return;u.mnt=u.mnt||[];var L=u.mnt.slice().sort(function(a,b){return (a.st==='done')-(b.st==='done')||String(b.d).localeCompare(String(a.d))}),sp=u.mnt.reduce(function(s,x){return s+(x.st==='done'&&x.by!=='t'?N(x.c):0)},0);
+ var h="<h2>🔧 صيانة «"+E_(u.name)+"»</h2><p class='mu' style='margin:0 0 8px'>سجّل أي طلب صيانة لحد ما يخلص. لما تقفله بتكلفة عليك بيتسجل مصروف على الاستديو لوحده.</p>";
+ h+=L.length?"<div class='xl'>"+L.map(function(x){var i=u.mnt.indexOf(x);return "<div class='xr"+(x.st==='done'?' xd':'')+"'><span><b>"+(x.st==='done'?'✅ ':'🟠 ')+E_(x.t)+"</b><small>"+dfmt(x.d)+(x.st==='done'?" • خلص"+(x.c?" • "+$(x.c)+(x.by==='t'?' على المستأجر':' عليّ'):''):" • مفتوح")+"</small></span>"+(x.st!=='done'?"<button class='p' onclick=\"mntDone('"+id+"',"+i+")\">تم</button>":"")+"<button class='x' onclick=\"mntDel('"+id+"',"+i+")\">✕</button></div>"}).join('')+"</div>":"<p class='mu'>مفيش طلبات صيانة.</p>";
+ if(sp)h+="<div class='xt'>اتصرف على صيانة الاستديو ده: <b>"+$(sp)+"</b></div>";
+ h+="<div class='bt xb'><button class='p' onclick=\"mntAdd('"+id+"')\">➕ طلب صيانة</button><button onclick=\"this.closest('.ov').remove()\">قفل</button></div>";M('mntx',h)};
+window.mntAdd=function(id){var u=U(id);var h="<h2>➕ طلب صيانة</h2><label>المشكلة</label><input id='mn_t' placeholder='مثال: التكييف مش بيبرّد'><label>التاريخ</label><input id='mn_d' type='date' value='"+td()+"'><div class='bt xb'><button class='p' id='mn_ok'>💾 حفظ</button><button onclick=\"mntOpen('"+id+"')\">رجوع</button></div>";
+ var d=M('mntx',h);d.querySelector('#mn_ok').onclick=function(){var t=d.querySelector('#mn_t').value.trim();if(!t){toast('اكتب المشكلة');return}u.mnt=u.mnt||[];u.mnt.push({id:nid(),t:t,d:d.querySelector('#mn_d').value||td(),st:'open'});sv();mntOpen(id);try{render()}catch(e){}}};
+window.mntDone=function(id,i){var u=U(id),x=u.mnt[i];var h="<h2>✅ خلص: "+E_(x.t)+"</h2><label>التكلفة (سيبها صفر لو مفيش)</label><input id='mn_c' type='number' inputmode='decimal' value=''><label>مين دفع؟</label><select id='mn_by'><option value='me'>عليّ (يتسجل مصروف على الاستديو)</option><option value='t'>على المستأجر</option></select><label>يوم الدفع</label><input id='mn_dd' type='date' value='"+td()+"'><div class='bt xb'><button class='p' id='mn_ok'>💾 حفظ</button><button onclick=\"mntOpen('"+id+"')\">رجوع</button></div>";
+ var d=M('mntx',h);d.querySelector('#mn_ok').onclick=function(){var c=N(d.querySelector('#mn_c').value),by=d.querySelector('#mn_by').value,dd=d.querySelector('#mn_dd').value||td();x.st='done';x.c=c;x.by=by;x.dd=dd;
+  if(c>0&&by==='me'){S.exp=S.exp||[];var eid=uid();S.exp.push({id:eid,u:u.id,g:'',w:'🔧 صيانة: '+x.t,a:c,d:dd,n:1});x.eid=eid}sv();mntOpen(id);try{render()}catch(e){}toast(c>0&&by==='me'?'✅ اتسجل مصروف صيانة '+$(c):'✅ اتقفل الطلب')}};
+window.mntDel=function(id,i){var u=U(id),x=u.mnt[i];if(x&&x.eid)S.exp=(S.exp||[]).filter(function(e){return e.id!==x.eid});u.mnt.splice(i,1);sv();mntOpen(id);try{render()}catch(e){}};
+
+/* buttons on the open studio (next to ✎ تعديل) */
+function addBtns(){if(S.tab!=='units')return;[].forEach.call(document.querySelectorAll('#app button[onclick^="mUnit(\'"]'),function(b){var m=/mUnit\('([^']+)'\)/.exec(b.getAttribute('onclick')||'');if(!m)return;var p=b.parentNode;if(!p||p.querySelector('.xinv'))return;var u=U(m[1]);if(!u)return;
+ var a=document.createElement('button');a.className='xinv';a.textContent='🛋 الجرد';a.setAttribute('onclick',"invOpen('"+u.id+"')");var c=document.createElement('button');c.className='xmnt';var n=mOpen(u);c.textContent='🔧 صيانة'+(n?' ('+n+')':'');if(n)c.style.borderColor='#f59e0b';c.setAttribute('onclick',"mntOpen('"+u.id+"')");b.after(a);a.after(c)})}
+
+/* ===== ⭐ تقييم المستأجر ===== */
+var RT={5:'⭐⭐⭐⭐⭐ ممتاز',4:'⭐⭐⭐⭐ كويس',3:'⭐⭐⭐ عادي',2:'⭐⭐ بيتأخر / مشاكل',1:'⭐ مش هأجّرله تاني'};
+var tf0=window.tnFile;if(tf0)window.tnFile=function(id,k){var o=tf0.apply(this,arguments);try{var u=U(id),L=u.leases[k],box=document.querySelector('#tnx .dlg')||document.getElementById('tnx');if(!box||box.querySelector('.xrt'))return o;var note=box.querySelector('.fx-note');var w=document.createElement('div');w.className='xrt';
+ w.innerHTML="<div class='fx-sec'>⭐ تقييم المستأجر</div><div class='xstars'>"+[1,2,3,4,5].map(function(n){return "<button type='button' data-n='"+n+"' class='"+((+L.rt||0)>=n?'on':'')+"'>★</button>"}).join('')+"<span class='mu'>"+(L.rt?RT[L.rt]:'اختار تقييم')+"</span></div>";
+ w.addEventListener('click',function(e){var b=e.target.closest('button[data-n]');if(!b)return;L.rt=+b.dataset.n;sv();[].forEach.call(w.querySelectorAll('button[data-n]'),function(x){x.classList.toggle('on',+x.dataset.n<=L.rt)});w.querySelector('span').textContent=RT[L.rt];toast('⭐ اتسجل التقييم')});
+ var sec=note&&note.previousElementSibling;(sec&&sec.classList.contains('fx-sec'))?box.insertBefore(w,sec):box.appendChild(w)}catch(e){}return o};
+function norm(t){return String(t||'').replace(/[^\d]/g,'').slice(-9)}
+function nm(t){return String(t||'').trim().replace(/\s+/g,' ')}
+window.bnyTenantHist=function(name,phone){var o=[],p=norm(phone),n=nm(name);(S.units||[]).forEach(function(u){(u.leases||[]).forEach(function(L){var hit=(p.length>=7&&norm(L.phone)===p)||(n.length>3&&nm(L.tenant)===n);if(hit)o.push({u:u,L:L})})});return o};
+function labOf(el){var l=el.previousElementSibling;if(l&&l.tagName==='LABEL')return l.textContent;var c=el.closest('label');if(c)return c.textContent;var p=el.parentNode&&el.parentNode.previousElementSibling;return p&&p.tagName==='LABEL'?p.textContent:''}
+function warnLease(root){var ins=[].slice.call(root.querySelectorAll('input'));var ti=ins.filter(function(x){return /اسم المستأجر/.test(labOf(x))})[0];if(!ti)return;var ph=ins.filter(function(x){return /(واتساب|موبايل|رقم) المستأجر/.test(labOf(x))&&!/هوية/.test(labOf(x))})[0];
+ var H=bnyTenantHist(ti.value,ph&&ph.value),bad=H.filter(function(x){return x.L.rt&&x.L.rt<=2}),good=H.filter(function(x){return x.L.rt>=4});var w=root.querySelector('.xwarn'),txt='';
+ if(bad.length)txt="⚠️ المستأجر ده اتقيّم قبل كده «"+RT[bad[0].L.rt]+"» في «"+E_(bad[0].u.name)+"»"+(bad[0].L.note?" — "+E_(String(bad[0].L.note).slice(0,60)):'');else if(good.length)txt="✅ مستأجر قديم: «"+RT[good[0].L.rt]+"» في «"+E_(good[0].u.name)+"»";
+ if(!txt){if(w)w.remove();return}if(!w){w=document.createElement('div');ti.after(w)}w.className='xwarn'+(bad.length?' bad':'');w.innerHTML=txt}
+document.addEventListener('input',function(e){var r=e.target&&e.target.closest&&e.target.closest('.dlg');if(r&&!e.target.closest('#ctwrap'))try{warnLease(r)}catch(x){}},true);
+
+/* ===== 📅 تقرير السنة ===== */
+window.yearRep=function(y){var now=today();y=y||now.getFullYear();var T={rin:0,oth:0,out:0,drw:0,prof:0,earn:0,cost:0,exM:0},per={},mth=[];window.__mrSilent=1;
+ try{for(var m=0;m<12;m++){if(new Date(y,m,1)>now)break;monthRep(y,m);var r=window.__mr||{};Object.keys(T).forEach(function(k){T[k]+=+r[k]||0});if(Math.abs(r.prof||0)>0.5||Math.abs((r.rin||0)+(r.oth||0)-(r.out||0))>0.5)mth.push([m,r.prof||0,(r.rin||0)+(r.oth||0)-(r.out||0)]);Object.keys(r.per||{}).forEach(function(id){var p=r.per[id];per[id]=per[id]||{n:p.n,r:0,p:0};per[id].r+=p.r;per[id].p+=p.p})}}finally{window.__mrSilent=0}
+ var g=(S.groups||[]).filter(function(x){return x.id===WS})[0],sh=[];if(g&&g.n>1){var me=+g.share||Math.round(100/g.n),ps=(window.spPartners?spPartners(g.id):[]).filter(function(x){return x!=='أنا'}),rest=(100-me)/Math.max(1,g.n-1);sh.push(['أنا',me]);for(var i=0;i<g.n-1;i++)sh.push([ps[i]||('شريك '+(i+1)),rest])}
+ var nm_=new Date(y,0,1).toLocaleDateString('ar-EG',{year:'numeric'});
+ var h="<div class='fx-mn'><button onclick='yearRep("+(y-1)+")'>›</button><h2 style='margin:0;font-size:18px;text-align:center'>📅 تقرير سنة "+nm_+(g?" — "+E_(g.name):"")+(y===now.getFullYear()?" <small class='mu'>(لحد النهارده)</small>":"")+"</h2><button onclick='yearRep("+(y+1)+")'"+(y>=now.getFullYear()?' disabled':'')+">‹</button></div>"
+ +"<div class='fx-g'><div><small>💰 اتقبض</small><b class='pos'>"+$(T.rin+T.oth)+"</b></div><div><small>💸 اتدفع</small><b class='neg'>"+$(T.out)+"</b></div><div><small>صافي الفلوس</small><b class='"+(T.rin+T.oth-T.out-T.drw<0?'neg':'pos')+"'>"+$(T.rin+T.oth-T.out-T.drw)+"</b></div><div><small>📈 ربح السنة</small><b class='"+(T.prof<0?'neg':'pos')+"'>"+$(T.prof)+"</b></div></div>"
+ +"<div class='mu' style='font-size:12.5px'>ربح السنة = مجموع ربح كل شهر بنفس طريقة التقرير الشهري: إيجار الأيام "+$(T.earn)+" − تكلفة العقود والفرش "+$(T.cost)+(T.exM?" − مصاريف "+$(T.exM):"")+(T.drw?" • مسحوبات الشركاء "+$(T.drw)+" (مش داخلة في الربح)":"")+"</div>";
+ if(sh.length){h+="<div class='fx-sec'>🤝 نصيب كل شريك من ربح السنة</div>"+sh.map(function(x){return "<div class='fx-r'><span>"+E_(x[0])+"<small>"+Math.round(x[1]*10)/10+"%</small></span><b class='"+(T.prof<0?'neg':'pos')+"'>"+$(T.prof*x[1]/100)+"</b></div>"}).join('')}
+ var P=Object.keys(per).map(function(k){return per[k]}).filter(function(x){return x.r||x.p}).sort(function(a,b){return b.p-a.p});
+ if(P.length){h+="<div class='fx-sec'>🏠 ربح كل استديو</div>"+P.map(function(x){return "<div class='fx-r'><span>"+E_(x.n)+"<small>إيجار "+$(x.r)+"</small></span><b class='"+(x.p<0?'neg':'pos')+"'>"+$(x.p)+"</b></div>"}).join('')}
+ h+="<div class='fx-sec'>📆 شهر بشهر</div>"+mth.map(function(x){return "<div class='fx-r'><span>"+new Date(y,x[0],1).toLocaleDateString('ar-EG',{month:'long'})+"<small>صافي الفلوس "+$(x[2])+"</small></span><b class='"+(x[1]<0?'neg':'pos')+"'>"+$(x[1])+"</b></div>"}).join('');
+ h+="<div class='bt xb'><button class='p' onclick='yearShare("+y+")'>💬 ابعته واتساب</button><button onclick=\"this.closest('.ov').remove()\">قفل</button></div>";
+ window.__yr={y:y,T:T,sh:sh,P:P,g:g};M('yrx',"<div class='xyr'>"+h+"</div>")};
+window.yearShare=function(y){var r=window.__yr;if(!r)return;var t="📅 تقرير سنة "+y+(r.g?" — "+r.g.name:"")+"\n💰 اتقبض: "+$(r.T.rin+r.T.oth)+"\n💸 اتدفع: "+$(r.T.out)+"\n📈 ربح السنة: "+$(r.T.prof)+(r.sh.length?"\n\n🤝 النصيب:\n"+r.sh.map(function(x){return "• "+x[0]+": "+$(r.T.prof*x[1]/100)}).join("\n"):"")+(r.P.length?"\n\n🏠 الاستديوهات:\n"+r.P.map(function(x){return "• "+x.n+": "+$(x.p)}).join("\n"):"")+"\n\n— Bunyan Furnished";
+ try{if(navigator.share){navigator.share({text:t}).catch(function(){});return}}catch(e){}window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')};
+function addYr(){if(S.tab!=='acc')return;var b=document.getElementById('mrb');if(!b||b.querySelector('#yrb'))return;var y=document.createElement('button');y.id='yrb';y.textContent='📅 تقرير السنة';y.setAttribute('onclick','yearRep()');b.appendChild(y)}
+
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{addBtns();addYr()}catch(e){}return o};
+var st=document.createElement('style');st.textContent=".xdl{max-height:88vh;overflow:auto}.xl{display:flex;flex-direction:column;gap:6px;margin:6px 0}.xr{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid rgba(120,140,160,.25);border-radius:12px}.xr>span{flex:1;min-width:0}.xr small{display:block;opacity:.75;font-size:12px}.xr select{max-width:130px}.xr.xd{opacity:.65}.xt{margin:8px 0;font-size:14px}.xb{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.xb button{flex:1 1 auto}.xstars{display:flex;align-items:center;gap:4px;flex-wrap:wrap}.xstars button{font-size:24px;line-height:1;padding:2px 6px;min-height:0;background:none;border:0;color:#c9ccd2;cursor:pointer}.xstars button.on{color:#f5a623}.xstars span{margin-inline-start:6px;font-size:13px}.xwarn{margin:6px 0 2px;padding:8px 10px;border-radius:10px;background:#e8f7ee;color:#14532d;font-size:13px;font-weight:700}.xwarn.bad{background:#fdecec;color:#991b1b}.xinv,.xmnt{margin-inline-start:6px}";document.head.appendChild(st);
+})();
+</script>
 </body>
 </html>
