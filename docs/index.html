@@ -3524,7 +3524,7 @@ function fx(){try{var hd=document.querySelector('.hd'),pn=document.getElementByI
   var sy=document.getElementById('syq');if(sy&&sy.parentNode!==pn&&!document.getElementById('setsub')){pn.insertBefore(sy,sp.nextSibling)}if(sy){sy.title='المزامنة بين الأجهزة'}var pv0=document.getElementById('pvb'),br=hd.querySelector('.brand');if(pv0&&br&&pv0.previousElementSibling!==br)br.insertAdjacentElement('afterend',pv0);
   var bl=document.getElementById('bell'),sp3=document.querySelector('.hd>span');if(bl&&sp3&&bl.parentNode!==sp3)sp3.insertBefore(bl,sp3.firstChild)}
  else{hd.classList.remove('wsin');if(it)it.remove();var s2=document.getElementById('wssep');if(s2)s2.remove();close();
-  var sy2=document.getElementById('syq'),pv=document.getElementById('pvb');if(sy2&&sy2.parentNode!==hd&&pv)pv.insertAdjacentElement('afterend',sy2);
+  var sy2=document.getElementById('syq'),pv=document.getElementById('pvb');/* the ☰ menu arranger keeps it inside #hmp — don't fight it (the two were moving it back and forth 10×/sec on wide screens = shaking) */if(sy2&&sy2.parentNode!==hd&&sy2.parentNode!==pn&&pv)pv.insertAdjacentElement('afterend',sy2);
   var bl2=document.getElementById('bell'),spn=document.querySelector('.hd>span');if(bl2&&spn&&bl2.parentNode!==spn)spn.insertBefore(bl2,spn.firstChild)}}catch(e){}}
 var r0=render;render=function(){var o=r0.apply(this,arguments);fx();return o};var w0=wsBar;wsBar=function(){var o=w0.apply(this,arguments);fx();return o};
 (mq.addEventListener?mq.addEventListener('change',fx):mq.addListener(fx));setTimeout(fx,0);setTimeout(fx,400);
@@ -5561,7 +5561,7 @@ html body #hmp>#syq#syq.nt>span:not(.sd){font-size:0!important}html body #hmp>#s
 <script id="mnu3js">(function(){
 var busy=false;
 function arrange(){if(busy)return;busy=true;try{var h=document.getElementById('hmp');if(!h)return;
- var syq=document.getElementById('syq');if(syq){var ws=document.getElementById('wssep')||document.getElementById('wsmi');if(syq.parentNode!==h||syq.previousElementSibling!==ws){h.insertBefore(syq,ws?ws.nextSibling:h.firstChild)}var st=syq.querySelector('span:not(.sd)'),nt=!st||/^\s*(مزامنة)?\s*$/.test(st.textContent);if(syq.classList.contains('nt')!==nt)syq.classList.toggle('nt',nt)}
+ var syq=document.getElementById('syq');if(syq){var ws=document.getElementById('wssep')||document.getElementById('wsmi');/* only on narrow screens (the ☰ menu); on wide screens the header keeps it — moving it here made the header shake */if(matchMedia('(max-width:860px)').matches&&(syq.parentNode!==h||syq.previousElementSibling!==ws)){h.insertBefore(syq,ws?ws.nextSibling:h.firstChild)}var st=syq.querySelector('span:not(.sd)'),nt=!st||/^\s*(مزامنة)?\s*$/.test(st.textContent);if(syq.classList.contains('nt')!==nt)syq.classList.toggle('nt',nt)}
  var ump=document.querySelector('#hmp #who .ump');if(ump){var dg=ump.querySelector(':scope>button.dg');
   var w2=ump.querySelector('.who2');if(w2&&!w2.dataset.a){try{w2.dataset.a=((typeof A!=='undefined'&&A&&A.u)||'?').charAt(0).toUpperCase()}catch(e){}}
   var sec=ump.querySelector(':scope>.ust');if(!sec){sec=document.createElement('div');sec.className='ust';sec.textContent='⚙️ الإعدادات'}
@@ -6708,6 +6708,8 @@ var R=[
   check:function(){return window.hkShare&&window.updPut?[]:['مشاركة العقد والأبديت مع حكيم مش شغالة']},fix:null},
  {id:'updcols',area:'الأبديت',t:'مكانش ينفع تغيّر ترتيب أعمدة صورة الأبديت، والسعر والنوع كانوا مش بارزين',
   check:function(){if(S.tab!=='upd')return [];var o=[];if(typeof window.updCols!=='function')o.push('زرار ترتيب الأعمدة مش موجود');var t=document.querySelector('#updposter tr.r:not(.rb) td.ty');if(t&&!bnyIsRed(getComputedStyle(t).color))o.push('نوع الشقة مش باللون الأحمر');return o},fix:null},
+ {id:'deskshake',area:'الكمبيوتر',t:'على اللاب البرنامج كان بيترعش على طول (زرار المزامنة بيتنقل بين مكانين 10 مرات في الثانية) وأزرار الهيدر نازلة على سطرين والصورة نص الشاشة',
+  check:function(){if(innerWidth<861)return [];var o=[],h=document.querySelector('.hd');if(h){var c=0,ob=new MutationObserver(function(L){c+=L.length});ob.observe(h,{subtree:true,childList:true});setTimeout(function(){ob.disconnect();window.__bnyShake=c},1000)}if((window.__bnyShake||0)>12)o.push('الهيدر بيتحرك لوحده ('+window.__bnyShake+' مرة في الثانية) — رعشة');var r=document.getElementById('reh');if(r&&r.parentElement&&r.getBoundingClientRect().width<r.parentElement.getBoundingClientRect().width*.8)o.push('صورة الترحيب واخدة نص الشاشة بس');return o},fix:null},
  {id:'autopair',area:'المزامنة',t:'أسامه مش عايز يدخل أكواد عشان يفتح حسابه على اللاب — الجهاز الجديد بيبعت طلب ربط مشفّر لوحده والموبايل بيسأله «ده انت؟»',
   check:function(){return window.bnyPair?[]:['الربط التلقائي بين الأجهزة مش شغال']},fix:null},
  {id:'devlink',area:'المزامنة',t:'لما سطّبت البرنامج على اللاب فتح على «إنشاء حساب جديد» ومكانش فيه طريقة سهلة يجيب حسابي — اتعمل «💻 اربط جهاز تاني» على الموبايل و«📲 عندي حساب» على الجهاز الجديد',
@@ -8263,5 +8265,10 @@ var d0=window.doLogin;if(typeof d0==='function')window.doLogin=async function(){
 })();
 </script>
 <style id="autopaircss">#pairbn{position:fixed;left:50%;transform:translateX(-50%);top:calc(70px + env(safe-area-inset-top,0px));z-index:440;width:min(94vw,560px);background:#0f5132;color:#fff;border-radius:14px;padding:10px 40px 10px 14px;box-shadow:0 10px 30px rgba(0,0,0,.25);direction:rtl;font-size:13.5px;line-height:1.7}#pairbn b{display:inline}#pairbn span{display:block}#pairbn button{position:absolute;left:8px;top:8px;margin:0!important;padding:2px 8px!important;background:rgba(255,255,255,.2)!important;color:#fff!important;border:0!important}</style>
+<style id="deskfix">
+/* wide screens (laptop / desktop app): header buttons on one line, the welcome picture full width, «اربط جهاز تاني» only on the phone */
+@media (min-width:861px){.hd>span>button{white-space:nowrap!important}.hd #hmsal,.hd #hmrem,.hd #cpmi,.hd>span>button:not([id]){font-size:13px!important;padding:6px 10px!important;line-height:1.2!important}.hd #hmlink{display:none!important}#hmp>button,#hmp>a{white-space:nowrap!important;font-size:13px!important;padding:6px 10px!important;line-height:1.2!important;min-height:0!important;height:auto!important}#hmp #hmlink{display:none!important}
+ #app .hero2,#app #reh{grid-column:1/-1!important}#app #reh>svg{height:180px!important;width:100%!important;display:block}#grpb{display:none!important}}
+</style>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
