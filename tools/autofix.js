@@ -13,7 +13,11 @@ const BENIGN=/Failed to fetch|NetworkError|Load failed|timeout|AbortError|cancel
 let reps=[];try{const hs=cp.execSync('git log --since="30 hours ago" --format=%h -- monitor.json',{cwd:DATA}).toString().trim().split('\n').filter(Boolean);
  hs.forEach(h=>{try{reps.push(JSON.parse(cp.execSync('git show '+h+':monitor.json',{cwd:DATA,maxBuffer:1e8}).toString()))}catch(e){}})}catch(e){}
 const errs={};reps.forEach(r=>(r.errs||r.errList||[]).concat((r.issues||[]).filter(x=>x.area==='أخطاء برمجية').map(x=>({m:x.msg,s:x.stack||''}))).forEach(e=>{if(!e||!e.m||BENIGN.test(e.m))return;const k=e.m.slice(0,160);errs[k]=errs[k]||{m:e.m,s:e.s||'',n:0};errs[k].n++;if(e.s&&!errs[k].s)errs[k].s=e.s}));
-const cand=Object.values(errs).filter(e=>e.n>=2&&!log.some(l=>l.m===e.m&&Date.now()-l.at<3*864e5)).sort((a,b)=>b.n-a.n);
+// no overlap with the Claude repair job: skip anything Claude fixed/touched in the last 3 days, and don't work while someone just changed the code
+let cf=[];try{cf=JSON.parse(fs.readFileSync(path.join(DATA,'claude-fixes.json'),'utf8'))}catch(e){}
+const claudeHas=m=>cf.some(x=>x&&Date.now()-Date.parse(x.at||0)<3*864e5&&String((x.problem||'')+' '+(x.fix||'')).includes(String(m).slice(0,40)));
+try{const last=+cp.execSync('git log -1 --format=%ct -- rental-tracker.html',{cwd:ROOT}).toString().trim()*1000;if(Date.now()-last<90*60e3){out('code changed in the last 90 min — leaving it (no overlap)');process.exit(0)}}catch(e){}
+const cand=Object.values(errs).filter(e=>e.n>=2&&!claudeHas(e.m)&&!log.some(l=>l.m===e.m&&Date.now()-l.at<3*864e5)).sort((a,b)=>b.n-a.n);
 if(!cand.length){out('nothing to fix');process.exit(0)}
 const src=fs.readFileSync(F,'utf8');
 // map every top-level function declaration in the inline scripts

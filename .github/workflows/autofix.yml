@@ -1,9 +1,10 @@
 name: Auto-fix (Gemini)
 on:
-  schedule: [{cron: '17 */6 * * *'}]
+  schedule: [{cron: '47 3,9,15,21 * * *'}]   # ~1.5h after the Claude repair job (it runs 20:23/02:23/08:23/14:23 UTC) — never at the same time
   workflow_dispatch:
 permissions:
   contents: write
+concurrency: {group: autofix, cancel-in-progress: false}
 jobs:
   fix:
     runs-on: ubuntu-latest
@@ -26,5 +27,5 @@ jobs:
           if [ -f .autofix-msg ]; then
             git config user.name "bunyan-autofix"; git config user.email "autofix@users.noreply.github.com"
             git add rental-tracker.html docs tools/autofix-log.json tools/baseline.json
-            git commit -q -F .autofix-msg && rm .autofix-msg && git push -q
+            git commit -q -F .autofix-msg && rm .autofix-msg && (git pull -q --rebase && git push -q || (git rebase --abort 2>/dev/null; echo 'someone pushed in between — dropping this fix, no overlap'))
           else git add tools/autofix-log.json 2>/dev/null; git diff --cached --quiet || (git config user.name "bunyan-autofix"; git config user.email "autofix@users.noreply.github.com"; git commit -qm "autofix log" && git push -q); fi
