@@ -3712,7 +3712,7 @@ function loadDB(){if(DB)return;var U=['hadith.json','../hadith.json','https://bu
  (function nx(){if(n>=U.length||DB)return;fetch(U[n++],{cache:'no-cache'}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){if(!d||!d.h)throw 0;if(!DB||d.h.length!==DB.h.length){useDB(d);idb(function(st){st.put(d,'db')})}}).catch(nx)})()}
 setTimeout(loadDB,6000);
 /* كتب الحديث الكاملة (الصحيح والحسن بس): بتتحمّل كتاب كتاب في الخلفية وتتحفظ على الجهاز */
-var BK={},BKL=['bukhari','muslim','nasai','abudawud','tirmidhi','ibnmajah','malik','nawawi','qudsi'];
+var BK={},BKL=['quran','bukhari','muslim','nasai','abudawud','tirmidhi','ibnmajah','malik','nawawi','qudsi'];
 function bkUse(b,d){if(d&&d.h&&d.h.length)BK[b]=d}
 idb(function(st){BKL.forEach(function(b){var g=st.get('bk_'+b);g.onsuccess=function(){bkUse(b,g.result)}})});
 function bkNext(){var b=BKL.filter(function(x){return !BK[x]})[0];if(!b)return;var U=['hd/','../hd/','https://bunyanrealstate-commits.github.io/bunyan/hd/'],n=0;
@@ -3735,7 +3735,9 @@ function pickH(){var seen=[],last='';try{var o2=localStorage.getItem('bny_hd_see
 function show(){if(typeof AUTH!=='undefined'&&!AUTH)return;if(document.hidden)return;if(!el){el=document.createElement('div');el.id='hdth';el.innerHTML="<div class='ht'></div><div class='hx'></div><div class='hs'></div><div class='hdt'>المس مرتين ورا بعض للإخفاء</div>";var lt=0;el.addEventListener('click',function(e){e.stopPropagation();var n=Date.now();if(n-lt<450){lt=0;hide()}else lt=n});el.addEventListener('dblclick',function(e){e.stopPropagation();hide()});document.body.appendChild(el)}
  var o=pick();el.querySelector('.ht').textContent=o.k;el.querySelector('.hx').textContent=o.t;el.querySelector('.hs').textContent=o.s;el.querySelector('.hs').style.display=o.s?'':'none';el.querySelector('.hx').scrollTop=0;el.classList.add('on');clearTimeout(tm)}
 function hide(){if(el)el.classList.remove('on')}
-setTimeout(function(){var l=0;try{l=+(localStorage.getItem('bny_hd_t')||0)}catch(e){}if(Date.now()-l<3600000)return;try{localStorage.setItem('bny_hd_t',String(Date.now()))}catch(e){}show()},4000);
+setTimeout(function(){var l=0;try{l=+(localStorage.getItem('bny_hd_t')||0)}catch(e){}if(Date.now()-l<60000)return;try{localStorage.setItem('bny_hd_t',String(Date.now()))}catch(e){}show()},4000);
+/* كل ما ترجع للتطبيق بعد ما سبته دقيقة أو أكتر يظهرلك كلام جديد */
+var hidAt=0;document.addEventListener('visibilitychange',function(){if(document.hidden){hidAt=Date.now();return}if(hidAt&&Date.now()-hidAt>=60000){hidAt=0;setTimeout(function(){try{localStorage.setItem('bny_hd_t',String(Date.now()))}catch(e){}show()},1200)}});
 })();
 </script>
 <style>.ov{z-index:450!important}#natx{z-index:460!important}body:has(#natx.ov) #hmp,body:has(#natx.ov) #setsub,body:has(#natx.ov) #wsub{display:none!important}body:has(.ov) #hmp,body:has(.ov) #setsub,body:has(.ov) #wsub{display:none!important}</style>
@@ -6709,7 +6711,7 @@ var R=[
   check:function(){if(S.tab!=='ct')return [];var o=[];if(!document.getElementById('ct2tpl'))o.push('زرار عقد مفروش / عقد فاضي مش ظاهر');if((S.ct&&S.ct.tpl)==='b'){var p=document.getElementById('ctpaper');if(p&&!p.querySelector('.t2,.t2b'))o.push('«عقد فاضي» مختار بس العقد ظاهر بشكل «عقد مفروش»');if(!document.getElementById('ct2box'))o.push('خانات الدفعات بتاعة «عقد فاضي» مش ظاهرة')}return o},fix:function(){window.ct2Box&&ct2Box();return 'رجّعت زراير عقد مفروش / عقد فاضي'}},
  {id:'ctbidi',area:'العقد',t:'لما بتكتب بالعربي رقم وكلمة زي «6 شيكات» كانت الكلمة بتيجي الأول والرقم بعدها',
   check:function(){if(S.tab!=='ct')return [];var o=[],e=document.querySelector('#ctpaper .fv');if(e&&getComputedStyle(e).unicodeBidi!=='plaintext')o.push('اتجاه الكتابة في خانات العقد مش تلقائي');return o},fix:null},
- {id:'hdbooks',area:'الأحاديث',t:'أسامه طلب كلام وأحاديث كتير — اتضافت كتب الحديث (البخاري، مسلم، والسنن الصحيح والحسن منها بس، والموطأ، والأربعين) أكتر من 30 ألف حديث بتتحمّل في الخلفية',
+ {id:'hdbooks',area:'الأحاديث',t:'أسامه طلب كلام وأحاديث كتير وتظهر كل ما يفتح — اتضاف القرآن الكريم كله وكتب الحديث (البخاري، مسلم، والسنن الصحيح والحسن منها بس، والموطأ، والأربعين) أكتر من 30 ألف حديث بتتحمّل في الخلفية',
   check:function(){return typeof window.bnyHadithCount==='function'?[]:['كتب الحديث مش متوصلة']},fix:null},
  {id:'tidy',area:'الشاشة',t:'التبويبات كانت طويلة جداً (الداشبورد قرب 3000 بكسل وسجل النشاط 22000) — الكروت اللي مش محتاجها كل يوم بقت مقفولة وتفتح بلمسة، والسجل بيعرض آخر 40',
   check:function(){var a=document.getElementById('app');if(!a)return [];if((S.tab==='log'||S.tab==='bk')&&a.scrollHeight>9000)return ['سجل النشاط طويل جداً ('+a.scrollHeight+'px)'];if(S.tab==='home'){var w=document.getElementById('wpcard');if(w&&!w.classList.contains('fd'))return ['خطة السحب مش متطبّقة في الداشبورد']}return []},fix:function(){render();return 'رجّعت تطبيق الكروت'}},
