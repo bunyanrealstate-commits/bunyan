@@ -320,7 +320,31 @@ label{margin:8px 0 4px!important;font-size:12.5px!important}
 html.bny-sd #bsplash.v2{opacity:0;transform:scale(1.04)}#bsplash.v2.quick{background:transparent!important}#bsplash.v2.quick .b2bg{display:none!important}</style>
 </head>
 <body>
-<div id="bsplash" class="v2" aria-hidden="true"><div class="b2bg"><i></i><i></i><i></i></div><div class="b2c"><div class="b2mark"><svg viewBox="-34 -8 106 116" width="46" height="50"><g fill="#fff"><path d="M0,0 H34 C54,0 62,10 62,24 C62,36 55,43 46,46 C58,49 66,57 66,72 C66,90 54,100 34,100 H0 Z M17,14 V40 H32 C41,40 45,36 45,27 C45,18 41,14 32,14 Z M17,54 V86 H34 C45,86 49,80 49,70 C49,60 45,54 34,54 Z"/><path d="M0,100 C-16,98 -28,86 -28,66 C-24,82 -12,92 4,93 L4,100 Z"/></g></svg></div><svg class="b2word" viewBox="-30 -10 500 120" width="220" height="53"><g fill="#fff"><path d="M0,0 H34 C54,0 62,10 62,24 C62,36 55,43 46,46 C58,49 66,57 66,72 C66,90 54,100 34,100 H0 Z M17,14 V40 H32 C41,40 45,36 45,27 C45,18 41,14 32,14 Z M17,54 V86 H34 C45,86 49,80 49,70 C49,60 45,54 34,54 Z"/><path d="M0,100 C-16,98 -28,86 -28,66 C-24,82 -12,92 4,93 L4,100 Z"/><path d="M72,0 H89 V68 C89,80 94,86 103,86 C112,86 117,80 117,68 V0 H134 V68 C134,92 122,100 103,100 C84,100 72,92 72,68 Z"/><path d="M146,100 V0 H162 L196,70 V0 H212 V100 H196 L162,30 V100 Z"/><path d="M222,0 H240 L256,36 L272,0 H290 L265,58 V100 H247 V58 Z"/><path d="M298,100 L326,0 H344 L372,100 H354 L350,82 H320 L316,100 Z M324,68 H346 L335,26 Z"/><path d="M384,100 V0 H400 L434,70 V0 H450 V100 H434 L400,30 V100 Z"/></g></svg><div class="b2sub">FURNISHED</div><div class="b2sub b2ar">بنيان للاستديوهات المفروشة</div><div class="b2bar"><i></i></div></div></div><script id="quietjs">
+<div id="bsplash" class="v2" aria-hidden="true"><div class="b2bg"><i></i><i></i><i></i></div><div class="b2c"><div class="b2mark"><svg viewBox="-34 -8 106 116" width="46" height="50"><g fill="#fff"><path d="M0,0 H34 C54,0 62,10 62,24 C62,36 55,43 46,46 C58,49 66,57 66,72 C66,90 54,100 34,100 H0 Z M17,14 V40 H32 C41,40 45,36 45,27 C45,18 41,14 32,14 Z M17,54 V86 H34 C45,86 49,80 49,70 C49,60 45,54 34,54 Z"/><path d="M0,100 C-16,98 -28,86 -28,66 C-24,82 -12,92 4,93 L4,100 Z"/></g></svg></div><svg class="b2word" viewBox="-30 -10 500 120" width="220" height="53"><g fill="#fff"><path d="M0,0 H34 C54,0 62,10 62,24 C62,36 55,43 46,46 C58,49 66,57 66,72 C66,90 54,100 34,100 H0 Z M17,14 V40 H32 C41,40 45,36 45,27 C45,18 41,14 32,14 Z M17,54 V86 H34 C45,86 49,80 49,70 C49,60 45,54 34,54 Z"/><path d="M0,100 C-16,98 -28,86 -28,66 C-24,82 -12,92 4,93 L4,100 Z"/><path d="M72,0 H89 V68 C89,80 94,86 103,86 C112,86 117,80 117,68 V0 H134 V68 C134,92 122,100 103,100 C84,100 72,92 72,68 Z"/><path d="M146,100 V0 H162 L196,70 V0 H212 V100 H196 L162,30 V100 Z"/><path d="M222,0 H240 L256,36 L272,0 H290 L265,58 V100 H247 V58 Z"/><path d="M298,100 L326,0 H344 L372,100 H354 L350,82 H320 L316,100 Z M324,68 H346 L335,26 Z"/><path d="M384,100 V0 H400 L434,70 V0 H450 V100 H434 L400,30 V100 Z"/></g></svg><div class="b2sub">FURNISHED</div><div class="b2sub b2ar">بنيان للاستديوهات المفروشة</div><div class="b2bar"><i></i></div></div></div><script id="merge3">
+/* مزامنة: لو الموبايل والسحابة اتعدلوا الاتنين، ادمج التعديلات بدل ما نسخة تمسح التانية */
+(function(){
+function H(x){var s=JSON.stringify(x===undefined?null:x),h=5381;for(var i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0).toString(36)+':'+s.length}
+function isIdArr(v){return Array.isArray(v)&&v.length>0&&v.every(function(x){return x&&typeof x==='object'&&x.id!=null})}
+function sig(st){var o={};Object.keys(st||{}).forEach(function(k){var v=st[k];if(isIdArr(v)){var m={};v.forEach(function(x){m[x.id]=H(x)});o[k]={__ids:m}}else o[k]=H(v)});return o}
+function key(){try{return 'bny_basesig_'+((typeof A!=='undefined'&&A&&A.u)||'')}catch(e){return 'bny_basesig_'}}
+window.bnySaveBase=function(st){try{localStorage.setItem(key(),JSON.stringify(sig(st)))}catch(e){}};
+window.bnyBaseSig=function(){try{return JSON.parse(localStorage.getItem(key())||'null')}catch(e){return null}};
+/* L = this device, R = cloud, newerL = this device has the newer last edit */
+window.bnyMerge3=function(L,R,newerL,B){B=B||bnyBaseSig();if(!B)return null;var out={},n={l:0,r:0,both:0};
+ var keys={};Object.keys(L||{}).concat(Object.keys(R||{})).forEach(function(k){keys[k]=1});
+ Object.keys(keys).forEach(function(k){var l=L[k],r=R[k],b=B[k];
+  if((isIdArr(l)||isIdArr(r)||(b&&b.__ids))&&(l==null||Array.isArray(l))&&(r==null||Array.isArray(r))){var bi=(b&&b.__ids)||{},lm={},rm={};(l||[]).forEach(function(x){lm[x.id]=x});(r||[]).forEach(function(x){rm[x.id]=x});var res=[],seen={};
+   function pick(id){var x=lm[id],y=rm[id],bh=bi[id];if(x&&y){var hx=H(x),hy=H(y);if(hx===hy)return y;if(hx===bh){n.r++;return y}if(hy===bh){n.l++;return x}n.both++;return newerL?x:y}
+    if(x){if(bh===undefined){n.l++;return x}if(H(x)===bh){n.r++;return null}n.l++;return x}
+    if(y){if(bh===undefined){n.r++;return y}if(H(y)===bh){n.l++;return null}n.r++;return y}return null}
+   (r||[]).forEach(function(y){var v=pick(y.id);seen[y.id]=1;if(v)res.push(v)});(l||[]).forEach(function(x){if(seen[x.id])return;var v=pick(x.id);if(v)res.push(v)});
+   if(k==='hist')res.sort(function(a,c){return (c.t||0)-(a.t||0)});out[k]=res;return}
+  var hl=H(l),hr=H(r);if(hl===hr){out[k]=r;return}if(hl===b){n.r++;out[k]=r}else if(hr===b){n.l++;out[k]=l}else{n.both++;out[k]=newerL?l:r}
+  if(out[k]===undefined)delete out[k]});
+ return {s:out,n:n}};
+})();
+</script>
+<script id="quietjs">
 (function(){
 function W(){try{var C=window.Capacitor;return C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.WaBiz||null}catch(e){return null}}
 window.bnyNewApk=function(){var w=W();return !!(w&&w.ringer)};
@@ -1277,7 +1301,7 @@ function stat(t){var c=cfg();if(c){c.last=t;setCfg(c)}var e=document.getElementB
 function nowS(){return new Date().toLocaleTimeString(typeof LOC==='function'?LOC():'ar-EG',{hour:'2-digit',minute:'2-digit'})}
 function box(h){gi('modal').innerHTML='<div class="ov" onclick="if(event.target===this)syClose()"><div class="dlg">'+h+'</div></div>'}
 window.syClose=function(){gi('modal').innerHTML=''};
-function adopt(rem,sha){var c=cfg(),tab=S.tab;S=Object.assign(blank(),rem);S.tab=tab;try{localStorage.setItem(A.k,JSON.stringify(S))}catch(e){}try{if(typeof snap==='function')PREVL=snap()}catch(e){}c.sha=sha;c.dirty=false;setCfg(c);stat('✓ '+nowS());render();toast('تم تحديث البيانات من السحابة')}
+function adopt(rem,sha){var c=cfg(),tab=S.tab;try{window.bnySaveBase&&bnySaveBase(rem)}catch(e){}S=Object.assign(blank(),rem);S.tab=tab;try{localStorage.setItem(A.k,JSON.stringify(S))}catch(e){}try{if(typeof snap==='function')PREVL=snap()}catch(e){}c.sha=sha;c.dirty=false;setCfg(c);stat('✓ '+nowS());render();toast('تم تحديث البيانات من السحابة')}
 function info(o){var u=o.units||[],L=0,R=0;u.forEach(function(x){(x.leases||[]).forEach(function(l){L++;R+=(l.rcv||[]).length})});var h=(o.hist||[]).filter(function(e){return e&&e.t&&!/تسجيل (دخول|خروج)/.test(e.d||'')}),last=null;h.forEach(function(e){if(!last||e.t>last.t)last=e});return {u:u.length,L:L,R:R,e:(o.exp||[]).length,t:last?last.t:0,d:last?String(last.d||'').split('\n')[0].slice(0,70):''}}
 function tf(t){if(!t)return '—';var d=new Date(t);try{return d.toLocaleDateString(LOC(),{day:'numeric',month:'short'})+' '+d.toLocaleTimeString(LOC(),{hour:'2-digit',minute:'2-digit'})}catch(e){return d.toISOString().slice(0,16).replace('T',' ')}}
 function preSync(){try{var x=JSON.parse(localStorage.getItem('bny_pre_sync'));return x&&x.s?x:null}catch(e){return null}}
@@ -1286,7 +1310,8 @@ function conflict(rem,sha){var a=info(S),b=info(rem),nw=a.t>b.t?'me':(b.t>a.t?'c
  box('<h2>⚠️ تعارض في البيانات</h2><p class="mu">توجد تعديلات على هذا الجهاز لم تُرفع بعد، وتم تعديل السحابة من جهاز آخر. اختيار نسخة يمسح تعديلات النسخة الأخرى.</p><div class="sc"><table><tr><th></th><th>هذا الجهاز</th><th>السحابة</th></tr>'+row('آخر تعديل',lt(a),lt(b))+row('استديوهات',a.u,b.u)+row('عقود مستأجرين',a.L,b.L)+row('إيجارات مستلمة',a.R,b.R)+row('مصروفات',a.e,b.e)+'</table></div>'+(nw?'<p><b>👈 الأحدث: '+(nw==='me'?'هذا الجهاز':'السحابة')+'</b></p>':'')+'<div class="bt"><button onclick="dlBackup()">⬇️ نسخة احتياطية من هذا الجهاز أولاً</button></div><div class="bt"><button class="'+(nw!=='cloud'?'p':'')+'" onclick="syKeepMine()">استخدم نسخة هذا الجهاز</button><button class="'+(nw==='cloud'?'p':'')+'" onclick="syKeepCloud()">استخدم نسخة السحابة</button></div>')}
 function autoRes(rem,sha){var a=info(S),b=info(rem),c=cfg(),same=false;
  try{same=JSON.stringify(strip(S))===JSON.stringify(rem)}catch(e){}
- if(same){c.sha=sha;c.dirty=false;setCfg(c);stat('\u2713 '+nowS());return}
+ if(same){c.sha=sha;c.dirty=false;setCfg(c);stat('\u2713 '+nowS());try{window.bnySaveBase&&bnySaveBase(rem)}catch(e){}return}
+ try{var mg=window.bnyMerge3&&bnyMerge3(strip(S),rem,a.t>b.t);if(mg&&mg.n.l&&mg.n.r){try{localStorage.setItem('bny_pre_sync',JSON.stringify({t:Date.now(),s:strip(S)}))}catch(e){}var tab0=S.tab;try{window.bnySaveBase&&bnySaveBase(rem)}catch(e){}S=Object.assign(blank(),mg.s);S.tab=tab0;try{localStorage.setItem(A.k,JSON.stringify(S))}catch(e){}c.sha=sha;c.dirty=true;setCfg(c);render();setTimeout(push,50);toast('🔀 دمجت تعديلات الموبايل مع تعديلات السحابة'+(mg.n.both?' ('+mg.n.both+' حاجة اتعدلت في الاتنين — خدت الأحدث)':''));return}if(mg&&!mg.n.l&&mg.n.r){try{localStorage.setItem('bny_pre_sync',JSON.stringify({t:Date.now(),s:strip(S)}))}catch(e){}adopt(rem,sha);return}if(mg&&mg.n.l&&!mg.n.r){c.sha=sha;setCfg(c);setTimeout(push,50);return}}catch(e){}
  var cloud;if(a.t!==b.t)cloud=b.t>a.t;else{var na=a.L+a.R+a.e+a.u,nb=b.L+b.R+b.e+b.u;cloud=nb>=na}
  if(cloud){try{localStorage.setItem('bny_pre_sync',JSON.stringify({t:Date.now(),s:strip(S)}))}catch(e){}adopt(rem,sha);toast('\u062a\u0645 \u0627\u0633\u062a\u062e\u062f\u0627\u0645 \u0646\u0633\u062e\u0629 \u0627\u0644\u0633\u062d\u0627\u0628\u0629 \u0644\u0623\u0646\u0647\u0627 \u0627\u0644\u0623\u062d\u062f\u062b')}
  else{try{localStorage.setItem('bny_pre_sync',JSON.stringify({t:Date.now(),s:rem}))}catch(e){}c.sha=sha;setCfg(c);setTimeout(push,50);toast('\u062a\u0645 \u0631\u0641\u0639 \u0628\u064a\u0627\u0646\u0627\u062a \u0647\u0630\u0627 \u0627\u0644\u062c\u0647\u0627\u0632 \u0644\u0623\u0646\u0647\u0627 \u0627\u0644\u0623\u062d\u062f\u062b')}}
@@ -1296,7 +1321,7 @@ window.syRestore=function(){var x=preSync();if(!x)return;syClose();confirmM('ا�
 async function push(){var c=cfg();if(!c||!c.token||!AUTH)return;if(c.acct&&A&&c.acct!==A.u)return;if(navigator.onLine===false){c.dirty=true;setCfg(c);return}if(busy){tm=setTimeout(push,2000);return}busy=true;
  try{var body={message:'sync '+new Date().toISOString(),content:enc(strip(S))};if(c.sha)body.sha=c.sha;
   var r=await api(c,'PUT',body);
-  if(r.ok){var j=await r.json();c=cfg();c.sha=j.content.sha;c.dirty=false;setCfg(c);stat('✓ '+nowS())}
+  if(r.ok){var j=await r.json();c=cfg();c.sha=j.content.sha;c.dirty=false;setCfg(c);stat('✓ '+nowS());try{window.bnySaveBase&&bnySaveBase(body.__src||strip(S))}catch(e){}}
   else if(r.status===409||r.status===422){busy=false;c.dirty=true;setCfg(c);return pull(true)}
   else stat('✗ '+r.status)}catch(e){stat('✗ '+(e&&e.message||''))}finally{busy=false}}
 async function pull(user){var c=cfg();if(!c||!c.token||!AUTH||busy)return;if(c.acct&&A&&c.acct!==A.u)return;if(!c.acct&&A&&US[0]&&A.u===US[0].u){c.acct=A.u;setCfg(c)}if(navigator.onLine===false){if(user)toast('مفيش إنترنت دلوقتي — بياناتك محفوظة على الجهاز');return}busy=true;
@@ -5988,6 +6013,10 @@ var R=[
   check:function(){if(S.tab!=='ct')return [];var o=[];if(!document.getElementById('ct2tpl'))o.push('زرار عقد مفروش / عقد فاضي مش ظاهر');if((S.ct&&S.ct.tpl)==='b'){var p=document.getElementById('ctpaper');if(p&&!p.querySelector('.t2,.t2b'))o.push('«عقد فاضي» مختار بس العقد ظاهر بشكل «عقد مفروش»');if(!document.getElementById('ct2box'))o.push('خانات الدفعات بتاعة «عقد فاضي» مش ظاهرة')}return o},fix:function(){window.ct2Box&&ct2Box();return 'رجّعت زراير عقد مفروش / عقد فاضي'}},
  {id:'ctbidi',area:'العقد',t:'لما بتكتب بالعربي رقم وكلمة زي «6 شيكات» كانت الكلمة بتيجي الأول والرقم بعدها',
   check:function(){if(S.tab!=='ct')return [];var o=[],e=document.querySelector('#ctpaper .fv');if(e&&getComputedStyle(e).unicodeBidi!=='plaintext')o.push('اتجاه الكتابة في خانات العقد مش تلقائي');return o},fix:null},
+ {id:'syncmerge',area:'المزامنة',t:'لما الموبايل والسحابة يتعدلوا الاتنين، المزامنة كانت بتاخد نسخة كاملة وتمسح التانية (زي تصليح البريكي اللي اتمسح لما الموبايل رفع نسخته) — بقت تدمج التعديلات',
+  check:function(){return window.bnyMerge3&&window.bnySaveBase?[]:['دمج المزامنة مش شغال']},fix:null},
+ {id:'nocost',area:'الحسابات',t:'استديو جديد (مش شغال من قبل) عليه مستأجر بيدفع إيجار بس عقد الشركة بتاعه من غير قيمة ولا دفعات — كده الإيجار كله بيتحسب ربح. الاستديوهات اللي اتضافت شغالة بتتحسب على الأرقام المكتوبة زي ما هي',
+  check:function(){var o=[];(S.units||[]).forEach(function(u){var L=(u.leases||[]).filter(function(l){return (+l.rent||0)>0});if(L.length&&!(+u.total>0)&&!(u.inst||[]).length&&!u.own&&!u.onb)o.push('«'+u.name+'»: عليه إيجار '+L[0].rent+' في الشهر بس عقد الشركة قيمته صفر ومفيش دفعات')});return o},fix:null},
  {id:'editfund',area:'الاستديوهات',t:'لما عدّلت تمن فرش استديو اتضاف بالتقسيم (جزء من النقدي وجزء من جيبك) خانة «اتدفع منين» اتغيرت لوحدها لـ «من الرصيد النقدي» والحسابات باظت — والتعديل مكانش فيه نفس خانات الإضافة',
   check:function(){var o=[];(S.units||[]).forEach(function(u){if(u.fsplit&&u.fsrc&&u.fsrc!=='split')o.push('«'+u.name+'»: الأثاث متسجل مقسّم بس مصدره اتغير لـ «'+u.fsrc+'»');if(u.fsrc==='split'&&(+u.capF||0)>0)o.push('«'+u.name+'»: الأثاث مقسّم وعليه كمان «جزء من أموالي» — متسجل مرتين');if(u.fsrc==='split'&&u.g){var gq=((S.gp||{})[u.g]||[]).filter(function(x){return x.key==='f'+u.id}).reduce(function(t,x){return t-(+x.a||0)},0),want=+(u.fsplit&&u.fsplit.gp)||0;if(Math.abs(gq-want)>0.5)o.push('«'+u.name+'»: فلوس الشراكة مخصوم منها للأثاث '+Math.round(gq)+' بس التقسيم بيقول '+Math.round(want))}});return o},fix:function(){var n=0;(S.units||[]).forEach(function(u){if(!u.fsplit)return;var bad=(u.fsrc&&u.fsrc!=='split')||(+u.capF||0)>0;var want=+u.fsplit.gp||0,gq=u.g?((S.gp||{})[u.g]||[]).filter(function(x){return x.key==='f'+u.id}).reduce(function(t,x){return t-(+x.a||0)},0):0;if(!bad&&Math.abs(gq-want)<=0.5)return;
    S.adj=(S.adj||[]).filter(function(a){return !(a.u===u.id&&/تمويل أثاث/.test(a.w||''))});S.tx=(S.tx||[]).filter(function(t){return !(t.u===u.id&&/أثاث/.test((t.w||'')+(t.c||'')))});
@@ -6137,9 +6166,9 @@ var bk0=bkTab;bkTab=function(){var h=bk0.apply(this,arguments);try{if((S.bksub||
 })();</script>
 <script id="jumpwatch">(function(){
 function sig(){var o=[],q=function(e,n){if(!e)return;var r=e.getBoundingClientRect();if(r.top>innerHeight)return;o.push(n+'@'+Math.round(r.top))};q(document.querySelector('.hd'),'الهيدر');q(document.getElementById('nav'),'التبويبات');var a=document.getElementById('app');if(a)[].slice.call(a.children,0,6).forEach(function(c,i){var h=c.querySelector&&c.querySelector('h2');q(c,h?h.textContent.trim().slice(0,14):'كارت '+(i+1))});return o}
-function watch(ms,cb,tab){var a=sig(),t0=Date.now(),y0=scrollY;(function f(){if((tab&&S.tab!==tab)||Math.abs(scrollY-y0)>3)return;var b=sig();var d=b.filter(function(x,i){return a[i]&&x!==a[i]&&Math.abs(+x.split('@')[1]-(+a[i].split('@')[1]))>6});if(d.length){cb(d.slice(0,3).join('، '));return}if(Date.now()-t0<ms)requestAnimationFrame(f)})()}
+var RN=0;function watch(ms,cb,tab){var a=sig(),t0=Date.now(),y0=scrollY,rn=RN;(function f(){if((tab&&S.tab!==tab)||Math.abs(scrollY-y0)>3||RN!==rn)return;var b=sig();var d=b.filter(function(x,i){return a[i]&&x!==a[i]&&Math.abs(+x.split('@')[1]-(+a[i].split('@')[1]))>6});if(d.length){cb(d.slice(0,3).join('، ')+' (كان '+a.slice(0,4).join('، ')+')');return}if(Date.now()-t0<ms)requestAnimationFrame(f)})()}
 var iv=setInterval(function(){if(document.documentElement.classList.contains('bny-ready')){clearInterval(iv);setTimeout(function(){watch(2500,function(w){window.__bootJump=w})},50)}},50);
-var r0=render;render=function(){var y=scrollY,t=S.tab,o=r0.apply(this,arguments);if(y<5)setTimeout(function(){if(S.tab===t&&scrollY<5)watch(1200,function(w){window.__tabJump={at:Date.now(),tab:t,what:w}},t)},30);return o};
+var r0=render;render=function(){RN++;var y=scrollY,t=S.tab,o=r0.apply(this,arguments);if(y<5)setTimeout(function(){if(S.tab===t&&scrollY<5)watch(1200,function(w){window.__tabJump={at:Date.now(),tab:t,what:w}},t)},30);return o};
 })();</script>
 <style id="ctonepage">
 #ctpaper{min-height:1123px!important}#ctpaper .fr{min-height:1079px!important;padding:14px 16px 18px!important}
