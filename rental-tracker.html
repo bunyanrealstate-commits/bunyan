@@ -6708,6 +6708,8 @@ var R=[
   check:function(){return window.hkShare&&window.updPut?[]:['مشاركة العقد والأبديت مع حكيم مش شغالة']},fix:null},
  {id:'updcols',area:'الأبديت',t:'مكانش ينفع تغيّر ترتيب أعمدة صورة الأبديت، والسعر والنوع كانوا مش بارزين',
   check:function(){if(S.tab!=='upd')return [];var o=[];if(typeof window.updCols!=='function')o.push('زرار ترتيب الأعمدة مش موجود');var t=document.querySelector('#updposter tr.r:not(.rb) td.ty');if(t&&!bnyIsRed(getComputedStyle(t).color))o.push('نوع الشقة مش باللون الأحمر');return o},fix:null},
+ {id:'devlink',area:'المزامنة',t:'لما سطّبت البرنامج على اللاب فتح على «إنشاء حساب جديد» ومكانش فيه طريقة سهلة يجيب حسابي — اتعمل «💻 اربط جهاز تاني» على الموبايل و«📲 عندي حساب» على الجهاز الجديد',
+  check:function(){var o=[];var d=document.querySelector('#login .ov.lg .dlg');if(d&&d.querySelector('#lp2')&&!d.querySelector('.lnkb'))o.push('زرار «عندي حساب» مش ظاهر في شاشة إنشاء الحساب');if(window.bnyLinkParse&&window.bnyLinkMake){var c=null;try{c=JSON.parse(localStorage.getItem('bny_sync')||'null')}catch(e){}if(c&&c.token){var x=bnyLinkParse(bnyLinkMake());if(!x||x.t!==c.token)o.push('كود ربط الأجهزة مش بيطلع صح')}}return o},fix:null},
  {id:'freeedit',area:'العقد والأبديت',t:'كان صعب تضيف أو تمسح أو تنقل خانات في العقد والأبديت — اتعمل «🧩 تعديل حر» زي الإكسيل؛ ولازم علامات التحديد ماتتحفظش جوه العقد',
   check:function(){var o=[];if(S.ct&&/ctgsel|ctgblk/.test(S.ct.html||''))o.push('علامة تحديد اتحفظت جوه العقد');if(S.tab==='ct'&&document.querySelector('#ctwrap .ctb')&&!document.getElementById('ctgbtn'))o.push('زرار «تعديل حر» مش ظاهر في العقد');return o},
   fix:function(){if(S.ct&&S.ct.html)S.ct.html=S.ct.html.replace(/\s*ctgsel|\s*ctgblk/g,'').replace(/ class=""/g,'');try{save()}catch(e){}window.ctGAdd&&ctGAdd();return 'شلت علامات التحديد ورجّعت زرار التعديل الحر'}},
@@ -8175,6 +8177,45 @@ function addCard(){var el=document.getElementById('hdth');if(!el||el.querySelect
 window.bnyExpAdd=addCard;setInterval(function(){try{addCard()}catch(e){}},1500);
 /* and on every saying in «طبقات الصوفية» */
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#slf .xb');if(!b)return;e.stopPropagation();var it=b.closest('.it'),c=it.cloneNode(true);c.querySelectorAll('.xb,small').forEach(function(x){x.remove()});var h=document.querySelector('#slf .bd h3');bnyExplain(c.textContent.trim(),h?h.textContent.trim():'')},true);
+})();
+</script>
+<style id="devlinkcss">
+#dlk textarea{width:100%;box-sizing:border-box;min-height:84px;font-family:monospace;font-size:12px;direction:ltr}
+#login .lnk{margin:10px 0 0;padding:10px;border:1.5px dashed #1b7a4b;border-radius:14px;background:#f3faf5;text-align:right}
+#login .lnk textarea{width:100%;box-sizing:border-box;min-height:70px;font-family:monospace;font-size:11.5px;direction:ltr;margin:6px 0 0!important}
+#login .lnk small{display:block;color:#4a5a52;font-size:12px;line-height:1.7}
+#login button.lnkb{width:100%;margin:10px 0 0!important;background:#fff!important;border:1.5px solid #1b7a4b!important;color:#0f5132!important;font-weight:800}
+</style>
+<script id="devlink">(function(){if(window.HBUILD)return;
+/* ربط جهاز جديد (لاب/كمبيوتر/موبايل تاني) بنفس الحساب من غير مفاتيح:
+   الموبايل: ☰ ← «💻 اربط جهاز تاني» ← ابعت الكود لنفسك.  الجهاز الجديد: «📲 عندي حساب» ← الصق الكود + نفس اسم المستخدم وكلمة السر ← كل البيانات بتنزل لوحدها */
+var PRE='BNYLINK-';
+function b64e(s){return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function b64d(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return decodeURIComponent(escape(atob(s)))}
+function make(){var c=null,g=null;try{c=JSON.parse(localStorage.getItem('bny_sync')||'null')}catch(e){}if(!c||!c.token||!c.repo)return '';try{g=localStorage.getItem('bny_gem')}catch(e){}
+ return PRE+b64e(JSON.stringify({r:c.repo,t:c.token,p:c.path||'book.json',g:g||'',u:(typeof A!=='undefined'&&A&&A.u)||''}))}
+function parse(x){x=String(x||'').replace(/\s+/g,'');var i=x.indexOf(PRE);if(i<0)return null;try{var o=JSON.parse(b64d(x.slice(i+PRE.length).replace(/[^A-Za-z0-9_-].*$/,'')));return o&&o.r&&o.t?o:null}catch(e){return null}}
+window.bnyLinkParse=parse;window.bnyLinkMake=make;
+window.devLinkOpen=function(){var code=make();try{bnyCloseMenus&&bnyCloseMenus()}catch(e){}var m=document.getElementById('modal');if(!m)return;
+ if(!code){m.innerHTML="<div class='ov' onclick=\"if(event.target===this)this.parentNode.innerHTML=''\"><div class='dlg'><h3>💻 اربط جهاز تاني</h3><p>الجهاز ده مش مربوط بالمزامنة — افتح الموبايل اللي عليه حسابك واعمل الخطوة دي منه.</p><div class='bt'><button class='p' onclick=\"document.getElementById('modal').innerHTML=''\">تمام</button></div></div></div>";return}
+ m.innerHTML="<div class='ov' id='dlk' onclick=\"if(event.target===this)this.parentNode.innerHTML=''\"><div class='dlg'><h3>💻 اربط جهاز تاني بحسابك</h3><p class='mu' style='font-size:13px;line-height:1.8'>1) ابعت الكود ده <b>لنفسك</b> (واتساب «أنا» أو إيميلك).<br>2) على الجهاز الجديد افتح بنيان ← دوس «📲 عندي حساب على الموبايل» ← الصق الكود واكتب نفس اسم المستخدم وكلمة السر.<br>3) كل بياناتك هتنزل لوحدها.</p><textarea readonly onclick='this.select()'>"+code+"</textarea><p style='font-size:12px;color:#b3261e;margin:6px 0'>🔒 الكود ده زي مفتاح بيتك — ماتبعتوش لحد غيرك.</p><div class='bt' style='display:flex;gap:8px'><button class='p' style='flex:1' onclick='devLinkShare()'>📤 ابعته لنفسي</button><button style='flex:1' onclick=\"cpy(document.querySelector('#dlk textarea').value,this)\">📋 نسخ</button></div></div></div>"};
+window.devLinkShare=function(){var t=make();if(!t)return;var msg='كود ربط بنيان (للكمبيوتر):\n'+t;try{var Sh=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Share;if(Sh){Sh.share({text:msg}).catch(function(){});return}}catch(e){}if(navigator.share){navigator.share({text:msg}).catch(function(){});return}try{cpy(t)}catch(e){}};
+/* menu button (phone / any linked device) */
+function addMenu(){var pn=document.getElementById('hmp');if(!pn||document.getElementById('hmlink'))return;var on=false;try{var c=JSON.parse(localStorage.getItem('bny_sync')||'null');on=!!(c&&c.token)}catch(e){}if(!on)return;
+ var b=document.createElement('button');b.id='hmlink';b.type='button';b.textContent='💻 اربط جهاز تاني';b.title='افتح حسابك على اللاب أو الكمبيوتر بنفس البيانات';b.onclick=devLinkOpen;pn.appendChild(b)}
+/* the new device: «📲 عندي حساب» on the create-account screen */
+function addLogin(){var d=document.querySelector('#login .ov.lg .dlg');if(!d||!d.querySelector('#lp2')||d.querySelector('.lnkb'))return;var bt=d.querySelector('.bt');if(!bt)return;
+ var b=document.createElement('button');b.type='button';b.className='lnkb';b.textContent='📲 عندي حساب على الموبايل — اربط الجهاز ده';
+ b.onclick=function(){if(d.querySelector('.lnk'))return;var w=document.createElement('div');w.className='lnk';w.innerHTML="<small>1) على الموبايل: ☰ ← «💻 اربط جهاز تاني» ← ابعت الكود لنفسك.<br>2) الصق الكود هنا، واكتب فوق <b>نفس اسم المستخدم وكلمة السر</b> اللي على الموبايل، ودوس «إنشاء».</small><textarea id='lnkc' placeholder='BNYLINK-…' oninput='bnyLinkChk()'></textarea><small id='lnkm'></small>";b.parentNode.insertBefore(w,b.nextSibling);b.style.display='none';
+  try{navigator.clipboard.readText().then(function(t){if(parse(t)){document.getElementById('lnkc').value=t.trim();bnyLinkChk()}}).catch(function(){})}catch(e){}};
+ bt.parentNode.insertBefore(b,bt.nextSibling)}
+window.bnyLinkChk=function(){var t=document.getElementById('lnkc'),m=document.getElementById('lnkm');if(!t||!m)return;var o=parse(t.value);m.style.color=o?'#17643f':'#b3261e';m.textContent=t.value.trim()?(o?'✅ الكود سليم'+(o.u?' — اكتب اسم المستخدم: '+o.u:''):'⚠️ الكود ناقص — انسخه كله'):'';if(o&&o.u){var lu=document.getElementById('lu');if(lu&&!lu.value)lu.value=o.u}};
+var d0=window.doLogin;if(typeof d0==='function')window.doLogin=async function(){var t=document.getElementById('lnkc'),o=t&&parse(t.value);if(t&&t.value.trim()&&!o){var e=document.getElementById('le');if(e)e.textContent='كود الربط مش سليم — انسخه كله من الموبايل';return}
+ var r=await d0.apply(this,arguments);
+ try{if(o&&typeof AUTH!=='undefined'&&AUTH){localStorage.setItem('bny_sync',JSON.stringify({repo:o.r,token:o.t,path:o.p||'book.json',acct:(typeof A!=='undefined'&&A&&A.u)||undefined}));if(o.g){try{if(!localStorage.getItem('bny_gem'))localStorage.setItem('bny_gem',o.g)}catch(e){}}
+  toast('⏳ بنزّل بياناتك من حسابك…');setTimeout(function(){try{window.syNow&&syNow()}catch(e){}},600);setTimeout(function(){try{window.syNow&&syNow();render()}catch(e){}},4000)}}catch(e){}return r};
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{addMenu();addLogin()}catch(e){}return o};setInterval(function(){try{addLogin()}catch(e){}},800);
+document.addEventListener('click',function(){setTimeout(function(){try{addMenu()}catch(e){}},30)},true);
 })();
 </script>
 </body>
