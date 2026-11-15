@@ -5875,11 +5875,17 @@ async function natSched(){var N=LN();if(!N)return;var errs=[],ok=0;try{try{var p
 window.remSched=natSched;
 function tick(){try{if(!AUTH||LN())return;var now=Date.now(),ch=false;R().forEach(function(r){if(!r.on)return;var at=r.nx||nextAt(r,(r.last||0));if(at<=now&&now-at<36e5*12){r.last=now;try{bnyNotify('⏰ '+r.t,r.n||'تذكير شخصي')}catch(e){}try{toast('⏰ '+r.t)}catch(e){}if(r.rp==='once')r.on=false;ch=true}r.nx=nextAt(r,Math.max(now,r.last||0))});if(ch){try{save()}catch(e){}}}catch(e){}}
 setInterval(tick,30000);setTimeout(tick,5000);setTimeout(natSched,4000);
-function remTab(){var L=R().slice().sort(function(a,b){return nextAt(a)-nextAt(b)});var now=Date.now();
- var h="<div class='card'><h2>⏰ تذكيراتي الشخصية <small class='mu'>(ليك انت بس)</small></h2><p class='mu' style='margin:0 0 8px'>بتوصلك إشعار بنغمة مميزة على الموبايل حتى لو مقفول.</p><button class='p' onclick='remEdit()'>➕ تذكير جديد</button></div><div class='card'>";
+function remTab(){var now=Date.now(),L=R().slice().sort(function(a,b){var pa=!a.on?2:(a.rp==='once'&&nextAt(a)<now?1:0),pb=!b.on?2:(b.rp==='once'&&nextAt(b)<now?1:0);return pa-pb||(pa===1?nextAt(b)-nextAt(a):nextAt(a)-nextAt(b))});
+ var late=L.filter(function(r){return r.rp==='once'&&nextAt(r)<now}).length,up=L.filter(function(r){return r.on&&nextAt(r)>=now}).length;
+ var h="<div class='card'><h2>⏰ تذكيراتي الشخصية <small class='mu'>(ليك انت بس)</small></h2><p class='mu' style='margin:0 0 10px'>بتوصلك إشعار بنغمة مميزة على الموبايل حتى لو مقفول.</p><div class='rmh'><button class='p' onclick='remEdit()'>➕ تذكير جديد</button>"+(late?"<button onclick='remClearPast()'>🧹 امسح اللي فات ("+late+")</button>":"")+"</div></div><div class='card rml'>";
  if(!L.length)h+="<p class='mu'>مفيش تذكيرات لسه.</p>";
- L.forEach(function(r){var at=nextAt(r),dt=new Date(at);h+="<div class='rmi"+(r.on?'':' off')+"'><div class='bd'><b>"+E(r.t)+"</b><small class='mu'>"+dt.toLocaleDateString('ar-EG',{weekday:'long',day:'numeric',month:'long'})+" • "+dt.toLocaleTimeString('ar-EG',{hour:'numeric',minute:'2-digit'})+" • "+RPL[r.rp||'once']+(r.n?' — '+E(r.n):'')+(r.on&&r.rp==='once'&&at<now?' • <span class=\"neg\">فات</span>':'')+"</small></div><button onclick=\"remTog('"+r.id+"')\">"+(r.on?'🔔':'🔕')+"</button><button onclick=\"remEdit('"+r.id+"')\">✎</button><button class='x' onclick=\"remDel('"+r.id+"')\">🗑</button></div>"});
+ var rel=function(at){var m=Math.round((at-now)/6e4);if(m<60)return 'بعد '+Math.max(1,m)+' دقيقة';var hh=Math.round(m/60);if(hh<24)return 'بعد '+hh+' ساعة';var d=Math.round(hh/24);return d===1?'بكرة':'بعد '+d+' يوم'};
+ L.forEach(function(r){var at=nextAt(r),dt=new Date(at),past=r.rp==='once'&&at<now,cls=(!r.on?' off':'')+(past?' late':'');
+  h+="<div class='rmi2"+cls+"'><div class='rt'><b>"+E(r.t)+"</b><small>📅 "+dt.toLocaleDateString('ar-EG',{weekday:'long',day:'numeric',month:'long'})+"  •  ⏰ "+dt.toLocaleTimeString('ar-EG',{hour:'numeric',minute:'2-digit'})+"</small>"+(r.n?"<small class='rn'>📝 "+E(r.n)+"</small>":"")+
+   "<div class='rtg'><span class='tg'>"+RPL[r.rp||'once']+"</span>"+(!r.on?"<span class='tg'>🔕 متوقف</span>":past?"<span class='tg late'>فات</span>":"<span class='tg soon'>"+rel(at)+"</span>")+"</div></div>"+
+   "<div class='ra'><button title='"+(r.on?'وقّفه':'شغّله')+"' class='"+(r.on?'on':'')+"' onclick=\"remTog('"+r.id+"')\">"+(r.on?'🔔':'🔕')+"</button><button title='تعديل' onclick=\"remEdit('"+r.id+"')\">✎</button><button title='حذف' class='x' onclick=\"remDel('"+r.id+"')\">🗑</button></div></div>"});
  return h+"</div>"}
+window.remClearPast=function(){var P=R().filter(function(r){return r.rp==='once'&&nextAt(r)<Date.now()});if(!P.length)return;dlg('🧹 امسح التذكيرات اللي فات؟','<p>'+P.length+' تذكير ميعاده عدّى هيتمسح — تقدر ترجعهم من «🗑 سلة المحذوفات».</p>',function(){P.forEach(function(r){try{window.bnyTrash&&bnyTrash('تذكير',r,'rem')}catch(e){}});S.rem=R().filter(function(r){return P.indexOf(r)<0});save();natSched();render()},'🧹 امسح')};
 window.remTab=remTab;
 window.remEdit=function(id){var r=id?R().filter(function(x){return x.id===id})[0]:null;r=r||{};var t=new Date(Date.now()+36e5);var d0=r.d||(t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')),tm0=r.tm||(String(t.getHours()).padStart(2,'0')+':00');
  dlg(id?'✎ تعديل تذكير':'⏰ تذكير جديد',"<label>فكّرني بـ</label><input id='rt' value='"+E(r.t||'')+"' placeholder='مثال: أدفع فاتورة النت'><label>ملاحظة (اختياري)</label><input id='rn' value='"+E(r.n||'')+"'><div style='display:flex;gap:8px'><div style='flex:1'><label>اليوم</label><input id='rd' type='date' value='"+d0+"'></div><div style='flex:1'><label>الساعة</label><input id='rtm' type='time' value='"+tm0+"'></div></div><label>التكرار</label><select id='rr'>"+Object.keys(RPL).map(function(k){return "<option value='"+k+"'"+((r.rp||'once')===k?' selected':'')+">"+RPL[k]+"</option>"}).join('')+"</select>",function(o){var v=function(i){return o.querySelector('#'+i).value.trim()};if(!v('rt')){toast('اكتب التذكير');return false}var x=id?r:{id:id8(),on:true};x.t=v('rt');x.n=v('rn');x.d=v('rd');x.tm=v('rtm')||'09:00';x.rp=v('rr');x.on=true;x.last=0;x.nx=0;if(!id)R().push(x);save();natSched();try{if(!LN()&&window.Notification&&Notification.permission==='default')Notification.requestPermission()}catch(e){}toast('✅ اتسجل التذكير');render()})};
@@ -6717,6 +6723,8 @@ var R=[
   check:function(){return window.hkShare&&window.updPut?[]:['مشاركة العقد والأبديت مع حكيم مش شغالة']},fix:null},
  {id:'updcols',area:'الأبديت',t:'مكانش ينفع تغيّر ترتيب أعمدة صورة الأبديت، والسعر والنوع كانوا مش بارزين',
   check:function(){if(S.tab!=='upd')return [];var o=[];if(typeof window.updCols!=='function')o.push('زرار ترتيب الأعمدة مش موجود');var t=document.querySelector('#updposter:not(.fz) tr.r:not(.rb) td.ty');if(t&&!bnyIsRed(getComputedStyle(t).color))o.push('نوع الشقة مش باللون الأحمر');return o},fix:null},
+ {id:'remlook',area:'تذكيراتي',t:'أسامه قال شكل تذكيراتي والقايمة مش مظبوط (العنوان لازق في التاريخ، أزرار كبيرة، القايمة متوسطة) — اتعمل صفوف نضيفة وأيقونات للقايمة',
+  check:function(){var o=[];if(S.tab==='rem'&&document.querySelector('#app .rmi'))o.push('صفوف التذكيرات القديمة لسه ظاهرة');var b=document.getElementById('hmrem');if(b&&innerWidth<=860&&!b.querySelector('.mi2'))o.push('زرار «تذكيراتي» في القايمة من غير أيقونة');return o},fix:null},
  {id:'remfix',area:'تذكيراتي',t:'أسامه قال تذكيراتي مش شغالة (تذكيرات النهارده مرنتش) — الجدولة كانت بتفشل في صمت؛ دلوقتي بتطلب الصلاحيات وبتوري الحالة وفيه زرار تجربة',
   check:function(){return []},fix:null},
  {id:'libplus',area:'مكتبتي',t:'أسامه طلب مميزات زيادة في مكتبتي — سلسلة أيام القراية، صفحات كل يوم، إحصائيات، ميعاد الخلصان، اقتباسات، بحث، تذكير يومي',
@@ -8738,5 +8746,23 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden){try
 var r0=render;render=function(){var o=r0.apply(this,arguments);try{card();watch()}catch(e){}return o};
 })();</script>
 <style id="remfixcss">#remst .rsl{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;border-radius:12px;margin:6px 0;font-weight:700;font-size:13px}#remst .rsl.ok{background:#e9f7ef;color:#146c3c}#remst .rsl.bad{background:#fdf0e6;color:#9a4a12}#remst .rsl button{margin:0!important;padding:6px 12px!important;min-height:0!important;flex:0 0 auto}#remst .rsb button{width:100%;margin:8px 0 0!important}#remst .rsh{margin-top:10px;font-size:13px}#remst .rsh summary{cursor:pointer;font-weight:800}#remst .rsh p{line-height:1.8;margin:6px 0 0}</style>
+<script id="hmicons">
+/* أزرار القايمة (مكتبتي، تذكيراتي، طبقات الصوفية، اربط جهاز، مش عاجبني) بقت بنفس شكل باقي القايمة: أيقونة في مربع + الكلام على اليمين */
+(function(){var M={hmlib:['📚','g'],hmrem:['⏰','o'],hmsal:['📜','b'],hmlink:['💻','p'],cpmi:['👎','r']};
+function fix(){var pn=document.getElementById('hmp');if(!pn)return;Object.keys(M).forEach(function(id){var b=document.getElementById(id);if(!b||b.querySelector('.mi2'))return;var t=b.textContent.replace(/^\s*(\p{Extended_Pictographic}️?)\s*/u,'').trim();b.innerHTML="<span class='mi2 hm"+M[id][1]+"'>"+M[id][0]+"</span><span class='wl'></span>";b.querySelector('.wl').textContent=t;b.classList.add('hmi')})}
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{fix()}catch(e){}return o};document.addEventListener('click',function(){setTimeout(function(){try{fix()}catch(e){}},60)},true);setTimeout(fix,1500);
+})();</script>
+<style id="hmiconscss">
+@media (max-width:860px){#hmp>button.hmi{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;text-align:start!important;width:100%!important}}
+#hmp>button.hmi .mi2{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:16px}
+#hmp .hmg{background:rgba(26,143,80,.12)}#hmp .hmo{background:rgba(224,138,30,.14)}#hmp .hmb{background:rgba(160,110,40,.14)}#hmp .hmp{background:rgba(20,115,230,.12)}#hmp .hmr{background:rgba(192,57,43,.10)}
+#app .rmh{display:flex;gap:8px;flex-wrap:wrap}#app .rmh button{margin:0!important}
+#app .rml{padding:6px 12px!important}
+#app .rmi2{display:flex;align-items:center;gap:10px;padding:12px 2px;border-bottom:1px solid var(--bd,#e8ecf0)}#app .rmi2:last-child{border-bottom:0}
+#app .rmi2 .rt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}#app .rmi2 .rt b{font-size:15px;font-weight:800;line-height:1.45}#app .rmi2 .rt small{font-size:12.5px;opacity:.75;font-weight:600}#app .rmi2 .rt .rn{opacity:.85}
+#app .rmi2 .rtg{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}#app .rmi2 .tg{font-size:11px;font-weight:800;padding:2px 9px;border-radius:999px;background:var(--bg2,#eef1f4)}#app .rmi2 .tg.late{background:#fdecec;color:#b3261e}#app .rmi2 .tg.soon{background:#e9f7ef;color:#146c3c}
+#app .rmi2{position:relative}#app .rmi2 .ra{display:flex;flex-direction:row;gap:6px;position:absolute;left:0;bottom:10px}#app .rmi2 .rtg{min-height:30px;align-items:center;padding-left:126px}#app .rmi2 .ra button{margin:0!important;width:36px;height:30px;padding:0!important;min-height:0!important;border-radius:10px!important;font-size:15px!important;display:grid;place-items:center}#app .rmi2 .ra button.on{background:#fff6e0!important;border-color:#f1d08a!important}
+#app .rmi2.late .rt b{opacity:.7}#app .rmi2.off{opacity:.55}
+</style>
 </body>
 </html>
