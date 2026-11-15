@@ -6715,8 +6715,8 @@ var R=[
   check:function(){return window.hkShare&&window.updPut?[]:['مشاركة العقد والأبديت مع حكيم مش شغالة']},fix:null},
  {id:'updcols',area:'الأبديت',t:'مكانش ينفع تغيّر ترتيب أعمدة صورة الأبديت، والسعر والنوع كانوا مش بارزين',
   check:function(){if(S.tab!=='upd')return [];var o=[];if(typeof window.updCols!=='function')o.push('زرار ترتيب الأعمدة مش موجود');var t=document.querySelector('#updposter tr.r:not(.rb) td.ty');if(t&&!bnyIsRed(getComputedStyle(t).color))o.push('نوع الشقة مش باللون الأحمر');return o},fix:null},
- {id:'updfurn',area:'الأبديت',t:'أسامه طلب أبديت للمفروش لوحده وتاريخ الأبديت يتنقل من مكانه — اتعمل زرارين «غير مفروش / مفروش» كل واحد ليه بياناته وصورته، والتاريخ بقى فوق يمين (ويتغير من التعديل الحر)',
-  check:function(){if(S.tab!=='upd'||!window.updModeNow)return [];var o=[];if(document.querySelector('#app .card')&&!document.getElementById('updmode'))o.push('زرار «مفروش / غير مفروش» مش ظاهر في الأبديت');return o},fix:null},
+ {id:'updfurn',area:'الأبديت',t:'أسامه طلب أبديت للمفروش لوحده (بلون مختلف) وتاريخ الأبديت يتنقل — زرارين «غير مفروش / مفروش» كل واحد ليه بياناته وصورته؛ وكان أبديت غير المفروش بيدخل جوه المفروش من مشاركة حكيم (اتفصلوا)',
+  check:function(){if(S.tab!=='upd'||!window.updModeNow)return [];var o=[];if(document.querySelector('#app .card')&&!document.getElementById('updmode'))o.push('زرار «مفروش / غير مفروش» مش ظاهر في الأبديت');if(updModeNow()==='f'){var d=updData(),u=updDataU(),ids={};(u.villas||[]).forEach(function(v){ids[v.id]=1});if(!d.fmark||(d.villas||[]).some(function(v){return ids[v.id]}))o.push('أبديت غير المفروش دخل جوه أبديت المفروش');var p=document.getElementById('updposter');if(p&&!p.classList.contains('fz'))o.push('صورة المفروش بنفس لون غير المفروش')}return o},fix:null},
  {id:'hdout',area:'الكمبيوتر',t:'أسامه عايز زرار دخول وخروج واضح على الكمبيوتر — الخروج كان مستخبي جوه قايمة الاسم (بقى تحت القايمة الجانبية)',
   check:function(){var T=window.__hdoutT;if((innerWidth<861&&!T)||typeof AUTH==='undefined'||!AUTH)return [];var b=document.getElementById('hdout');return !b||(!T&&!b.offsetWidth)?['زرار «تسجيل خروج» مش ظاهر تحت القايمة الجانبية']:[]},
   fix:function(){window.bnyHdOut&&bnyHdOut();setTimeout(function(){window.__hdoutT=0},0);return 'رجّعت زرار الخروج'}},
@@ -7059,8 +7059,8 @@ function n(v){var x=+String(v||'').replace(/[^\d.]/g,'');return x?x.toLocaleStri
 function lab(L,k,i){var r=L.filter(function(x){return x[0]===k})[0];return r?r[i]:''}
 function blank(){if(MODE==='f')return blankF();return {title:'AL SHAMKHA SOUTH',phone:'0528091984',fee:500,dep:'1 Month (Cheque)',group:'',notes:'',hideBooked:false,at:0,villas:[]}}
 var D=null;function depFix(){if(D&&(D.dep==='ONE MONTH RENT'||D.dep==='إيجار شهر'||!D.dep)&&!D.depSet){D.dep='1 Month (Cheque)';D.depSet=1;try{localStorage.setItem(KSF(),JSON.stringify(D))}catch(e){}}}
-function load(){if(D){depFix();if(typeof S!=='undefined'&&S&&S.upd)mig();return D}try{D=JSON.parse(localStorage.getItem(KSF())||'null')}catch(e){D=null}
- if(!D)D=blank();mig();depFix();return D}
+function load(){if(D){if(MODE==='f'&&!D.fmark)cleanF();depFix();if(typeof S!=='undefined'&&S&&S.upd)mig();return D}try{D=JSON.parse(localStorage.getItem(KSF())||'null')}catch(e){D=null}
+ if(!D)D=blank();if(MODE==='f'&&!D.fmark)cleanF();mig();depFix();return D}
 function mig(){if(MODE==='f'||typeof S==='undefined'||!S||!S.upd)return;var have={};D.villas.forEach(function(v){have[v.id]=1});{/* move the old list that was saved inside the group data, without the studios that were imported from the business */try{var o=S&&S.upd;if(o){if(!D.at)['title','phone','fee','dep','group','hideBooked'].forEach(function(k){if(o[k]!=null)D[k]=o[k]});if(D.dep==='إيجار شهر'||D.dep==='ONE MONTH RENT')D.dep='1 Month (Cheque)';
    D.villas=D.villas.concat((o.villas||[]).filter(function(v){return !v.src&&!have[v.id]}).map(function(v){return {id:v.id||id(),name:v.name,area:v.area||'',loc:v.loc||'',note:'',units:(v.units||[]).map(function(a){var f=String(a.floor||'').toUpperCase(),t=String(a.type||'').toUpperCase();
     return {id:a.id||id(),floor:/ROOF/.test(f)?'R':/^G/.test(f)?'G':/^F|1ST/.test(f)?'1':/2ND|S FLOOR/.test(f)?'2':'G',no:a.no||'',type:/^(FURNISHED )?STUDIO$/.test(t)?'st':/^(FURNISHED )?1 BHK$/.test(t)?'1bk':/^(FURNISHED )?2 BHK$/.test(t)?'2bk':'x',tx:/STUDIO|^(FURNISHED )?[12] BHK$/.test(t)?'':t.replace(/^FURNISHED /,''),furn:/FURNISHED/.test(t),price:a.p1||a.p2||a.p3||0,pays:a.p3?3:a.p2?2:1,mo:a.mo||0,note:'',booked:!!a.booked,hide:!!a.hide}})}}));delete S.upd;try{save()}catch(e){}}}catch(e){}keep(1)}}
@@ -7072,7 +7072,7 @@ function cfg(){try{var c=JSON.parse(localStorage.getItem('bny_sync')||'null');re
 function api(c){return {u:'https://api.github.com/repos/'+c.repo+'/contents/'+(MODE==='f'?'upd_f.json':'upd.json'),H:{'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}}
 function b64(s){return btoa(unescape(encodeURIComponent(s)))}function unb64(s){return decodeURIComponent(escape(atob(String(s).replace(/\s/g,''))))}
 async function push(){var c=cfg();if(!c)return;var A=api(c);try{var sha=null,r=await fetch(A.u,{headers:A.H});if(r.ok)sha=(await r.json()).sha;await fetch(A.u,{method:'PUT',headers:A.H,body:JSON.stringify({message:'📢 update list',content:b64(JSON.stringify(D)),sha:sha||undefined})})}catch(e){}}
-async function pull(){var c=cfg();if(!c)return;var A=api(c);try{var r=await fetch(A.u,{headers:A.H});if(!r.ok)return;var j=await r.json(),x=JSON.parse(unb64(j.content));load();if(x&&x.at>(D.at||0)){D=x;keep(1);if(S.tab==='upd')render()}}catch(e){}}
+async function pull(){var c=cfg();if(!c)return;var A=api(c);try{var r=await fetch(A.u,{headers:A.H});if(!r.ok)return;var j=await r.json(),x=JSON.parse(unb64(j.content));load();if(MODE==='f'&&x&&!x.fmark)return;if(x&&x.at>(D.at||0)){D=x;keep(1);if(S.tab==='upd')render()}}catch(e){}}
 setTimeout(pull,4000);
 function V(i){return load().villas.filter(function(v){return v.id===i})[0]}
 function A(v,i){return (v.units||[]).filter(function(x){return x.id===i})[0]}
@@ -7104,7 +7104,7 @@ function poster(){var d=load(),P=PM(),U0=[];d.villas.forEach(function(v){(v.unit
  dt=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase(),
  hdTxt=function(x){return x.mo?(d.lab&&d.lab.mo?LB('mo',''):"MONTHLY<small>AED / MONTH</small>"):(PM().m==='sep'?(x.hh||x.h):(d.lab&&d.lab.pay?LB('pay',''):"RENT / YEAR<em>"+E(x.h)+"</em>"))};
  var DP=d.dtpos||'r',DTH="<div class='dt'>"+LB('upd','UPDATED')+" · "+dt+"</div>";
- var h="<div id='updposter' class='v4 lt"+(all.length>8?' cmp':'')+" dt"+DP+"'>"+
+ var h="<div id='updposter' class='v4 lt"+(all.length>8?' cmp':'')+" dt"+DP+(MODE==='f'?' fz':'')+"'>"+
   "<div class='h4'><div class='h4in'><div class='h4top'>"+(DP==='r'||DP==='l'?DTH:'')+"</div>"+
   "<div class='tt'>"+E(d.title||'AVAILABLE UNITS')+"</div><div class='rule'><i></i><b>◆</b><i></i></div></div></div><div class='bd4'>";
  L.forEach(function(v){var U=(v.units||[]).filter(shown);/* booked flats stay in their own place */
@@ -7191,9 +7191,15 @@ window.updXRow=function(vid,aid,w){var v=V(vid);if(!v)return;var U=v.units=v.uni
 /* ===== 🛋️ أبديت المفروش: لستة تانية مستقلة (بياناتها وصورتها لوحدها) — بتبدأ بالاستديوهات المفروشة اللي في البرنامج بإيجارها الشهري ===== */
 function blankF(){var td0=new Date().toISOString().slice(0,10),U=[];try{(S.units||[]).forEach(function(u,i){var L=(u.leases||[]).filter(function(l){return !l.exit}),cur=L.filter(function(l){return (l.end||'9999')>=td0}).sort(function(a,b){return (a.start||'')<(b.start||'')?-1:1})[0],last=L[L.length-1]||{};
   U.push({id:id(),at:Date.now(),floor:'G',no:String(i+1),type:'st',furn:true,price:0,mo:String((cur||last).rent||''),booked:!!cur,note:''})})}catch(e){}
- return {title:'FURNISHED STUDIOS',phone:'0528091984',fee:0,dep:'1 Month',group:'',notes:'',hideBooked:false,at:0,pm:'single',pn:1,showMo:true,hc:{pay:true,fl:true},hf:{fee:true},lab:{mo:'MONTHLY RENT'},dtpos:'r',villas:U.length?[{id:id(),name:'BUNYAN FURNISHED',area:'Abu Dhabi',units:U}]:[]}}
+ return {fmark:1,title:'FURNISHED STUDIOS',phone:'0528091984',fee:0,dep:'1 Month',group:'',notes:'',hideBooked:false,at:0,pm:'single',pn:1,showMo:true,hc:{pay:true,fl:true},hf:{fee:true},lab:{mo:'MONTHLY RENT'},dtpos:'r',villas:U.length?[{id:id(),name:'BUNYAN FURNISHED',area:'Abu Dhabi',units:U}]:[]}}
 window.updMode=function(m){m=m==='f'?'f':'u';if(m===MODE)return;try{keep(1)}catch(e){}MODE=m;try{localStorage.setItem('bny_updmode',m)}catch(e){}D=null;load();try{pull()}catch(e){}render();toast(m==='f'?'🛋️ أبديت المفروش':'🏢 أبديت غير المفروش')};
 window.updModeNow=function(){return MODE};
+/* the unfurnished list no matter which one is open (Hakim's shared update is the unfurnished one — it was leaking into the furnished list) */
+async function pushTo(file,data){var c=cfg();if(!c)return;var A=api(c);A.u=A.u.replace(/contents\/[^?]+$/,'contents/'+file);try{var sha=null,r=await fetch(A.u,{headers:A.H});if(r.ok)sha=(await r.json()).sha;await fetch(A.u,{method:'PUT',headers:A.H,body:JSON.stringify({message:'📢 update list',content:b64(JSON.stringify(data)),sha:sha||undefined})})}catch(e){}}
+window.updDataU=function(){if(MODE==='u')return load();var x=null;try{x=JSON.parse(localStorage.getItem(KS)||'null')}catch(e){}return x||{villas:[],at:0}};
+window.updPutU=function(x,bk){if(MODE==='u')return updPut(x,bk);if(!x||!x.villas)return;try{localStorage.setItem(KS,JSON.stringify(x))}catch(e){}if(bk)pushTo('upd.json',x)};
+/* a furnished list that isn't really one (got the unfurnished villas) starts over from the furnished studios */
+function cleanF(){if(MODE!=='f'||!D||D.fmark)return;var b=blankF();b.at=Date.now();D=b;keep()}
 function modeChips(){if(S.tab!=='upd')return;var c=document.querySelector('#app .card');if(!c||document.getElementById('updmode'))return;var w=document.createElement('div');w.id='updmode';
  w.innerHTML="<button type='button' class='"+(MODE==='u'?'on':'')+"' onclick=\"updMode('u')\">🏢 غير مفروش</button><button type='button' class='"+(MODE==='f'?'on':'')+"' onclick=\"updMode('f')\">🛋️ مفروش</button>";
  var h=c.querySelector('h3,h2,.ch,.ct');(h&&h.parentNode===c?h:c.firstChild)&&c.insertBefore(w,(h&&h.parentNode===c?h.nextSibling:c.firstChild))}
@@ -7609,8 +7615,8 @@ function tick(){try{if(typeof AUTH==='undefined'||!AUTH||typeof S==='undefined'|
   else if(t<L.ct.t){if(H&&L.ct.d){if(h!==hs(strip(L.ct.d))){S.ct=JSON.parse(JSON.stringify(L.ct.d));try{save()}catch(e){}try{if(S.tab==='ct')render()}catch(e){}}else S.ct._t=L.ct.t}else{c._t=Date.now();L.ct={t:c._t,h:h};try{save()}catch(e){}mark()}}
   else if(h!==L.ct.h){c._t=Date.now();L.ct={t:c._t,h:h,d:H?c:null};try{save()}catch(e){}mark()}}
  /* update list */
- if(window.updData){var u=updData(),ut=+u.at||0;L.upd=L.upd||{t:0};
-  if(H&&S.updx&&((+S.updx.at>(L.upd.t||0)&&(+S.updx.at>ut||!L.upd.t))||(!(u.villas||[]).length&&(S.updx.villas||[]).length&&!L.upd.mine))){updPut(S.updx);L.upd.t=+S.updx.at}
+ if(window.updData){var u=(window.updDataU||updData)(),ut=+u.at||0;L.upd=L.upd||{t:0};
+  if(H&&S.updx&&((+S.updx.at>(L.upd.t||0)&&(+S.updx.at>ut||!L.upd.t))||(!(u.villas||[]).length&&(S.updx.villas||[]).length&&!L.upd.mine))){(window.updPutU||updPut)(S.updx);L.upd.t=+S.updx.at}
   else if(!L.upd.t){L.upd.t=ut}
   else if(ut>L.upd.t){L.upd.t=ut;if(H)L.upd.mine=1;mark()}}
  LS(L)}catch(e){}}
@@ -7618,13 +7624,13 @@ function mark(){dirty=true;clearTimeout(pT);pT=setTimeout(H?push:function(){dirt
 /* Hakim → main */
 var pb=false;async function push(){var c=cfg();if(!dirty||!c||!c.token||!c.repo||pb||navigator.onLine===false)return;pb=true;
  try{var r=await RF(url(c)+'?t='+Date.now(),{headers:hdr(c),cache:'no-store'}),sha='';if(r.ok)sha=(await r.json()).sha;
-  var b={message:'hakim live '+new Date().toISOString(),content:enc({ct:S.ct||null,upd:window.updData?updData():null,at:Date.now(),by:(typeof A!=='undefined'&&A&&A.u)||'hakim'})};if(sha)b.sha=sha;
+  var b={message:'hakim live '+new Date().toISOString(),content:enc({ct:S.ct||null,upd:window.updData?(window.updDataU||updData)():null,at:Date.now(),by:(typeof A!=='undefined'&&A&&A.u)||'hakim'})};if(sha)b.sha=sha;
   var w=await RF(url(c),{method:'PUT',headers:hdr(c),body:JSON.stringify(b)});if(w.ok){dirty=false;try{toast('✅ اتبعت للبرنامج الأساسي')}catch(e){}}}catch(e){}finally{pb=false;if(dirty)setTimeout(push,8000)}}
 /* main ← Hakim */
 var ET='',pl=false;async function pull(){var c=cfg();if(H||!c||!c.token||!c.repo||pl||document.hidden||navigator.onLine===false||typeof AUTH==='undefined'||!AUTH)return;pl=true;
  try{var hh=hdr(c);if(ET)hh['If-None-Match']=ET;var r=await RF(url(c),{headers:hh,cache:'no-store'});if(r.status!==200)return;ET=r.headers.get('ETag')||'';var x=dec((await r.json()).content)||{},L=LG(),ch=0;
   if(x.ct&&+x.ct._t>(+(S.ct&&S.ct._t)||0)&&+x.ct._t>(L.ct&&L.ct.t||0)){S.ct=x.ct;L.ct={t:+x.ct._t,h:hs(strip(x.ct))};try{save()}catch(e){}ch=1}
-  if(x.upd&&window.updData&&+x.upd.at>(+updData().at||0)){updPut(x.upd,1);L.upd={t:+x.upd.at};ch=1}
+  if(x.upd&&window.updData&&+x.upd.at>(+(window.updDataU||updData)().at||0)){(window.updPutU||updPut)(x.upd,1);L.upd={t:+x.upd.at};ch=1}
   if(ch){LS(L);try{render();toast('✏️ حكيم عدّل '+(x.ct?'العقد':'')+(x.ct&&x.upd?' / ':'')+(x.upd?'الأبديت':''))}catch(e){}try{window.hakimExport&&setTimeout(hakimExport,1500)}catch(e){}}}catch(e){}finally{pl=false}}
 window.hkShare={tick:tick,push:push,pull:pull};
 setInterval(tick,2500);setTimeout(tick,3000);if(!H){setTimeout(pull,6000);setInterval(pull,20000);document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(pull,1000)})}else{addEventListener('online',function(){if(dirty)push()})}
@@ -8323,5 +8329,29 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);try{add()}catch(e
 })();</script>
 <style id="updtpos">#updposter.v4.dtr .h4top{justify-content:flex-end!important}#updposter.v4.dtl .h4top{justify-content:flex-start!important}#updposter.v4.dtb .h4top,#updposter.v4.dth .h4top{display:none!important}#updposter.v4 .dtb{display:flex;justify-content:center;margin:14px 0 2px}</style>
 <style id="updmodecss">#updmode{display:flex;gap:6px;margin:4px 0 12px}#updmode button{flex:1;margin:0!important;padding:10px 6px!important;font-weight:800;border-radius:12px!important;font-size:14px!important}#updmode button.on{background:#0f5132!important;color:#fff!important;border-color:#0f5132!important}</style>
+<style id="updfzcss">
+#updposter.v4.lt.fz{background:#fffdf8!important}
+#updposter.v4.lt.fz .h4{background:#fffdf8!important}
+#updposter.v4.lt.fz .dt{color:#1b2a4a!important;border-color:#e3d3a8!important;background:#fbf5e6!important}
+#updposter.v4.lt.fz .tt{color:#1b2a4a!important}
+#updposter.v4.lt.fz .rule i{background:#c79a3a!important}#updposter.v4.lt.fz .rule b{color:#c79a3a!important}
+#updposter.v4.lt.fz .vc{border-color:#eadfc4!important;background:#fff!important}
+#updposter.v4.lt.fz .vh3{background:#fff!important;border-bottom-color:#efe6cf!important}
+#updposter.v4.lt.fz .vt3{border-left-color:#c79a3a!important}
+#updposter.v4.lt.fz .vn{color:#1b2a4a!important}
+#updposter.v4.lt.fz tr.hd2 td{background:#1b2a4a!important;color:#f1dca3!important}
+#updposter.v4.lt.fz tr.hd2 td small,#updposter.v4.lt.fz tr.hd2 td em{color:#f1dca3!important}
+#updposter.v4.lt.fz tr.r td,#updposter.v4.lt.fz tr.r:nth-child(odd) td{border-top-color:#f1ead8!important}
+#updposter.v4.lt.fz tr.r:nth-child(even) td{background:#fffaf0!important}
+#updposter.v4.lt.fz td.fn .no{background:linear-gradient(135deg,#e7c873,#c79a3a)!important;color:#1b2a4a!important}
+#updposter.v4.lt.fz tr.r td.ty{color:#1b2a4a!important}
+#updposter.v4.lt.fz tr.r td.yr,#updposter.v4.lt.fz tr.r td.mo,#updposter.v4.lt.fz small.aed{color:#b07d1e!important}
+#updposter.v4.lt.fz td.ubkd span{border-color:#9b2c2c!important;color:#9b2c2c!important}
+#updposter.v4.lt.fz tr.r.rb td{background:#f7f5ef!important}
+#updposter.v4.lt.fz .ft3>div{background:#fbf5e6!important;border-color:#eadfc4!important}#updposter.v4.lt.fz .ft3 b{color:#1b2a4a!important}#updposter.v4.lt.fz .ft3 small{color:#6b5a32!important}
+#updposter.v4.lt.fz .ct3{background:linear-gradient(135deg,#22355c,#1b2a4a 60%,#121d36)!important;border:2px solid #c79a3a!important}
+#updposter.v4.lt.fz .ct3 .cx small{color:#f1dca3!important}
+#updposter.v4.lt.fz .gn{background:#fbf5e6!important;border-color:#eadfc4!important}
+</style>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
