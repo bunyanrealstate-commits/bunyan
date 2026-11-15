@@ -87,22 +87,29 @@ object Net {
     fun iaUrl(id: String, f: String) = "https://archive.org/download/" + URLEncoder.encode(id, "UTF-8") + "/" + f.split("/").joinToString("/") { URLEncoder.encode(it, "UTF-8").replace("+", "%20") }
 
     /* ───── Gemini (المفتاح المجاني من حساب بنيان) ───── */
-    suspend fun gemini(prompt: String, img: Bitmap? = null): String? = withContext(Dispatchers.IO) {
+    suspend fun gemini(prompt: String, img: Bitmap? = null): String? = ask(prompt, if (img == null) emptyList() else listOf(img))
+
+    fun hasGem() = Lib.gem() != null
+
+    suspend fun ask(prompt: String, imgs: List<Bitmap> = emptyList(), fileUris: List<String> = emptyList(), json: Boolean = false): String? = withContext(Dispatchers.IO) {
         val g = Lib.gem() ?: return@withContext null
         val models = ArrayList<String>()
         g.optJSONArray("models")?.let { a -> for (i in 0 until a.length()) models.add(a.getString(i)) }
         listOf("gemini-2.5-flash", "gemini-flash-latest", "gemini-2.0-flash").forEach { if (!models.contains(it)) models.add(it) }
-        val parts = JSONArray().put(JSONObject().put("text", prompt))
-        if (img != null) {
-            val bo = ByteArrayOutputStream(); img.compress(Bitmap.CompressFormat.JPEG, 85, bo)
+        val parts = JSONArray()
+        fileUris.forEach { parts.put(JSONObject().put("file_data", JSONObject().put("mime_type", "application/pdf").put("file_uri", it))) }
+        imgs.forEach { img ->
+            val bo = ByteArrayOutputStream(); img.compress(Bitmap.CompressFormat.JPEG, 82, bo)
             parts.put(JSONObject().put("inline_data", JSONObject().put("mime_type", "image/jpeg").put("data", Base64.encodeToString(bo.toByteArray(), Base64.NO_WRAP))))
         }
-        val body = JSONObject().put("contents", JSONArray().put(JSONObject().put("parts", parts)))
-            .put("generationConfig", JSONObject().put("temperature", 0)).toString()
+        parts.put(JSONObject().put("text", prompt))
+        val gc = JSONObject().put("temperature", if (json) 0.4 else 0)
+        if (json) gc.put("responseMimeType", "application/json")
+        val body = JSONObject().put("contents", JSONArray().put(JSONObject().put("parts", parts))).put("generationConfig", gc).toString()
         for (m in models.take(4)) {
             try {
                 val c = URL("https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent").openConnection() as HttpURLConnection
-                c.requestMethod = "POST"; c.doOutput = true; c.connectTimeout = 20000; c.readTimeout = 90000
+                c.requestMethod = "POST"; c.doOutput = true; c.connectTimeout = 20000; c.readTimeout = 180000
                 c.setRequestProperty("Content-Type", "application/json"); c.setRequestProperty("x-goog-api-key", g.optString("key"))
                 c.outputStream.use { it.write(body.toByteArray()) }
                 if (c.responseCode != 200) continue
@@ -113,5 +120,55 @@ object Net {
             } catch (_: Exception) {}
         }
         null
+    }
+
+    suspend fun askJson(prompt: String, imgs: List<Bitmap> = emptyList(), fileUris: List<String> = emptyList()): JSONObject? {
+        val t = ask(prompt, imgs, fileUris, true) ?: return null
+        val m = Regex("\\{[\\s\\S]*\\}").find(t) ?: return null
+        return try { JSONObject(m.value) } catch (_: Exception) { null }
+    }
+
+    /** يرفع ملف الكتاب لـGemini مرة واحدة (بيفضل هناك يومين) علشان «اسأل الكتاب» يقرا الكتاب كله */
+    suspend fun upload(f: File, prog: (String) -> Unit): String? = withContext(Dispatchers.IO) {
+        val g = Lib.gem() ?: return@withContext null
+        val gf = Lib.cfg.optJSONObject("gf") ?: JSONObject().also { Lib.cfg.put("gf", it) }
+        val key = f.name + ":" + f.length()
+        gf.optJSONObject(key)?.let { if (it.optLong("e") > System.currentTimeMillis()) return@withContext it.optString("u") }
+        try {
+            val k = g.optString("key")
+            val c = URL("https://generativelanguage.googleapis.com/upload/v1beta/files").openConnection() as HttpURLConnection
+            c.requestMethod = "POST"; c.doOutput = true
+            c.setRequestProperty("x-goog-api-key", k)
+            c.setRequestProperty("X-Goog-Upload-Protocol", "resumable"); c.setRequestProperty("X-Goog-Upload-Command", "start")
+            c.setRequestProperty("X-Goog-Upload-Header-Content-Length", f.length().toString()); c.setRequestProperty("X-Goog-Upload-Header-Content-Type", "application/pdf")
+            c.setRequestProperty("Content-Type", "application/json")
+            c.outputStream.use { it.write(JSONObject().put("file", JSONObject().put("display_name", "book")).toString().toByteArray()) }
+            if (c.responseCode != 200) return@withContext null
+            val up = c.getHeaderField("X-Goog-Upload-URL") ?: return@withContext null
+            val u = URL(up).openConnection() as HttpURLConnection
+            u.requestMethod = "POST"; u.doOutput = true; u.setFixedLengthStreamingMode(f.length()); u.readTimeout = 300000
+            u.setRequestProperty("X-Goog-Upload-Offset", "0"); u.setRequestProperty("X-Goog-Upload-Command", "upload, finalize")
+            val total = f.length()
+            u.outputStream.use { out -> f.inputStream().use { inp ->
+                val buf = ByteArray(256 * 1024); var sent = 0L; var last = 0L
+                while (true) { val n = inp.read(buf); if (n < 0) break; out.write(buf, 0, n); sent += n
+                    if (sent - last > 1048576) { last = sent; val pc = (sent * 100 / total).toInt(); withContext(Dispatchers.Main) { prog("⬆️ برفع الكتاب لـGemini أول مرة… $pc%") } } }
+            } }
+            if (u.responseCode != 200) return@withContext null
+            val fo = JSONObject(u.inputStream.bufferedReader().readText()).getJSONObject("file")
+            var state = fo.optString("state"); val name = fo.optString("name"); val uri = fo.optString("uri")
+            var tries = 0
+            while (state == "PROCESSING" && tries < 60) {
+                withContext(Dispatchers.Main) { prog("⏳ Gemini بيجهّز الكتاب…") }
+                Thread.sleep(3000); tries++
+                val s = URL("https://generativelanguage.googleapis.com/v1beta/$name").openConnection() as HttpURLConnection
+                s.setRequestProperty("x-goog-api-key", k)
+                state = JSONObject(s.inputStream.bufferedReader().readText()).optString("state")
+            }
+            if (state != "ACTIVE") return@withContext null
+            gf.put(key, JSONObject().put("u", uri).put("e", System.currentTimeMillis() + 44L * 3600 * 1000))
+            withContext(Dispatchers.Main) { Lib.save() }
+            uri
+        } catch (_: Exception) { null }
     }
 }

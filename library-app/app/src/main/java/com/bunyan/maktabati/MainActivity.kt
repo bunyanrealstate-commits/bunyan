@@ -82,6 +82,16 @@ fun App(incoming: MutableState<Intent?>) {
     val scope = rememberCoroutineScope()
     var reading by remember { mutableStateOf<JSONObject?>(null) }
     var screen by remember { mutableStateOf("home") }
+    var recap by remember { mutableStateOf<Triple<JSONObject, Int, Int>?>(null) }
+    var sheet by remember { mutableStateOf<String?>(null) }
+    var notes by remember { mutableStateOf<JSONObject?>(null) }
+    var searchQ by remember { mutableStateOf("") }
+    val notifPerm = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    LaunchedEffect(Unit) {
+        Notify.ensure(ctx); Notify.schedule(ctx)
+        if (android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED)
+            notifPerm.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+    }
     val dl = remember { mutableStateMapOf<String, Float>() }
     @Suppress("UNUSED_VARIABLE") val v = Lib.ver
 
@@ -118,6 +128,7 @@ fun App(incoming: MutableState<Intent?>) {
     LaunchedEffect(incoming.value) {
         val itn = incoming.value ?: return@LaunchedEffect
         incoming.value = null
+        itn.getStringExtra("open")?.let { id -> Lib.book(id)?.let { b -> openBook(b) }; return@LaunchedEffect }
         val d = itn.data ?: return@LaunchedEffect
         if (d.scheme == "bnylib") {
             val code = d.getQueryParameter("c") ?: d.fragment ?: ""
@@ -131,17 +142,30 @@ fun App(incoming: MutableState<Intent?>) {
     LaunchedEffect(Unit) { if (Lib.link != null) Lib.msg = Lib.sync() }
 
     val r = reading
-    if (r != null) { ReaderScreen(r) { reading = null; scope.launch { Lib.sync() } }; return }
+    if (r != null) { ReaderScreen(r) { from, to, read ->
+        reading = null
+        if (read >= 2 && Net.hasGem()) recap = Triple(r, from, to)
+        if (Net.hasGem()) Lib.bg.launch { prepNext(r, to) }
+        Notify.schedule(ctx)
+        scope.launch { Lib.sync() }
+    }; return }
+    recap?.let { (b, f, t) -> RecapSheet(b, f, t) { recap = null } }
+    when (sheet) {
+        "rec" -> RecommendSheet({ sheet = null }) { q -> sheet = null; searchQ = q; screen = "search" }
+        "set" -> SettingsSheet { sheet = null }
+    }
+    notes?.let { NotesSheet(it) { notes = null } }
 
     when (screen) {
-        "search" -> SearchScreen(onBack = { screen = "home" }) { h ->
+        "search" -> SearchScreen(searchQ, onBack = { screen = "home"; searchQ = "" }) { h ->
             val b = Lib.addLocal(h.title, h.author) { it.put("ia", h.id) }
             screen = "home"; fetch(b, false); toast("⬇️ بنزّل «${h.title}»")
         }
         "link" -> LinkScreen { screen = "home" }
         else -> HomeScreen(dl, onOpen = { openBook(it) }, onFetch = { fetch(it, false) }, onSearch = { screen = "search" },
             onPick = { pick.launch(arrayOf("application/pdf")) }, onLink = { screen = "link" },
-            onSync = { scope.launch { Lib.msg = Lib.sync(); toast(Lib.msg) } })
+            onSync = { scope.launch { Lib.msg = Lib.sync(); toast(Lib.msg) } },
+            onRec = { sheet = "rec" }, onSettings = { sheet = "set" }, onNotes = { notes = it })
     }
 }
 
@@ -180,7 +204,8 @@ fun Cover(b: JSONObject, modifier: Modifier) {
 }
 
 @Composable
-fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (JSONObject) -> Unit, onSearch: () -> Unit, onPick: () -> Unit, onLink: () -> Unit, onSync: () -> Unit) {
+fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (JSONObject) -> Unit, onSearch: () -> Unit, onPick: () -> Unit, onLink: () -> Unit, onSync: () -> Unit,
+               onRec: () -> Unit, onSettings: () -> Unit, onNotes: (JSONObject) -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Lib.ver
     var shelf by remember { mutableStateOf("now") }
     var q by remember { mutableStateOf("") }
@@ -237,7 +262,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
         }
         // هدف اليوم + الشمعة
         item(span = { GridItemSpan(3) }) {
-            Surface(onClick = { goalDlg = true }, shape = RoundedCornerShape(20.dp), color = Card) {
+            Surface(onClick = { onSettings() }, shape = RoundedCornerShape(20.dp), color = Card) {
                 Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(64.dp), Alignment.Center) {
                         CircularProgressIndicator(progress = { (today.toFloat() / goal).coerceIn(0f, 1f) }, Modifier.fillMaxSize(), color = Flame, trackColor = Sand, strokeWidth = 6.dp)
@@ -255,10 +280,12 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 }
             }
         }
+        item(span = { GridItemSpan(3) }) { ReviewCard() }
         // أزرار
         item(span = { GridItemSpan(3) }) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Action("🔎", "نزّل كتاب", Modifier.weight(1f), onSearch)
+                Action("✨", "رشّحلي", Modifier.weight(1f), onRec)
                 Action("📄", "من موبايلي", Modifier.weight(1f), onPick)
                 Action(if (Lib.link == null) "🔗" else "✅", if (Lib.link == null) "اربط ببنيان" else "مربوط", Modifier.weight(1f), onLink)
             }
@@ -290,6 +317,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 Text(b.optString("t"), fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, color = Ink, modifier = Modifier.padding(top = 4.dp))
             }
         }
+        item(span = { GridItemSpan(3) }) { Column(Modifier.padding(top = 10.dp)) { StatsAndBadges() } }
         item(span = { GridItemSpan(3) }) { Text("«عشر صفحات كل يوم = حوالي 12 كتاب في السنة»", Modifier.fillMaxWidth().padding(top = 16.dp), textAlign = TextAlign.Center, color = Muted, fontSize = 13.sp) }
     }
 
@@ -300,6 +328,8 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (b.optString("a").isNotEmpty()) Text(b.optString("a"), color = Muted)
                     Button({ menu = null; onOpen(b) }, Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Green)) { Text(if (Lib.have(b)) "📖 اقرأ" else "⬇️ نزّل واقرأ") }
+                    val nq = (b.optJSONArray("q")?.length() ?: 0) + (b.optJSONArray("sums")?.length() ?: 0)
+                    OutlinedButton({ menu = null; onNotes(b) }, Modifier.fillMaxWidth()) { Text("💬 اقتباساتي وملخصاتي ($nq)") }
                     if (!Lib.have(b) && b.optString("ia").isNotEmpty()) OutlinedButton({ menu = null; onFetch(b) }, Modifier.fillMaxWidth()) { Text("⬇️ نزّله بس") }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf("want" to "📌 عايز", "now" to "📖 بقراه", "done" to "✅ خلصته").forEach { (k, t) -> Chip(t, b.optString("sh", "want") == k) { Lib.setShelf(b, k); menu = null } }
@@ -326,10 +356,10 @@ fun Action(ic: String, t: String, m: Modifier, click: () -> Unit) {
 }
 
 @Composable
-fun SearchScreen(onBack: () -> Unit, onPick: (Net.Hit) -> Unit) {
+fun SearchScreen(initial: String, onBack: () -> Unit, onPick: (Net.Hit) -> Unit) {
     BackHandler { onBack() }
     val scope = rememberCoroutineScope()
-    var q by remember { mutableStateOf("") }
+    var q by remember { mutableStateOf(initial) }
     var busy by remember { mutableStateOf(false) }
     var res by remember { mutableStateOf<List<Net.Hit>?>(null) }
     var err by remember { mutableStateOf("") }
@@ -343,6 +373,7 @@ fun SearchScreen(onBack: () -> Unit, onPick: (Net.Hit) -> Unit) {
         OutlinedTextField(q, { q = it }, Modifier.fillMaxWidth(), placeholder = { Text("اسم الكتاب أو المؤلف") }, singleLine = true, shape = RoundedCornerShape(14.dp),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { go() }),
             trailingIcon = { TextButton({ go() }) { Text("دوّر") } })
+        LaunchedEffect(Unit) { if (initial.isNotBlank()) go() }
         if (busy) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 8.dp), color = Green)
         if (err.isNotEmpty()) Text(err, color = Color(0xFFB3261E), modifier = Modifier.padding(8.dp))
         LazyColumn(Modifier.fillMaxSize().padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -388,4 +419,14 @@ fun LinkScreen(onBack: () -> Unit) {
             }, Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = Green)) { Text("اربط", fontWeight = FontWeight.Bold) }
         }
     }
+}
+
+/** يحضّر أول فقرة من الصفحة اللي وقفت عندها علشان إشعار «5 دقايق» */
+suspend fun prepNext(b: JSONObject, p: Int) {
+    try {
+        val doc = Doc(Lib.files(b)); if (p !in 1..doc.count) { doc.close(); return }
+        val bm = doc.render(p, 1100); doc.close()
+        val t = Net.ask("اكتب أول فقرة في الصفحة دي بالظبط زي ما هي مكتوبة (حوالي 300 حرف)، من غير رقم الصفحة ولا العنوان المتكرر ومن غير أي تعليق.", listOf(bm))?.trim() ?: return
+        if (t.length > 30) { b.put("nx", JSONObject().put("p", p).put("t", t.take(330))); Lib.save() }
+    } catch (_: Exception) {}
 }

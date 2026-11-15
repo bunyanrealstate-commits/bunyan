@@ -6,7 +6,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -30,6 +32,11 @@ object Lib {
     var link: JSONObject? = null           // {r,t,p,g}
     var app = JSONObject()                  // id -> {cur,maxp,sh,rd,sd,fd,pg,add:[{i,d,p}], nw?, o?}
     var pulledAt = 0L
+    /** إعدادات وحاجات محلية: eve/eveT/para/paraT/badges/rev/wk/gf/mode */
+    var cfg = JSONObject()
+    /** تذكيرات اتعملت من التطبيق ورايحة لتذكيراتي في بنيان */
+    var rems = JSONArray()
+    val bg = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     val session = UUID.randomUUID().toString().take(8)
 
@@ -47,6 +54,8 @@ object Lib {
             app = j.optJSONObject("app") ?: JSONObject()
             goal = j.optInt("goal", 10)
             pulledAt = j.optLong("pulledAt", 0)
+            cfg = j.optJSONObject("cfg") ?: JSONObject()
+            rems = j.optJSONArray("rems") ?: JSONArray()
             queue = ArrayList(arr(j.optJSONArray("queue")).map { it.toString() })
             books.clear(); arr(j.optJSONArray("books")).forEach { if (it is JSONObject) books.add(it) }
         } catch (_: Exception) {}
@@ -55,7 +64,7 @@ object Lib {
 
     fun save() {
         val j = JSONObject()
-        j.put("link", link); j.put("app", app); j.put("goal", goal); j.put("pulledAt", pulledAt)
+        j.put("link", link); j.put("app", app); j.put("goal", goal); j.put("pulledAt", pulledAt); j.put("cfg", cfg); j.put("rems", rems)
         j.put("queue", JSONArray(queue)); j.put("books", JSONArray(books))
         val f = File(dir, "lib.json.tmp"); f.writeText(j.toString()); f.renameTo(File(dir, "lib.json"))
         bump()
@@ -95,6 +104,22 @@ object Lib {
         touch(b, "maxp", "sh", "sd")
         save(); return true
     }
+
+    fun addQuote(b: JSONObject, t: String, p: Int) {
+        val q = JSONObject().put("t", t.trim()).put("p", p).put("d", today())
+        (b.optJSONArray("q") ?: JSONArray().also { b.put("q", it) }).put(q)
+        val r = appRec(b.optString("id")); (r.optJSONArray("q") ?: JSONArray().also { r.put("q", it) }).put(JSONObject(q.toString()))
+        touch(b); save()
+    }
+    fun addSum(b: JSONObject, sm: JSONObject) {
+        (b.optJSONArray("sums") ?: JSONArray().also { b.put("sums", it) }).put(sm)
+        val r = appRec(b.optString("id")); (r.optJSONArray("sums") ?: JSONArray().also { r.put("sums", it) }).put(JSONObject(sm.toString()))
+        touch(b); save()
+    }
+    fun addRem(t: String, n: String, d: String, tm: String) {
+        rems.put(JSONObject().put("i", "rm_" + UUID.randomUUID().toString().take(10)).put("t", t).put("n", n).put("d", d).put("tm", tm)); save()
+    }
+    fun quoteText(q: Any?): String = when (q) { is JSONObject -> q.optString("t"); null -> ""; else -> q.toString() }
 
     fun setShelf(b: JSONObject, sh: String) {
         b.put("sh", sh)
@@ -177,7 +202,7 @@ object Lib {
                 val cv = rb.optString("cv")
                 if (cv.startsWith("data:image")) { val cf = File(dir, "covers/$id.jpg"); if (!cf.exists()) try { cf.writeBytes(Base64.decode(cv.substringAfter(","), Base64.DEFAULT)) } catch (_: Exception) {} }
                 rb.remove("cv")
-                if (loc != null && loc.has("spd")) rb.put("spd", loc.optInt("spd"))
+                if (loc != null) for (k in listOf("spd", "nx")) if (loc.has(k)) rb.put(k, loc.get(k))
                 val r = app.optJSONObject(id)
                 if (r != null && r.optLong("rd") > rb.optLong("rd", 0)) {
                     for (k in listOf("cur", "maxp", "sh", "sd", "fd", "pg", "rd")) if (r.has(k)) rb.put(k, r.get(k))
@@ -197,8 +222,19 @@ object Lib {
                     val keep = JSONArray(); for (i in 0 until adds.length()) { val a = adds.getJSONObject(i); if (!done.contains(a.optString("i"))) keep.put(a) }
                     r.put("add", keep)
                 }
+                if (r != null) {
+                    for (k in listOf("q", "sums")) {
+                        val mine = r.optJSONArray(k) ?: continue
+                        val there = rb.optJSONArray(k) ?: JSONArray().also { rb.put(k, it) }
+                        val have = HashSet((0 until there.length()).map { quoteText(there.get(it)) })
+                        val keep = JSONArray()
+                        for (i in 0 until mine.length()) { val x = mine.getJSONObject(i); if (!have.contains(x.optString("t"))) { there.put(x); keep.put(x) } }
+                        r.put(k, keep)
+                    }
+                }
                 out.add(rb)
             }
+            run { val keep = JSONArray(); for (i in 0 until rems.length()) { val x = rems.getJSONObject(i); if (!done.contains(x.optString("i"))) keep.put(x) }; rems = keep }
             books.filter { !seen.contains(it.optString("id")) && app.optJSONObject(it.optString("id"))?.has("nw") == true }.forEach { out.add(0, it) }
             books.clear(); books.addAll(out)
             goal = d.optInt("bdg", goal)
@@ -210,10 +246,10 @@ object Lib {
     }
 
     private fun push() {
-        if (app.length() == 0) return
+        if (app.length() == 0 && rems.length() == 0) return
         val (c0, t0) = gh("lib-app.json")
         val sha = if (c0 == 200) JSONObject(t0).optString("sha") else null
-        val payload = JSONObject().put("at", System.currentTimeMillis()).put("books", app)
+        val payload = JSONObject().put("at", System.currentTimeMillis()).put("books", app).put("rems", rems)
         val body = JSONObject().put("message", "مكتبتي: تقدم القراية من تطبيق الموبايل")
             .put("content", Base64.encodeToString(payload.toString().toByteArray(), Base64.NO_WRAP))
         if (sha != null) body.put("sha", sha)

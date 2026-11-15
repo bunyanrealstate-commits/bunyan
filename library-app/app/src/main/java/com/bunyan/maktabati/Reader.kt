@@ -80,17 +80,18 @@ class Doc(files: List<File>) {
 private const val VP = "دي صفحة من كتاب عربي هتتقري بصوت عالي بقارئ آلي. اكتب كلام الصفحة بالظبط بالترتيب الصح، واكتبه مشكول تشكيل كامل وصحيح نحويًا (كل حرف عليه حركته الصح، وخصوصًا أواخر الكلمات)، علشان القارئ ينطقه صح. متكتبش رقم الصفحة ولا العناوين المتكررة فوق ولا الحواشي، ومن غير أي شرح أو تعليق. الآيات اكتبها بتشكيلها الصح."
 
 @Composable
-fun ReaderScreen(b: JSONObject, onClose: () -> Unit) {
+fun ReaderScreen(b: JSONObject, onClose: (Int, Int, Int) -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val doc = remember(b) { try { Doc(Lib.files(b)) } catch (e: Exception) { null } }
     DisposableEffect(doc) { onDispose { doc?.close() } }
-    BackHandler { onClose() }
     if (doc == null || doc.count == 0) { Box(Modifier.fillMaxSize(), Alignment.Center) { Text("⚠️ الملف بايظ — امسحه ونزّله تاني") }; return }
     val n = doc.count
     if (b.optInt("pg") != n) { b.put("pg", n); Lib.touch(b, "pg"); Lib.save() }
     val start = b.optInt("cur", 1).coerceIn(1, n)
     val list = rememberLazyListState(initialFirstVisibleItemIndex = start - 1)
+    var flip by remember { mutableStateOf(Lib.cfg.optString("mode") == "flip") }
+    val pager = androidx.compose.foundation.pager.rememberPagerState(initialPage = start - 1) { n }
     var widthPx by remember { mutableIntStateOf(1080) }
     var night by remember { mutableStateOf(false) }
     var zoom by remember { mutableFloatStateOf(1f) }
@@ -102,12 +103,16 @@ fun ReaderScreen(b: JSONObject, onClose: () -> Unit) {
 
     // الصفحة الحالية = أكتر صفحة ظاهرة على الشاشة
     val cur by remember { derivedStateOf {
+        if (flip) return@derivedStateOf pager.currentPage + 1
         val vis = list.layoutInfo.visibleItemsInfo
         if (vis.isEmpty()) start else {
             val top = list.layoutInfo.viewportStartOffset; val bot = list.layoutInfo.viewportEndOffset
             vis.maxByOrNull { minOf(it.offset + it.size, bot) - maxOf(it.offset, top) }!!.index + 1
         }
     } }
+    fun close() { onClose(start, cur, sess) }
+    BackHandler { close() }
+    suspend fun goTo(p: Int, anim: Boolean = false) { val i = (p - 1).coerceIn(0, n - 1); if (flip) { if (anim) pager.animateScrollToPage(i) else pager.scrollToPage(i) } else { if (anim) list.animateScrollToItem(i) else list.scrollToItem(i) } }
     // سرعتك: متوسط الوقت اللي بتقعده على الصفحة
     DisposableEffect(cur) {
         val e = System.currentTimeMillis()
@@ -168,16 +173,20 @@ fun ReaderScreen(b: JSONObject, onClose: () -> Unit) {
             if (!listening) break
             Lib.credit(b, p)
             if (p >= n) { listening = false; Toast.makeText(ctx, "🎉 خلصت الكتاب!", Toast.LENGTH_LONG).show(); break }
-            p++; list.animateScrollToItem(p - 1)
+            p++; goTo(p, true)
         }
     }
 
     var showTools by remember { mutableStateOf(false) }
+    var aiMenu by remember { mutableStateOf(false) }
+    var ai by remember { mutableStateOf<String?>(null) }
+    var sleepAt by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(sleepAt) { if (sleepAt > 0) { delay(sleepAt - System.currentTimeMillis()); listening = false; sleepAt = 0; Toast.makeText(ctx, "😴 وقفت القراية بالصوت", Toast.LENGTH_SHORT).show() } }
     val bg = if (night) Color(0xFF1A1A1A) else Color(0xFFEDE6D8)
     Column(Modifier.fillMaxSize().background(bg)) {
         // الشريط اللي فوق
         Row(Modifier.fillMaxWidth().background(if (night) Color(0xFF111111) else Color(0xFFFBF6EC)).statusBarsPadding().padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconBtn("✕") { onClose() }
+            IconBtn("✕") { close() }
             Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
                 Text(b.optString("t"), fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 1, color = if (night) Color.White else Color(0xFF1D2733))
                 Text("صفحة $cur من $n • ${cur * 100 / n}%" + remain(b, n - cur), fontSize = 12.sp, color = Color(0xFF7A6A55))
@@ -185,9 +194,13 @@ fun ReaderScreen(b: JSONObject, onClose: () -> Unit) {
             }
             IconBtn(if (listening) "⏸" else "🎧", on = listening) { listening = !listening }
             Spacer(Modifier.width(6.dp))
+            IconBtn("💡") { aiMenu = true }
+            Spacer(Modifier.width(6.dp))
             IconBtn("⋯") { showTools = true }
         }
-        Box(Modifier.weight(1f).fillMaxWidth().onSizeChanged { widthPx = it.width }
+        if (flip) androidx.compose.foundation.pager.HorizontalPager(pager, Modifier.weight(1f).fillMaxWidth().onSizeChanged { widthPx = it.width }, beyondViewportPageCount = 1) { i ->
+            Box(Modifier.fillMaxSize().padding(vertical = 6.dp), Alignment.Center) { PageView(doc, i + 1, widthPx, night, fit = true) }
+        } else Box(Modifier.weight(1f).fillMaxWidth().onSizeChanged { widthPx = it.width }
             .pointerInput(Unit) {
                 detectTransformGestures { _, pan, z, _ ->
                     zoom = (zoom * z).coerceIn(1f, 3f)
@@ -203,7 +216,7 @@ fun ReaderScreen(b: JSONObject, onClose: () -> Unit) {
         // سلايدر الصفحات
         Row(Modifier.fillMaxWidth().background(if (night) Color(0xFF111111) else Color(0xFFFBF6EC)).navigationBarsPadding().padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             var sl by remember(cur) { mutableFloatStateOf(cur.toFloat()) }
-            Slider(value = sl, onValueChange = { sl = it }, onValueChangeFinished = { scope.launch { list.scrollToItem(sl.toInt() - 1) } },
+            Slider(value = sl, onValueChange = { sl = it }, onValueChangeFinished = { scope.launch { goTo(sl.toInt()) } },
                 valueRange = 1f..n.toFloat().coerceAtLeast(2f), modifier = Modifier.weight(1f))
         }
     }
@@ -211,17 +224,38 @@ fun ReaderScreen(b: JSONObject, onClose: () -> Unit) {
         AlertDialog(onDismissRequest = { showTools = false }, confirmButton = { TextButton({ showTools = false }) { Text("قفل") } },
             title = { Text("⚙️ أدوات القراية") }, text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("📖 شكل القراية", fontWeight = FontWeight.Bold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Chip("↕️ اسكرول", !flip) { if (flip) { val c = cur; flip = false; Lib.cfg.put("mode", "scroll"); Lib.save(); scope.launch { list.scrollToItem(c - 1) } } }
+                        Chip("📖 صفحة صفحة", flip) { if (!flip) { val c = cur; flip = true; zoom = 1f; panX = 0f; Lib.cfg.put("mode", "flip"); Lib.save(); scope.launch { pager.scrollToPage(c - 1) } } }
+                    }
                     Text("🎧 سرعة الصوت", fontWeight = FontWeight.Bold)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(0.75f, 1f, 1.25f, 1.5f).forEach { r -> Chip("${r}x", rate == r) { rate = r } } }
+                    Text("😴 وقّف الصوت بعد", fontWeight = FontWeight.Bold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(15, 30, 60).forEach { m -> Chip("$m د", false) { sleepAt = System.currentTimeMillis() + m * 60000L; Toast.makeText(ctx, "😴 الصوت هيقف بعد $m دقيقة", Toast.LENGTH_SHORT).show() } }
+                        if (sleepAt > 0) Chip("❌ إلغاء", true) { sleepAt = 0 }
+                    }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Chip(if (night) "☀️ نهاري" else "🌙 ليلي", night) { night = !night }
                         Chip("🔍 ترجيع الحجم", false) { zoom = 1f; panX = 0f }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Chip("✅ خلصته", b.optString("sh") == "done") { Lib.setShelf(b, "done"); showTools = false; onClose() }
+                        Chip("✅ خلصته", b.optString("sh") == "done") { Lib.setShelf(b, "done"); showTools = false; close() }
                     }
                 }
             })
+    }
+    if (aiMenu) AiMenu({ ai = it; aiMenu = false }) { aiMenu = false }
+    ai?.let { k -> AiSheet(k, b, doc, cur, onGo = { p -> scope.launch { goTo(p) } }) { ai = null } }
+}
+
+@Composable
+private fun AiMenu(onPick: (String) -> Unit, onDismiss: () -> Unit) {
+    Sheet("💡 ساعدني أفهم", onDismiss) {
+        listOf("explain" to "💡 اشرحلي الصفحة دي", "word" to "🔤 كلمة أو جملة مش فاهمها", "ask" to "💬 اسأل الكتاب أي سؤال", "quote" to "💬 احفظ اقتباس من الصفحة", "ideas" to "💼 أفكار من الكتاب لشغلي").forEach { (k, t) ->
+            Surface(onClick = { onPick(k) }, shape = RoundedCornerShape(14.dp), color = Card, modifier = Modifier.fillMaxWidth()) { Text(t, Modifier.padding(14.dp), fontWeight = FontWeight.Bold, color = Ink, fontSize = 15.sp) }
+        }
     }
 }
 
@@ -232,11 +266,11 @@ fun remain(b: JSONObject, left: Int): String {
 }
 
 @Composable
-fun PageView(doc: Doc, p: Int, w: Int, night: Boolean) {
+fun PageView(doc: Doc, p: Int, w: Int, night: Boolean, fit: Boolean = false) {
     var bm by remember(p, w) { mutableStateOf<Bitmap?>(null) }
     var ratio by remember(p) { mutableFloatStateOf(1.414f) }
     LaunchedEffect(p, w) { try { ratio = doc.ratio(p); bm = doc.render(p, (w * 1.6f).toInt().coerceAtMost(2000)) } catch (_: Exception) {} }
-    Box(Modifier.fillMaxWidth().aspectRatio(1f / ratio).padding(horizontal = 6.dp).clip(RoundedCornerShape(4.dp)).background(Color.White), Alignment.Center) {
+    Box((if (fit) Modifier.fillMaxSize().wrapContentSize().aspectRatio(1f / ratio, matchHeightConstraintsFirst = ratio > 1.3f) else Modifier.fillMaxWidth().aspectRatio(1f / ratio)).padding(horizontal = 6.dp).clip(RoundedCornerShape(4.dp)).background(Color.White), Alignment.Center) {
         val b = bm
         if (b != null) Image(b.asImageBitmap(), null, Modifier.fillMaxSize().graphicsLayer {
             if (night) { /* عكس الألوان للوضع الليلي */ }
