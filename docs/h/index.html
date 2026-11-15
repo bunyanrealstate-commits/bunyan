@@ -6416,7 +6416,7 @@ function poster(){var d=load(),P=PM(),U0=[];d.villas.forEach(function(v){(v.unit
  dt=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase(),
  hdTxt=function(x){return x.mo?(d.lab&&d.lab.mo?LB('mo',''):"MONTHLY<small>AED / MONTH</small>"):(PM().m==='sep'?(x.hh||x.h):(d.lab&&d.lab.pay?LB('pay',''):"RENT / YEAR<em>"+E(x.h)+"</em>"))};
  var DP=d.dtpos||'r',DTH="<div class='dt'>"+LB('upd','UPDATED')+" · "+dt+"</div>";
- var h="<div id='updposter' class='v4 lt"+(all.length>8?' cmp':'')+" dt"+DP+(MODE==='f'?' fz':'')+"'>"+
+ var h="<div id='updposter' class='v4 lt"+(all.length>8?' cmp':'')+" dt"+DP+(MODE==='f'?' fz th-'+(d.fzt||'n'):'')+"'>"+
   "<div class='h4'><div class='h4in'><div class='h4top'>"+(DP==='r'||DP==='l'?DTH:'')+"</div>"+
   "<div class='tt'>"+E(d.title||'AVAILABLE UNITS')+"</div><div class='rule'><i></i><b>◆</b><i></i></div></div></div><div class='bd4'>";
  L.forEach(function(v){var U=(v.units||[]).filter(shown);/* booked flats stay in their own place */
@@ -6506,6 +6506,7 @@ function blankF(){var td0=new Date().toISOString().slice(0,10),U=[];try{(S.units
  return {fmark:1,title:'FURNISHED STUDIOS',phone:'0528091984',fee:0,dep:'1 Month',group:'',notes:'',hideBooked:false,at:0,pm:'single',pn:1,showMo:true,flOn:1,hc:{pay:true},hf:{fee:true},lab:{mo:'MONTHLY RENT'},dtpos:'r',villas:U.length?[{id:id(),name:'BUNYAN FURNISHED',area:'Abu Dhabi',units:U}]:[]}}
 window.updMode=function(m){m=m==='f'?'f':'u';if(m===MODE)return;try{keep(1)}catch(e){}MODE=m;try{localStorage.setItem('bny_updmode',m)}catch(e){}D=null;load();try{pull()}catch(e){}render();toast(m==='f'?'🛋️ أبديت المفروش':'🏢 أبديت غير المفروش')};
 window.updModeNow=function(){return MODE};
+window.updFz=function(t){var d=load();d.fzt=t;keep();var w=document.getElementById('updmode');w&&w.remove();render();toast('🎨 اتغيّر اللون — دوس «شوف الصورة» تشوفها')};
 /* the unfurnished list no matter which one is open (Hakim's shared update is the unfurnished one — it was leaking into the furnished list) */
 async function pushTo(file,data){var c=cfg();if(!c)return;var A=api(c);A.u=A.u.replace(/contents\/[^?]+$/,'contents/'+file);try{var sha=null,r=await fetch(A.u,{headers:A.H});if(r.ok)sha=(await r.json()).sha;await fetch(A.u,{method:'PUT',headers:A.H,body:JSON.stringify({message:'📢 update list',content:b64(JSON.stringify(data)),sha:sha||undefined})})}catch(e){}}
 window.updDataU=function(){if(MODE==='u')return load();var x=null;try{x=JSON.parse(localStorage.getItem(KS)||'null')}catch(e){}return x||{villas:[],at:0}};
@@ -6514,7 +6515,8 @@ window.updPutU=function(x,bk){if(MODE==='u')return updPut(x,bk);if(!x||!x.villas
 function flOn(){if(MODE==='f'&&D&&D.fmark&&!D.flOn){D.flOn=1;D.hc=D.hc||{};D.hc.fl=false;keep()}}
 function cleanF(){if(MODE!=='f'||!D||D.fmark)return;var b=blankF();b.at=Date.now();D=b;keep()}
 function modeChips(){if(S.tab!=='upd')return;var c=document.querySelector('#app .card');if(!c||document.getElementById('updmode'))return;var w=document.createElement('div');w.id='updmode';
- w.innerHTML="<button type='button' class='"+(MODE==='u'?'on':'')+"' onclick=\"updMode('u')\">🏢 غير مفروش</button><button type='button' class='"+(MODE==='f'?'on':'')+"' onclick=\"updMode('f')\">🛋️ مفروش</button>";
+ w.innerHTML="<button type='button' class='"+(MODE==='u'?'on':'')+"' onclick=\"updMode('u')\">🏢 غير مفروش</button><button type='button' class='"+(MODE==='f'?'on':'')+"' onclick=\"updMode('f')\">🛋️ مفروش</button>"+
+  (MODE==='f'?"<div id='fzpick'><span>🎨 لون الصورة:</span>"+[['n','كحلي','#1b2a4a','#c79a3a'],['c','تيراكوتا','#7a3b24','#c8683f'],['o','خشب','#4a3a2a','#a8763e'],['s','زيتوني','#2f4a3a','#b58a4c'],['r','وردي','#5a2a3c','#c98b8f']].map(function(t){var on=(load().fzt||'n')===t[0];return "<button type='button' class='"+(on?'on':'')+"' onclick=\"updFz('"+t[0]+"')\"><i style='background:linear-gradient(135deg,"+t[2]+" 55%,"+t[3]+" 55%)'></i>"+t[1]+"</button>"}).join('')+"</div>":'');
  var h=c.querySelector('h3,h2,.ch,.ct');(h&&h.parentNode===c?h:c.firstChild)&&c.insertBefore(w,(h&&h.parentNode===c?h.nextSibling:c.firstChild))}
 (function(){var r0=render;render=function(){var o=r0.apply(this,arguments);try{modeChips()}catch(e){}return o}})();
 window.updBook=function(vid,aid){var v=V(vid),a=v&&A(v,aid);if(!a)return;a.booked=!a.booked;done();toast(a.booked?'✅ اتعلّمت BOOKED':'↩️ رجعت متاحة')};
@@ -7643,29 +7645,37 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);try{add()}catch(e
 <style id="updtpos">#updposter.v4.dtr .h4top{justify-content:flex-end!important}#updposter.v4.dtl .h4top{justify-content:flex-start!important}#updposter.v4.dtb .h4top,#updposter.v4.dth .h4top{display:none!important}#updposter.v4 .dtb{display:flex;justify-content:center;margin:14px 0 2px}</style>
 <style id="updmodecss">#updmode{display:flex;gap:6px;margin:4px 0 12px}#updmode button{flex:1;margin:0!important;padding:10px 6px!important;font-weight:800;border-radius:12px!important;font-size:14px!important}#updmode button.on{background:#0f5132!important;color:#fff!important;border-color:#0f5132!important}</style>
 <style id="updfzcss">
-#updposter.v4.lt.fz{background:#fffdf8!important}
-#updposter.v4.lt.fz .h4{background:#fffdf8!important}
-#updposter.v4.lt.fz .dt{color:#1b2a4a!important;border-color:#e3d3a8!important;background:#fbf5e6!important}
-#updposter.v4.lt.fz .tt{color:#1b2a4a!important}
-#updposter.v4.lt.fz .rule i{background:#c79a3a!important}#updposter.v4.lt.fz .rule b{color:#c79a3a!important}
-#updposter.v4.lt.fz .vc{border-color:#eadfc4!important;background:#fff!important}
-#updposter.v4.lt.fz .vh3{background:#fff!important;border-bottom-color:#efe6cf!important}
-#updposter.v4.lt.fz .vt3{border-left-color:#c79a3a!important}
-#updposter.v4.lt.fz .vn{color:#1b2a4a!important}
-#updposter.v4.lt.fz tr.hd2 td{background:#1b2a4a!important;color:#f1dca3!important}
-#updposter.v4.lt.fz tr.hd2 td small,#updposter.v4.lt.fz tr.hd2 td em{color:#f1dca3!important}
-#updposter.v4.lt.fz tr.r td,#updposter.v4.lt.fz tr.r:nth-child(odd) td{border-top-color:#f1ead8!important}
-#updposter.v4.lt.fz tr.r:nth-child(even) td{background:#fffaf0!important}
-#updposter.v4.lt.fz td.fn .no{background:linear-gradient(135deg,#e7c873,#c79a3a)!important;color:#1b2a4a!important}
-#updposter.v4.lt.fz tr.r td.ty{color:#1b2a4a!important}
-#updposter.v4.lt.fz tr.r td.yr,#updposter.v4.lt.fz tr.r td.mo,#updposter.v4.lt.fz small.aed{color:#b07d1e!important}
+/* furnished update theme — colors come from variables so the theme can change (d.fzt) */
+#updposter.v4.lt.fz{--m:#1b2a4a;--m2:#22355c;--a:#c79a3a;--a2:#e7c873;--p:#b07d1e;--bg:#fffdf8;--sf:#fbf5e6;--ln:#eadfc4;--tx:#f1dca3}
+#updposter.v4.lt.fz.th-c{--m:#7a3b24;--m2:#934a2e;--a:#c8683f;--a2:#e7a27e;--p:#b4532c;--bg:#fffaf5;--sf:#fbefe6;--ln:#f0dccd;--tx:#fde6d6}
+#updposter.v4.lt.fz.th-o{--m:#4a3a2a;--m2:#5c4835;--a:#a8763e;--a2:#d6ad73;--p:#8f5f2a;--bg:#fdfaf4;--sf:#f6efe3;--ln:#e8dcc8;--tx:#f3e2c4}
+#updposter.v4.lt.fz.th-s{--m:#2f4a3a;--m2:#3c5c49;--a:#b58a4c;--a2:#d9bb85;--p:#9a6f33;--bg:#fbfcf8;--sf:#f1f4ec;--ln:#dfe6d6;--tx:#efe1bf}
+#updposter.v4.lt.fz.th-r{--m:#5a2a3c;--m2:#6e3449;--a:#c98b8f;--a2:#e8bcbd;--p:#a8495a;--bg:#fffafa;--sf:#fbefef;--ln:#f1dcdd;--tx:#f9dfe2}
+#updposter.v4.lt.fz{background:var(--bg)!important}
+#updposter.v4.lt.fz .h4{background:var(--bg)!important}
+#updposter.v4.lt.fz .dt{color:var(--m)!important;border-color:var(--ln)!important;background:var(--sf)!important}
+#updposter.v4.lt.fz .tt{color:var(--m)!important}
+#updposter.v4.lt.fz .rule i{background:var(--a)!important}#updposter.v4.lt.fz .rule b{color:var(--a)!important}
+#updposter.v4.lt.fz .vc{border-color:var(--ln)!important;background:#fff!important}
+#updposter.v4.lt.fz .vh3{background:#fff!important;border-bottom-color:var(--ln)!important}
+#updposter.v4.lt.fz .vt3{border-left-color:var(--a)!important}
+#updposter.v4.lt.fz .vn{color:var(--m)!important}
+#updposter.v4.lt.fz tr.hd2 td{background:var(--m)!important;color:var(--tx)!important}
+#updposter.v4.lt.fz tr.hd2 td small,#updposter.v4.lt.fz tr.hd2 td em{color:var(--tx)!important}
+#updposter.v4.lt.fz tr.r td,#updposter.v4.lt.fz tr.r:nth-child(odd) td{border-top-color:var(--ln)!important}
+#updposter.v4.lt.fz tr.r:nth-child(even) td{background:var(--bg)!important}
+#updposter.v4.lt.fz td.fn .no{background:linear-gradient(135deg,var(--a2),var(--a))!important;color:var(--m)!important}
+#updposter.v4.lt.fz .fp.g,#updposter.v4.lt.fz .fp.f1,#updposter.v4.lt.fz .fp.f2,#updposter.v4.lt.fz .fp.f3,#updposter.v4.lt.fz .fp.fr{background:var(--sf)!important;color:var(--m)!important}
+#updposter.v4.lt.fz tr.r td.ty{color:var(--m)!important}
+#updposter.v4.lt.fz tr.r td.yr,#updposter.v4.lt.fz tr.r td.mo,#updposter.v4.lt.fz small.aed{color:var(--p)!important}
 #updposter.v4.lt.fz td.ubkd span{border-color:#9b2c2c!important;color:#9b2c2c!important}
-#updposter.v4.lt.fz tr.r.rb td{background:#f7f5ef!important}
-#updposter.v4.lt.fz .ft3>div{background:#fbf5e6!important;border-color:#eadfc4!important}#updposter.v4.lt.fz .ft3 b{color:#1b2a4a!important}#updposter.v4.lt.fz .ft3 small{color:#6b5a32!important}
-#updposter.v4.lt.fz .ct3{background:linear-gradient(135deg,#22355c,#1b2a4a 60%,#121d36)!important;border:2px solid #c79a3a!important}
-#updposter.v4.lt.fz .ct3 .cx small{color:#f1dca3!important}
-#updposter.v4.lt.fz .gn{background:#fbf5e6!important;border-color:#eadfc4!important}
+#updposter.v4.lt.fz tr.r.rb td{background:#f7f5f1!important}
+#updposter.v4.lt.fz .ft3>div{background:var(--sf)!important;border-color:var(--ln)!important}#updposter.v4.lt.fz .ft3 b{color:var(--m)!important}#updposter.v4.lt.fz .ft3 small{color:var(--m)!important;opacity:.75}
+#updposter.v4.lt.fz .ct3{background:linear-gradient(135deg,var(--m2),var(--m))!important;border:2px solid var(--a)!important}
+#updposter.v4.lt.fz .ct3 .cx small{color:var(--tx)!important}
+#updposter.v4.lt.fz .gn{background:var(--sf)!important;border-color:var(--ln)!important}
 </style>
+<style id="fzpickcss">#updmode{flex-wrap:wrap}#fzpick{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px}#fzpick span{font-size:13px;font-weight:800;margin-inline-end:2px}#fzpick button{flex:0 0 auto!important;display:inline-flex;align-items:center;gap:6px;padding:6px 10px!important;font-size:13px!important;border-radius:999px!important;font-weight:700}#fzpick button i{width:18px;height:18px;border-radius:50%;display:inline-block;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}#fzpick button.on{outline:2.5px solid #0f5132;outline-offset:1px;background:#fff!important;color:inherit!important}</style>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script><style id="hlogo">html body .hd{background:linear-gradient(120deg,#16653b 0%,#2a9d5c 55%,#3cc47c 100%)!important;border-bottom:0!important;box-shadow:0 4px 16px rgba(22,101,59,.28)!important;color:#fff!important}.hd h1.brand{display:inline-flex!important;flex-direction:column;align-items:center;justify-content:center;line-height:1;width:auto!important;background:none!important;padding:0!important}.hd h1.brand svg{height:30px!important;width:auto!important;filter:drop-shadow(0 1px 2px rgba(0,0,0,.18))}.hd h1.brand svg *{fill:#fff!important;stroke:none}.hd h1.brand::after{content:"حكيم";display:block;margin-top:-3px;background:#fff;color:#16653b;font-size:9.5px;font-weight:800;line-height:1;padding:2px 9px 3px;border-radius:999px;letter-spacing:0;box-shadow:0 1px 4px rgba(0,0,0,.15)}html body .hd #pvb,html body .hd #bell,html body .hd #hmb{background:rgba(255,255,255,.16)!important;border:1px solid rgba(255,255,255,.38)!important;color:#fff!important;box-shadow:none!important}html body .hd #hmb{color:#fff!important}html body .hd #bell:not(.al):not(.od){background:rgba(255,255,255,.16)!important;border:1px solid rgba(255,255,255,.38)!important;color:#fff!important}html body .hd #clk2{color:#fff!important}html body .hd #clk2 small{color:#d4f7e2!important}html body .hd #grpb button{background:rgba(255,255,255,.18)!important;border:1px solid rgba(255,255,255,.45)!important;box-shadow:0 2px 10px rgba(0,0,0,.12)!important;color:#fff!important}html body .hd #grpb button b,html body .hd #grpb button span{color:#fff!important}html body .hd #grpb button i{background:#ffc93c!important;box-shadow:0 0 0 2px rgba(255,201,60,.35),0 0 8px rgba(255,201,60,.6)!important}html body .hd{min-height:52px!important;padding-top:6px!important;padding-bottom:6px!important}.hd h1.brand svg{height:27px!important}.hd h1.brand::after{font-size:9px!important}html body .hd #clk2{font-size:15px!important}html body .hd #grpb button{min-height:30px!important;font-size:13px!important}html body .hd #pvb,html body .hd #bell,html body .hd #hmb{width:36px!important;height:36px!important;min-height:36px!important;font-size:17px!important}</style><script id="hguard">(function(){
 var D=["units","exp","dep","gp","gc","adj"];window._ug=0;["pointerdown","keydown","touchstart"].forEach(function(e){addEventListener(e,function(){window._ug=Date.now()},{capture:true,passive:true})});
 function pk(o){var r={};D.forEach(function(k){if(o&&o[k]!=null)r[k]=o[k]});return JSON.stringify(r)}
