@@ -100,10 +100,14 @@ fun App(incoming: MutableState<Intent?>) {
     fun fetch(b: JSONObject, open: Boolean) {
         val id = b.optString("id")
         if (dl.containsKey(id)) return
-        if (b.optString("ia").isEmpty()) { toast("الكتاب ده اترفع من ملف — دوس «📄 من موبايلي» واختاره"); return }
         dl[id] = 0f
         scope.launch {
             try {
+                if (b.optString("ia").isEmpty()) {
+                    toast("🔎 بدوّر على «${b.optString("t")}» في أرشيف الإنترنت…")
+                    if (!Net.findIA(b)) { dl.remove(id); toast("ملقتش «${b.optString("t")}» على الأرشيف — نزّله بـ «🔎 نزّل كتاب» أو «📄 من موبايلي»"); return@launch }
+                    Lib.touch(b, "ia", "iaf", "iaff", "iav"); Lib.save()
+                }
                 val parts = Net.parts(b)
                 if (parts.isEmpty()) throw Exception("مفيش PDF")
                 parts.forEachIndexed { i, f ->

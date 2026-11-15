@@ -171,4 +171,43 @@ object Net {
             uri
         } catch (_: Exception) { null }
     }
+
+    /* لاقي الكتاب على أرشيف الإنترنت لوحده بالاسم والمؤلف (زي بنيان بالظبط) */
+    private fun norm(t: String) = t.replace(Regex("[\u064B-\u0652\u0640]"), "").replace(Regex("[أإآ]"), "ا").replace("ة", "ه").replace("ى", "ي")
+        .replace(Regex("[^\u0600-\u06FFa-zA-Z0-9 ]"), " ").replace(Regex("\\s+"), " ").trim().lowercase()
+    private fun auth(b: JSONObject) = b.optString("a").replace(Regex("^(ترجمة|تحرير)\\s*"), "").split(Regex("[،,(]"))[0].trim()
+    private fun score(d: JSONObject, b: JSONObject): Double {
+        val tt = d.opt("title").let { if (it is JSONArray) it.optString(0) else it?.toString() ?: "" }
+        val cr = d.opt("creator").let { if (it is JSONArray) (0 until it.length()).joinToString(" ") { k -> it.optString(k) } else it?.toString() ?: "" }
+        val t = norm(tt); val bt = norm(b.optString("t").replace(Regex("\\(.*\\)"), "")).trim(); val c = norm(cr); val a = norm(auth(b))
+        var s = 0.0
+        if (t == bt) s += 60 else if (t.contains(bt) || (bt.contains(t) && t.length > 3)) s += 35 else {
+            val w = bt.split(" ").filter { it.length > 2 }; val h = w.count { t.contains(it) }; if (w.isNotEmpty()) s += Math.round(25.0 * h / w.size)
+        }
+        if (a.isNotEmpty()) { val aw = a.split(" ").filter { it.length > 2 }; val ah = aw.count { c.contains(it) || t.contains(it) }; if (aw.isNotEmpty()) s += Math.round(25.0 * ah / aw.size) }
+        s += minOf(15.0, Math.log10(d.optDouble("downloads", 0.0) + 1) * 4)
+        return s
+    }
+    suspend fun findIA(b: JSONObject): Boolean = withContext(Dispatchers.IO) {
+        val bt = b.optString("t").replace(Regex("\\(.*\\)"), "").trim(); val au = auth(b)
+        val qs = listOf("title:($bt) AND creator:($au)", "title:($bt)", "($bt $au)")
+        val seen = HashSet<String>(); val docs = ArrayList<JSONObject>()
+        for (q in qs) try {
+            val u = "https://archive.org/advancedsearch.php?q=" + URLEncoder.encode("$q AND mediatype:texts", "UTF-8") + "&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=downloads&rows=12&sort[]=downloads+desc&output=json"
+            val a = JSONObject(getText(u)).getJSONObject("response").getJSONArray("docs")
+            for (k in 0 until a.length()) { val d = a.getJSONObject(k); if (seen.add(d.optString("identifier"))) docs.add(d) }
+        } catch (_: Exception) {}
+        val best = docs.map { it to score(it, b) }.filter { it.second >= 40 }.sortedByDescending { it.second }.take(4)
+        for ((d, _) in best) try {
+            val m = JSONObject(getText("https://archive.org/metadata/" + URLEncoder.encode(d.optString("identifier"), "UTF-8")))
+            val fs = m.optJSONArray("files") ?: continue
+            val l = (0 until fs.length()).map { fs.getJSONObject(it) }
+                .filter { val n = it.optString("name"); n.endsWith(".pdf", true) && !n.endsWith("_text.pdf", true) && (it.optString("size").toLongOrNull() ?: 0) < 180L * 1048576 }
+                .map { it.optString("name") }.sortedWith { x, y -> natural(x, y) }.take(12)
+            if (l.isEmpty()) continue
+            b.put("ia", d.optString("identifier")); b.put("iaf", l[0]); b.put("iaff", JSONArray(l)); b.put("iav", l.size)
+            return@withContext true
+        } catch (_: Exception) {}
+        false
+    }
 }

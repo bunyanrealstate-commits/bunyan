@@ -59,6 +59,16 @@ object Lib {
             queue = ArrayList(arr(j.optJSONArray("queue")).map { it.toString() })
             books.clear(); arr(j.optJSONArray("books")).forEach { if (it is JSONObject) books.add(it) }
         } catch (_: Exception) {}
+        // أول مرة: قايمة كتبك اللي في بنيان (من الرابط اللي بعته) جاهزة جوه التطبيق
+        if (books.none { !(app.optJSONObject(it.optString("id"))?.has("nw") ?: false) }) try {
+            val sd = JSONObject(ctx.assets.open("seed.json").bufferedReader().readText())
+            val have = books.map { it.optString("id") }.toHashSet()
+            arr(sd.optJSONArray("books")).forEach { if (it is JSONObject && !have.contains(it.optString("id"))) books.add(it) }
+            if (!f.exists()) goal = sd.optInt("bdg", 10)
+            if (queue.isEmpty()) queue = ArrayList(arr(sd.optJSONArray("bq")).map { it.toString() })
+            (ctx.assets.list("covers") ?: emptyArray()).forEach { n -> val o = File(dir, "covers/$n"); if (!o.exists()) ctx.assets.open("covers/$n").use { i -> o.outputStream().use { i.copyTo(it) } } }
+            save()
+        } catch (_: Exception) {}
         bump()
     }
 
