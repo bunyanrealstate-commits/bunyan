@@ -23,6 +23,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
@@ -125,65 +126,78 @@ fun ReaderScreen(b: JSONObject, onClose: (Int, Int, Int) -> Unit) {
     LaunchedEffect(cur) {
         Lib.setCur(b, cur)
         delay(20000)
-        if (Lib.credit(b, cur)) { sess++; if (sess == 5 || sess == 10 || sess == 20) Toast.makeText(ctx, "🔥 $sess صفحات في القعدة دي — عاش!", Toast.LENGTH_SHORT).show() }
+        if (Lib.credit(b, cur)) {
+            sess++
+            if (Lib.goal == 1 && Lib.todayPages() == 1) Toast.makeText(ctx, "✅ عدّيت تحدي الصفحة الواحدة النهارده! أي صفحة زيادة بونص 💪", Toast.LENGTH_LONG).show()
+            else if (sess == 5 || sess == 10 || sess == 20) Toast.makeText(ctx, "🔥 $sess صفحات في القعدة دي — عاش!", Toast.LENGTH_SHORT).show()
+        }
     }
 
-    /* 🎧 القراية بالصوت */
-    var listening by remember { mutableStateOf(false) }
-    var rate by remember { mutableFloatStateOf(1f) }
-    val tts = remember { mutableStateOf<TextToSpeech?>(null) }
+    /* 🎧 القراية بالصوت — خدمة بتكمّل والشاشة مقفولة */
+    val listening = Speech.playing && Speech.bookId == b.optString("id")
+    LaunchedEffect(Speech.page, listening) { if (listening && Speech.page in 1..n && Speech.page != cur) goTo(Speech.page, true) }
+    fun toggleListen() {
+        if (listening) Speech.stop(ctx)
+        else if (!Net.hasGem()) Toast.makeText(ctx, "محتاج Gemini — اربط التطبيق بحساب بنيان الأول", Toast.LENGTH_LONG).show()
+        else { Speech.start(ctx, b, cur); Toast.makeText(ctx, if (Speech.natural()) "🗣 بجهّز الصوت الطبيعي… وتقدر تقفل الشاشة" else "🎧 بجهّز الصفحة… وتقدر تقفل الشاشة", Toast.LENGTH_SHORT).show() }
+    }
+
+    /* 🌙 وضع التركيز: الشاشة متطفيش + فلتر دافي + الإشعارات تسكت */
+    val act = ctx as? android.app.Activity
+    var warm by remember { mutableStateOf(Lib.cfg.optBoolean("warm", false)) }
     DisposableEffect(Unit) {
-        var t: TextToSpeech? = null
-        t = TextToSpeech(ctx) { st -> if (st == TextToSpeech.SUCCESS) { t?.setLanguage(Locale("ar")); tts.value = t } }
-        onDispose { t?.stop(); t?.shutdown() }
-    }
-    val pending = remember { HashMap<String, CompletableDeferred<Unit>>() }
-    LaunchedEffect(tts.value) {
-        tts.value?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onStart(id: String?) {}
-            override fun onDone(id: String?) { pending.remove(id)?.complete(Unit) }
-            @Deprecated("") override fun onError(id: String?) { pending.remove(id)?.complete(Unit) }
-        })
-    }
-    suspend fun say(s: String) {
-        val t = tts.value ?: return
-        val id = java.util.UUID.randomUUID().toString(); val d = CompletableDeferred<Unit>(); pending[id] = d
-        t.setSpeechRate(0.95f * rate)
-        t.speak(s, TextToSpeech.QUEUE_ADD, null, id); d.await()
-    }
-    suspend fun vocal(p: Int): String {
-        val f = File(Lib.dir, "tts/${b.optString("id")}_$p.txt")
-        if (f.exists()) return f.readText()
-        val bm = doc.render(p, 1500)
-        val t = Net.gemini(VP, bm)?.replace(Regex("[*#_`>]"), " ")?.replace(Regex("\\s+"), " ")?.trim()
-        if (!t.isNullOrEmpty() && t.length > 5) { f.writeText(t); return t }
-        return ""
-    }
-    LaunchedEffect(listening) {
-        if (!listening) { tts.value?.stop(); pending.values.forEach { it.complete(Unit) }; pending.clear(); return@LaunchedEffect }
-        if (Lib.gem() == null) { Toast.makeText(ctx, "محتاج Gemini — اربط التطبيق بحساب بنيان الأول", Toast.LENGTH_LONG).show(); listening = false; return@LaunchedEffect }
-        if (tts.value == null) { Toast.makeText(ctx, "صوت القراية العربي مش جاهز على الموبايل", Toast.LENGTH_LONG).show(); listening = false; return@LaunchedEffect }
-        Toast.makeText(ctx, "📖 بجهّز الصفحة بالتشكيل الصح…", Toast.LENGTH_SHORT).show()
-        var p = cur
-        while (isActive && listening) {
-            val txt = vocal(p)
-            if (p < n) launch { try { vocal(p + 1) } catch (_: Exception) {} }
-            if (txt.isEmpty()) { Toast.makeText(ctx, "⚠️ مقدرتش أقرا الصفحة دي — اتأكد من النت", Toast.LENGTH_SHORT).show(); listening = false; break }
-            for (s in Regex("[^.!؟?،\n]{1,220}[.!؟?،]?").findAll(txt).map { it.value.trim() }.filter { it.isNotEmpty() }) { if (!listening) break; say(s) }
-            if (!listening) break
-            Lib.credit(b, p)
-            if (p >= n) { listening = false; Toast.makeText(ctx, "🎉 خلصت الكتاب!", Toast.LENGTH_LONG).show(); break }
-            p++; goTo(p, true)
+        act?.window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        val nm = ctx.getSystemService(android.app.NotificationManager::class.java)
+        var prev = -1
+        if (Lib.cfg.optBoolean("dnd", false) && nm.isNotificationPolicyAccessGranted) { prev = nm.currentInterruptionFilter; nm.setInterruptionFilter(android.app.NotificationManager.INTERRUPTION_FILTER_PRIORITY) }
+        Keys.reader = true
+        onDispose {
+            act?.window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            if (prev > 0) try { nm.setInterruptionFilter(prev) } catch (_: Exception) {}
+            Keys.reader = false
         }
+    }
+    /* 🔊 قلب الصفحات بزراير الصوت */
+    LaunchedEffect(Unit) { Keys.flow.collect { d -> goTo(cur + d, true) } }
+
+    /* 🪝 طُعم قبل ما تبدأ */
+    var hook by remember { mutableStateOf<String?>(if (Lib.cfg.optBoolean("hook", true) && Net.hasGem()) "" else null) }
+    LaunchedEffect(Unit) { if (hook != null) { val h = try { Boost.hook(doc, b, start) } catch (_: Exception) { null }; hook = if (h.isNullOrEmpty()) null else h } }
+
+    /* 📺 الحلقات */
+    var epMsg by remember { mutableStateOf<String?>(null) }
+    var lastEp by remember { mutableIntStateOf(Boost.epAt(b, start)?.first ?: -1) }
+    LaunchedEffect(cur) {
+        val e = Boost.epAt(b, cur) ?: return@LaunchedEffect
+        if (lastEp >= 0 && e.first == lastEp + 1) {
+            val prevN = Boost.eps(b).getOrNull(lastEp)?.optString("n") ?: ""
+            epMsg = "🎬 خلصت الحلقة ${lastEp + 1}" + (if (prevN.isNotEmpty()) " «$prevN»" else "") + "!\nالجاية: «${e.second.optString("n")}» — حلقة كمان؟"
+        }
+        lastEp = e.first
+    }
+
+    /* 🖍 التعليم على الصفحة */
+    var hlMode by remember { mutableStateOf(false) }
+    fun onHl(p: Int, r: FloatArray) {
+        val hl = b.optJSONArray("hl") ?: org.json.JSONArray().also { b.put("hl", it) }
+        val o = JSONObject().put("p", p).put("r", org.json.JSONArray(r.map { it.toDouble() })).put("d", Lib.today())
+        hl.put(o); Lib.save()
+        if (Net.hasGem()) scope.launch {
+            try {
+                val full = doc.render(p, 1500); val x1 = (r[0] * full.width).toInt().coerceIn(0, full.width - 2); val y1 = (r[1] * full.height).toInt().coerceIn(0, full.height - 2)
+                val x2 = (r[2] * full.width).toInt().coerceIn(x1 + 1, full.width); val y2 = (r[3] * full.height).toInt().coerceIn(y1 + 1, full.height)
+                val crop = Bitmap.createBitmap(full, x1, y1, x2 - x1, y2 - y1)
+                val t = Net.ask("اكتب الكلام العربي اللي في الصورة دي بالظبط زي ما هو، جملة كاملة، من غير أي تعليق.", listOf(crop))?.trim()
+                if (!t.isNullOrEmpty()) { o.put("t", t); Lib.addQuote(b, t, p); Toast.makeText(ctx, "🖍 اتعلّم واتحفظ في اقتباساتك", Toast.LENGTH_SHORT).show() }
+            } catch (_: Exception) {}
+        } else Toast.makeText(ctx, "🖍 اتعلّم", Toast.LENGTH_SHORT).show()
     }
 
     var showTools by remember { mutableStateOf(false) }
     var aiMenu by remember { mutableStateOf(false) }
     var ai by remember { mutableStateOf<String?>(null) }
-    var sleepAt by remember { mutableLongStateOf(0L) }
-    LaunchedEffect(sleepAt) { if (sleepAt > 0) { delay(sleepAt - System.currentTimeMillis()); listening = false; sleepAt = 0; Toast.makeText(ctx, "😴 وقفت القراية بالصوت", Toast.LENGTH_SHORT).show() } }
     val bg = if (night) Color(0xFF1A1A1A) else Color(0xFFEDE6D8)
-    Column(Modifier.fillMaxSize().background(bg)) {
+    Column(Modifier.fillMaxSize().background(bg).drawWithContent { drawContent(); if (warm) drawRect(Color(0x33FF8A00)) }) {
         // الشريط اللي فوق
         Row(Modifier.fillMaxWidth().background(if (night) Color(0xFF111111) else Color(0xFFFBF6EC)).statusBarsPadding().padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             IconBtn("✕") { close() }
@@ -192,25 +206,27 @@ fun ReaderScreen(b: JSONObject, onClose: (Int, Int, Int) -> Unit) {
                 Text("صفحة $cur من $n • ${cur * 100 / n}%" + remain(b, n - cur), fontSize = 12.sp, color = Color(0xFF7A6A55))
                 Text("⏱ ${secs / 60}:${String.format(Locale.US, "%02d", secs % 60)} • +$sess صفحة", fontSize = 11.sp, color = Color(0xFF1F7A55), fontWeight = FontWeight.Bold)
             }
-            IconBtn(if (listening) "⏸" else "🎧", on = listening) { listening = !listening }
+            IconBtn(if (listening) "⏸" else "🎧", on = listening) { toggleListen() }
+            Spacer(Modifier.width(6.dp))
+            IconBtn("🖍", on = hlMode) { hlMode = !hlMode; if (hlMode) { zoom = 1f; panX = 0f; Toast.makeText(ctx, "🖍 اسحب صباعك على الجملة علشان تعلّم عليها", Toast.LENGTH_SHORT).show() } }
             Spacer(Modifier.width(6.dp))
             IconBtn("💡") { aiMenu = true }
             Spacer(Modifier.width(6.dp))
             IconBtn("⋯") { showTools = true }
         }
-        if (flip) androidx.compose.foundation.pager.HorizontalPager(pager, Modifier.weight(1f).fillMaxWidth().onSizeChanged { widthPx = it.width }, beyondViewportPageCount = 1) { i ->
-            Box(Modifier.fillMaxSize().padding(vertical = 6.dp), Alignment.Center) { PageView(doc, i + 1, widthPx, night, fit = true) }
+        if (flip) androidx.compose.foundation.pager.HorizontalPager(pager, Modifier.weight(1f).fillMaxWidth().onSizeChanged { widthPx = it.width }, beyondViewportPageCount = 1, userScrollEnabled = !hlMode) { i ->
+            Box(Modifier.fillMaxSize().padding(vertical = 6.dp), Alignment.Center) { PageView(doc, i + 1, widthPx, night, fit = true, b = b, hlMode = hlMode, onHl = ::onHl) }
         } else Box(Modifier.weight(1f).fillMaxWidth().onSizeChanged { widthPx = it.width }
-            .pointerInput(Unit) {
-                detectTransformGestures { _, pan, z, _ ->
+            .pointerInput(hlMode) {
+                if (!hlMode) detectTransformGestures { _, pan, z, _ ->
                     zoom = (zoom * z).coerceIn(1f, 3f)
                     val maxX = (zoom - 1f) * widthPx / 2f
                     panX = if (zoom <= 1.01f) 0f else (panX + pan.x).coerceIn(-maxX, maxX)
                 }
             }) {
-            LazyColumn(state = list, modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = zoom; scaleY = zoom; translationX = panX; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f) },
+            LazyColumn(state = list, userScrollEnabled = !hlMode, modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = zoom; scaleY = zoom; translationX = panX; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f) },
                 contentPadding = PaddingValues(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                itemsIndexed(List(n) { it + 1 }) { _, p -> PageView(doc, p, widthPx, night) }
+                itemsIndexed(List(n) { it + 1 }) { _, p -> PageView(doc, p, widthPx, night, b = b, hlMode = hlMode, onHl = ::onHl) }
             }
         }
         // سلايدر الصفحات
@@ -230,11 +246,25 @@ fun ReaderScreen(b: JSONObject, onClose: (Int, Int, Int) -> Unit) {
                         Chip("📖 صفحة صفحة", flip) { if (!flip) { val c = cur; flip = true; zoom = 1f; panX = 0f; Lib.cfg.put("mode", "flip"); Lib.save(); scope.launch { pager.scrollToPage(c - 1) } } }
                     }
                     Text("🎧 سرعة الصوت", fontWeight = FontWeight.Bold)
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(0.75f, 1f, 1.25f, 1.5f).forEach { r -> Chip("${r}x", rate == r) { rate = r } } }
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(0.75f, 1f, 1.25f, 1.5f).forEach { r -> Chip("${r}x", Speech.rate == r) { Speech.rate = r } } }
                     Text("😴 وقّف الصوت بعد", fontWeight = FontWeight.Bold)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf(15, 30, 60).forEach { m -> Chip("$m د", false) { sleepAt = System.currentTimeMillis() + m * 60000L; Toast.makeText(ctx, "😴 الصوت هيقف بعد $m دقيقة", Toast.LENGTH_SHORT).show() } }
-                        if (sleepAt > 0) Chip("❌ إلغاء", true) { sleepAt = 0 }
+                        listOf(15, 30, 60).forEach { m -> Chip("$m د", false) { Speech.sleepAt = System.currentTimeMillis() + m * 60000L; Toast.makeText(ctx, "😴 الصوت هيقف بعد $m دقيقة", Toast.LENGTH_SHORT).show() } }
+                        if (Speech.sleepAt > 0) Chip("❌ إلغاء", true) { Speech.sleepAt = 0 }
+                    }
+                    Text("🗣 الصوت", fontWeight = FontWeight.Bold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Chip("📱 صوت الموبايل", !Speech.natural()) { Lib.cfg.put("voice", "tts"); Lib.save() }
+                        Chip("🗣 صوت طبيعي", Speech.natural()) { Lib.cfg.put("voice", "gem"); Lib.save() }
+                    }
+                    Text("🌙 التركيز", fontWeight = FontWeight.Bold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Chip("🟠 فلتر دافي", warm) { warm = !warm; Lib.cfg.put("warm", warm); Lib.save() }
+                        Chip("🔕 سكّت الإشعارات", Lib.cfg.optBoolean("dnd", false)) {
+                            val nm = ctx.getSystemService(android.app.NotificationManager::class.java)
+                            if (!nm.isNotificationPolicyAccessGranted) { Toast.makeText(ctx, "فعّل «مكتبتي» من الشاشة اللي هتفتح، وارجع", Toast.LENGTH_LONG).show(); ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)) }
+                            else { Lib.cfg.put("dnd", !Lib.cfg.optBoolean("dnd", false)); Lib.save(); Toast.makeText(ctx, "هتشتغل من المرة الجاية اللي تفتح فيها كتاب", Toast.LENGTH_SHORT).show() }
+                        }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Chip(if (night) "☀️ نهاري" else "🌙 ليلي", night) { night = !night }
@@ -246,6 +276,15 @@ fun ReaderScreen(b: JSONObject, onClose: (Int, Int, Int) -> Unit) {
                 }
             })
     }
+    hook?.let { h ->
+        AlertDialog(onDismissRequest = { hook = null }, confirmButton = { Button({ hook = null }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1F7A55))) { Text("يلا نبدأ 📖") } },
+            title = { Text("🪝 قبل ما تبدأ…", fontWeight = FontWeight.Bold) },
+            text = { if (h.isEmpty()) Text("⏳ …", fontSize = 18.sp) else Text(h, fontSize = 18.sp, lineHeight = 30.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1D2733)) })
+    }
+    epMsg?.let { m ->
+        AlertDialog(onDismissRequest = { epMsg = null }, confirmButton = { Button({ epMsg = null }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1F7A55))) { Text("▶️ حلقة كمان") } },
+            dismissButton = { TextButton({ epMsg = null; close() }) { Text("كفاية النهارده") } }, text = { Text(m, fontSize = 17.sp, lineHeight = 28.sp, fontWeight = FontWeight.Bold) })
+    }
     if (aiMenu) AiMenu({ ai = it; aiMenu = false }) { aiMenu = false }
     ai?.let { k -> AiSheet(k, b, doc, cur, onGo = { p -> scope.launch { goTo(p) } }) { ai = null } }
 }
@@ -253,7 +292,7 @@ fun ReaderScreen(b: JSONObject, onClose: (Int, Int, Int) -> Unit) {
 @Composable
 private fun AiMenu(onPick: (String) -> Unit, onDismiss: () -> Unit) {
     Sheet("💡 ساعدني أفهم", onDismiss) {
-        listOf("explain" to "💡 اشرحلي الصفحة دي", "word" to "🔤 كلمة أو جملة مش فاهمها", "ask" to "💬 اسأل الكتاب أي سؤال", "quote" to "💬 احفظ اقتباس من الصفحة", "ideas" to "💼 أفكار من الكتاب لشغلي").forEach { (k, t) ->
+        listOf("explain" to "💡 اشرحلي الصفحة دي", "word" to "🔤 كلمة أو جملة مش فاهمها", "ask" to "💬 اسأل الكتاب أي سؤال", "quote" to "💬 احفظ اقتباس من الصفحة", "find" to "🔎 دوّر جوه الكتاب", "ideas" to "💼 أفكار من الكتاب لشغلي").forEach { (k, t) ->
             Surface(onClick = { onPick(k) }, shape = RoundedCornerShape(14.dp), color = Card, modifier = Modifier.fillMaxWidth()) { Text(t, Modifier.padding(14.dp), fontWeight = FontWeight.Bold, color = Ink, fontSize = 15.sp) }
         }
     }
@@ -266,18 +305,39 @@ fun remain(b: JSONObject, left: Int): String {
 }
 
 @Composable
-fun PageView(doc: Doc, p: Int, w: Int, night: Boolean, fit: Boolean = false) {
+fun PageView(doc: Doc, p: Int, w: Int, night: Boolean, fit: Boolean = false, b: JSONObject? = null, hlMode: Boolean = false, onHl: ((Int, FloatArray) -> Unit)? = null) {
     var bm by remember(p, w) { mutableStateOf<Bitmap?>(null) }
     var ratio by remember(p) { mutableFloatStateOf(1.414f) }
     LaunchedEffect(p, w) { try { ratio = doc.ratio(p); bm = doc.render(p, (w * 1.6f).toInt().coerceAtMost(2000)) } catch (_: Exception) {} }
+    @Suppress("UNUSED_VARIABLE") val v = Lib.ver
+    val marks = b?.optJSONArray("hl")?.let { a -> (0 until a.length()).mapNotNull { a.optJSONObject(it) }.filter { it.optInt("p") == p }.mapNotNull { o -> o.optJSONArray("r")?.let { r -> FloatArray(4) { k -> r.optDouble(k).toFloat() } } } } ?: emptyList()
+    var drag by remember { mutableStateOf<FloatArray?>(null) }
     Box((if (fit) Modifier.fillMaxSize().wrapContentSize().aspectRatio(1f / ratio, matchHeightConstraintsFirst = ratio > 1.3f) else Modifier.fillMaxWidth().aspectRatio(1f / ratio)).padding(horizontal = 6.dp).clip(RoundedCornerShape(4.dp)).background(Color.White), Alignment.Center) {
-        val b = bm
-        if (b != null) Image(b.asImageBitmap(), null, Modifier.fillMaxSize().graphicsLayer {
-            if (night) { /* عكس الألوان للوضع الليلي */ }
-        }, contentScale = ContentScale.FillBounds,
+        val img = bm
+        if (img != null) Image(img.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.FillBounds,
             colorFilter = if (night) androidx.compose.ui.graphics.ColorFilter.colorMatrix(androidx.compose.ui.graphics.ColorMatrix(floatArrayOf(
                 -0.9f, 0f, 0f, 0f, 235f, 0f, -0.9f, 0f, 0f, 235f, 0f, 0f, -0.9f, 0f, 235f, 0f, 0f, 0f, 1f, 0f))) else null)
         else Text("$p", color = Color(0xFFBBBBBB), fontSize = 22.sp)
+        // 🖍 التعليمات المحفوظة + اللي بتعلّمه دلوقتي
+        androidx.compose.foundation.Canvas(Modifier.matchParentSize().then(if (hlMode && onHl != null) Modifier.pointerInput(p) {
+            androidx.compose.foundation.gestures.detectDragGestures(
+                onDragStart = { o -> drag = floatArrayOf(o.x / size.width, o.y / size.height, o.x / size.width, o.y / size.height) },
+                onDrag = { ch, _ -> val d = drag; if (d != null) drag = floatArrayOf(d[0], d[1], (ch.position.x / size.width).coerceIn(0f, 1f), (ch.position.y / size.height).coerceIn(0f, 1f)) },
+                onDragEnd = {
+                    val d = drag; drag = null
+                    if (d != null) {
+                        val th = 0.018f
+                        val r = floatArrayOf(minOf(d[0], d[2]), (minOf(d[1], d[3]) - th).coerceAtLeast(0f), maxOf(d[0], d[2]), (maxOf(d[1], d[3]) + th).coerceAtMost(1f))
+                        if (r[2] - r[0] > 0.04f) onHl(p, r)
+                    }
+                },
+                onDragCancel = { drag = null })
+        } else Modifier)) {
+            val hc = Color(0x66FFE14D)
+            (marks + listOfNotNull(drag?.let { d -> floatArrayOf(minOf(d[0], d[2]), minOf(d[1], d[3]) - 0.018f, maxOf(d[0], d[2]), maxOf(d[1], d[3]) + 0.018f) })).forEach { r ->
+                drawRect(hc, androidx.compose.ui.geometry.Offset(r[0] * size.width, r[1] * size.height), androidx.compose.ui.geometry.Size((r[2] - r[0]) * size.width, (r[3] - r[1]) * size.height))
+            }
+        }
     }
 }
 

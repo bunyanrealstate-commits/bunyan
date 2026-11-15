@@ -42,6 +42,27 @@ object Notify {
             if (c.timeInMillis <= System.currentTimeMillis() + 30000) c.add(Calendar.DAY_OF_MONTH, 1)
             am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, c.timeInMillis, p)
         }
+        // 🤲 صدقة الشمعة الصبح، 💬 رفيق بالليل
+        for ((k, def, on) in listOf(Triple("sad", "09:00", cfg.optInt("sadaqa", 0) > 0), Triple("buddy", cfg.optString("buddyT", "22:15"), cfg.optBoolean("buddy", true)))) {
+            val p = pi(ctx, k); am.cancel(p); if (!on) continue
+            val tm = def.split(":"); val c = Calendar.getInstance()
+            c.set(Calendar.HOUR_OF_DAY, tm[0].toInt()); c.set(Calendar.MINUTE, tm[1].toInt()); c.set(Calendar.SECOND, 0)
+            if (c.timeInMillis <= System.currentTimeMillis() + 30000) c.add(Calendar.DAY_OF_MONTH, 1)
+            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, c.timeInMillis, p)
+        }
+        scheduleNudge(ctx, cfg)
+    }
+
+    /** 📱 بدل الاسكرول: كل 10 دقايق بالليل بيبص لو انت على انستجرام/تيك توك */
+    fun scheduleNudge(ctx: Context, cfg: JSONObject = read(ctx).optJSONObject("cfg") ?: JSONObject()) {
+        val am = ctx.getSystemService(AlarmManager::class.java); val p = pi(ctx, "nudge"); am.cancel(p)
+        if (!cfg.optBoolean("nudge", true) || !Boost.usageOk(ctx)) return
+        val from = cfg.optInt("nudgeFrom", 20); val to = cfg.optInt("nudgeTo", 2)
+        val c = Calendar.getInstance(); c.add(Calendar.MINUTE, 10)
+        val h = c.get(Calendar.HOUR_OF_DAY)
+        val inWin = if (from <= to) h in from until to else (h >= from || h < to)
+        if (!inWin) { c.set(Calendar.HOUR_OF_DAY, from); c.set(Calendar.MINUTE, 5); if (c.timeInMillis <= System.currentTimeMillis()) c.add(Calendar.DAY_OF_MONTH, 1) }
+        am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, c.timeInMillis, p)
     }
 
     fun post(ctx: Context, id: Int, title: String, body: String, open: String?) {
@@ -77,6 +98,23 @@ class AlarmRx : BroadcastReceiver() {
             val nx = cur.optJSONObject("nx")
             if (nx != null && nx.optString("t").length > 30) Notify.post(ctx, 9202, "⚡ 5 دقايق من «${cur.optString("t")}»", nx.optString("t") + "…\n\nدوس وكمّل من صفحة " + nx.optInt("p"), cur.optString("id"))
             else Notify.post(ctx, 9202, "⚡ 5 دقايق بس؟", "كمّل «${cur.optString("t")}» من صفحة ${cur.optInt("cur", 1)} — 5 دقايق بس 📖", cur.optString("id"))
+        }
+        if (k == "nudge") {
+            val (mins, app) = Boost.scrollMinutes(ctx, 12)
+            val sp = ctx.getSharedPreferences("nudge", Context.MODE_PRIVATE)
+            if (mins >= 4 && cur != null && System.currentTimeMillis() - sp.getLong("at", 0) > 35 * 60000L) {
+                sp.edit().putLong("at", System.currentTimeMillis()).apply()
+                Notify.post(ctx, 9203, "📱 بقالك $mins دقايق على $app…", "بدل 10 دقايق اسكرول، 3 صفحات من «${cur.optString("t")}» وتنام؟ 📖 دوس هنا وابدأ على طول", cur.optString("id"))
+            }
+            Notify.scheduleNudge(ctx); return
+        }
+        if (k == "sad" || k == "buddy") {
+            if (!Lib.isInit()) Lib.init(ctx.applicationContext)
+            if (k == "sad" && Boost.sadaqaDue()) Notify.post(ctx, 9204, "🕯 الشمعة طفت امبارح", "اتفقنا: لو يوم عدّى من غير قراية تتصدق بـ ${Lib.cfg.optInt("sadaqa")} درهم 🤲 — والنهارده نولّعها تاني 🔥", null)
+            if (k == "buddy" && cur != null) {
+                val t = if (pages > 0) "قريت $pages صفحة النهارده في «${cur.optString("t")}» 👏 — احكيلي إيه أكتر حاجة عجبتك؟" else "عامل إيه؟ لسه مفتحتش «${cur.optString("t")}» النهارده… تعالى نتكلم شوية 😄"
+                Notify.post(ctx, 9205, "💬 رفيق", t, "buddy")
+            }
         }
         Notify.schedule(ctx)
     }

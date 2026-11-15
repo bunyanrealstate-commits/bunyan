@@ -41,11 +41,13 @@ object Lib {
     val session = UUID.randomUUID().toString().take(8)
 
     fun bump() { ver++ }
+    fun isInit() = ::dir.isInitialized
+    var appCtx: Context? = null
     fun today(): String = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
     fun ds(d: Date): String = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(d)
 
     fun init(ctx: Context) {
-        dir = ctx.filesDir
+        dir = ctx.filesDir; appCtx = ctx.applicationContext
         File(dir, "books").mkdirs(); File(dir, "tts").mkdirs(); File(dir, "covers").mkdirs()
         val f = File(dir, "lib.json")
         if (f.exists()) try {
@@ -78,6 +80,7 @@ object Lib {
         j.put("queue", JSONArray(queue)); j.put("books", JSONArray(books))
         val f = File(dir, "lib.json.tmp"); f.writeText(j.toString()); f.renameTo(File(dir, "lib.json"))
         bump()
+        appCtx?.let { c -> try { ReadWidget.refresh(c) } catch (_: Exception) {} }
     }
 
     fun arr(a: JSONArray?): List<Any> = if (a == null) emptyList() else (0 until a.length()).map { a.get(it) }
@@ -214,7 +217,7 @@ object Lib {
                 val cv = rb.optString("cv")
                 if (cv.startsWith("data:image")) { val cf = File(dir, "covers/$id.jpg"); if (!cf.exists()) try { cf.writeBytes(Base64.decode(cv.substringAfter(","), Base64.DEFAULT)) } catch (_: Exception) {} }
                 rb.remove("cv")
-                if (loc != null) for (k in listOf("spd", "nx")) if (loc.has(k)) rb.put(k, loc.get(k))
+                if (loc != null) for (k in listOf("spd", "nx", "eps", "hook", "ch", "hl", "paper")) if (loc.has(k)) rb.put(k, loc.get(k))
                 val r = app.optJSONObject(id)
                 if (r != null && r.optLong("rd") > rb.optLong("rd", 0)) {
                     for (k in listOf("cur", "maxp", "sh", "sd", "fd", "pg", "rd")) if (r.has(k)) rb.put(k, r.get(k))

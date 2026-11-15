@@ -76,6 +76,20 @@ class MainActivity : ComponentActivity() {
         }
     }
     override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); incoming.value = intent }
+    /* 🔊 زراير الصوت بتقلب الصفحات جوه الكتاب */
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+        val k = event.keyCode
+        if (Keys.reader && !Speech.playing && Lib.cfg.optBoolean("volkeys", true) && (k == android.view.KeyEvent.KEYCODE_VOLUME_DOWN || k == android.view.KeyEvent.KEYCODE_VOLUME_UP)) {
+            if (event.action == android.view.KeyEvent.ACTION_DOWN) Keys.flow.tryEmit(if (k == android.view.KeyEvent.KEYCODE_VOLUME_DOWN) 1 else -1)
+            return true
+        }
+        return super.dispatchKeyEvent(event)
+    }
+}
+
+object Keys {
+    @Volatile var reader = false
+    val flow = kotlinx.coroutines.flow.MutableSharedFlow<Int>(extraBufferCapacity = 8)
 }
 
 @Composable
@@ -94,43 +108,15 @@ fun App(incoming: MutableState<Intent?>) {
         if (android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED)
             notifPerm.launch(android.Manifest.permission.POST_NOTIFICATIONS)
     }
-    val dl = remember { mutableStateMapOf<String, Float>() }
+    val dl = Dl.prog
     @Suppress("UNUSED_VARIABLE") val v = Lib.ver
 
     fun toast(s: String) = Toast.makeText(ctx, s, Toast.LENGTH_SHORT).show()
 
-    fun fetch(b: JSONObject, open: Boolean) {
-        val id = b.optString("id")
-        if (dl.containsKey(id)) return
-        dl[id] = 0f
-        scope.launch {
-            try {
-                if (b.optString("ia").isEmpty()) {
-                    toast("🔎 بدوّر على «${b.optString("t")}» في أرشيف الإنترنت…")
-                    if (!Net.findIA(b)) { dl.remove(id); toast("ملقتش «${b.optString("t")}» على الأرشيف — نزّله بـ «🔎 نزّل كتاب» أو «📄 من موبايلي»"); return@launch }
-                    Lib.touch(b, "ia", "iaf", "iaff", "iav"); Lib.save()
-                }
-                val parts = Net.parts(b)
-                if (parts.isEmpty()) throw Exception("مفيش PDF")
-                // الأجزاء كلها بتتحمّل مع بعض في نفس الوقت
-                val pr = FloatArray(parts.size)
-                kotlinx.coroutines.coroutineScope {
-                    parts.mapIndexed { i, f ->
-                        async {
-                            val to = File(Lib.dir, "books/" + (if (i == 0) "$id.pdf" else "$id#part${i + 1}.pdf"))
-                            if (!to.exists()) Net.download(Net.iaUrl(b.optString("ia"), f), to) { got, tot ->
-                                pr[i] = if (tot > 0) (got.toFloat() / tot).coerceIn(0f, 1f) else 0f
-                                dl[id] = (pr.sum() / parts.size).coerceIn(0f, 0.999f)
-                            } else pr[i] = 1f
-                        }
-                    }.awaitAll()
-                }
-                cover(b)
-                Lib.save(); dl.remove(id)
-                if (open) reading = b
-            } catch (e: Exception) { dl.remove(id); toast("⚠️ التحميل وقف — جرّب تاني (${e.message?.take(30)})") }
-        }
-    }
+    var pendingOpen by remember { mutableStateOf<String?>(null) }
+    fun fetch(b: JSONObject, open: Boolean) { if (open) pendingOpen = b.optString("id"); Dl.fetch(ctx, b) }
+    LaunchedEffect(Dl.done) { val d = Dl.done ?: return@LaunchedEffect; if (d == pendingOpen) { pendingOpen = null; Lib.book(d)?.let { reading = it } }; Dl.done = null }
+    LaunchedEffect(Unit) { kotlinx.coroutines.delay(4000); Dl.prefetchNext(ctx) }
 
     fun openBook(b: JSONObject) { if (Lib.have(b)) reading = b else fetch(b, true) }
 
@@ -141,7 +127,7 @@ fun App(incoming: MutableState<Intent?>) {
     LaunchedEffect(incoming.value) {
         val itn = incoming.value ?: return@LaunchedEffect
         incoming.value = null
-        itn.getStringExtra("open")?.let { id -> Lib.book(id)?.let { b -> openBook(b) }; return@LaunchedEffect }
+        itn.getStringExtra("open")?.let { id -> if (id == "buddy") screen = "buddy" else Lib.book(id)?.let { b -> openBook(b) }; return@LaunchedEffect }
         val d = itn.data ?: return@LaunchedEffect
         if (d.scheme == "bnylib") {
             val code = d.getQueryParameter("c") ?: d.fragment ?: ""
@@ -173,11 +159,13 @@ fun App(incoming: MutableState<Intent?>) {
         if (Net.hasGem()) Lib.bg.launch { prepNext(r, to) }
         Notify.schedule(ctx)
         scope.launch { Lib.sync() }
+        Dl.prefetchNext(ctx)
     }; return }
     recap?.let { (b, f, t) -> RecapSheet(b, f, t) { recap = null } }
     when (sheet) {
         "rec" -> RecommendSheet({ sheet = null }) { q -> sheet = null; searchQ = q; screen = "search" }
         "set" -> SettingsSheet { sheet = null }
+        "jar" -> JarSheet { sheet = null }
     }
     notes?.let { NotesSheet(it) { notes = null } }
 
@@ -187,10 +175,14 @@ fun App(incoming: MutableState<Intent?>) {
             screen = "home"; fetch(b, false); toast("⬇️ بنزّل «${h.title}»")
         }
         "link" -> LinkScreen { screen = "home" }
+        "buddy" -> BuddyScreen { screen = "home" }
+        "journey" -> JourneyScreen({ screen = "home" }) { b -> screen = "home"; openBook(b) }
+        "paper" -> PaperScreen { screen = "home" }
         else -> HomeScreen(dl, onOpen = { openBook(it) }, onFetch = { fetch(it, false) }, onSearch = { screen = "search" },
             onPick = { pick.launch(arrayOf("application/pdf")) }, onLink = { screen = "link" },
             onSync = { scope.launch { Lib.msg = Lib.sync(); toast(Lib.msg) } },
-            onRec = { sheet = "rec" }, onSettings = { sheet = "set" }, onNotes = { notes = it })
+            onRec = { sheet = "rec" }, onSettings = { sheet = "set" }, onNotes = { notes = it },
+            onMore = { k -> if (k == "jar") sheet = "jar" else screen = k })
     }
 }
 
@@ -230,7 +222,10 @@ fun Cover(b: JSONObject, modifier: Modifier) {
 
 @Composable
 fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (JSONObject) -> Unit, onSearch: () -> Unit, onPick: () -> Unit, onLink: () -> Unit, onSync: () -> Unit,
-               onRec: () -> Unit, onSettings: () -> Unit, onNotes: (JSONObject) -> Unit) {
+               onRec: () -> Unit, onSettings: () -> Unit, onNotes: (JSONObject) -> Unit, onMore: (String) -> Unit = {}) {
+    val hctx = LocalContext.current
+    val hscope = rememberCoroutineScope()
+    var epBusy by remember { mutableStateOf("") }
     @Suppress("UNUSED_VARIABLE") val v = Lib.ver
     var shelf by remember { mutableStateOf("now") }
     var q by remember { mutableStateOf("") }
@@ -283,6 +278,10 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                                 LinearProgressIndicator(progress = { (c.toFloat() / pg).coerceIn(0f, 1f) }, Modifier.fillMaxWidth().height(8.dp).clip(CircleShape), color = Green, trackColor = Sand)
                                 Text("صفحة $c من $pg • ${c * 100 / pg}%" + remain(cur, pg - c), fontSize = 12.sp, color = Muted, modifier = Modifier.padding(top = 4.dp))
                             }
+                            val ep = Boost.epAt(cur, maxOf(1, c))
+                            if (ep != null) Text("📺 الحلقة ${ep.first + 1} من ${Boost.eps(cur).size}: «${ep.second.optString("n")}»", fontSize = 13.sp, color = Color(0xFF7B3FA0), fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp), maxLines = 2)
+                            else if (Lib.have(cur) && pg > 0) Text(if (epBusy.isNotEmpty()) epBusy else "📺 قسّمه حلقات قصيرة زي المسلسل", fontSize = 13.sp, color = Color(0xFF7B3FA0), fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = 6.dp).clickable { if (epBusy.isEmpty()) hscope.launch { epBusy = "⏳ بجهّز الحلقات…"; Boost.genEpisodes(cur) { epBusy = it }; epBusy = "" } })
                         }
                         Spacer(Modifier.width(12.dp))
                         Cover(cur, Modifier.width(78.dp).height(110.dp))
@@ -290,7 +289,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                     Spacer(Modifier.height(12.dp))
                     val p = dl[cur.optString("id")]
                     Button(onClick = { onOpen(cur) }, Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = Green), enabled = p == null) {
-                        Text(when { p != null -> "⬇️ بنزّل… ${(p * 100).toInt()}%"; !Lib.have(cur) -> "⬇️ نزّله وابدأ"; c > 1 -> "📖 كمّل من صفحة $c"; else -> "📖 ابدأ القراية" }, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                        Text(when { p != null -> "⬇️ بنزّل… ${(p * 100).toInt()}%"; !Lib.have(cur) -> "⬇️ نزّله وابدأ"; Boost.epAt(cur, maxOf(1, c)) != null -> "▶️ كمّل الحلقة"; c > 1 -> "📖 كمّل من صفحة $c"; else -> "📖 ابدأ القراية" }, fontSize = 17.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -305,8 +304,8 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                     }
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("هدف النهارده: $goal صفحات", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Ink)
-                        Text(if (today >= goal) "🎉 خلّصت هدف النهارده!" else "فاضلك ${goal - today} صفحة بس", color = Muted, fontSize = 13.sp)
+                        Text(if (goal == 1) "1️⃣ التحدي: صفحة واحدة بس" else "هدف النهارده: $goal صفحات", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Ink)
+                        Text(if (goal == 1) (if (today >= 1) "✅ عدّيت التحدي! وقريت $today — كل صفحة زيادة بونص 💪" else "افتح الكتاب واقرا صفحة واحدة… بس كده 😉") else if (today >= goal) "🎉 خلّصت هدف النهارده!" else "فاضلك ${goal - today} صفحة بس", color = Muted, fontSize = 13.sp)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(if (st > 0) "🔥" else "🕯", fontSize = 26.sp)
@@ -315,6 +314,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 }
             }
         }
+        item(span = { GridItemSpan(3) }) { MotivationCards { onMore("jar") } }
         item(span = { GridItemSpan(3) }) { ReviewCard() }
         // أزرار
         item(span = { GridItemSpan(3) }) {
@@ -325,6 +325,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 Action(if (Lib.link == null) "🔗" else "✅", if (Lib.link == null) "اربط ببنيان" else "مربوط", Modifier.weight(1f), onLink)
             }
         }
+        item(span = { GridItemSpan(3) }) { MoreActions({ onMore("journey") }, { onMore("buddy") }, { onMore("paper") }, onSettings) }
         // الرفوف
         item(span = { GridItemSpan(3) }) {
             Column {
@@ -366,8 +367,11 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                     val nq = (b.optJSONArray("q")?.length() ?: 0) + (b.optJSONArray("sums")?.length() ?: 0)
                     OutlinedButton({ menu = null; onNotes(b) }, Modifier.fillMaxWidth()) { Text("💬 اقتباساتي وملخصاتي ($nq)") }
                     if (!Lib.have(b) && b.optString("ia").isNotEmpty()) OutlinedButton({ menu = null; onFetch(b) }, Modifier.fillMaxWidth()) { Text("⬇️ نزّله بس") }
+                    if (Net.hasGem() && b.optString("sh") != "want" && b.optJSONObject("ch") == null) OutlinedButton({ val bb = b; menu = null; Toast.makeText(hctx, "⏳ بجهّزلك تحدي من الكتاب…", Toast.LENGTH_SHORT).show()
+                        hscope.launch { Toast.makeText(hctx, if (Boost.genChallenge(bb)) "🛠 التحدي في الصفحة الرئيسية" else "⚠️ مقدرتش دلوقتي", Toast.LENGTH_SHORT).show() } }, Modifier.fillMaxWidth()) { Text("🛠 طبّقها: تحدي من الكتاب") }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf("want" to "📌 عايز", "now" to "📖 بقراه", "done" to "✅ خلصته").forEach { (k, t) -> Chip(t, b.optString("sh", "want") == k) { Lib.setShelf(b, k); menu = null } }
+                        listOf("want" to "📌 عايز", "now" to "📖 بقراه", "done" to "✅ خلصته").forEach { (k, t) -> Chip(t, b.optString("sh", "want") == k) { Lib.setShelf(b, k); menu = null
+                            if (k == "done" && Net.hasGem() && b.optJSONObject("ch") == null) hscope.launch { if (Boost.genChallenge(b)) Toast.makeText(hctx, "🛠 ليك تحدي تطبّقه من الكتاب ده — في الرئيسية", Toast.LENGTH_LONG).show() } } }
                     }
                     if (Lib.have(b)) TextButton({ Lib.files(b).forEach { it.delete() }; Lib.save(); menu = null }) { Text("🗑 امسح الملف من الموبايل (التقدم بيفضل)", color = Color(0xFFB3261E)) }
                 }

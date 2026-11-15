@@ -66,7 +66,8 @@ fun AiSheet(kind: String, b: JSONObject, doc: Doc, cur: Int, onGo: (Int) -> Unit
     var sents by remember { mutableStateOf<List<String>?>(null) }
     val saved = remember { mutableStateListOf<String>() }
     var uris by remember { mutableStateOf<List<String>?>(null) }
-    val title = mapOf("explain" to "💡 اشرحلي الصفحة", "word" to "🔤 كلمة أو جملة مش فاهمها", "ask" to "💬 اسأل الكتاب", "ideas" to "💼 أفكار من الكتاب لشغلك", "quote" to "💬 احفظ اقتباس")[kind] ?: ""
+    val title = mapOf("explain" to "💡 اشرحلي الصفحة", "word" to "🔤 كلمة أو جملة مش فاهمها", "ask" to "💬 اسأل الكتاب", "ideas" to "💼 أفكار من الكتاب لشغلك", "quote" to "💬 احفظ اقتباس", "find" to "🔎 دوّر جوه الكتاب")[kind] ?: ""
+    var found by remember { mutableStateOf<List<JSONObject>?>(null) }
     suspend fun img(p: Int, w: Int = 1300): Bitmap = doc.render(p, w)
 
     LaunchedEffect(kind) {
@@ -136,13 +137,37 @@ fun AiSheet(kind: String, b: JSONObject, doc: Doc, cur: Int, onGo: (Int) -> Unit
                     } }
                 }
             }
+            "find" -> {
+                OutlinedTextField(q, { q = it }, Modifier.fillMaxWidth(), placeholder = { Text("كلمة أو موضوع… مثلاً: الصبر") }, singleLine = true, shape = RoundedCornerShape(14.dp))
+                Button({
+                    val w = q.trim(); if (w.isEmpty() || busy.isNotEmpty()) return@Button
+                    scope.launch {
+                        if (uris == null) { val l = ArrayList<String>(); for (f in Lib.files(b)) { val u = Net.upload(f) { busy = it }; if (u == null) { l.clear(); break }; l.add(u) }; uris = l }
+                        busy = "⏳ بدوّر في الكتاب كله…"
+                        val pr = "ده كتاب «${b.optString("t")}»" + (if ((uris?.size ?: 0) > 1) " مقسوم على كذا ملف بالترتيب (رقم الصفحة = ترتيبها في الملفات كلها ورا بعض)" else "") +
+                            ". لاقي كل الصفحات اللي فيها «$w» أو بتتكلم عنه (لحد 15 صفحة)، ولكل صفحة اكتب جملة قصيرة منها بالظبط. رجّع JSON بس: {\"r\":[{\"p\":12,\"s\":\"الجملة\"}]}"
+                        val j = if (!uris.isNullOrEmpty()) Net.askJson(pr, fileUris = uris!!) else null
+                        found = j?.optJSONArray("r")?.let { a -> (0 until a.length()).mapNotNull { a.optJSONObject(it) }.filter { it.optInt("p") > 0 } } ?: emptyList()
+                        busy = ""
+                    }
+                }, Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Green)) { Text("🔎 دوّر") }
+                found?.let { l ->
+                    if (l.isEmpty()) Text("ملقتش حاجة — جرّب كلمة تانية", color = Muted)
+                    l.forEach { x -> Surface(onClick = { onGo(x.optInt("p")); onDismiss() }, shape = RoundedCornerShape(14.dp), color = Card, modifier = Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(12.dp)) { Text("📄 صفحة ${x.optInt("p")}", fontWeight = FontWeight.Bold, color = Green); Text(x.optString("s"), color = Ink, lineHeight = 22.sp) }
+                    } }
+                }
+            }
             "quote" -> {
                 sents?.let { l ->
                     if (l.isEmpty()) Text("⚠️ مقدرتش أقرا الصفحة دي دلوقتي", color = Muted)
                     l.forEach { s ->
                         val done = saved.contains(s)
                         Surface(onClick = { if (!done) { Lib.addQuote(b, s, cur); saved.add(s) } }, shape = RoundedCornerShape(14.dp), color = if (done) Color(0xFFE8F3EE) else Card) {
-                            Text((if (done) "✅ " else "💾 ") + "«$s»", Modifier.padding(12.dp), color = Ink, lineHeight = 24.sp)
+                            Column(Modifier.padding(12.dp)) {
+                                Text((if (done) "✅ " else "💾 ") + "«$s»", color = Ink, lineHeight = 24.sp)
+                                if (done) Chip("📸 شاركه صورة", false) { Boost.shareQuote(ctx, s, b) }
+                            }
                         }
                     }
                 }
@@ -378,7 +403,10 @@ fun NotesSheet(b: JSONObject, onDismiss: () -> Unit) {
     Sheet("💬 اقتباساتي وملخصاتي — ${b.optString("t")}", onDismiss) {
         val q = b.optJSONArray("q"); val s = b.optJSONArray("sums")
         if ((q?.length() ?: 0) == 0 && (s?.length() ?: 0) == 0) Text("لسه مفيش — جوه الكتاب دوس 💡 ← «احفظ اقتباس»، والملخص بيتعمل لوحده لما تقفل بعد ما تقرا صفحتين.", color = Muted, lineHeight = 22.sp)
-        q?.let { for (i in 0 until it.length()) { val x = it.get(i); Bubble("«" + Lib.quoteText(x) + "»" + ((x as? JSONObject)?.optInt("p")?.takeIf { p -> p > 0 }?.let { p -> "  — ص $p" } ?: "")) } }
+        val nctx = LocalContext.current
+        q?.let { for (i in 0 until it.length()) { val x = it.get(i); Bubble("«" + Lib.quoteText(x) + "»" + ((x as? JSONObject)?.optInt("p")?.takeIf { p -> p > 0 }?.let { p -> "  — ص $p" } ?: ""))
+            Chip("📸 شاركه صورة (ستوري / حالة)", false) { Boost.shareQuote(nctx, Lib.quoteText(x), b) } } }
+        b.optJSONArray("hl")?.takeIf { it.length() > 0 }?.let { h -> Text("🖍 تعليماتي: " + (0 until h.length()).mapNotNull { h.optJSONObject(it)?.optInt("p") }.distinct().sorted().joinToString("، ") { "ص $it" }, color = Muted, fontSize = 13.sp) }
         s?.let { for (i in 0 until it.length()) { val x = it.optJSONObject(i) ?: continue; Text("📝 " + x.optString("d"), color = Muted, fontSize = 12.sp); Bubble(x.optString("t")) } }
     }
 }
@@ -390,7 +418,8 @@ fun SettingsSheet(onDismiss: () -> Unit) {
     fun set(k: String, x: Any) { Lib.cfg.put(k, x); Lib.save(); Notify.schedule(ctx) }
     Sheet("🎯 هدفك والتذكيرات", onDismiss) {
         Text("هدفك كل يوم (صفحات)", fontWeight = FontWeight.Bold)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(5, 10, 15, 20, 30).forEach { g -> Chip("$g", Lib.goal == g) { Lib.goal = g; Lib.save() } } }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(1, 5, 10, 15, 20, 30).forEach { g -> Chip(if (g == 1) "1️⃣ تحدي" else "$g", Lib.goal == g) { Lib.goal = g; Lib.save() } } }
+        if (Lib.goal == 1) Text("1️⃣ تحدي الصفحة الواحدة: أصعب حاجة البداية — صفحة واحدة بس، وغالباً هتكمّل لوحدك.", color = Muted, fontSize = 13.sp, lineHeight = 20.sp)
         HorizontalDivider()
         Row(verticalAlignment = Alignment.CenterVertically) { Text("🔔 فكّرني بالليل لو لسه مكملتش هدفي", Modifier.weight(1f), fontWeight = FontWeight.Bold); Switch(Lib.cfg.optBoolean("eve", true), { set("eve", it) }) }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf("20:00", "21:30", "22:30", "23:30").forEach { t -> Chip(t, Lib.cfg.optString("eveT", "21:30") == t) { set("eveT", t) } } }
@@ -398,5 +427,6 @@ fun SettingsSheet(onDismiss: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) { Text("⚡ ابعتلي فقرة من كتابي كل يوم", Modifier.weight(1f), fontWeight = FontWeight.Bold); Switch(Lib.cfg.optBoolean("para", true), { set("para", it) }) }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf("08:00", "13:00", "17:00", "19:00").forEach { t -> Chip(t, Lib.cfg.optString("paraT", "13:00") == t) { set("paraT", t) } } }
         OutlinedButton({ Notify.post(ctx, 9299, "🔔 تجربة", "التذكيرات شغالة ✅", null) }, Modifier.fillMaxWidth()) { Text("🔔 جرّب إشعار دلوقتي") }
+        MoreSettings()
     }
 }
