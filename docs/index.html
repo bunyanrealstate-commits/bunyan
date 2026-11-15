@@ -6723,6 +6723,8 @@ var R=[
   check:function(){return window.hkShare&&window.updPut?[]:['مشاركة العقد والأبديت مع حكيم مش شغالة']},fix:null},
  {id:'updcols',area:'الأبديت',t:'مكانش ينفع تغيّر ترتيب أعمدة صورة الأبديت، والسعر والنوع كانوا مش بارزين',
   check:function(){if(S.tab!=='upd')return [];var o=[];if(typeof window.updCols!=='function')o.push('زرار ترتيب الأعمدة مش موجود');var t=document.querySelector('#updposter:not(.fz) tr.r:not(.rb) td.ty');if(t&&!bnyIsRed(getComputedStyle(t).color))o.push('نوع الشقة مش باللون الأحمر');return o},fix:null},
+ {id:'bkparts',area:'مكتبتي',t:'أسامه قال «النبأ العظيم» نزل أول ملف بس ونسي التاني — الكتب اللي متقسمة أجزاء بتنزل كلها وتتقري كأنها كتاب واحد، واللي نزل ناقص بيكمّل أول ما تفتحه',
+  check:function(){return []},fix:null},
  {id:'bkzoom',area:'مكتبتي',t:'أسامه عايز يكبّر ويصغّر صفحة الكتاب بصباعين زي العقد',
   check:function(){return []},fix:null},
  {id:'bkhelp',area:'مكتبتي',t:'أسامه قال «ساعدني أقرأ لأني كسول» — في القارئ: عدّاد للجلسة وتشجيع عند ١٠ دقايق وعند خلصان هدف اليوم، وزرار 🎧 يقرأ الكتاب بصوت ويقلب الصفحات لوحده — وحتى لو الصفحة صورة (سكانر) بيطلّع الكلام منها (Gemini أو قارئ صور) ويقراه',
@@ -8805,6 +8807,7 @@ function db(){return new Promise(function(res,rej){var q=indexedDB.open('bny_boo
 async function fput(id,v){var d=await db();return new Promise(function(res,rej){var t=d.transaction('f','readwrite');t.objectStore('f').put(v,id);t.oncomplete=function(){HAVE[id]=1;res()};t.onerror=function(){rej(t.error)}})}
 async function fget(id){var d=await db();return new Promise(function(res){var g=d.transaction('f').objectStore('f').get(id);g.onsuccess=function(){res(g.result)};g.onerror=function(){res(null)}})}
 async function fkeys(){try{var d=await db();return await new Promise(function(res){var g=d.transaction('f').objectStore('f').getAllKeys();g.onsuccess=function(){res(g.result||[])};g.onerror=function(){res([])}})}catch(e){return []}}
+window.__bkStore={put:fput,get:fget};
 fkeys().then(function(k){k.forEach(function(x){HAVE[x]=1});try{if(S.tab==='books')render()}catch(e){}});
 /* ---- pdf.js (loaded only when needed) ---- */
 var base=(/\/(c|h)\//.test(location.pathname)?'../':'')+'vendor/pdfjs/',CDN='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
@@ -8849,6 +8852,8 @@ window.bkRead=async function(id){var b=bk(id);if(!b)return;var blob=await fget(i
  var night=false;try{night=localStorage.getItem('bny_bkr_n')==='1'}catch(e){}o.classList.toggle('night',night);
  var zoom=1;try{zoom=+localStorage.getItem('bny_bkr_z')||1}catch(e){}
  var L,doc;try{L=await pdfjs();doc=await L.getDocument(opts(new Uint8Array(await blob.arrayBuffer()))).promise}catch(e){o.remove();document.documentElement.classList.remove('bkropen');toast('⚠️ مقدرتش أفتح الكتاب');return}
+ /* كتاب متقسّم أجزاء: بيتقرا كأنه كتاب واحد (الجزء الأول بعده التاني…) */
+ try{var parts=[doc];for(var k=2;k<=24;k++){var pb=await fget(id+'#part'+k);if(!pb)break;parts.push(await L.getDocument(opts(new Uint8Array(await pb.arrayBuffer()))).promise)}if(parts.length>1){var offs=[],tt=0;parts.forEach(function(d){offs.push(tt);tt+=d.numPages});doc={numPages:tt,getPage:function(i){for(var j=parts.length-1;j>=0;j--)if(i>offs[j])return parts[j].getPage(i-offs[j]);return parts[0].getPage(i)},destroy:function(){parts.forEach(function(d){try{d.destroy()}catch(e){}})}}}}catch(e){}
  o.querySelector('.rload').remove();var N=doc.numPages;if(b.pg!==N)b.pg=N;var sc=o.querySelector('.rsc'),wrap=o.querySelector('.rpages'),rr=o.querySelector('.rr');rr.max=N;
  var p1=await doc.getPage(1),v1=p1.getViewport({scale:1}),ratio=v1.height/v1.width,cur=Math.min(N,Math.max(1,+b.cur||1)),done={},rend={},busy={};
  function W(){return Math.min(sc.clientWidth-16,900)*zoom}
@@ -9060,12 +9065,18 @@ async function findIA(b){var N=window.__bkNet&&__bkNet();if(!N)throw new Error('
  for(var i=0;i<qs.length&&docs.length<6;i++){try{var j=await N.getJSON('https://archive.org/advancedsearch.php?q='+encodeURIComponent(qs[i]+' AND mediatype:texts')+'&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=downloads&rows=12&sort[]=downloads+desc&output=json');((j.response&&j.response.docs)||[]).forEach(function(d){if(!seen[d.identifier]){seen[d.identifier]=1;docs.push(d)}})}catch(e){if(i===0)throw e}}
  docs=docs.map(function(d){return {d:d,s:score(d,b)}}).filter(function(x){return x.s>=40}).sort(function(x,y){return y.s-x.s}).slice(0,5);
  for(var k=0;k<docs.length;k++){var d=docs[k].d;try{var m=await N.getJSON('https://archive.org/metadata/'+encodeURIComponent(d.identifier)),F=(m.files||[]).filter(function(f){return /\.pdf$/i.test(f.name)&&!/_text\.pdf$/i.test(f.name)&&(!+f.size||+f.size<180*1048576)});
-  if(!F.length)continue;F.sort(function(x,y){return String(x.name).localeCompare(String(y.name),'ar',{numeric:true})});b.ia=d.identifier;b.iaf=F[0].name;b.iasz=+F[0].size||0;if(F.length>1)b.iav=F.length;try{save()}catch(e){}return {id:b.ia,f:b.iaf,sz:b.iasz}}catch(e){}}
+  if(!F.length)continue;F.sort(function(x,y){return String(x.name).localeCompare(String(y.name),'ar',{numeric:true})});b.ia=d.identifier;b.iaf=F[0].name;b.iasz=+F[0].size||0;if(F.length>1){b.iav=F.length;b.iaff=F.slice(0,12).map(function(f){return f.name});b.iatsz=F.slice(0,12).reduce(function(s,f){return s+(+f.size||0)},0)}try{save()}catch(e){}return {id:b.ia,f:b.iaf,sz:b.iasz}}catch(e){}}
  return null}
-async function fetchBook(b,prog){var N=__bkNet(),r=await findIA(b);if(!r)return false;var url='https://archive.org/download/'+encodeURIComponent(r.id)+'/'+String(r.f).split('/').map(encodeURIComponent).join('/');
+/* الكتاب ممكن يبقى متقسّم أكتر من ملف (أجزاء) — بينزّلهم كلهم ويجمعهم في كتاب واحد بالترتيب */
+async function partsOf(b){if(b.iaff&&b.iaff.length)return b.iaff;var N=__bkNet(),m=await N.getJSON('https://archive.org/metadata/'+encodeURIComponent(b.ia)),F=(m.files||[]).filter(function(f){return /\.pdf$/i.test(f.name)&&!/_text\.pdf$/i.test(f.name)&&(!+f.size||+f.size<180*1048576)}).sort(function(x,y){return String(x.name).localeCompare(String(y.name),'ar',{numeric:true})}).slice(0,12);b.iaff=F.map(function(f){return f.name});b.iatsz=F.reduce(function(s,f){return s+(+f.size||0)},0);b.iav=F.length;return b.iaff}
+async function fetchAll(b,prog){var N=__bkNet(),names=await partsOf(b),bufs=[],done=0,tot=b.iatsz||0;for(var i=0;i<names.length;i++){var url='https://archive.org/download/'+encodeURIComponent(b.ia)+'/'+String(names[i]).split('/').map(encodeURIComponent).join('/');var base=done;var buf=await N.getBuf(url,function(n,t){prog&&prog(base+Math.max(0,n),tot,i+1,names.length)});done+=buf.byteLength;bufs.push(buf)}prog&&prog(-2,0,names.length,names.length);await bkAttachBuf(b.id,bufs[0],names[0],'https://archive.org/details/'+b.ia);var tot=+b.pg||0,ST=window.__bkStore;for(var k=1;k<bufs.length;k++){await ST.put(b.id+'#part'+(k+1),new Blob([bufs[k]],{type:'application/pdf'}));try{var d=await window.pdfjsLib.getDocument({data:new Uint8Array(bufs[k].slice(0))}).promise;tot+=d.numPages;d.destroy()}catch(e){}}b.pg=tot;b.iam=names.length;try{save()}catch(e){}return true}
+async function fetchBook(b,prog){var r=await findIA(b);if(!r)return false;if(b.iav>1)return fetchAll(b,prog);var N=__bkNet(),url='https://archive.org/download/'+encodeURIComponent(r.id)+'/'+String(r.f).split('/').map(encodeURIComponent).join('/');
  var buf=await N.getBuf(url,function(n,t){prog&&prog(n,t||r.sz)});await bkAttachBuf(b.id,buf,r.f,'https://archive.org/details/'+r.id);return true}
+/* كتب اتنزل منها جزء واحد بس قبل كده: بيكمّل باقي الأجزاء أول ما تفتحها */
+window.bkFixParts=async function(id){var b=bk(id);if(!b||!b.ia||!(b.iav>1)||b.iam>=b.iav)return false;var o=ov(b),st=o.querySelector('.lfos'),bar=o.querySelector('.lfob i'),gone=false;o.querySelector('.lx').onclick=function(){gone=true;o.remove()};st.textContent='📚 الكتاب ده '+b.iav+' أجزاء — بنزّل الباقي وأجمعهم…';
+ try{await fetchAll(b,function(n,t,i,k){if(gone)return;if(n===-2){st.textContent='🧩 بجهّز الأجزاء…';bar.style.width='99%';return}st.textContent='⬇️ بنزّل الجزء '+i+' من '+k+(t?' • '+Math.min(99,Math.round(n/t*100))+'%':'');bar.style.width=(t?Math.min(99,n/t*100):30)+'%'});if(!gone){o.remove();toast('✅ الكتاب كامل دلوقتي — '+(b.pg||'')+' صفحة');render()}return true}catch(e){if(!gone){o.remove();toast('⚠️ مقدرتش أكمّل باقي الأجزاء دلوقتي — هجرب تاني المرة الجاية')}return false}};
 function ov(b){var o=document.createElement('div');o.className='ov lfo';o.innerHTML="<div class='dlg'><div class='lfoh'>"+(window.__lgc?__lgc(b.id,1):'')+"<div><b>"+E(b.t)+"</b><small>"+E(b.a||'')+"</small><p class='lfos'>🔎 بدوّر على الكتاب…</p><div class='lfob'><i></i></div></div></div><button type='button' class='lx'>إلغاء</button></div>";document.body.appendChild(o);return o}
-window.bkGo=async function(id){var b=bk(id);if(!b)return;if(have(id))return bkRead0(id);if(b.paper)return bkPage(id);
+window.bkGo=async function(id){var b=bk(id);if(!b)return;if(have(id)){if(b.ia&&b.iav>1&&!(b.iam>=b.iav))await bkFixParts(id);return bkRead0(id)}if(b.paper)return bkPage(id);
  var o=ov(b),st=o.querySelector('.lfos'),bar=o.querySelector('.lfob i'),gone=false;o.querySelector('.lx').onclick=function(){gone=true;o.remove()};
  try{var p=GET[id]||(GET[id]=fetchBook(b,function(n,t){if(gone)return;if(n<0){st.textContent='⬇️ بينزل…';return}st.textContent='⬇️ بينزل… '+(t?Math.min(99,Math.round(n/t*100))+'%':Math.round(n/1048576)+' MB');bar.style.width=(t?Math.min(99,n/t*100):30)+'%'}));
   if(GET[id]&&GET[id].__bg){st.textContent='⬇️ بينزل في الخلفية… استنى ثواني'}
@@ -9074,7 +9085,7 @@ window.bkGo=async function(id){var b=bk(id);if(!b)return;if(have(id))return bkRe
 function miss(b){var w=document.createElement('div');w.className='ov';var q=String(b.t).replace(/\(.*\)/,'').trim()+' '+auth(b);w.innerHTML="<div class='dlg'><h2>📕 «"+E(b.t)+"» مش لاقيه أوتوماتيك</h2><p class='mu'>المكتبة المجانية ملهاش نسخة مطابقة. اختار:</p><div class='lba'><button type='button' class='p' data-k='s'>🔎 وريني النتايج وأنا أختار</button><button type='button' data-k='u'>📎 عندي ملفه PDF</button><button type='button' data-k='p'>📗 عندي نسخة ورق — سجّل الصفحات بس</button></div><button type='button' class='lx'>قفل</button></div>";document.body.appendChild(w);
  w.onclick=function(e){if(e.target===w||e.target.classList.contains('lx')){w.remove();return}var k=e.target.dataset&&e.target.dataset.k;if(!k)return;w.remove();if(k==='s')bkSearch(q);else if(k==='u')bkUpload(b.id);else{b.paper=1;save();render();bkPage(b.id)}}}
 /* bkRead without a file used to ask for an upload — now it downloads it */
-var bkRead0=window.bkRead;window.bkRead=function(id){if(have(id))return bkRead0(id);return bkGo(id)};
+var bkRead0=window.bkRead;window.bkRead=function(id){var b=bk(id);if(have(id)&&!(b&&b.ia&&b.iav>1&&!(b.iam>=b.iav)))return bkRead0(id);return bkGo(id)};
 /* ---- quiet background download of the book you're reading + the next one ---- */
 var bgT=0;function bg(){clearTimeout(bgT);bgT=setTimeout(function(){try{if(typeof AUTH==='undefined'||!AUTH||document.hidden||navigator.onLine===false)return;var c=nowB()[0],n=nextB();[c,n].forEach(function(b){if(!b||b.paper||have(b.id)||GET[b.id]||b.bgf>2)return;b.bgf=(b.bgf||0)+1;var p=GET[b.id]=fetchBook(b).then(function(ok){delete GET[b.id];if(ok&&S.tab==='books')render();return ok},function(e){delete GET[b.id];throw e});p.__bg=1;p.catch(function(){})})}catch(e){}},2500)}
 /* ---- one book till the end ---- */
