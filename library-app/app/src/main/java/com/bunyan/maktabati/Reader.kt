@@ -13,6 +13,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -320,7 +321,7 @@ fun PageView(doc: Doc, p: Int, w: Int, night: Boolean, fit: Boolean = false, b: 
         else Text("$p", color = Color(0xFFBBBBBB), fontSize = 22.sp)
         // 🖍 التعليمات المحفوظة + اللي بتعلّمه دلوقتي
         androidx.compose.foundation.Canvas(Modifier.matchParentSize().then(if (hlMode && onHl != null) Modifier.pointerInput(p) {
-            androidx.compose.foundation.gestures.detectDragGestures(
+            detectDragGestures(
                 onDragStart = { o -> drag = floatArrayOf(o.x / size.width, o.y / size.height, o.x / size.width, o.y / size.height) },
                 onDrag = { ch, _ -> val d = drag; if (d != null) drag = floatArrayOf(d[0], d[1], (ch.position.x / size.width).coerceIn(0f, 1f), (ch.position.y / size.height).coerceIn(0f, 1f)) },
                 onDragEnd = {
