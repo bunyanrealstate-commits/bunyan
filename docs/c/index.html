@@ -6371,8 +6371,8 @@ function n(v){var x=+String(v||'').replace(/[^\d.]/g,'');return x?x.toLocaleStri
 function lab(L,k,i){var r=L.filter(function(x){return x[0]===k})[0];return r?r[i]:''}
 function blank(){if(MODE==='f')return blankF();return {title:'AL SHAMKHA SOUTH',phone:'0528091984',fee:500,dep:'1 Month (Cheque)',group:'',notes:'',hideBooked:false,at:0,villas:[]}}
 var D=null;function depFix(){if(D&&(D.dep==='ONE MONTH RENT'||D.dep==='إيجار شهر'||!D.dep)&&!D.depSet){D.dep='1 Month (Cheque)';D.depSet=1;try{localStorage.setItem(KSF(),JSON.stringify(D))}catch(e){}}}
-function load(){if(D){if(MODE==='f'&&!D.fmark)cleanF();depFix();if(typeof S!=='undefined'&&S&&S.upd)mig();return D}try{D=JSON.parse(localStorage.getItem(KSF())||'null')}catch(e){D=null}
- if(!D)D=blank();if(MODE==='f'&&!D.fmark)cleanF();mig();depFix();return D}
+function load(){if(D){if(MODE==='f'&&!D.fmark)cleanF();if(MODE==='f'&&!D.flOn)flOn();depFix();if(typeof S!=='undefined'&&S&&S.upd)mig();return D}try{D=JSON.parse(localStorage.getItem(KSF())||'null')}catch(e){D=null}
+ if(!D)D=blank();if(MODE==='f'&&!D.fmark)cleanF();if(MODE==='f'&&!D.flOn)flOn();mig();depFix();return D}
 function mig(){if(MODE==='f'||typeof S==='undefined'||!S||!S.upd)return;var have={};D.villas.forEach(function(v){have[v.id]=1});{/* move the old list that was saved inside the group data, without the studios that were imported from the business */try{var o=S&&S.upd;if(o){if(!D.at)['title','phone','fee','dep','group','hideBooked'].forEach(function(k){if(o[k]!=null)D[k]=o[k]});if(D.dep==='إيجار شهر'||D.dep==='ONE MONTH RENT')D.dep='1 Month (Cheque)';
    D.villas=D.villas.concat((o.villas||[]).filter(function(v){return !v.src&&!have[v.id]}).map(function(v){return {id:v.id||id(),name:v.name,area:v.area||'',loc:v.loc||'',note:'',units:(v.units||[]).map(function(a){var f=String(a.floor||'').toUpperCase(),t=String(a.type||'').toUpperCase();
     return {id:a.id||id(),floor:/ROOF/.test(f)?'R':/^G/.test(f)?'G':/^F|1ST/.test(f)?'1':/2ND|S FLOOR/.test(f)?'2':'G',no:a.no||'',type:/^(FURNISHED )?STUDIO$/.test(t)?'st':/^(FURNISHED )?1 BHK$/.test(t)?'1bk':/^(FURNISHED )?2 BHK$/.test(t)?'2bk':'x',tx:/STUDIO|^(FURNISHED )?[12] BHK$/.test(t)?'':t.replace(/^FURNISHED /,''),furn:/FURNISHED/.test(t),price:a.p1||a.p2||a.p3||0,pays:a.p3?3:a.p2?2:1,mo:a.mo||0,note:'',booked:!!a.booked,hide:!!a.hide}})}}));delete S.upd;try{save()}catch(e){}}}catch(e){}keep(1)}}
@@ -6503,7 +6503,7 @@ window.updXRow=function(vid,aid,w){var v=V(vid);if(!v)return;var U=v.units=v.uni
 /* ===== 🛋️ أبديت المفروش: لستة تانية مستقلة (بياناتها وصورتها لوحدها) — بتبدأ بالاستديوهات المفروشة اللي في البرنامج بإيجارها الشهري ===== */
 function blankF(){var td0=new Date().toISOString().slice(0,10),U=[];try{(S.units||[]).forEach(function(u,i){var L=(u.leases||[]).filter(function(l){return !l.exit}),cur=L.filter(function(l){return (l.end||'9999')>=td0}).sort(function(a,b){return (a.start||'')<(b.start||'')?-1:1})[0],last=L[L.length-1]||{};
   U.push({id:id(),at:Date.now(),floor:'G',no:String(i+1),type:'st',furn:true,price:0,mo:String((cur||last).rent||''),booked:!!cur,note:''})})}catch(e){}
- return {fmark:1,title:'FURNISHED STUDIOS',phone:'0528091984',fee:0,dep:'1 Month',group:'',notes:'',hideBooked:false,at:0,pm:'single',pn:1,showMo:true,hc:{pay:true,fl:true},hf:{fee:true},lab:{mo:'MONTHLY RENT'},dtpos:'r',villas:U.length?[{id:id(),name:'BUNYAN FURNISHED',area:'Abu Dhabi',units:U}]:[]}}
+ return {fmark:1,title:'FURNISHED STUDIOS',phone:'0528091984',fee:0,dep:'1 Month',group:'',notes:'',hideBooked:false,at:0,pm:'single',pn:1,showMo:true,flOn:1,hc:{pay:true},hf:{fee:true},lab:{mo:'MONTHLY RENT'},dtpos:'r',villas:U.length?[{id:id(),name:'BUNYAN FURNISHED',area:'Abu Dhabi',units:U}]:[]}}
 window.updMode=function(m){m=m==='f'?'f':'u';if(m===MODE)return;try{keep(1)}catch(e){}MODE=m;try{localStorage.setItem('bny_updmode',m)}catch(e){}D=null;load();try{pull()}catch(e){}render();toast(m==='f'?'🛋️ أبديت المفروش':'🏢 أبديت غير المفروش')};
 window.updModeNow=function(){return MODE};
 /* the unfurnished list no matter which one is open (Hakim's shared update is the unfurnished one — it was leaking into the furnished list) */
@@ -6511,6 +6511,7 @@ async function pushTo(file,data){var c=cfg();if(!c)return;var A=api(c);A.u=A.u.r
 window.updDataU=function(){if(MODE==='u')return load();var x=null;try{x=JSON.parse(localStorage.getItem(KS)||'null')}catch(e){}return x||{villas:[],at:0}};
 window.updPutU=function(x,bk){if(MODE==='u')return updPut(x,bk);if(!x||!x.villas)return;try{localStorage.setItem(KS,JSON.stringify(x))}catch(e){}if(bk)pushTo('upd.json',x)};
 /* a furnished list that isn't really one (got the unfurnished villas) starts over from the furnished studios */
+function flOn(){if(MODE==='f'&&D&&D.fmark&&!D.flOn){D.flOn=1;D.hc=D.hc||{};D.hc.fl=false;keep()}}
 function cleanF(){if(MODE!=='f'||!D||D.fmark)return;var b=blankF();b.at=Date.now();D=b;keep()}
 function modeChips(){if(S.tab!=='upd')return;var c=document.querySelector('#app .card');if(!c||document.getElementById('updmode'))return;var w=document.createElement('div');w.id='updmode';
  w.innerHTML="<button type='button' class='"+(MODE==='u'?'on':'')+"' onclick=\"updMode('u')\">🏢 غير مفروش</button><button type='button' class='"+(MODE==='f'?'on':'')+"' onclick=\"updMode('f')\">🛋️ مفروش</button>";
