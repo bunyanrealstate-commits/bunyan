@@ -36,5 +36,5 @@
             <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED" /></intent-filter>
         </receiver>
     </application>
-    <queries><intent><action android:name="android.intent.action.TTS_SERVICE" /></intent></queries>
+    <queries><package android:name="com.bunyan.furnished" /><intent><action android:name="android.intent.action.TTS_SERVICE" /></intent></queries>
 </manifest>

@@ -245,8 +245,13 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
         if (Lib.link == null) item(span = { GridItemSpan(3) }) {
             Surface(onClick = onLink, shape = RoundedCornerShape(18.dp), color = Color(0xFFE8F3EE)) {
                 Column(Modifier.padding(14.dp)) {
-                    Text("🔗 اربط التطبيق بحساب بنيان", fontWeight = FontWeight.Bold, color = Green, fontSize = 15.sp)
-                    Text("علشان كتبك وتقدمك يبقوا واحد هنا وفي بنيان، والقراية بالصوت تشتغل.", fontSize = 13.sp, color = Muted)
+                    Text("🔗 كتبك لسه منزلتش — التطبيق مش مربوط ببنيان", fontWeight = FontWeight.Black, color = Green, fontSize = 16.sp)
+                    Text("1) دوس الزرار ده هيفتحلك بنيان\n2) في بنيان ادخل «مكتبتي» ودوس «📱 افتح في تطبيق مكتبتي»\n3) هيرجعك هنا وكتبك تنزل لوحدها", fontSize = 14.sp, color = Ink, lineHeight = 24.sp, modifier = Modifier.padding(vertical = 8.dp))
+                    val lctx = LocalContext.current
+                    Button({
+                        val i = lctx.packageManager.getLaunchIntentForPackage("com.bunyan.furnished")
+                        if (i != null) lctx.startActivity(i) else Toast.makeText(lctx, "تطبيق بنيان مش متسطّب على الموبايل ده", Toast.LENGTH_LONG).show()
+                    }, Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = Green), shape = RoundedCornerShape(14.dp)) { Text("افتح بنيان", fontWeight = FontWeight.Bold, fontSize = 16.sp) }
                 }
             }
         }
