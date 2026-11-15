@@ -8725,7 +8725,7 @@ var busy=0;async function card(){var a=document.getElementById('app');if(!a||S.t
  var h="<div class='card' id='remst'><h2>🔔 حالة التنبيهات على الموبايل</h2>";
  if(!o)h+="<p class='mu'>انت فاتح من المتصفح — التذكير بيظهر لو البرنامج مفتوح. على تطبيق الموبايل بيرن حتى لو مقفول.</p>";
  else{h+=ln(o.perm==='granted','الإشعارات '+(o.perm==='granted'?'مسموحة':'مقفولة'),"<button onclick='remFixPerm()'>فعّلها</button>");
-  if(o.exact!=null)h+=ln(o.exact==='granted','المنبهات في ميعادها بالظبط '+(o.exact==='granted'?'مسموحة':'مقفولة — التذكير ممكن يتأخر أو ميرنش'),"<button onclick='remFixExact()'>فعّلها</button>");
+  if(o.exact!=null)h+=ln(o.exact==='granted','المنبهات في ميعادها بالظبط '+(o.exact==='granted'?'مسموحة':'مقفولة — التذكير ممكن يتأخر أو ميرنش'),"<button onclick='remFixExact()'>فعّلها</button>")+(o.exact==='granted'?'':"<div class='rsl bad'><span>لو زرار «السماح» رمادي ومش بيتفعل: حدّث التطبيق الأول</span><button onclick='bnySelfUpdate()'>⬆️ حدّث</button></div>");
   h+=ln(o.pend>0||!(S.rem||[]).some(function(r){return r.on}),'التذكيرات المجدولة على الموبايل: '+(o.pend||0));
   if(o.err&&o.err.length)h+="<div class='rsl bad'><span>❌ "+String(o.err[0]).slice(0,120)+"</span></div>"}
  h+="<div class='rsb'><button class='p' onclick='remTest()'>🔔 جرّب دلوقتي (بعد 15 ثانية)</button></div><details class='rsh'><summary>لسه مش بيرن؟ (موبايلات Honor)</summary><p>الإعدادات ← البطارية ← <b>تشغيل التطبيقات</b> ← Bunyan ← اقفل «إدارة تلقائية» وفعّل الـ 3 (تشغيل تلقائي، تشغيل ثانوي، التشغيل في الخلفية).<br>وكمان: الإعدادات ← التطبيقات ← Bunyan ← الإشعارات ← «تنبيهات بنيان» ← خليها <b>مهمة</b> بصوت.</p></details></div>";
