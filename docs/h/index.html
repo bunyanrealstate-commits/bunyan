@@ -3135,9 +3135,11 @@ function pickH(){var seen=[],last='';try{var o2=localStorage.getItem('bny_hd_see
 function show(){if(typeof AUTH!=='undefined'&&!AUTH)return;if(document.hidden)return;if(!el){el=document.createElement('div');el.id='hdth';el.innerHTML="<div class='ht'></div><div class='hx'></div><div class='hs'></div><div class='hdt'>المس مرتين ورا بعض للإخفاء</div>";var lt=0;el.addEventListener('click',function(e){e.stopPropagation();var n=Date.now();if(n-lt<450){lt=0;hide()}else lt=n});el.addEventListener('dblclick',function(e){e.stopPropagation();hide()});document.body.appendChild(el)}
  var o=pick();el.querySelector('.ht').textContent=o.k;el.querySelector('.hx').textContent=o.t;el.querySelector('.hs').textContent=o.s;el.querySelector('.hs').style.display=o.s?'':'none';el.querySelector('.hx').scrollTop=0;el.classList.add('on');clearTimeout(tm)}
 function hide(){if(el)el.classList.remove('on')}
-setTimeout(function(){var l=0;try{l=+(localStorage.getItem('bny_hd_t')||0)}catch(e){}if(Date.now()-l<60000)return;try{localStorage.setItem('bny_hd_t',String(Date.now()))}catch(e){}show()},4000);
+/* أسامه: الأحاديث تقل — مرة كل ساعة بس */
+var HDGAP=3600000;
+setTimeout(function(){var l=0;try{l=+(localStorage.getItem('bny_hd_t')||0)}catch(e){}if(Date.now()-l<HDGAP)return;try{localStorage.setItem('bny_hd_t',String(Date.now()))}catch(e){}show()},4000);
 /* كل ما ترجع للتطبيق بعد ما سبته دقيقة أو أكتر يظهرلك كلام جديد */
-var hidAt=0;document.addEventListener('visibilitychange',function(){if(document.hidden){hidAt=Date.now();return}if(hidAt&&Date.now()-hidAt>=60000){hidAt=0;setTimeout(function(){try{localStorage.setItem('bny_hd_t',String(Date.now()))}catch(e){}show()},1200)}});
+var hidAt=0;document.addEventListener('visibilitychange',function(){if(document.hidden){hidAt=Date.now();return}var l2=0;try{l2=+(localStorage.getItem('bny_hd_t')||0)}catch(e){}if(hidAt&&Date.now()-l2>=HDGAP){hidAt=0;setTimeout(function(){try{localStorage.setItem('bny_hd_t',String(Date.now()))}catch(e){}show()},1200)}});
 })();
 </script>
 <style>.ov{z-index:450!important}#natx{z-index:460!important}body:has(#natx.ov) #hmp,body:has(#natx.ov) #setsub,body:has(#natx.ov) #wsub{display:none!important}body:has(.ov) #hmp,body:has(.ov) #setsub,body:has(.ov) #wsub{display:none!important}</style>
@@ -6027,6 +6029,8 @@ var R=[
   check:function(){return window.hkShare&&window.updPut?[]:['مشاركة العقد والأبديت مع حكيم مش شغالة']},fix:null},
  {id:'updcols',area:'الأبديت',t:'مكانش ينفع تغيّر ترتيب أعمدة صورة الأبديت، والسعر والنوع كانوا مش بارزين',
   check:function(){if(S.tab!=='upd')return [];var o=[];if(typeof window.updCols!=='function')o.push('زرار ترتيب الأعمدة مش موجود');var t=document.querySelector('#updposter tr.r:not(.rb) td.ty');if(t&&!bnyIsRed(getComputedStyle(t).color))o.push('نوع الشقة مش باللون الأحمر');return o},fix:null},
+ {id:'hdgap',area:'الأحاديث',t:'أسامه قال الأحاديث كتير — تظهر مرة كل ساعة بس',
+  check:function(){return []},fix:null},
  {id:'tilefold',area:'الشكل',t:'أسامه عايز كل الكروت اللي بتنزل لستة (◂ / ▾) تبقى كروت مربعة زي الداشبورد وتفتح في شباك — في كل البرنامج',
   check:function(){var a=document.getElementById('app');if(!a||S.tab==='upd'||S.tab==='ct')return [];var o=[];[].forEach.call(a.children,function(c){if((c.classList.contains('card')&&c.classList.contains('fd'))||(c.tagName==='DETAILS'&&c.classList.contains('card')))o.push('كارت «'+((c.querySelector('h2,summary')||{}).textContent||'').trim().slice(0,30)+'» لسه بينزل لستة بدل ما يفتح شباك')});return o},fix:null},
  {id:'updlook',area:'الأبديت',t:'أسامه اشتكى إن شكل الأبديت والتعديل الحر صعب ومش مرتب (زراير كتير وشطب على المحجوز) — اتعمل صفوف نضيفة للشقق وتعديل حر بتبويبات وجدول زي الإكسيل',
