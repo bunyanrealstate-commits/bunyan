@@ -6029,6 +6029,8 @@ var R=[
   check:function(){return window.hkShare&&window.updPut?[]:['مشاركة العقد والأبديت مع حكيم مش شغالة']},fix:null},
  {id:'updcols',area:'الأبديت',t:'مكانش ينفع تغيّر ترتيب أعمدة صورة الأبديت، والسعر والنوع كانوا مش بارزين',
   check:function(){if(S.tab!=='upd')return [];var o=[];if(typeof window.updCols!=='function')o.push('زرار ترتيب الأعمدة مش موجود');var t=document.querySelector('#updposter:not(.fz) tr.r:not(.rb) td.ty');if(t&&!bnyIsRed(getComputedStyle(t).color))o.push('نوع الشقة مش باللون الأحمر');return o},fix:null},
+ {id:'libplus',area:'مكتبتي',t:'أسامه طلب مميزات زيادة في مكتبتي — سلسلة أيام القراية، صفحات كل يوم، إحصائيات، ميعاد الخلصان، اقتباسات، بحث، تذكير يومي',
+  check:function(){return S.tab==='books'&&AUTH&&!document.getElementById('libx')?['كارت إحصائيات القراية مش ظاهر في مكتبتي']:[]},fix:null},
  {id:'hmlib',area:'القايمة',t:'أسامه قال «مكتبتي» بتبان على اللاب ومش ظاهرة على الموبايل — اتحطت في القايمة الرئيسية',
   check:function(){var pn=document.getElementById('hmp');return pn&&AUTH&&pn.offsetParent&&innerWidth<=860&&!document.getElementById('hmlib')?['«📚 مكتبتي» مش في قايمة الموبايل']:[]},fix:null},
  {id:'hdgap',area:'الأحاديث',t:'أسامه قال الأحاديث كتير — تظهر مرة كل ساعة بس',
@@ -7968,5 +7970,56 @@ function add(){var pn=document.getElementById('hmp');if(!pn||!AUTH||document.get
 var r0=render;render=function(){var o=r0.apply(this,arguments);try{add()}catch(e){}return o};document.addEventListener('click',function(){setTimeout(function(){try{add()}catch(e){}},30)},true);
 })();</script>
 <style id="hmlibcss">@media (min-width:861px){#hmlib{display:none!important}}@media (max-width:860px){#who .ump #mbooks{display:none!important}}</style>
+<script id="libplus">
+/* مكتبتي — مميزات زيادة: سلسلة أيام القراية، صفحات كل يوم، إحصائيات، ميعاد الخلصان المتوقع، اقتباسات، بحث، تذكير يومي */
+(function(){
+function E(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function B(){S.books=S.books||[];return S.books}
+function ds(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function today(){return ds(new Date())}
+function bk(id){return B().filter(function(x){return x.id===id})[0]}
+function dlg(title,body,onOk,okTxt){var o=document.createElement('div');o.className='ov';o.innerHTML='<div class="dlg"><h2>'+title+'</h2>'+body+'<div class="bt"><button type="button" class="c0">إلغاء</button>'+(onOk?'<button type="button" class="p c1">'+(okTxt||'💾 حفظ')+'</button>':'')+'</div></div>';document.body.appendChild(o);o.querySelector('.c0').onclick=function(){o.remove()};o.addEventListener('click',function(e){if(e.target===o)o.remove()});var c1=o.querySelector('.c1');if(c1)c1.onclick=function(){if(onOk(o)!==false)o.remove()};return o}
+/* pages read per day (all books) */
+function dayMap(){var m={};B().forEach(function(b){(b.log||[]).forEach(function(l){m[l.d]=(m[l.d]||0)+(+l.p||0)})});return m}
+function streak(m){var d=new Date(),n=0;if(!m[ds(d)])d.setDate(d.getDate()-1);while(m[ds(d)]>0){n++;d.setDate(d.getDate()-1)}return n}
+function best(m){var ks=Object.keys(m).filter(function(k){return m[k]>0}).sort(),b=0,c=0,prev=null;ks.forEach(function(k){var d=new Date(k);if(prev&&(d-prev)/864e5===1)c++;else c=1;if(c>b)b=c;prev=d});return b}
+function pace(b){var L=(b.log||[]).filter(function(l){return (new Date()-new Date(l.d))/864e5<=14});var p=L.reduce(function(s,l){return s+(+l.p||0)},0);return p/14}
+function eta(b){if(!b.pg||!b.cur)return '';var left=b.pg-(+b.cur||0);if(left<=0)return '';var v=pace(b);if(v<=0)return '';var d=new Date();d.setDate(d.getDate()+Math.ceil(left/v));return d.toLocaleDateString('ar-EG',{day:'numeric',month:'long'})}
+/* page update now records how many pages you read today */
+window.bkPage=function(id){var b=bk(id);if(!b)return;var o=dlg('📄 وصلت لصفحة كام؟',"<input id='bc' type='number' inputmode='numeric' min='0' value='"+(+b.cur||0)+"'>"+(b.pg?"<small class='mu'>من "+b.pg+"</small>":"")+"<div class='lpq'>"+[5,10,20,30].map(function(n){return "<button type='button' data-n='"+n+"'>+"+n+"</button>"}).join('')+"</div>",function(o){var nv=Math.max(0,+o.querySelector('#bc').value||0),d=nv-(+b.cur||0);if(d>0){b.log=b.log||[];var t=today(),l=b.log.filter(function(x){return x.d===t})[0];if(l)l.p+=d;else b.log.push({d:t,p:d})}b.cur=nv;save();if(b.pg&&b.cur>=b.pg){window.bkMove&&bkMove(id,'done');return}if(d>0)toast('📖 +'+d+' صفحة النهارده');render()});
+ o.querySelector('.lpq').onclick=function(e){var n=e.target&&e.target.dataset&&e.target.dataset.n;if(n){var i=o.querySelector('#bc');i.value=(+i.value||0)+(+n)}}};
+/* quotes */
+window.bkQuotes=function(id){var b=bk(id);if(!b)return;b.q=b.q||[];var draw=function(){return (b.q.length?b.q.map(function(q,i){return "<div class='lqi'><p>«"+E(q.t)+"»</p><small class='mu'>"+(q.p?'صفحة '+E(q.p)+' • ':'')+E(q.d||'')+"</small><span><button type='button' data-c='"+i+"'>📋</button><button type='button' data-x='"+i+"'>🗑</button></span></div>"}).join(''):"<p class='mu'>مفيش اقتباسات لسه.</p>")+"<label>اقتباس جديد</label><textarea id='lqt' rows='3' placeholder='اكتب الجملة اللي عجبتك'></textarea><label>صفحة (اختياري)</label><input id='lqp' type='number' inputmode='numeric' value='"+(+b.cur||'')+"'>"};
+ var o=dlg('💬 اقتباسات «'+E(b.t)+'»',"<div class='lqw'>"+draw()+"</div>",function(o){var t=o.querySelector('#lqt').value.trim();if(!t)return true;b.q.push({t:t,p:o.querySelector('#lqp').value,d:today()});save();render();toast('💬 اتحفظ الاقتباس')},'➕ احفظ الاقتباس');
+ o.querySelector('.lqw').onclick=function(e){var c=e.target.dataset;if(c.c!=null){var q=b.q[+c.c];try{navigator.clipboard.writeText('«'+q.t+'» — '+b.t+(b.a?' ('+b.a+')':''));toast('📋 اتنسخ')}catch(x){}}if(c.x!=null){b.q.splice(+c.x,1);save();o.querySelector('.lqw').innerHTML=draw();render()}}};
+window.bkAllQuotes=function(){var L=[];B().forEach(function(b){(b.q||[]).forEach(function(q){L.push({q:q,b:b})})});dlg('💬 كل اقتباساتي ('+L.length+')',L.length?L.map(function(x){return "<div class='lqi'><p>«"+E(x.q.t)+"»</p><small class='mu'>"+E(x.b.t)+(x.q.p?' • صفحة '+E(x.q.p):'')+"</small></div>"}).join(''):"<p class='mu'>لسه مفيش اقتباسات — افتح أي كتاب ودوس «💬 اقتباس».</p>")};
+/* daily reading reminder (uses تذكيراتي) */
+window.bkRemind=function(){var r=(S.rem||[]).filter(function(x){return x.bk})[0];dlg('⏰ تذكير القراية كل يوم',"<label>الساعة</label><input id='brt' type='time' value='"+(r?r.tm:'21:00')+"'>"+(r?"<label style='display:flex;gap:8px;align-items:center;margin-top:10px'><input type='checkbox' id='bro' "+(r.on?'checked':'')+" style='width:auto'> شغّال</label>":""),function(o){S.rem=S.rem||[];var tm=o.querySelector('#brt').value||'21:00';if(!r){r={id:Math.random().toString(36).slice(2,10),bk:1,t:'📖 وقت القراية',n:'اقرأ ولو 10 صفحات',rp:'day',on:true};S.rem.push(r)}r.tm=tm;r.d=today();r.last=0;r.nx=0;var cb=o.querySelector('#bro');if(cb)r.on=cb.checked;save();try{window.remSched&&remSched()}catch(e){}render();toast('⏰ هفكّرك كل يوم الساعة '+tm)})};
+window.bkFind=function(v){window.__bkq=v;var q=String(v||'').trim().toLowerCase();document.querySelectorAll('#app .bki').forEach(function(x){x.style.display=!q||x.textContent.toLowerCase().indexOf(q)>=0?'':'none'})};
+function extra(){var a=document.getElementById('app');if(!a||S.tab!=='books'||a.querySelector('#libx'))return;var L=B(),m=dayMap(),st=streak(m),bs=best(m),y=String(new Date().getFullYear());
+ var wk=[];for(var i=6;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);wk.push({k:ds(d),n:d.toLocaleDateString('ar-EG',{weekday:'short'}),p:m[ds(d)]||0})}var mx=Math.max.apply(null,wk.map(function(w){return w.p}).concat([1])),wsum=wk.reduce(function(s,w){return s+w.p},0);
+ var dn=L.filter(function(b){return b.sh==='done'}),dy=dn.filter(function(b){return String(b.fd||'').slice(0,4)===y}),rt=dn.filter(function(b){return +b.r}),avg=rt.length?(rt.reduce(function(s,b){return s+(+b.r)},0)/rt.length).toFixed(1):'—',days=dn.filter(function(b){return b.sd&&b.fd}).map(function(b){return Math.max(1,Math.round((new Date(b.fd)-new Date(b.sd))/864e5))}),ad=days.length?Math.round(days.reduce(function(s,x){return s+x},0)/days.length):0,nq=L.reduce(function(s,b){return s+((b.q||[]).length)},0);
+ var r=(S.rem||[]).filter(function(x){return x.bk&&x.on})[0];
+ var h="<div class='card' id='libx'><div class='lst'><div><b>🔥 "+st+"</b><small>يوم ورا بعض</small></div><div><b>"+wsum+"</b><small>صفحة الأسبوع ده</small></div><div><b>"+dy.length+"</b><small>كتاب خلصته "+y+"</small></div><div><b>⭐ "+avg+"</b><small>متوسط تقييمك</small></div></div>"+
+  "<div class='lwk'>"+wk.map(function(w){return "<div><i style='height:"+Math.max(4,Math.round(w.p/mx*56))+"px' class='"+(w.p?'on':'')+"'></i><small>"+(w.p||'')+"</small><em>"+w.n+"</em></div>"}).join('')+"</div>"+
+  "<small class='mu'>"+(bs?'أطول سلسلة: '+bs+' يوم':'سجّل الصفحات اللي قرأتها من «📄 وصلت لصفحة» علشان السلسلة تبدأ')+(ad?' • بتخلص الكتاب في '+ad+' يوم في المتوسط':'')+"</small>"+
+  "<div class='lact'><button onclick='bkRemind()'>"+(r?'⏰ القراية '+r.tm:'⏰ فكّرني أقرأ كل يوم')+"</button><button onclick='bkAllQuotes()'>💬 اقتباساتي ("+nq+")</button></div>"+
+  "<input id='bkq' class='lsrch' placeholder='🔎 دوّر في كتبك (اسم، مؤلف، ملاحظة)' value='"+E(window.__bkq||'')+"' oninput='bkFind(this.value)'></div>";
+ var c1=a.querySelector('.card');if(c1)c1.insertAdjacentHTML('afterend',h);else a.insertAdjacentHTML('afterbegin',h);
+ /* per-book: quotes button + expected finish */
+ L.forEach(function(b){var ed=a.querySelector("button[onclick=\"bkEdit('"+b.id+"')\"]");if(!ed)return;var q=document.createElement('button');q.textContent='💬 اقتباس'+((b.q||[]).length?' ('+b.q.length+')':'');q.onclick=function(){bkQuotes(b.id)};ed.parentNode.insertBefore(q,ed);
+  if(b.sh==='now'){var e=eta(b),pv=pace(b),bd=ed.closest('.bd');if(bd&&(e||pv)){var s=document.createElement('small');s.className='leta';s.textContent=(pv?'⚡ '+(pv>=1?Math.round(pv):pv.toFixed(1))+' صفحة/يوم':'')+(e?' • هتخلصه تقريبًا '+e:'');var pr=bd.querySelector('.bpr');(pr&&pr.nextSibling?pr.nextSibling:bd.querySelector('small')).after(s)}}});
+ if(window.__bkq)bkFind(window.__bkq)}
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{extra()}catch(e){}return o};
+})();</script>
+<style id="libpluscss">
+#libx .lst{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;text-align:center;margin-bottom:10px}#libx .lst>div{background:var(--bg2,#f1f4f7);border-radius:12px;padding:8px 2px}#libx .lst b{display:block;font-size:19px;font-weight:900}#libx .lst small{font-size:10.5px;opacity:.7;font-weight:700}
+#libx .lwk{display:flex;gap:6px;align-items:flex-end;height:96px;margin:4px 0 6px;direction:rtl}#libx .lwk>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;height:100%}#libx .lwk i{width:70%;border-radius:6px 6px 2px 2px;background:rgba(120,140,160,.25)}#libx .lwk i.on{background:linear-gradient(#36b37e,#1a8f50)}#libx .lwk small{font-size:10px;font-weight:800;min-height:12px}#libx .lwk em{font-style:normal;font-size:10px;opacity:.65}
+#libx .lact{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 8px}#libx .lact button{margin:0!important;flex:1 1 auto}
+#libx .lsrch{width:100%;box-sizing:border-box;margin:0!important}
+.leta{display:block;color:#1a8f50;font-weight:700}
+.lpq{display:flex;gap:6px;margin-top:8px}.lpq button{flex:1;margin:0!important}
+.lqi{position:relative;border:1px solid var(--bd,#e3e8ee);border-radius:12px;padding:10px 12px;margin:8px 0}.lqi p{margin:0 0 4px;font-weight:700;line-height:1.7}.lqi span{position:absolute;top:6px;left:6px;display:flex;gap:4px}.lqi span button{margin:0!important;padding:2px 6px!important;min-height:0!important;font-size:12px!important}
+</style>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
