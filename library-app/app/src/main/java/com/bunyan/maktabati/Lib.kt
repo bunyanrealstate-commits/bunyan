@@ -71,7 +71,7 @@ object Lib {
     fun touch(b: JSONObject, vararg keys: String) {
         val r = appRec(b.optString("id"))
         b.put("rd", System.currentTimeMillis())
-        for (k in keys + "rd") if (b.has(k)) r.put(k, b.get(k))
+        for (k in keys.toList() + "rd") if (b.has(k)) r.put(k, b.get(k))
     }
 
     fun setCur(b: JSONObject, p: Int) { b.put("cur", p); touch(b, "cur"); save() }
