@@ -6723,6 +6723,8 @@ var R=[
   check:function(){return window.hkShare&&window.updPut?[]:['مشاركة العقد والأبديت مع حكيم مش شغالة']},fix:null},
  {id:'updcols',area:'الأبديت',t:'مكانش ينفع تغيّر ترتيب أعمدة صورة الأبديت، والسعر والنوع كانوا مش بارزين',
   check:function(){if(S.tab!=='upd')return [];var o=[];if(typeof window.updCols!=='function')o.push('زرار ترتيب الأعمدة مش موجود');var t=document.querySelector('#updposter:not(.fz) tr.r:not(.rb) td.ty');if(t&&!bnyIsRed(getComputedStyle(t).color))o.push('نوع الشقة مش باللون الأحمر');return o},fix:null},
+ {id:'lib2',area:'مكتبتي',t:'أسامه طلب مكتبتي بأحسن شكل وترتيب وألوان تشجّع على القراية (وقال إنه كسول في القراية ومش فاهم «يوم ورا بعض»)',
+  check:function(){return S.tab==='books'&&AUTH&&!window.HBUILD&&!document.getElementById('lib2')?['شكل مكتبتي الجديد مش ظاهر']:[]},fix:null},
  {id:'booklists',area:'مكتبتي',t:'أسامه بعت رابط مقال فيه أسامي كتب (سبعون كتابا تصنع عقلا مختلفا) عايزها تتضاف لمكتبتي ويقدر ينزلها',
   check:function(){return []},fix:null},
  {id:'bksearch',area:'مكتبتي',t:'أسامه عايز يدوّر على الكتاب وينزل أوتوماتيك على التطبيق — اتربط بمكتبة أرشيف الإنترنت المجانية',
@@ -8897,5 +8899,94 @@ function ui(){var a=document.getElementById('app');if(!a||S.tab!=='books')return
 var r0=render;render=function(){var o=r0.apply(this,arguments);try{ui()}catch(e){}return o};
 })();</script>
 <style id="booklistscss">.bkls{display:block;margin-top:4px;font-size:11px;opacity:.65}.bkfind{font-weight:800}</style>
+<script id="lib2js">
+/* «مكتبتي» — شكل جديد يشجّع على القراية: كمّل كتابك بدوسة، هدف صفحات بسيط لكل يوم، شموع الأيام، ورف كتب بأغلفة */
+(function(){if(window.HBUILD)return;
+function E(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function B(){S.books=S.books||[];return S.books}function bk(id){return B().filter(function(x){return x.id===id})[0]}
+function ds(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function dayMap(){var m={};B().forEach(function(b){(b.log||[]).forEach(function(l){m[l.d]=(m[l.d]||0)+(+l.p||0)})});return m}
+function streak(m){var d=new Date(),n=0;if(!m[ds(d)])d.setDate(d.getDate()-1);while(m[ds(d)]>0){n++;d.setDate(d.getDate()-1)}return n}
+function have(id){return !!(window.__bkHave&&__bkHave[id])}
+var SAY=[['وخيرُ جليسٍ في الزمانِ كتابُ','المتنبي'],['اقرأ وربك الأكرم','سورة العلق'],['عشر صفحات كل يوم = حوالي 12 كتاب في السنة','حسبة بسيطة'],['الكتاب اللي بتقرأ منه صفحة النهارده أحسن من الكتاب اللي ناوي تخلصه كله بكرة',''],['من أكثر من مطالعة الكتب لم تخل نفسه من فائدة','الماوردي']];
+var PAL=[['#1f5f4a','#2f8a6a'],['#7a3b24','#b5643f'],['#2e3f6e','#4b64a8'],['#5a2a4c','#8e4a78'],['#6b5420','#a8843a'],['#24525e','#3b8494'],['#4a3a2a','#7a5d40'],['#3b2f5e','#5f4b96']];
+function hh(t){var x=0;t=String(t||'');for(var i=0;i<t.length;i++)x=(x*31+t.charCodeAt(i))|0;return Math.abs(x)}
+function cover(b,big){if(b.cv)return "<div class='lcv"+(big?' big':'')+"'><img src='"+E(b.cv)+"' loading='lazy' onerror=\"this.parentNode.outerHTML=window.__lgc('"+b.id+"',"+(big?1:0)+")\"></div>";return gen(b,big)}
+function gen(b,big){var c=PAL[hh(b.t)%PAL.length];return "<div class='lcv gen"+(big?' big':'')+"' style='background:linear-gradient(160deg,"+c[1]+","+c[0]+")'><i></i><b>"+E(b.t)+"</b><small>"+E(String(b.a||'').replace(/^(ترجمة|تحرير)\s*/,''))+"</small></div>"}
+window.__lgc=function(id,big){var b=bk(id);return b?gen(b,!!big):''};
+var SH=window.__lshf||'now';
+function view(){var L=B(),m=dayMap(),t=ds(new Date()),pt=m[t]||0,goal=+S.bdg||10,st=streak(m),y=new Date().getFullYear();
+ var now=L.filter(function(b){return b.sh==='now'}).sort(function(a,b){return (b.rd||0)-(a.rd||0)}),want=L.filter(function(b){return b.sh==='want'}),done=L.filter(function(b){return b.sh==='done'});
+ var cur=now[0],dy=done.filter(function(b){return String(b.fd||'').slice(0,4)==String(y)}).length,yg=(S.bgoal&&S.bgoal[y])||0;
+ var say=SAY[Math.floor(Date.now()/864e5)%SAY.length];
+ var h="<div id='lib2'>";
+ /* 1) hero: continue reading */
+ h+="<div class='lhero'><div class='lhh'><b>📚 مكتبتي</b><small>"+(pt?'🎉 برافو! قريت النهارده '+pt+' صفحة':'📖 ١٠ دقايق قراية بس النهارده كفاية')+"</small></div>";
+ if(cur){var pr=cur.pg?Math.min(100,Math.round((+cur.cur||0)/cur.pg*100)):0,rd=have(cur.id);
+  h+="<div class='lcur' onclick=\"lbOpen('"+cur.id+"')\">"+cover(cur,1)+"<div class='lci'><small>بتقرأ دلوقتي</small><b>"+E(cur.t)+"</b><span>"+E(cur.a||'')+"</span><div class='lbar'><i style='width:"+pr+"%'></i></div><em>"+(cur.pg?'صفحة '+(+cur.cur||0)+' من '+cur.pg+' • '+pr+'%':'صفحة '+(+cur.cur||0))+"</em></div></div>"+
+   "<button class='lgo' onclick=\""+(rd?"bkRead('"+cur.id+"')":"bkPage('"+cur.id+"')")+"\">"+(rd?(+cur.cur>1?'📖 كمّل من صفحة '+cur.cur:'📖 ابدأ القراية'):'📄 سجّل وصلت لصفحة كام')+"</button>"}
+ else h+="<div class='lempty'><b>مفيش كتاب بتقرأه دلوقتي</b><small>اختار كتاب من رف «عايز أقرأه» أو نزّل كتاب جديد</small><button class='lgo' onclick=\"lbShelf('want')\">📌 اختار كتاب تبدأ بيه</button></div>";
+ h+="</div>";
+ /* 2) today goal + candles */
+ var pc=Math.min(100,Math.round(pt/goal*100)),wk=[];for(var i=6;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);wk.push({k:ds(d),n:d.toLocaleDateString('ar-EG',{weekday:'narrow'}),on:(m[ds(d)]||0)>0,td:i===0})}
+ h+="<div class='lday'><div class='lring' style='--p:"+pc+"' onclick='lbGoal()'><div><b>"+pt+"</b><small>من "+goal+"</small></div></div><div class='ldt'><b>"+(pt>=goal?'✅ خلصت هدف النهارده!':'هدف النهارده: '+goal+' صفحات')+"</b><small>"+(pt>=goal?'أي صفحة زيادة مكسب 💪':'فاضلك '+(goal-pt)+' صفحة بس')+"</small><div class='lcand'>"+wk.map(function(w){return "<span class='"+(w.on?'on':'')+(w.td?' td':'')+"'><i>"+(w.on?'🔥':'')+"</i><em>"+w.n+"</em></span>"}).join('')+"</div><small class='lst'>"+(st?'🔥 بقالك '+st+' يوم بتقرأ ورا بعض — متقطعش السلسلة':'كل يوم تقرأ فيه ولو صفحة بتولّع شمعة 🔥')+"</small></div></div>";
+ /* 3) small stats + actions */
+ h+="<div class='lstats'><div onclick='bkGoal()'><b>"+dy+(yg?'<small>/'+yg+'</small>':'')+"</b><span>كتب "+y+(yg?'':' • حدّد هدف')+"</span></div><div><b>"+Object.keys(m).filter(function(k){return (new Date()-new Date(k))/864e5<7}).reduce(function(s,k){return s+m[k]},0)+"</b><span>صفحة الأسبوع ده</span></div><div onclick='bkAllQuotes()'><b>"+L.reduce(function(s,b){return s+((b.q||[]).length)},0)+"</b><span>اقتباس محفوظ</span></div></div>";
+ var r=(S.rem||[]).filter(function(x){return x.bk&&x.on})[0];
+ h+="<div class='lacts'><button onclick='bkSearch()'><i>🔎</i>نزّل كتاب</button><button onclick='bkUpload()'><i>📥</i>عندي PDF</button><button onclick='bkRemind()'><i>⏰</i>"+(r?'تذكير '+r.tm:'فكّرني أقرأ')+"</button><button onclick='bkEdit()'><i>✍️</i>كتاب ورق</button></div>";
+ /* 4) shelves */
+ var C={now:now.length,want:want.length,done:done.length},N={now:'📖 بقرأه',want:'📌 عايز أقرأه',done:'✅ خلصته'};
+ h+="<div class='lshelf'><div class='ltabs'>"+['now','want','done'].map(function(k){return "<button class='"+(SH===k?'on':'')+"' onclick=\"lbShelf('"+k+"')\">"+N[k]+" <small>"+C[k]+"</small></button>"}).join('')+"</div><input class='lsr' placeholder='🔎 دوّر في كتبك' value='"+E(window.__lq||'')+"' oninput='lbFind(this.value)'>";
+ var V=SH==='now'?now:SH==='want'?want:done.slice().sort(function(a,b){return String(b.fd||'').localeCompare(String(a.fd||''))});
+ if(!V.length)h+="<p class='lnone'>"+(SH==='now'?'مفيش كتاب بتقرأه — افتح «عايز أقرأه» واختار واحد':SH==='want'?'ضيف كتب ناوي تقرأها من «🔎 نزّل كتاب»':'لسه مخلصتش كتب — أول كتاب هو الأصعب 💪')+"</p>";
+ h+="<div class='lgrid'>"+V.map(function(b){var pr=b.pg?Math.min(100,Math.round((+b.cur||0)/b.pg*100)):0;return "<div class='lbk' data-q='"+E((b.t+' '+(b.a||'')).toLowerCase())+"' onclick=\"lbOpen('"+b.id+"')\">"+cover(b)+(have(b.id)?"<span class='lfl'>📄</span>":"")+(b.sh==='now'&&b.pg?"<div class='lbar sm'><i style='width:"+pr+"%'></i></div>":"")+"<b>"+E(b.t)+"</b><small>"+(b.sh==='done'?'★★★★★'.slice(0,+b.r||0):E(String(b.a||'').replace(/^(ترجمة|تحرير)\s*/,'')))+"</small></div>"}).join('')+"</div></div>";
+ h+="<div class='lsay'>«"+E(say[0])+"»"+(say[1]?"<small>— "+E(say[1])+"</small>":"")+"</div>";
+ return h+"</div>"}
+window.lbShelf=function(k){SH=window.__lshf=k;render()};
+window.lbFind=function(v){window.__lq=v;var q=String(v||'').trim().toLowerCase();document.querySelectorAll('#lib2 .lbk').forEach(function(x){x.style.display=!q||x.dataset.q.indexOf(q)>=0?'':'none'})};
+window.lbGoal=function(){var o=document.createElement('div');o.className='ov';o.innerHTML="<div class='dlg'><h2>🎯 هدفك كل يوم</h2><p class='mu'>كام صفحة تقرأها في اليوم؟ ابدأ بحاجة سهلة — الاستمرار أهم من الكمية.</p><div class='lgo2'>"+[5,10,15,20,30].map(function(n){return "<button type='button' class='"+((+S.bdg||10)===n?'p':'')+"' data-n='"+n+"'>"+n+"</button>"}).join('')+"</div><div class='bt'><button type='button' class='c0'>قفل</button></div></div>";document.body.appendChild(o);o.onclick=function(e){if(e.target===o||e.target.classList.contains('c0')){o.remove();return}var n=e.target.dataset&&e.target.dataset.n;if(n){S.bdg=+n;save();o.remove();render();toast('🎯 هدفك '+n+' صفحات في اليوم')}}};
+window.lbOpen=function(id){var b=bk(id);if(!b)return;var rd=have(id),pr=b.pg?Math.min(100,Math.round((+b.cur||0)/b.pg*100)):0,q="'"+id+"'";
+ var btn=function(f,t,cl){return "<button type='button' class='"+(cl||'')+"' data-f=\""+f+"\">"+t+"</button>"};var A=[];
+ if(b.sh==='now'){A.push(rd?btn("bkRead("+q+")",+b.cur>1?'📖 كمّل من صفحة '+b.cur:'📖 اقرأ','p'):btn("bkSearch(window.__lbq)",'🔎 دوّر عليه ونزّله','p'));A.push(btn("bkPage("+q+")",'📄 وصلت لصفحة كام'));if(!rd)A.push(btn("bkUpload("+q+")",'📎 عندي ملفه PDF'));A.push(btn("bkMove("+q+",'done')",'✅ خلصته'))}
+ else if(b.sh==='want'){A.push(btn("lbStart("+q+")",rd?'▶️ ابدأ اقرأه دلوقتي':'▶️ ابدأ فيه','p'));if(!rd){A.push(btn("bkSearch(window.__lbq)",'🔎 دوّر عليه ونزّله'));A.push(btn("bkUpload("+q+")",'📎 عندي ملفه PDF'))}}
+ else{if(rd)A.push(btn("bkRead("+q+")",'📖 افتحه تاني'))}
+ A.push(btn("bkQuotes("+q+")",'💬 اقتباسات'+((b.q||[]).length?' ('+b.q.length+')':'')));A.push(btn("bkEdit("+q+")",'✎ تعديل'));A.push(btn("bkDel("+q+")",'🗑 امسح','dl'));
+ window.__lbq=b.t+' '+String(b.a||'').replace(/^(ترجمة|تحرير)\s*/,'');
+ var o=document.createElement('div');o.className='ov lbs';o.innerHTML="<div class='dlg'><div class='lbsh'>"+cover(b,1)+"<div><b>"+E(b.t)+"</b><span>"+E(b.a||'')+"</span>"+(b.pg?"<small>"+b.pg+" صفحة</small>":"")+(b.sh==='now'&&b.pg?"<div class='lbar'><i style='width:"+pr+"%'></i></div><small>وصلت صفحة "+(+b.cur||0)+" • "+pr+"%</small>":"")+(b.sh==='done'?"<small class='lrt'>"+'★★★★★'.slice(0,+b.r||0)+(b.fd?' • خلصته '+E(b.fd):'')+"</small>":"")+(b.ls?"<small>📃 "+E(b.ls)+"</small>":"")+"</div></div>"+(b.n?"<p class='lnt'>📝 "+E(b.n)+"</p>":"")+"<div class='lba'>"+A.join('')+"</div><button type='button' class='lx'>قفل</button></div>";
+ document.body.appendChild(o);o.onclick=function(e){if(e.target===o||e.target.classList.contains('lx')){o.remove();return}var f=e.target.closest('button')&&e.target.closest('button').dataset.f;if(f){o.remove();try{(new Function(f))()}catch(x){}}}};
+window.lbStart=function(id){var b=bk(id);if(!b)return;b.sh='now';b.sd=b.sd||ds(new Date());b.rd=Date.now();save();SH=window.__lshf='now';render();toast('📖 بالتوفيق! «'+b.t+'» بقى في «بقرأه»');if(have(id))setTimeout(function(){bkRead(id)},300)};
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(typeof AUTH!=='undefined'&&AUTH&&S.tab==='books'){var a=document.getElementById('app');if(a){a.innerHTML=view();if(window.__lq)lbFind(window.__lq)}}}catch(e){}return o};
+})();</script>
+<style id="lib2css">
+#lib2{--lp:#fbf6ec;--lc:#fffdf8;--lb:#eadfca;--lt:#2b2216;--lm:#7a6a52;--lg:#1f7a55;--la:#d98a1c;display:flex;flex-direction:column;gap:14px;color:var(--lt)}
+html.dark #lib2{--lp:#1d1a15;--lc:#26221b;--lb:#3a3326;--lt:#efe6d6;--lm:#b5a68c}
+#lib2>div{background:var(--lc);border:1px solid var(--lb);border-radius:22px;padding:16px;box-shadow:0 6px 20px rgba(80,60,20,.07)}
+#lib2 .lhero{background:linear-gradient(160deg,#fff7e6,#fdeccb)!important;border-color:#f0d9a8!important}html.dark #lib2 .lhero{background:linear-gradient(160deg,#2b2417,#3a2e18)!important;border-color:#5a4720!important}
+#lib2 .lhh{display:flex;flex-direction:column;gap:2px;margin-bottom:12px}#lib2 .lhh b{font-size:20px;font-weight:900}#lib2 .lhh small{font-size:13.5px;font-weight:700;color:var(--lm)}
+#lib2 .lcur{display:flex;gap:14px;align-items:center;cursor:pointer}
+#lib2 .lci{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}#lib2 .lci small{font-size:11.5px;font-weight:800;color:var(--la);letter-spacing:.3px}#lib2 .lci b{font-size:17px;font-weight:900;line-height:1.35}#lib2 .lci span{font-size:12.5px;color:var(--lm);font-weight:600}#lib2 .lci em{font-style:normal;font-size:12px;font-weight:800;color:var(--lm)}
+#lib2 .lbar{height:9px;border-radius:9px;background:rgba(120,100,60,.15);overflow:hidden;margin:6px 0 2px}#lib2 .lbar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,#2fa36f,#1f7a55)}#lib2 .lbar.sm{height:5px;margin:6px 0 0}
+#lib2 .lgo{width:100%;margin:14px 0 0!important;padding:14px!important;border-radius:16px!important;border:0!important;background:linear-gradient(135deg,#1f7a55,#2fa36f)!important;color:#fff!important;font-size:16px!important;font-weight:900;box-shadow:0 8px 18px rgba(31,122,85,.28)!important}
+#lib2 .lempty{display:flex;flex-direction:column;gap:4px;text-align:center}#lib2 .lempty b{font-size:16px}#lib2 .lempty small{color:var(--lm);font-weight:600}
+.lcv{width:62px;height:90px;flex:0 0 62px;border-radius:6px 10px 10px 6px;overflow:hidden;box-shadow:2px 4px 10px rgba(0,0,0,.18),inset 3px 0 0 rgba(0,0,0,.12);position:relative;background:#e9e1d0}.lcv.big{width:86px;height:124px;flex-basis:86px}.lcv img{width:100%;height:100%;object-fit:cover;display:block}
+.lcv.gen{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:8px 6px;color:#fff;gap:4px}.lcv.gen i{position:absolute;top:0;bottom:0;right:6px;width:2px;background:rgba(255,255,255,.25)}.lcv.gen b{font-size:11px;font-weight:900;line-height:1.35;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}.lcv.big.gen b{font-size:13px}.lcv.gen small{font-size:8.5px;opacity:.85;font-weight:700;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#lib2 .lday{display:flex;gap:16px;align-items:center}
+#lib2 .lring{--p:0;width:96px;height:96px;flex:0 0 96px;border-radius:50%;background:conic-gradient(var(--la) calc(var(--p)*1%),rgba(120,100,60,.15) 0);display:grid;place-items:center;cursor:pointer}#lib2 .lring>div{width:74px;height:74px;border-radius:50%;background:var(--lc);display:flex;flex-direction:column;align-items:center;justify-content:center}#lib2 .lring b{font-size:26px;font-weight:900;line-height:1}#lib2 .lring small{font-size:11px;color:var(--lm);font-weight:700}
+#lib2 .ldt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}#lib2 .ldt>b{font-size:15.5px;font-weight:900}#lib2 .ldt>small{font-size:12.5px;color:var(--lm);font-weight:700}
+#lib2 .lcand{display:flex;gap:4px;margin:8px 0 4px;direction:rtl}#lib2 .lcand span{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}#lib2 .lcand i{font-style:normal;width:100%;max-width:32px;height:32px;border-radius:10px;background:rgba(120,100,60,.12);display:grid;place-items:center;font-size:16px}#lib2 .lcand .on i{background:#ffe7c2}html.dark #lib2 .lcand .on i{background:#4a3410}#lib2 .lcand .td i{outline:2px solid var(--la);outline-offset:1px}#lib2 .lcand em{font-style:normal;font-size:10.5px;color:var(--lm);font-weight:800}
+#lib2 .lst{font-size:12px!important;color:var(--lg)!important;font-weight:800!important}
+#lib2 .lstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px!important}#lib2 .lstats>div{text-align:center;padding:8px 4px;border-radius:14px;background:var(--lp);cursor:pointer}#lib2 .lstats b{display:block;font-size:22px;font-weight:900}#lib2 .lstats b small{font-size:13px;opacity:.6}#lib2 .lstats span{font-size:11px;color:var(--lm);font-weight:700}
+#lib2 .lacts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px!important}#lib2 .lacts button{margin:0!important;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 2px!important;min-height:0!important;border-radius:14px!important;background:var(--lp)!important;border:1px solid var(--lb)!important;color:var(--lt)!important;font-size:11.5px!important;font-weight:800;white-space:nowrap}#lib2 .lacts i{font-style:normal;font-size:22px}
+#lib2 .ltabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:14px;background:var(--lp);margin-bottom:10px}#lib2 .ltabs button{margin:0!important;padding:9px 2px!important;min-height:0!important;border:0!important;border-radius:11px!important;background:transparent!important;color:var(--lt)!important;font-weight:800;font-size:12.5px!important;box-shadow:none!important;white-space:nowrap}#lib2 .ltabs button small{opacity:.6}#lib2 .ltabs button.on{background:var(--lc)!important;box-shadow:0 2px 6px rgba(80,60,20,.15)!important;color:var(--lg)!important}
+#lib2 .lsr{width:100%;box-sizing:border-box;margin:0 0 12px!important;border-radius:12px!important}
+#lib2 .lgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 12px;padding:12px 6px 6px;background:linear-gradient(transparent 0,transparent calc(100% - 0px));}
+#lib2 .lbk{display:flex;flex-direction:column;align-items:center;text-align:center;cursor:pointer;position:relative;min-width:0}#lib2 .lbk .lcv{width:100%;max-width:96px;height:auto;aspect-ratio:2/3;flex:none}#lib2 .lbk .lcv.gen b{font-size:11.5px}#lib2 .lbk>b{font-size:12px;font-weight:800;line-height:1.35;margin-top:7px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:100%}#lib2 .lbk>small{font-size:10.5px;color:var(--lm);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}#lib2 .lbk .lbar.sm{width:100%;max-width:96px}
+#lib2 .lfl{position:absolute;top:4px;left:calc(50% - 44px);font-size:12px;background:#fff;border-radius:6px;padding:0 3px;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+#lib2 .lnone{text-align:center;color:var(--lm);font-weight:700;padding:14px 4px}
+#lib2 .lsay{text-align:center;font-weight:800;font-size:14px;line-height:1.8;background:transparent!important;border:0!important;box-shadow:none!important;color:var(--lm)}#lib2 .lsay small{display:block;font-size:11.5px;opacity:.8}
+.lgo2{display:flex;gap:8px;margin:12px 0}.lgo2 button{flex:1;margin:0!important;font-size:17px!important;font-weight:900}
+.lbs .dlg{width:min(460px,100%)!important}.lbsh{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px}.lbsh>div:last-child{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.lbsh b{font-size:17px;font-weight:900;line-height:1.4}.lbsh span{font-size:13px;opacity:.75;font-weight:700}.lbsh small{font-size:12px;opacity:.7;font-weight:600}.lbsh .lrt{color:#d98a1c;opacity:1}.lbsh .lbar{height:8px;border-radius:8px;background:rgba(120,100,60,.15);overflow:hidden;margin:6px 0 2px}.lbsh .lbar i{display:block;height:100%;background:linear-gradient(90deg,#2fa36f,#1f7a55)}
+.lnt{font-size:13px;line-height:1.7;margin:0 0 10px;opacity:.85}.lba{display:flex;flex-direction:column;gap:8px}.lba button{margin:0!important;width:100%;padding:12px!important;font-weight:800;border-radius:14px!important}.lba button.dl{color:#b3261e!important;background:#fdecec!important;border-color:#f3b8b4!important}.lbs .lx{width:100%;margin:10px 0 0!important}
+</style>
 </body>
 </html>
