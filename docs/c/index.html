@@ -6151,6 +6151,8 @@ var R=[
   check:function(){try{var L=JSON.parse(localStorage.getItem('bny_mon_err')||'[]');return L.some(function(z){return /actions\/secrets/.test(z.m||'')})?['خطأ قديم لصلاحية إعدادات GitHub لسه محفوظ وبيتبعت في التقارير']:[]}catch(e){return []}},fix:function(){var L=JSON.parse(localStorage.getItem('bny_mon_err')||'[]');localStorage.setItem('bny_mon_err',JSON.stringify(L.filter(function(z){return !/actions\/secrets/.test(z.m||'')})));return 'مسحت خطأ الصلاحية القديم من سجل الأخطاء'}},
  {id:'fzred',area:'قواعد المراقب',t:'المراقب كان بيقول «نوع الشقة مش أحمر» على أبديت المفروش — وده بقصد: المفروش ليه لون تيراكوتا خاص بيه، والنوع بياخد لون الثيم',
   check:function(){var p=$('#updposter');if(!p||!p.classList.contains('fz'))return [];var t=p.querySelector('tr.r:not(.rb) td.ty');if(!t)return [];var m=getComputedStyle(p).getPropertyValue('--m').trim(),c=getComputedStyle(t).color,x=document.createElement('i');x.style.color=m;document.body.appendChild(x);var mc=getComputedStyle(x).color;x.remove();return m&&c!==mc?['نوع الشقة في أبديت المفروش مش بلون الثيم']:[]},fix:null},
+ {id:'remshift',area:'شكل الصفحات',t:'صفحة «⏰ تذكيراتي» كانت بتتنط: كارت «🔔 حالة التنبيهات» كان بيستنى رد الموبايل وبعدين يتحط فوق التذكيرات فيزقها 344px لتحت',
+  check:function(){var o=[];if(window.bnyRemStSync===false)o.push('كارت حالة التنبيهات بيتحط متأخر فوق التذكيرات');return o},fix:function(){window.bnyRemStSync=true;return 'كارت حالة التنبيهات بقى يترسم فوراً من آخر حالة أو يتحط في آخر الصفحة'}},
  {id:'look',area:'الشاشة',t:'كلام مقطوع، حاجة طالعة برّه الشاشة، زراير راكبة على بعض، زراير كبيرة أو متبعترة',
   check:function(){try{return (window.bnyUiCheck&&bnyUiCheck()||[]).filter(function(x){return !/الكلام طالع برّه خانته/.test(x)})}catch(e){return []}},fix:null}
 ];
@@ -6197,7 +6199,7 @@ window.bnyRulesSelfTest=function(){var bad=[],t=S.tab,hc=S.ct&&S.ct.html,tp0=S.c
   ['ctsubpk',function(){S.tab='ct';render();var e=document.getElementById('ctsubpk');e&&e.remove()}],
   ['rowtxt',function(){var e=document.getElementById('rowtxtcss');e&&e.remove();var d=document.createElement('div');d.id='__rt';d.className='tri';d.innerHTML="<div class='bd'><b>عقد مستأجر «اختبار اسم طويل جداً جداً جداً جداً جداً جداً»</b></div><button>↩️</button>";document.getElementById('app').appendChild(d)}],
   ['uidet',function(){window.bnyVisSkipClosed=false;var d=document.createElement('div');d.id='__rt';d.style.cssText='position:relative;height:50px';d.innerHTML="<details><summary>x</summary><button style='position:absolute;top:0;left:0;width:120px;height:40px'>✅ اختبار</button></details><button style='position:absolute;top:0;left:0;width:120px;height:40px'>➖</button>";document.getElementById('app').appendChild(d)}],
-  ['sharebusy',function(){window.__bnyShareBusy=Date.now()-120000}],
+  ['sharebusy',function(){window.__bnyShareBusy=Date.now()-120000}],['remshift',function(){window.bnyRemStSync=false}],
   ['menu',function(){var hd=$('.hd');hd.classList.add('mopen');var o=document.createElement('div');o.className='ov';o.id='__rt';document.body.appendChild(o)}]];
  cases.forEach(function(c){try{c[1]();var res=runAll([c[0]]);var x=res.filter(function(y){return y.r.id===c[0]})[0];if(!x)bad.push(c[0]+': not detected');else if(!x.fixed)bad.push(c[0]+': detected but not fixed')}catch(e){bad.push(c[0]+': crashed '+e.message)}var o=document.getElementById('__rt');o&&o.remove()});
  S.tab=t;S.ct.tpl=tp0;S.ct.lay=ly0;if(tp0===undefined)delete S.ct.tpl;if(ly0===undefined)delete S.ct.lay;if(hc!=null)S.ct.html=hc;S.ct.sgpos=sp0||{};if(ts0)S.ct.tsig=ts0;S.monfix=(S.monfix||[]).filter(function(x){return !/^r:/.test(x.k)});return bad};
@@ -8040,7 +8042,14 @@ window.remFixExact=async function(){var N=LN();if(!N||!N.changeExactNotification
 window.remTest=async function(){var N=LN();if(!N){try{bnyNotify('⏰ تجربة تذكير','لو شايف ده يبقى التذكيرات شغالة')}catch(e){}toast('⏰ تجربة');return}
  try{var at=new Date(Date.now()+15000);await N.schedule({notifications:[{id:999999001,title:'⏰ تجربة تذكير',body:'لو سمعت النغمة دي يبقى التذكيرات شغالة ✅',schedule:{at:at,allowWhileIdle:true},channelId:(window.bnyNewApk&&bnyNewApk()?'bny_alerts3':'bny_alerts2'),sound:(window.bnyNewApk&&bnyNewApk()?'bny_tone2.wav':'bny_tone.wav')}]});toast('⏳ اقفل الشاشة — هيرن بعد 15 ثانية')}catch(e){toast('❌ '+((e&&e.message)||e))}};
 async function stat(){var N=LN();if(!N)return null;var o={perm:window.__remPerm,exact:window.__remExact,ok:window.__remOk,err:window.__remErr||[]};try{var pm=await N.checkPermissions();o.perm=pm.display}catch(e){}try{if(N.checkExactNotificationSetting){var ex=await N.checkExactNotificationSetting();o.exact=ex.exact_alarm}}catch(e){}try{var pe=await N.getPending();o.pend=(pe.notifications||[]).filter(function(x){return +x.id>=9e8&&+x.id<1e9}).length}catch(e){}return o}
-var busy=0;async function card(){var a=document.getElementById('app');if(!a||S.tab!=='rem'||a.querySelector('#remst')||busy)return;busy=1;var o=await stat();busy=0;if(S.tab!=='rem'||a.querySelector('#remst'))return;var c=a.querySelector('.card');if(!c)return;
+/* كارت الحالة كان بيستنى رد الموبايل وبعدين يتحط تحت أول كارت فيزق التذكيرات 344px لتحت (الشاشة بتتنط) — دلوقتي بيترسم فوراً من آخر حالة معروفة، ولو مفيش لسه بيتحط في الآخر، وبيتحدث في مكانه */
+var busy=0,cache=null;if(window.bnyRemStSync===undefined)window.bnyRemStSync=true;
+function put(a,h){var c=a.querySelector('.card');if(!c)return;c.insertAdjacentHTML('afterend',h)}
+async function card(){var a=document.getElementById('app');if(!a||S.tab!=='rem'||a.querySelector('#remst'))return;var sy=window.bnyRemStSync!==false;
+ if(sy&&(!LN()||cache)){put(a,build(LN()?cache:null));if(!LN()||busy)return;busy=1;var o2=null;try{o2=await stat()}finally{busy=0}cache=o2;var el=a.querySelector('#remst');if(el&&S.tab==='rem'){var nh=build(o2);if(el.outerHTML!==nh){var op=el.querySelector('details.rsh');var wasOpen=op&&op.open;el.outerHTML=nh;if(wasOpen){var d=a.querySelector('#remst details.rsh');d&&(d.open=true)}}}return}
+ if(busy)return;busy=1;var o=null;try{o=await stat()}finally{busy=0}cache=o;if(S.tab!=='rem'||a.querySelector('#remst'))return;if(sy)a.insertAdjacentHTML('beforeend',build(o));else put(a,build(o))}
+window.__remStWarm=function(){if(LN()&&!cache&&!busy){busy=1;stat().then(function(o){cache=o}).catch(function(){}).then(function(){busy=0})}};setTimeout(function(){try{__remStWarm()}catch(e){}},3000);
+function build(o){
  var ln=function(ok,t,btn){return "<div class='rsl "+(ok?'ok':'bad')+"'><span>"+(ok?'✅':'⚠️')+" "+t+"</span>"+(ok?'':btn||'')+"</div>"};
  var h="<div class='card' id='remst'><h2>🔔 حالة التنبيهات على الموبايل</h2>";
  if(!o)h+="<p class='mu'>انت فاتح من المتصفح — التذكير بيظهر لو البرنامج مفتوح. على تطبيق الموبايل بيرن حتى لو مقفول.</p>";
@@ -8049,7 +8058,7 @@ var busy=0;async function card(){var a=document.getElementById('app');if(!a||S.t
   h+=ln(o.pend>0||!(S.rem||[]).some(function(r){return r.on}),'التذكيرات المجدولة على الموبايل: '+(o.pend||0));
   if(o.err&&o.err.length)h+="<div class='rsl bad'><span>❌ "+String(o.err[0]).slice(0,120)+"</span></div>"}
  h+="<div class='rsb'><button class='p' onclick='remTest()'>🔔 جرّب دلوقتي (بعد 15 ثانية)</button></div><details class='rsh'><summary>لسه مش بيرن؟ (موبايلات Honor)</summary><p>الإعدادات ← البطارية ← <b>تشغيل التطبيقات</b> ← Bunyan ← اقفل «إدارة تلقائية» وفعّل الـ 3 (تشغيل تلقائي، تشغيل ثانوي، التشغيل في الخلفية).<br>وكمان: الإعدادات ← التطبيقات ← Bunyan ← الإشعارات ← «تنبيهات بنيان» ← خليها <b>مهمة</b> بصوت.</p></details></div>";
- c.insertAdjacentHTML('afterend',h)}
+ return h}
 /* لو التذكيرات اتغيرت من جهاز تاني (مزامنة) أو من المساعد — اتجدول تاني على الموبايل */
 var sig0=null,st0=0;function sig(){return JSON.stringify((S.rem||[]).map(function(r){return [r.id,r.on,r.d,r.tm,r.rp,r.t,r.n]}))}
 function watch(){if(!LN()||!AUTH)return;var g=sig();if(sig0===null){sig0=g;return}if(g!==sig0){sig0=g;clearTimeout(st0);st0=setTimeout(function(){window.remSched&&remSched()},1500)}}
