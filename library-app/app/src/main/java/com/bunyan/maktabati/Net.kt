@@ -2,7 +2,7 @@ package com.bunyan.maktabati
 
 import android.graphics.Bitmap
 import android.util.Base64
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -66,22 +66,65 @@ object Net {
         return ra.size - rb.size
     }
 
+    /** تحميل سريع: بيقسم الملف لـ 8 حتت ويحمّلهم في نفس الوقت من السيرفر المباشر (زي برامج التحميل) */
     suspend fun download(u: String, to: File, prog: (Long, Long) -> Unit) = withContext(Dispatchers.IO) {
-        val c = open(u)
-        if (c.responseCode >= 400) throw Exception("HTTP " + c.responseCode)
-        val total = c.contentLengthLong
-        val tmp = File(to.path + ".dl")
-        c.inputStream.use { inp ->
-            tmp.outputStream().use { out ->
-                val buf = ByteArray(256 * 1024); var got = 0L; var last = 0L
-                while (true) {
-                    val n = inp.read(buf); if (n < 0) break
-                    out.write(buf, 0, n); got += n
-                    if (got - last > 512 * 1024) { last = got; withContext(Dispatchers.Main) { prog(got, total) } }
-                }
+        // 1) نوصل للسيرفر الحقيقي ونعرف الحجم ولو بيدعم التقسيم
+        var url = u; var total = -1L; var ranges = false
+        run {
+            var n = 0
+            while (true) {
+                val c = URL(url).openConnection() as HttpURLConnection
+                c.connectTimeout = 20000; c.readTimeout = 30000; c.instanceFollowRedirects = false
+                c.setRequestProperty("User-Agent", "Maktabati/1.0 (Android)"); c.setRequestProperty("Range", "bytes=0-0")
+                val code = c.responseCode
+                if (code in 300..399 && n < 8) { url = URL(URL(url), c.getHeaderField("Location")).toString(); c.disconnect(); n++; continue }
+                if (code >= 400) { c.disconnect(); throw Exception("HTTP $code") }
+                val cr = c.getHeaderField("Content-Range")
+                if (code == 206 && cr != null) { ranges = true; total = cr.substringAfter("/").trim().toLongOrNull() ?: -1 } else total = c.contentLengthLong
+                c.disconnect(); break
             }
         }
-        tmp.renameTo(to)
+        val tmp = File(to.path + ".dl")
+        val got = java.util.concurrent.atomic.AtomicLong(0)
+        val tick = launch { while (isActive) { kotlinx.coroutines.delay(300); val g = got.get(); withContext(Dispatchers.Main) { prog(g, total) } } }
+        try {
+            if (ranges && total > 3L * 1048576) {
+                java.io.RandomAccessFile(tmp, "rw").use { it.setLength(total) }
+                val k = if (total > 40L * 1048576) 10 else if (total > 12L * 1048576) 8 else 4
+                val sz = (total + k - 1) / k
+                coroutineScope {
+                    (0 until k).map { i ->
+                        async(Dispatchers.IO) {
+                            val a = i * sz; val e = minOf(total - 1, a + sz - 1); var pos = a; var tries = 0
+                            while (pos <= e) {
+                                try {
+                                    val c = URL(url).openConnection() as HttpURLConnection
+                                    c.connectTimeout = 20000; c.readTimeout = 45000
+                                    c.setRequestProperty("User-Agent", "Maktabati/1.0 (Android)"); c.setRequestProperty("Range", "bytes=$pos-$e")
+                                    if (c.responseCode != 206) throw Exception("HTTP " + c.responseCode)
+                                    java.io.RandomAccessFile(tmp, "rw").use { raf ->
+                                        raf.seek(pos)
+                                        c.inputStream.use { inp ->
+                                            val buf = ByteArray(128 * 1024)
+                                            while (pos <= e) { val n = inp.read(buf); if (n < 0) break; raf.write(buf, 0, n); pos += n; got.addAndGet(n.toLong()) }
+                                        }
+                                    }
+                                } catch (x: Exception) { if (++tries > 6) throw x; kotlinx.coroutines.delay(800L * tries) }
+                            }
+                        }
+                    }.awaitAll()
+                }
+            } else {
+                val c = open(url)
+                if (c.responseCode >= 400) throw Exception("HTTP " + c.responseCode)
+                if (total <= 0) total = c.contentLengthLong
+                c.inputStream.use { inp -> tmp.outputStream().use { out ->
+                    val buf = ByteArray(256 * 1024)
+                    while (true) { val n = inp.read(buf); if (n < 0) break; out.write(buf, 0, n); got.addAndGet(n.toLong()) }
+                } }
+            }
+        } finally { tick.cancel() }
+        if (!tmp.renameTo(to)) { tmp.copyTo(to, true); tmp.delete() }
     }
 
     fun iaUrl(id: String, f: String) = "https://archive.org/download/" + URLEncoder.encode(id, "UTF-8") + "/" + f.split("/").joinToString("/") { URLEncoder.encode(it, "UTF-8").replace("+", "%20") }
@@ -192,14 +235,16 @@ object Net {
         val bt = b.optString("t").replace(Regex("\\(.*\\)"), "").trim(); val au = auth(b)
         val qs = listOf("title:($bt) AND creator:($au)", "title:($bt)", "($bt $au)")
         val seen = HashSet<String>(); val docs = ArrayList<JSONObject>()
-        for (q in qs) try {
+        val res = coroutineScope { qs.map { q -> async(Dispatchers.IO) { try {
             val u = "https://archive.org/advancedsearch.php?q=" + URLEncoder.encode("$q AND mediatype:texts", "UTF-8") + "&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=downloads&rows=12&sort[]=downloads+desc&output=json"
-            val a = JSONObject(getText(u)).getJSONObject("response").getJSONArray("docs")
-            for (k in 0 until a.length()) { val d = a.getJSONObject(k); if (seen.add(d.optString("identifier"))) docs.add(d) }
-        } catch (_: Exception) {}
+            JSONObject(getText(u)).getJSONObject("response").getJSONArray("docs")
+        } catch (_: Exception) { null } } }.awaitAll() }
+        for (a in res) if (a != null) for (k in 0 until a.length()) { val d = a.getJSONObject(k); if (seen.add(d.optString("identifier"))) docs.add(d) }
         val best = docs.map { it to score(it, b) }.filter { it.second >= 40 }.sortedByDescending { it.second }.take(4)
-        for ((d, _) in best) try {
-            val m = JSONObject(getText("https://archive.org/metadata/" + URLEncoder.encode(d.optString("identifier"), "UTF-8")))
+        val metas = coroutineScope { best.map { (d, _) -> async(Dispatchers.IO) { try { JSONObject(getText("https://archive.org/metadata/" + URLEncoder.encode(d.optString("identifier"), "UTF-8"))) } catch (_: Exception) { null } } }.awaitAll() }
+        for ((idx, pr) in best.withIndex()) try {
+            val d = pr.first
+            val m = metas[idx] ?: continue
             val fs = m.optJSONArray("files") ?: continue
             val l = (0 until fs.length()).map { fs.getJSONObject(it) }
                 .filter { val n = it.optString("name"); n.endsWith(".pdf", true) && !n.endsWith("_text.pdf", true) && (it.optString("size").toLongOrNull() ?: 0) < 180L * 1048576 }

@@ -46,6 +46,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -110,11 +112,18 @@ fun App(incoming: MutableState<Intent?>) {
                 }
                 val parts = Net.parts(b)
                 if (parts.isEmpty()) throw Exception("مفيش PDF")
-                parts.forEachIndexed { i, f ->
-                    val to = File(Lib.dir, "books/" + (if (i == 0) "$id.pdf" else "$id#part${i + 1}.pdf"))
-                    if (!to.exists()) Net.download(Net.iaUrl(b.optString("ia"), f), to) { got, tot ->
-                        dl[id] = ((i + (if (tot > 0) got.toFloat() / tot else 0f)) / parts.size).coerceIn(0f, 1f)
-                    }
+                // الأجزاء كلها بتتحمّل مع بعض في نفس الوقت
+                val pr = FloatArray(parts.size)
+                kotlinx.coroutines.coroutineScope {
+                    parts.mapIndexed { i, f ->
+                        async {
+                            val to = File(Lib.dir, "books/" + (if (i == 0) "$id.pdf" else "$id#part${i + 1}.pdf"))
+                            if (!to.exists()) Net.download(Net.iaUrl(b.optString("ia"), f), to) { got, tot ->
+                                pr[i] = if (tot > 0) (got.toFloat() / tot).coerceIn(0f, 1f) else 0f
+                                dl[id] = (pr.sum() / parts.size).coerceIn(0f, 0.999f)
+                            } else pr[i] = 1f
+                        }
+                    }.awaitAll()
                 }
                 cover(b)
                 Lib.save(); dl.remove(id)
