@@ -8634,7 +8634,7 @@ var g0=window.lbGoal;if(g0)window.lbGoal=function(){g0.apply(this,arguments);set
 function J(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}}
 function bk(id){return (S.books||[]).filter(function(x){return x.id===id})[0]}
 window.bkOpenApp=function(){var c=window.bnyLinkMake&&bnyLinkMake();if(!c){toast('⚠️ لازم البرنامج يكون متزامن مع حسابك الأول');return}
- var u='bnylib://link?c='+encodeURIComponent(c),N=window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform();
+ try{navigator.clipboard&&navigator.clipboard.writeText(c).catch(function(){})}catch(e){}var u='bnylib://link?c='+encodeURIComponent(c),N=window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform();
  if(N){try{var A=Capacitor.Plugins&&Capacitor.Plugins.App;if(A&&A.openUrl){A.openUrl({url:u}).catch(function(){location.href=u});return}}catch(e){}}
  location.href=u;setTimeout(function(){if(!document.hidden){var w=document.createElement('div');w.className='ov';w.onclick=function(e){if(e.target===w||e.target.classList.contains('rx'))w.remove()};w.innerHTML="<div class='dlg'><h2>📱 تطبيق مكتبتي</h2><p style='line-height:1.9'>لو التطبيق مفتحش لوحده: نزّل <b>Maktabati.apk</b> وسطّبه، وبعدين دوس الزرار تاني.<br>أو افتح التطبيق ← «🔗 اربط ببنيان» والصق الكود ده:</p><textarea readonly style='width:100%;min-height:90px;direction:ltr;font-size:11px;font-family:monospace'>"+c+"</textarea><button type='button' class='rx' style='width:100%'>قفل</button></div>";document.body.appendChild(w)}},1800)};
 var busy=0,last=0;window.bkAppPull=async function(force){var c=J('bny_sync');if(!c||!c.token||!c.repo||busy||typeof AUTH==='undefined'||!AUTH)return;if(!force&&Date.now()-last<120000)return;busy=1;last=Date.now();

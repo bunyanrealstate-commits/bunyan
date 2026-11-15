@@ -188,8 +188,10 @@ object Lib {
         if (link == null) return@withContext "مش مربوط بحساب بنيان"
         syncing = true
         try {
-            push()
+            try { push() } catch (_: Exception) {}
             val (code, txt) = gh(link!!.optString("p", "book.json"), raw = true)
+            if (code == 401 || code == 403) return@withContext "مفتاح الربط مش شغال ($code) — اربط تاني من بنيان"
+            if (code == 404) return@withContext "ملف بياناتك مش لاقيه (404)"
             if (code != 200) return@withContext "مقدرتش أجيب البيانات ($code)"
             val d = JSONObject(txt)
             val done = HashSet(arr(d.optJSONArray("bkAppDone")).map { it.toString() })
@@ -241,7 +243,7 @@ object Lib {
             queue = ArrayList(arr(d.optJSONArray("bq")).map { it.toString() })
             pulledAt = System.currentTimeMillis()
             withContext(Dispatchers.Main) { save() }
-            "تمام ✅"
+            "تمام ✅ (${books.size} كتاب)"
         } catch (e: Exception) { "مفيش نت؟ (${e.message?.take(40)})" } finally { syncing = false }
     }
 
@@ -257,7 +259,7 @@ object Lib {
     }
 
     fun parseLink(code: String): JSONObject? {
-        var s = code.trim().substringAfter("BNYLINK-", "")
+        var s = Regex("BNYLINK-([A-Za-z0-9_-]+)").find(code.replace(Regex("\\s+"), ""))?.groupValues?.get(1) ?: ""
         if (s.isEmpty()) return null
         s = s.replace("-", "+").replace("_", "/"); while (s.length % 4 != 0) s += "="
         return try { val o = JSONObject(String(Base64.decode(s, Base64.DEFAULT))); if (o.optString("t").isEmpty()) null else o } catch (_: Exception) { null }

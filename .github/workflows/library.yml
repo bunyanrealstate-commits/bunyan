@@ -26,6 +26,6 @@ jobs:
           git add . && git commit -q -m "build log" && git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git apk-library-log
       - name: Publish APK to branch apk-library
         run: |
-          mkdir /tmp/out && cp library-app/app/build/outputs/apk/debug/app-debug.apk /tmp/out/Maktabati.apk
+          mkdir /tmp/out && cp library-app/app/build/outputs/apk/debug/app-debug.apk /tmp/out/Maktabati.apk && echo "{\"code\":${{ github.run_number }}}" > /tmp/out/version.json
           cd /tmp/out && git init -q -b apk-library && git config user.name github-actions && git config user.email actions@github.com
           git add . && git commit -q -m "Build Maktabati APK" && git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git apk-library

@@ -132,14 +132,26 @@ fun App(incoming: MutableState<Intent?>) {
         val d = itn.data ?: return@LaunchedEffect
         if (d.scheme == "bnylib") {
             val code = d.getQueryParameter("c") ?: d.fragment ?: ""
-            val o = Lib.parseLink(code)
-            if (o == null) toast("⚠️ كود الربط مش مظبوط") else {
-                Lib.link = JSONObject().put("r", o.optString("r")).put("t", o.optString("t")).put("p", o.optString("p", "book.json")).put("g", o.optString("g"))
-                Lib.save(); toast("✅ اتربط بحساب بنيان — بنزّل مكتبتك…"); Lib.msg = Lib.sync(); screen = "home"
-            }
+            if (!linkWith(code)) toast("⚠️ كود الربط مش مظبوط") else { toast("✅ اتربط بحساب بنيان — بنزّل مكتبتك…"); Lib.msg = Lib.sync(); toast(Lib.msg); screen = "home" }
         } else if (itn.action == Intent.ACTION_VIEW) addFromUri(ctx, d)?.let { b -> reading = b }
     }
     LaunchedEffect(Unit) { if (Lib.link != null) Lib.msg = Lib.sync() }
+    // تحديث التطبيق لوحده + ربط تلقائي لو كود الربط متنسخ (زرار بنيان بينسخه)
+    val life = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    DisposableEffect(life) {
+        val ob = androidx.lifecycle.LifecycleEventObserver { _, e ->
+            if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) scope.launch {
+                kotlinx.coroutines.delay(700)
+                if (Lib.link == null) try {
+                    val cm = ctx.getSystemService(android.content.ClipboardManager::class.java)
+                    val t = cm.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(ctx)?.toString() ?: ""
+                    if (t.contains("BNYLINK-") && linkWith(t)) { toast("✅ اتربط بحساب بنيان — بنزّل مكتبتك…"); Lib.msg = Lib.sync(); toast(Lib.msg) }
+                } catch (_: Exception) {}
+                Updater.check(ctx)?.let { toast(it) }
+            }
+        }
+        life.lifecycle.addObserver(ob); onDispose { life.lifecycle.removeObserver(ob) }
+    }
 
     val r = reading
     if (r != null) { ReaderScreen(r) { from, to, read ->
@@ -223,6 +235,11 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 Text("📚 مكتبتي", fontSize = 26.sp, fontWeight = FontWeight.Black, color = Ink, modifier = Modifier.weight(1f))
                 if (Lib.syncing) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                 else if (Lib.link != null) Text("🔄", fontSize = 20.sp, modifier = Modifier.clickable { onSync() }.padding(8.dp))
+            }
+        }
+        if (Lib.link != null && Lib.msg.isNotEmpty() && !Lib.msg.startsWith("تمام")) item(span = { GridItemSpan(3) }) {
+            Surface(onClick = onSync, shape = RoundedCornerShape(14.dp), color = Color(0xFFFDECEC)) {
+                Text("⚠️ المزامنة مع بنيان: " + Lib.msg + " — دوس هنا تجرب تاني", Modifier.padding(12.dp), color = Color(0xFFB3261E), fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
         }
         if (Lib.link == null) item(span = { GridItemSpan(3) }) {
@@ -404,6 +421,7 @@ fun LinkScreen(onBack: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) { IconBtn("→") { onBack() }; Spacer(Modifier.width(10.dp)); Text("🔗 الربط بحساب بنيان", fontWeight = FontWeight.Black, fontSize = 19.sp, color = Ink) }
         if (Lib.link != null) {
             Text("✅ التطبيق مربوط بحسابك. كتبك وتقدمك بيتزامنوا مع مكتبتي في بنيان.", color = Green, fontWeight = FontWeight.Bold)
+            if (Lib.msg.isNotEmpty()) Text("آخر مزامنة: " + Lib.msg, color = Muted, fontSize = 13.sp)
             OutlinedButton({ scope.launch { Toast.makeText(ctx, Lib.sync(), Toast.LENGTH_SHORT).show() } }, Modifier.fillMaxWidth()) { Text("🔄 زامن دلوقتي") }
             TextButton({ Lib.link = null; Lib.save() }) { Text("فك الربط", color = Color(0xFFB3261E)) }
         } else {
@@ -414,10 +432,13 @@ fun LinkScreen(onBack: () -> Unit) {
                 val o = Lib.parseLink(code)
                 if (o == null) Toast.makeText(ctx, "⚠️ الكود مش مظبوط", Toast.LENGTH_SHORT).show() else {
                     Lib.link = JSONObject().put("r", o.optString("r")).put("t", o.optString("t")).put("p", o.optString("p", "book.json")).put("g", o.optString("g"))
-                    Lib.save(); scope.launch { Toast.makeText(ctx, Lib.sync(), Toast.LENGTH_SHORT).show(); onBack() }
+                    Lib.save(); scope.launch { Lib.msg = Lib.sync(); Toast.makeText(ctx, Lib.msg, Toast.LENGTH_LONG).show(); onBack() }
                 }
             }, Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = Green)) { Text("اربط", fontWeight = FontWeight.Bold) }
         }
+        Spacer(Modifier.height(20.dp))
+        OutlinedButton({ scope.launch { Toast.makeText(ctx, Updater.check(ctx, true) ?: "", Toast.LENGTH_LONG).show() } }, Modifier.fillMaxWidth()) { Text("⬆️ شوف لو فيه تحديث للتطبيق") }
+        Text("نسخة التطبيق: " + Updater.myVersion(ctx) + " — بيتحدث لوحده", color = Muted, fontSize = 12.sp, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
     }
 }
 
@@ -429,4 +450,10 @@ suspend fun prepNext(b: JSONObject, p: Int) {
         val t = Net.ask("اكتب أول فقرة في الصفحة دي بالظبط زي ما هي مكتوبة (حوالي 300 حرف)، من غير رقم الصفحة ولا العنوان المتكرر ومن غير أي تعليق.", listOf(bm))?.trim() ?: return
         if (t.length > 30) { b.put("nx", JSONObject().put("p", p).put("t", t.take(330))); Lib.save() }
     } catch (_: Exception) {}
+}
+
+fun linkWith(code: String): Boolean {
+    val o = Lib.parseLink(code) ?: return false
+    Lib.link = JSONObject().put("r", o.optString("r")).put("t", o.optString("t")).put("p", o.optString("p", "book.json").ifEmpty { "book.json" }).put("g", o.optString("g"))
+    Lib.save(); return true
 }
