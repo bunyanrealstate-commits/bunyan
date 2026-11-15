@@ -103,6 +103,8 @@ jobs:
               call.resolve(r);
             }
             @PluginMethod
+            public void tone3(PluginCall call) { JSObject r = new JSObject(); r.put("ok", true); call.resolve(r); }
+            @PluginMethod
             public void accEnabled(PluginCall call) {
               JSObject r = new JSObject();
               try { String v = android.provider.Settings.Secure.getString(getContext().getContentResolver(), android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES); r.put("on", v != null && v.contains(getContext().getPackageName() + "/") && v.contains("BnySendService")); } catch (Exception e) { r.put("on", false); }
