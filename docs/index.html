@@ -9322,5 +9322,28 @@ var g0=window.lbGoal;if(g0)window.lbGoal=function(){g0.apply(this,arguments);set
 .rpgo{display:inline!important;margin:0 2px!important;padding:1px 7px!important;min-height:0!important;font-size:12px!important;border-radius:8px!important;font-weight:800;background:#e8f3ee!important;color:#1f7a55!important;border:0!important}
 .rin{display:flex;gap:6px}.rin input{flex:1;margin:0!important}.rin button{margin:0!important;width:auto!important;padding:0 16px!important}
 </style>
+<script id="libapp">
+/* تطبيق «مكتبتي» Native على الموبايل: زرار يفتحه ويربطه، ودمج تقدم القراية اللي بيكتبه التطبيق في lib-app.json */
+(function(){if(window.HBUILD)return;
+function J(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}}
+function bk(id){return (S.books||[]).filter(function(x){return x.id===id})[0]}
+window.bkOpenApp=function(){var c=window.bnyLinkMake&&bnyLinkMake();if(!c){toast('⚠️ لازم البرنامج يكون متزامن مع حسابك الأول');return}
+ var u='bnylib://link?c='+encodeURIComponent(c),N=window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform();
+ if(N){try{var A=Capacitor.Plugins&&Capacitor.Plugins.App;if(A&&A.openUrl){A.openUrl({url:u}).catch(function(){location.href=u});return}}catch(e){}}
+ location.href=u;setTimeout(function(){if(!document.hidden){var w=document.createElement('div');w.className='ov';w.onclick=function(e){if(e.target===w||e.target.classList.contains('rx'))w.remove()};w.innerHTML="<div class='dlg'><h2>📱 تطبيق مكتبتي</h2><p style='line-height:1.9'>لو التطبيق مفتحش لوحده: نزّل <b>Maktabati.apk</b> وسطّبه، وبعدين دوس الزرار تاني.<br>أو افتح التطبيق ← «🔗 اربط ببنيان» والصق الكود ده:</p><textarea readonly style='width:100%;min-height:90px;direction:ltr;font-size:11px;font-family:monospace'>"+c+"</textarea><button type='button' class='rx' style='width:100%'>قفل</button></div>";document.body.appendChild(w)}},1800)};
+var busy=0,last=0;window.bkAppPull=async function(force){var c=J('bny_sync');if(!c||!c.token||!c.repo||busy||typeof AUTH==='undefined'||!AUTH)return;if(!force&&Date.now()-last<120000)return;busy=1;last=Date.now();
+ try{var r=await fetch('https://api.github.com/repos/'+c.repo+'/contents/lib-app.json',{headers:{Authorization:'Bearer '+c.token,Accept:'application/vnd.github.raw','Cache-Control':'no-cache'},cache:'no-store'});if(!r.ok)return;var d=await r.json();if(!d||!d.books)return;
+  S.bkAppDone=S.bkAppDone||[];var done={},ch=0;S.bkAppDone.forEach(function(x){done[x]=1});
+  Object.keys(d.books).forEach(function(id){var x=d.books[id],b=bk(id);
+   if(!b&&x.nw&&x.o){b=JSON.parse(JSON.stringify(x.o));S.books=S.books||[];S.books.unshift(b);ch++}if(!b)return;
+   if((+x.rd||0)>(+b.rd||0)){['cur','sh','sd','fd','pg','rd'].forEach(function(k){if(x[k]!=null&&b[k]!==x[k]){b[k]=x[k];ch++}})}
+   if((+x.maxp||0)>(+b.maxp||0)){b.maxp=+x.maxp;ch++}
+   (x.add||[]).forEach(function(a){if(!a||done[a.i])return;b.log=b.log||[];var l=b.log.filter(function(y){return y.d===a.d})[0];if(l)l.p=(+l.p||0)+(+a.p||0);else b.log.push({d:a.d,p:+a.p||0});S.bkAppDone.push(a.i);done[a.i]=1;ch++})});
+  if(S.bkAppDone.length>600)S.bkAppDone=S.bkAppDone.slice(-600);
+  if(ch){try{save()}catch(e){}if(S.tab==='books')render()}}catch(e){}finally{busy=0}};
+setTimeout(function(){bkAppPull(1)},6000);document.addEventListener('visibilitychange',function(){if(!document.hidden)bkAppPull()});
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(typeof AUTH!=='undefined'&&AUTH&&S.tab==='books'){bkAppPull();var a=document.getElementById('lib2');if(a&&!a.querySelector('.lappb')){var ac=a.querySelector('.lacts');if(ac)ac.insertAdjacentHTML('afterend',"<button type='button' class='lappb' onclick='bkOpenApp()'>📱 افتح في تطبيق مكتبتي</button>")}}}catch(e){}return o};
+})();</script>
+<style id="libappcss">#lib2 .lappb{width:100%;margin:10px 0 0!important;padding:11px!important;border-radius:16px!important;background:#e8f3ee!important;color:#1f7a55!important;border:1.5px dashed #1f7a55!important;font-weight:800;font-size:14px!important}</style>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
