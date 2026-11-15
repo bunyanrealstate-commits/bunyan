@@ -7108,7 +7108,7 @@ function poster(){var d=load(),P=PM(),U0=[];d.villas.forEach(function(v){(v.unit
  dt=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase(),
  hdTxt=function(x){return x.mo?(d.lab&&d.lab.mo?LB('mo',''):"MONTHLY<small>AED / MONTH</small>"):(PM().m==='sep'?(x.hh||x.h):(d.lab&&d.lab.pay?LB('pay',''):"RENT / YEAR<em>"+E(x.h)+"</em>"))};
  var DP=d.dtpos||'r',DTH="<div class='dt' data-e='lab:upd'>"+LB('upd','UPDATED')+" · "+dt+"</div>";
- var h="<div id='updposter' class='v4 lt"+(all.length>8?' cmp':'')+" dt"+DP+(MODE==='f'?' fz th-'+(d.fzt||'c'):'')+"'>"+
+ var h="<div id='updposter' class='v4 lt"+(all.length>8?' cmp':'')+" dt"+DP+(MODE==='f'?' fz th-c':'')+"'>"+
   "<div class='h4'><div class='h4in'><div class='h4top'>"+(DP==='r'||DP==='l'?DTH:'')+"</div>"+
   "<div class='tt' data-e='title'>"+E(d.title||'AVAILABLE UNITS')+"</div>"+(DP==='u'?"<div class='rule rdt'><i></i>"+DTH+"<i></i></div>":"<div class='rule'><i></i><b>◆</b><i></i></div>")+"</div></div><div class='bd4'>";
  L.forEach(function(v){var U=(v.units||[]).filter(shown);/* booked flats stay in their own place */
@@ -7138,7 +7138,6 @@ window.updTab=function(){var d=load();setTimeout(fit,0);var op=window.__updOpen|
   "<div class='uedh'"+(PV?"":" hidden")+">✏️ دوس على أي كلمة أو رقم في الصورة وعدّله</div><div id='updprev'"+(PV?"":" class='hid'")+">"+poster()+"</div></div>"+
   "<div class='card u2 usecs'>"+
   sec('v','🏡','الفلل والشقق',d.villas.length+' فيلا • '+tot+' شقة',vh+"<div class='ugrid'><button class='p' onclick='updVilla()'>➕ فيلا</button><button onclick='updToggleBk()'>"+(d.hideBooked?'👁 أظهر المحجوز':'🙈 اخفي المحجوز')+"</button></div>")+
-  (MODE==='f'?sec('c','🎨','لون الصورة',({n:'كحلي',c:'تيراكوتا',o:'خشب',s:'زيتوني',r:'وردي'})[d.fzt||'c'],"<div id='fzpick'>"+[['n','كحلي','#1b2a4a','#c79a3a'],['c','تيراكوتا','#7a3b24','#c8683f'],['o','خشب','#4a3a2a','#a8763e'],['s','زيتوني','#2f4a3a','#b58a4c'],['r','وردي','#5a2a3c','#c98b8f']].map(function(t){var on=(d.fzt||'c')===t[0];return "<button type='button' class='"+(on?'on':'')+"' onclick=\"updFz('"+t[0]+"')\"><i style='background:linear-gradient(135deg,"+t[2]+" 55%,"+t[3]+" 55%)'></i>"+t[1]+"</button>"}).join('')+"</div>"):'')+
   sec('k','🧱','الأعمدة',colOrder(d).filter(function(k){return !(d.hc||{})[k]}).length+' ظاهر',colList(d))+
   sec('p','📞','أرقام التواصل',phs(d).length+' رقم',phInline(d))+
   sec('t','🔤','كلام الصورة','العنوان • التاريخ • التأمين',txtInline(d))+
