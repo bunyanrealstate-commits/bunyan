@@ -6029,6 +6029,8 @@ var R=[
   check:function(){return window.hkShare&&window.updPut?[]:['مشاركة العقد والأبديت مع حكيم مش شغالة']},fix:null},
  {id:'updcols',area:'الأبديت',t:'مكانش ينفع تغيّر ترتيب أعمدة صورة الأبديت، والسعر والنوع كانوا مش بارزين',
   check:function(){if(S.tab!=='upd')return [];var o=[];if(typeof window.updCols!=='function')o.push('زرار ترتيب الأعمدة مش موجود');var t=document.querySelector('#updposter:not(.fz) tr.r:not(.rb) td.ty');if(t&&!bnyIsRed(getComputedStyle(t).color))o.push('نوع الشقة مش باللون الأحمر');return o},fix:null},
+ {id:'bkhelp',area:'مكتبتي',t:'أسامه قال «ساعدني أقرأ لأني كسول» — في القارئ: عدّاد للجلسة وتشجيع عند ١٠ دقايق وعند خلصان هدف اليوم، وزرار 🎧 يقرأ الكتاب بصوت ويقلب الصفحات لوحده',
+  check:function(){var r=document.getElementById('bkr');return r&&!r.querySelector('.ls')?['زرار «🎧 اسمع» مش ظاهر في القارئ']:[]},fix:null},
  {id:'trbar2',area:'الشكل',t:'أسامه قال تنبيه «اتحذف — تراجع» كبير وفي نص الشاشة — بقى صغير ومختصر وتحت على اليمين',
   check:function(){var b=document.getElementById('trbar');if(!b)return [];var r=b.getBoundingClientRect();return r.top<innerHeight*.6?['تنبيه التراجع طالع في نص الشاشة']:[]},fix:null},
  {id:'lib2',area:'مكتبتي',t:'أسامه طلب مكتبتي بأحسن شكل وترتيب وألوان تشجّع على القراية (وقال إنه كسول في القراية ومش فاهم «يوم ورا بعض»)',
@@ -8145,8 +8147,8 @@ window.bkSearch=function(q0){var o=document.createElement('div');o.className='ov
 /* ---- the reader ---- */
 var R=null;
 window.bkRead=async function(id){var b=bk(id);if(!b)return;var blob=await fget(id);if(!blob){toast('ملف الكتاب مش على الجهاز ده — ارفعه هنا');bkUpload(id);return}
- if(b.sh==='want'){b.sh='now';b.sd=b.sd||today()}if(b.maxp==null)b.maxp=+b.cur||0;
- var o=document.createElement('div');o.id='bkr';o.innerHTML="<div class='rbar'><button class='x' title='قفل'>✕</button><div class='rt'><b></b><small class='rp'></small></div><button class='bm' title='علامة'>🔖</button><button class='qt' title='اقتباس'>💬</button><button class='nt' title='الوضع الليلي'>🌙</button><button class='zm' data-z='-1'>A−</button><button class='zm' data-z='1'>A+</button></div><div class='rsc'><div class='rpages'></div></div><div class='rfoot'><input type='range' min='1' value='1' class='rr'><div class='rbms'></div></div><div class='rload'>⏳ بيفتح الكتاب…</div>";
+ if(b.sh==='want'){b.sh='now';b.sd=b.sd||today()}if(b.maxp==null)b.maxp=+b.cur||1;
+ var o=document.createElement('div');o.id='bkr';o.innerHTML="<div class='rbar'><button class='x' title='قفل'>✕</button><div class='rt'><b></b><small class='rp'></small><small class='rss'></small></div><button class='ls' title='اسمع الكتاب'>🎧</button><button class='bm' title='علامة'>🔖</button><button class='qt' title='اقتباس'>💬</button><button class='nt' title='الوضع الليلي'>🌙</button><button class='zm' data-z='-1'>A−</button><button class='zm' data-z='1'>A+</button></div><div class='rsc'><div class='rpages'></div></div><div class='rfoot'><input type='range' min='1' value='1' class='rr'><div class='rbms'></div></div><div class='rload'>⏳ بيفتح الكتاب…</div>";
  document.body.appendChild(o);document.documentElement.classList.add('bkropen');o.querySelector('.rt b').textContent=b.t;
  var night=false;try{night=localStorage.getItem('bny_bkr_n')==='1'}catch(e){}o.classList.toggle('night',night);
  var zoom=1;try{zoom=+localStorage.getItem('bny_bkr_z')||1}catch(e){}
@@ -8173,6 +8175,17 @@ window.bkRead=async function(id){var b=bk(id);if(!b)return;var blob=await fget(i
  var pop=function(){if(document.getElementById('bkr'))close()};try{history.pushState({bkr:1},'');window.addEventListener('popstate',pop)}catch(e){}
  o.querySelector('.x').onclick=function(){try{if(history.state&&history.state.bkr){history.back();return}}catch(e){}close()};
  document.addEventListener('visibilitychange',function vc(){if(!document.getElementById('bkr')){document.removeEventListener('visibilitychange',vc);return}if(document.hidden){b.cur=cur;try{save()}catch(e){}}});
+ /* جلسة القراية: عدّاد وقت + صفحات الجلسة + تشجيع */
+ var t0=Date.now(),p0=cur,cheer={};var tick=setInterval(function(){if(!document.getElementById('bkr')){clearInterval(tick);return}var sec=Math.round((Date.now()-t0)/1000),mm=Math.floor(sec/60),pp=Math.max(0,cur-p0);o.querySelector('.rss').textContent='⏱ '+mm+':'+String(sec%60).padStart(2,'0')+(pp?' • +'+pp+' صفحة':'');
+  if(mm>=10&&!cheer.t){cheer.t=1;toast('👏 عشر دقايق قراية! كمّل لو قادر')}var td=0;(b.log||[]).forEach(function(l){if(l.d===today())td+=+l.p||0});td+=Math.max(0,cur-(+b.maxp||0));if(td>=(+S.bdg||10)&&!cheer.g){cheer.g=1;toast('🎯 خلصت هدف النهارده ('+(+S.bdg||10)+' صفحات) — عاش!')}},1000);
+ /* 🎧 اسمع الكتاب: بيقرا الصفحة بصوت ويقلب لوحده */
+ var TS=null;try{TS=window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()&&Capacitor.Plugins&&Capacitor.Plugins.TextToSpeech}catch(e){}var LS=false,lb=o.querySelector('.ls');
+ function say(t){return new Promise(function(res){if(!LS)return res();if(TS){TS.speak({text:t,lang:'ar-SA',rate:.95,volume:1}).then(res,res);return}try{var u=new SpeechSynthesisUtterance(t);u.lang='ar';u.rate=.95;u.onend=res;u.onerror=res;speechSynthesis.speak(u)}catch(e){res()}})}
+ function hush(){LS=false;lb.classList.remove('on');try{TS&&TS.stop()}catch(e){}try{speechSynthesis.cancel()}catch(e){}}
+ async function listen(){while(LS&&document.getElementById('bkr')){var pg=await doc.getPage(cur),tc=await pg.getTextContent(),t=tc.items.map(function(i){return i.str}).join(' ').replace(/\s+/g,' ').trim();
+   if(t.length<15){toast('📷 الصفحة دي صورة مش كلام — مقدرش أقراها بصوت');hush();return}var parts=t.match(/[^.!؟?،\n]{1,220}[.!؟?،]?/g)||[t];for(var i=0;i<parts.length&&LS;i++)await say(parts[i]);if(!LS)return;if(cur>=N){hush();toast('🎉 خلصت الكتاب!');return}go(cur+1,true);await new Promise(function(r){setTimeout(r,600)})}}
+ lb.onclick=function(){if(LS){hush();return}LS=true;lb.classList.add('on');toast('🎧 هقرالك — دوس 🎧 تاني علشان أوقف');listen()};
+ var cl0=close;close=function(){hush();clearInterval(tick);cl0()};o.querySelector('.x').onclick=function(){try{if(history.state&&history.state.bkr){history.back();return}}catch(e){}close()};window.removeEventListener('popstate',pop);pop=function(){if(document.getElementById('bkr'))close()};window.addEventListener('popstate',pop);
  R={close:close}};
 /* ---- buttons in «مكتبتي» ---- */
 function ui(){var a=document.getElementById('app');if(!a||S.tab!=='books'||a.querySelector('#bkup'))return;var c1=a.querySelector('.card');if(c1){var x=document.createElement('div');x.id='bkup';x.innerHTML="<button class='p' onclick='bkSearch()'>🔎 دوّر على كتاب ونزّله أوتوماتيك</button><button onclick='bkUpload()'>📥 عندي ملف PDF على الموبايل</button>";c1.appendChild(x)}
@@ -8189,7 +8202,7 @@ html.bkropen body{overflow:hidden}
 #bkr{position:fixed;inset:0;z-index:445;background:#e9e6df;display:flex;flex-direction:column;color:#1d2733}
 #bkr .rbar{display:flex;align-items:center;gap:6px;padding:calc(8px + env(safe-area-inset-top,0px)) 10px 8px;background:#fffdf8;border-bottom:1px solid #ddd6c8;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 #bkr .rbar button{margin:0!important;min-height:0!important;height:36px;min-width:36px;padding:0 8px!important;border-radius:10px!important;font-size:14px!important;font-weight:800;background:#f3efe6!important;border:1px solid #e0d8c8!important;color:#3a3226!important}
-#bkr .rbar .bm.on{background:#ffe9a8!important}
+#bkr .rbar .bm.on,#bkr .rbar .ls.on{background:#ffe9a8!important}#bkr .rt .rss{color:#1f7a55;opacity:1!important}
 #bkr .rt{flex:1;min-width:0;display:flex;flex-direction:column}#bkr .rt b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#bkr .rt small{font-size:11.5px;opacity:.7;font-weight:700}
 #bkr .rsc{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:8px 0}
 #bkr .rpages{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:min-content;padding:0 8px}
