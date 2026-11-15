@@ -6723,6 +6723,8 @@ var R=[
   check:function(){return window.hkShare&&window.updPut?[]:['مشاركة العقد والأبديت مع حكيم مش شغالة']},fix:null},
  {id:'updcols',area:'الأبديت',t:'مكانش ينفع تغيّر ترتيب أعمدة صورة الأبديت، والسعر والنوع كانوا مش بارزين',
   check:function(){if(S.tab!=='upd')return [];var o=[];if(typeof window.updCols!=='function')o.push('زرار ترتيب الأعمدة مش موجود');var t=document.querySelector('#updposter:not(.fz) tr.r:not(.rb) td.ty');if(t&&!bnyIsRed(getComputedStyle(t).color))o.push('نوع الشقة مش باللون الأحمر');return o},fix:null},
+ {id:'bkdwell',area:'مكتبتي',t:'أسامه قال «مقرأتش 15 صفحة، كنت بعمل اسكرول بس» — الصفحة بقت تتحسب بس لو فضلت قدامه 20 ثانية أو اتقرتله بالصوت',
+  check:function(){return []},fix:null},
  {id:'bkfast',area:'مكتبتي',t:'أسامه قال سرّع تحميل الكتب — البحث بقى بالتوازي، والتنزيل من السيرفر على طول وعلى كذا حتة في نفس الوقت، والأجزاء بتنزل مع بعض',
   check:function(){return []},fix:null},
  {id:'bkparts',area:'مكتبتي',t:'أسامه قال «النبأ العظيم» نزل أول ملف بس ونسي التاني — الكتب اللي متقسمة أجزاء بتنزل كلها وتتقري كأنها كتاب واحد، واللي نزل ناقص بيكمّل أول ما تفتحه',
@@ -8867,8 +8869,12 @@ window.bkRead=async function(id){var b=bk(id);if(!b)return;var blob=await fget(i
  function unload(c){Object.keys(rend).forEach(function(k){k=+k;if(Math.abs(k-c)>3){var d=wrap.children[k-1];if(d){d.innerHTML="<span>"+k+"</span>"}delete rend[k]}})}
  function visible(){var r=sc.getBoundingClientRect(),mid=r.top+r.height*.35,best=cur;for(var i=Math.max(1,cur-6);i<=Math.min(N,cur+6);i++){var e=wrap.children[i-1];if(!e)continue;var q=e.getBoundingClientRect();if(q.top<=mid&&q.bottom>mid){best=i;break}}if(best===cur){/* far jump */for(var j=1;j<=N;j++){var q2=wrap.children[j-1].getBoundingClientRect();if(q2.top<=mid&&q2.bottom>mid){best=j;break}}}return best}
  function lab(){o.querySelector('.rp').textContent='صفحة '+cur+' من '+N+' • '+Math.round(cur/N*100)+'%';rr.value=cur;var bms=(b.bm||[]);o.querySelector('.bm').classList.toggle('on',bms.indexOf(cur)>=0);o.querySelector('.rbms').innerHTML=bms.length?bms.map(function(p){return "<button data-g='"+p+"'>🔖 "+p+"</button>"}).join(''):''}
- var st=0;function persist(){clearTimeout(st);st=setTimeout(function(){var d=cur-(+b.maxp||0);if(d>0){b.log=b.log||[];var t=today(),l=b.log.filter(function(x){return x.d===t})[0];if(l)l.p+=d;else b.log.push({d:t,p:d});b.maxp=cur}b.cur=cur;b.rd=Date.now();try{save()}catch(e){}},1500)}
- function onpage(){var c=visible();if(c!==cur){cur=c;lab();persist();if(cur===N&&b.sh!=='done')setTimeout(function(){if(cur===N&&document.getElementById('bkr'))toast('🎉 وصلت لآخر صفحة — اقفل ودوس «✅ خلصته»')},800)}for(var i=Math.max(1,cur-1);i<=Math.min(N,cur+2);i++)draw(i);unload(cur)}
+ /* الصفحة بتتحسب «مقروءة» بس لو فضلت قدامك 20 ثانية على الأقل (أو اتقرتلك بالصوت) — الاسكرول السريع مش بيتحسب */
+ var MIN=20000,pEnter=Date.now(),pDone=false,sessRead=0,heard={};
+ function credit(p){if(pDone&&p===cur)return;if(p>(+b.maxp||0)){b.log=b.log||[];var t=today(),l=b.log.filter(function(x){return x.d===t})[0];if(l)l.p+=1;else b.log.push({d:t,p:1});b.maxp=p;sessRead++;try{save()}catch(e){}}if(p===cur)pDone=true}
+ function leave(p){if(!pDone&&(Date.now()-pEnter>=MIN||heard[p]))credit(p)}
+ var st=0;function persist(){clearTimeout(st);st=setTimeout(function(){b.cur=cur;b.rd=Date.now();try{save()}catch(e){}},1500)}
+ function onpage(){var c=visible();if(c!==cur){leave(cur);cur=c;pEnter=Date.now();pDone=false;lab();persist();if(cur===N&&b.sh!=='done')setTimeout(function(){if(cur===N&&document.getElementById('bkr'))toast('🎉 وصلت لآخر صفحة — اقفل ودوس «✅ خلصته»')},800)}for(var i=Math.max(1,cur-1);i<=Math.min(N,cur+2);i++)draw(i);unload(cur)}
  function go(p,smooth){p=Math.min(N,Math.max(1,p));var e=wrap.children[p-1];if(e)sc.scrollTo({top:e.offsetTop-8,behavior:smooth?'smooth':'auto'});cur=p;lab();onpage()}
  build();setTimeout(function(){go(cur)},30);var tk=0;sc.addEventListener('scroll',function(){if(tk)return;tk=1;requestAnimationFrame(function(){tk=0;onpage()})},{passive:true});
  rr.oninput=function(){o.querySelector('.rp').textContent='صفحة '+rr.value+' من '+N};rr.onchange=function(){go(+rr.value)};
@@ -8877,13 +8883,13 @@ window.bkRead=async function(id){var b=bk(id);if(!b)return;var blob=await fget(i
  o.querySelector('.qt').onclick=function(){b.cur=cur;window.bkQuotes&&bkQuotes(b.id)};
  o.querySelector('.nt').onclick=function(){night=!night;o.classList.toggle('night',night);try{localStorage.setItem('bny_bkr_n',night?'1':'0')}catch(e){}};
  [].forEach.call(o.querySelectorAll('.zm'),function(z){z.onclick=function(){zoom=Math.min(2.5,Math.max(.6,zoom+(+z.dataset.z)*.2));try{localStorage.setItem('bny_bkr_z',zoom)}catch(e){}var c=cur;build();go(c)}});
- var close=function(){clearTimeout(st);var d=cur-(+b.maxp||0);if(d>0){b.log=b.log||[];var t=today(),l=b.log.filter(function(x){return x.d===t})[0];if(l)l.p+=d;else b.log.push({d:t,p:d});b.maxp=cur}b.cur=cur;b.rd=Date.now();try{save()}catch(e){}try{doc.destroy()}catch(e){}o.remove();document.documentElement.classList.remove('bkropen');R=null;window.removeEventListener('popstate',pop);try{S.tab='books';render()}catch(e){}setTimeout(function(){try{if(S.tab!=='books'){S.tab='books';render()}}catch(e){}},120)};
+ var close=function(){clearTimeout(st);leave(cur);b.cur=cur;b.rd=Date.now();try{save()}catch(e){}try{doc.destroy()}catch(e){}o.remove();document.documentElement.classList.remove('bkropen');R=null;window.removeEventListener('popstate',pop);try{S.tab='books';render()}catch(e){}setTimeout(function(){try{if(S.tab!=='books'){S.tab='books';render()}}catch(e){}},120)};
  var pop=function(){if(document.getElementById('bkr'))close()};try{history.pushState({bkr:1},'');window.addEventListener('popstate',pop)}catch(e){}
  o.querySelector('.x').onclick=function(){try{if(history.state&&history.state.bkr){history.back();return}}catch(e){}close()};
  document.addEventListener('visibilitychange',function vc(){if(!document.getElementById('bkr')){document.removeEventListener('visibilitychange',vc);return}if(document.hidden){b.cur=cur;try{save()}catch(e){}}});
  /* جلسة القراية: عدّاد وقت + صفحات الجلسة + تشجيع */
- var t0=Date.now(),p0=cur,cheer={};var tick=setInterval(function(){if(!document.getElementById('bkr')){clearInterval(tick);return}var sec=Math.round((Date.now()-t0)/1000),mm=Math.floor(sec/60),pp=Math.max(0,cur-p0);o.querySelector('.rss').textContent='⏱ '+mm+':'+String(sec%60).padStart(2,'0')+(pp?' • +'+pp+' صفحة':'');
-  if(mm>=10&&!cheer.t){cheer.t=1;toast('👏 عشر دقايق قراية! كمّل لو قادر')}var td=0;(b.log||[]).forEach(function(l){if(l.d===today())td+=+l.p||0});td+=Math.max(0,cur-(+b.maxp||0));if(td>=(+S.bdg||10)&&!cheer.g){cheer.g=1;toast('🎯 خلصت هدف النهارده ('+(+S.bdg||10)+' صفحات) — عاش!')}},1000);
+ var t0=Date.now(),p0=cur,cheer={};var tick=setInterval(function(){if(!document.getElementById('bkr')){clearInterval(tick);return}if(!pDone&&Date.now()-pEnter>=MIN)credit(cur);var sec=Math.round((Date.now()-t0)/1000),mm=Math.floor(sec/60),pp=sessRead;o.querySelector('.rss').textContent='⏱ '+mm+':'+String(sec%60).padStart(2,'0')+(pp?' • +'+pp+' صفحة':'');
+  if(mm>=10&&!cheer.t){cheer.t=1;toast('👏 عشر دقايق قراية! كمّل لو قادر')}var td=0;(b.log||[]).forEach(function(l){if(l.d===today())td+=+l.p||0});if(td>=(+S.bdg||10)&&!cheer.g){cheer.g=1;toast('🎯 خلصت هدف النهارده ('+(+S.bdg||10)+' صفحات) — عاش!')}},1000);
  /* 🎧 اسمع الكتاب: بيقرا الصفحة بصوت ويقلب لوحده */
  var TS=null;try{TS=window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()&&Capacitor.Plugins&&Capacitor.Plugins.TextToSpeech}catch(e){}var LS=false,lb=o.querySelector('.ls');
  function say(t){return new Promise(function(res){if(!LS)return res();if(TS){TS.speak({text:t,lang:'ar-SA',rate:.95,volume:1}).then(res,res);return}try{var u=new SpeechSynthesisUtterance(t);u.lang='ar';u.rate=.95;u.onend=res;u.onerror=res;speechSynthesis.speak(u)}catch(e){res()}})}
@@ -8896,7 +8902,7 @@ window.bkRead=async function(id){var b=bk(id);if(!b)return;var blob=await fget(i
  async function ocr(n){if(OC[n])return OC[n];OC[n]=(async function(){var key=b.id+'#ocr'+n;try{var c0=await fget(key);if(c0&&c0.t)return c0.t}catch(e){}var c=await pageImg(n),t=await gemOcr(c);if(!t){try{var T=await tess(),r=await T.recognize(c,'ara');t=r&&r.data&&r.data.text}catch(e){t=''}}t=String(t||'').replace(/\s+/g,' ').trim();if(t)try{await fput(key,{t:t})}catch(e){}return t})();return OC[n]}
  async function pageText(n){var pg=await doc.getPage(n),tc=await pg.getTextContent(),t=tc.items.map(function(i){return i.str}).join(' ').replace(/\s+/g,' ').trim();if(t.length>=15)return t;if(!said){said=1;toast('📷 الصفحة صورة — بطلّع الكلام منها وأقرهولك…')}return await ocr(n)}
  async function listen(){while(LS&&document.getElementById('bkr')){var t=await pageText(cur);if(!LS)return;if(cur<N)pageText(cur+1).catch(function(){});
-   if(!t||t.length<5){toast('⚠️ مقدرتش أطلّع كلام من الصفحة دي — هعدّيها');if(cur>=N){hush();return}go(cur+1,true);await new Promise(function(r){setTimeout(r,500)});continue}var parts=t.match(/[^.!؟?،\n]{1,220}[.!؟?،]?/g)||[t];for(var i=0;i<parts.length&&LS;i++)await say(parts[i]);if(!LS)return;if(cur>=N){hush();toast('🎉 خلصت الكتاب!');return}go(cur+1,true);await new Promise(function(r){setTimeout(r,600)})}}
+   if(!t||t.length<5){toast('⚠️ مقدرتش أطلّع كلام من الصفحة دي — هعدّيها');if(cur>=N){hush();return}go(cur+1,true);await new Promise(function(r){setTimeout(r,500)});continue}var parts=t.match(/[^.!؟?،\n]{1,220}[.!؟?،]?/g)||[t];for(var i=0;i<parts.length&&LS;i++)await say(parts[i]);if(!LS)return;heard[cur]=1;credit(cur);if(cur>=N){hush();toast('🎉 خلصت الكتاب!');return}go(cur+1,true);await new Promise(function(r){setTimeout(r,600)})}}
  lb.onclick=function(){if(LS){hush();return}LS=true;lb.classList.add('on');toast('🎧 هقرالك — دوس 🎧 تاني علشان أوقف');listen()};
  var cl0=close;close=function(){hush();clearInterval(tick);cl0()};o.querySelector('.x').onclick=function(){try{if(history.state&&history.state.bkr){history.back();return}}catch(e){}close()};window.removeEventListener('popstate',pop);pop=function(){if(document.getElementById('bkr'))close()};window.addEventListener('popstate',pop);
  /* تكبير وتصغير الصفحة بصباعين (زي العقد) + دوستين ورا بعض تكبّر/ترجّع */
@@ -9154,5 +9160,9 @@ setTimeout(function(){try{bg()}catch(e){}},12000);
 #trbar>em{position:absolute;left:0;bottom:0;height:3px;background:#f0b429;width:100%;animation:trbar 9s linear forwards}
 @keyframes trbar{to{width:0}}@keyframes trin{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 </style>
+<script id="bkfix1115">
+/* أسامه: «مقرأتش 15 صفحة — كنت بعمل اسكرول بس» — الصفحات اللي اتحسبت النهارده من الاسكرول اتمسحت مرة واحدة، والعدّ بقى بالوقت */
+(function(){var t0=Date.now();var iv=setInterval(function(){try{if(typeof AUTH==='undefined'||!AUTH||Date.now()-t0<6000)return;clearInterval(iv);if(S.bkfix1115)return;var ch=false;(S.books||[]).forEach(function(b){if(b.log&&b.log.some(function(l){return l.d==='2026-11-15'})){b.log=b.log.filter(function(l){return l.d!=='2026-11-15'});b.maxp=Math.max(0,(+b.cur||1)-1);ch=true}});S.bkfix1115=1;save();if(ch&&S.tab==='books')render()}catch(e){}},2000)})();
+</script>
 </body>
 </html>
