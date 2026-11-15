@@ -4620,7 +4620,7 @@ var LAY=[];function layScan(){var out=[],W=innerWidth,app=document.getElementByI
   if((r.right>Math.min(W,AR.right)+3||r.left<Math.max(0,AR.left)-3)&&!e.closest('svg,.leaflet-container')&&!inScroll(e)){var par=e.parentElement&&e.parentElement.getBoundingClientRect();if(!par||!(par.right>W+3||par.left<-3)||e.parentElement===app){out.push(['warn','عنصر طالع برّه الشاشة: '+sel(e)]);n++}}
   if((e.tagName==='BUTTON'||e.tagName==='A')&&r.height<26&&r.width<26&&!e.closest('svg')&&(e.textContent||'').trim()){out.push(['warn','زرار صغير قوي صعب الضغط عليه: '+sel(e)]);n++}
   if(e.tagName==='IMG'&&e.complete&&!e.naturalWidth&&e.src&&!/^data:/.test(e.src)){out.push(['warn','صورة مش ظاهرة: '+sel(e)]);n++}});
- app.querySelectorAll('.card').forEach(function(c){var t=(c.innerText||'').replace(/\s+/g,'');var h=c.querySelector('h2');if(h&&t.length<=h.innerText.replace(/\s+/g,'').length+1)out.push(['warn','كارت فاضي: «'+h.innerText.trim().slice(0,30)+'»'])});
+ app.querySelectorAll('.card').forEach(function(c){if(window.bnyLayFoldSkip!==false&&c.classList.contains('fd')&&!c.classList.contains('fo'))return;var t=(c.innerText||'').replace(/\s+/g,'');var h=c.querySelector('h2');if(h&&t.length<=h.innerText.replace(/\s+/g,'').length+1)out.push(['warn','كارت فاضي: «'+h.innerText.trim().slice(0,30)+'»'])});
  var tn=tabName();out.forEach(function(o){var k=tn+'|'+o[1];if(!LAY.some(function(x){return x.k===k}))LAY.push({k:k,sev:o[0],msg:o[1]+' — في '+tn,t:Date.now()})});LAY=LAY.slice(-25)}
 reg('التنسيق',function(add){LAY.forEach(function(x){add(x.sev,'التنسيق',x.msg)});try{(window.bnyUiCheck?bnyUiCheck():[]).filter(function(m){return /الهيدر/.test(m)}).forEach(function(m){add('err','التنسيق',m+' — في '+tabName())})}catch(e){}});
 reg('نسخة حكيم',function(add){try{var st=window.hkST;if(st&&st.mon&&st.mon.length){st.mon.slice(0,6).forEach(function(m){add('warn','نسخة حكيم',m)})}if(st&&st.errs)add('warn','نسخة حكيم','حصل '+st.errs+' خطأ برمجي في تطبيق حكيم'+(st.lastErr?' — آخرهم: '+String(st.lastErr).slice(0,80):''))}catch(e){}});
@@ -5544,7 +5544,7 @@ if(window.monReg)monReg('تغيّر مفاجئ',function(add){var T=today(),ym=f
  if(ae>0&&(ex[now]||0)>ae*2&&(ex[now]||0)-ae>500)add('warn','تغيّر مفاجئ','المصروفات الشهر ده '+$(ex[now])+' — أكتر من ضعف المتوسط ('+$(ae)+'). راجع لو فيه مصروف اتكتب غلط')});
 /* 3) catch more kinds of failures */
 var push=window.__monPush||function(){};
-try{var f0=window.fetch;if(f0&&!f0.__mon){var fw=function(u,o){var url=String(u&&u.url||u);return f0.apply(this,arguments).then(function(r){try{if(r&&(r.status>=500||r.status===401||r.status===403)&&/github|googleapis|script\.google/.test(url))push({m:'اتصال فشل ('+r.status+'): '+url.replace(/\?.*$/,'').replace(/https?:\/\//,'').slice(0,80),l:'net'})}catch(e){}return r})};fw.__mon=1;window.fetch=fw}}catch(e){}
+window.bnyNetSkip=/\/actions\/secrets(\/|$)/;try{var f0=window.fetch;if(f0&&!f0.__mon){var fw=function(u,o){var url=String(u&&u.url||u);return f0.apply(this,arguments).then(function(r){try{if(r&&(r.status>=500||r.status===401||r.status===403)&&/github|googleapis|script\.google/.test(url)&&!(window.bnyNetSkip&&bnyNetSkip.test(url)))push({m:'اتصال فشل ('+r.status+'): '+url.replace(/\?.*$/,'').replace(/https?:\/\//,'').slice(0,80),l:'net'})}catch(e){}return r})};fw.__mon=1;window.fetch=fw}}catch(e){}
 try{var si=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){try{return si.apply(this,arguments)}catch(e){if(/quota/i.test(e&&e.name+e.message))push({m:'مساحة التخزين على الجهاز اتملت — البيانات ممكن ماتتحفظش ('+k+')',l:'storage'});throw e}}}catch(e){}
 try{new PerformanceObserver(function(l){l.getEntries().forEach(function(e){if(e.duration>1500&&!document.hidden)push({m:'البرنامج علّق '+Math.round(e.duration/100)/10+' ثانية في «'+(S&&S.tab)+'»',l:'slow'})})}).observe({type:'longtask',buffered:false})}catch(e){}
 /* 4) weekly report on Friday */
@@ -6115,6 +6115,10 @@ var R=[
  {id:'uidet',area:'الشاشة',t:'المراقب كان بيقول «زرار ✅ دفع راكب على ➖» في الداشبورد وهو مش راكب — الزرار كان جوه قايمة «الدفعات القادمة» وهي مقفولة (مش ظاهر أصلاً)، فكان بيحسبه ظاهر',
   check:function(){var o=[];try{if(window.bnyVisSkipClosed===false)o.push('فحص الشكل بيعدّ الحاجات اللي جوه قايمة مقفولة');var hid=[].slice.call(document.querySelectorAll('#app details:not([open]) button')).filter(function(b){var sm=b.closest('summary');if(sm&&sm.parentElement===b.closest('details'))return false;var r=b.getBoundingClientRect();return r.width>2&&r.height>2});if(hid.length&&window.bnyUiCheck){var L=hid.map(function(b){return (b.textContent||'').trim().replace(/\s+/g,' ').slice(0,40)}).filter(Boolean);(bnyUiCheck()||[]).forEach(function(x){if(o.length<3&&/راكب على/.test(x)&&L.some(function(l){return x.indexOf('«'+l)>=0}))o.push(x+' (والزرار جوه قايمة مقفولة)')})}}catch(e){}return o},
   fix:function(){window.bnyVisSkipClosed=true;return 'فحص الشكل بقى يتجاهل الزراير اللي جوه قايمة مقفولة'}},
+ {id:'foldempty',area:'قواعد المراقب',t:'المراقب كان بيقول «كارت فاضي» على «🧭 خطة السحب» و«🕘 آخر التعديلات» و«📊 التحليل المالي» وغيرهم — وهم مش فاضيين، دول كروت مقفولة بقصد وبتتفتح بلمسة على العنوان',
+  check:function(){return window.bnyLayFoldSkip===false?['فحص التنسيق بيعدّ الكروت المقفولة كأنها فاضية']:[]},fix:function(){window.bnyLayFoldSkip=true;return 'فحص التنسيق بقى يتجاهل الكروت المقفولة'}},
+ {id:'sec403',area:'أخطاء برمجية',t:'المراقب كان بيسجل «اتصال فشل (403): …/actions/secrets/public-key» كخطأ برمجي في كل تقرير — ده مش خطأ في البرنامج، ده مفتاح GitHub ناقصه صلاحية Secrets لتجهيز التصليح المجاني (حالته بتظهر تحت «التصليح التلقائي»)',
+  check:function(){return window.bnyNetSkip&&bnyNetSkip.test('api.github.com/repos/x/y/actions/secrets/public-key')?[]:['أخطاء صلاحية إعدادات GitHub بتتسجل كأخطاء برمجية']},fix:function(){window.bnyNetSkip=/\/actions\/secrets(\/|$)/;return 'خطأ صلاحية الإعدادات بقى يظهر تحت «التصليح التلقائي» بس'}},
  {id:'look',area:'الشاشة',t:'كلام مقطوع، حاجة طالعة برّه الشاشة، زراير راكبة على بعض، زراير كبيرة أو متبعترة',
   check:function(){try{return (window.bnyUiCheck&&bnyUiCheck()||[]).filter(function(x){return !/الكلام طالع برّه خانته/.test(x)})}catch(e){return []}},fix:null}
 ];
@@ -6154,6 +6158,7 @@ window.bnyRulesSelfTest=function(){var bad=[],t=S.tab,hc=S.ct&&S.ct.html,tp0=S.c
   ['cttpl2',function(){S.tab='ct';render();var e=document.getElementById('ct2tpl');e&&e.remove()}],
   ['aiecho',function(){BNYMEM.addFact('النسخ الاحتياطي شغال علي drive ولا لأ')}],
   ['editfund',function(){var id='__rtu';S.units.push({id:id,name:'اختبار',g:'',furn:100,fsrc:'cash',fat:Date.now(),capF:40,fsplit:{gp:0,cash:60,pk:{},out:40},inst:[],leases:[]});S.adj=(S.adj||[]).concat([{u:id,a:40,w:'تمويل أثاث اختبار من أموالي الخاصة',d:'2026-01-01',k:'me'}]);setTimeout(function(){S.units=S.units.filter(function(u){return u.id!==id});S.adj=S.adj.filter(function(a){return a.u!==id})},0)}],
+  ['foldempty',function(){window.bnyLayFoldSkip=false}],['sec403',function(){window.bnyNetSkip=null}],
   ['tidy',function(){S.tab='home';render();var w=document.getElementById('wpcard');if(w)w.classList.remove('fd','fo')}],
   ['scrlock',function(){var e=document.getElementById('scrlockcss');e&&e.remove()}],
   ['undopos',function(){S.tab='ct';render();var u=document.getElementById('ctundo');if(!u){u=document.createElement('div');u.id='ctundo';u.innerHTML='<button>↶</button>';document.body.appendChild(u)}else{document.body.appendChild(u)}u.classList.remove('inz')}],
@@ -7231,7 +7236,7 @@ async function run(){if(navigator.onLine===false)return;var c=J('bny_sync'),g=J(
  var st=J('bny_autosec')||{},sig=hs(c.token+'|'+gk);if(st.sig===sig&&(st.ok||(st.at&&Date.now()-st.at<6*3600e3)))return;
  var res={at:Date.now(),sig:sig,gem:!!gk};
  try{await loadSeal();var H={Authorization:'Bearer '+c.token,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},R='https://api.github.com/repos/bunyanrealstate-commits/bunyan/actions';
-  var r=await fetch(R+'/secrets/public-key',{headers:H});if(!r.ok)throw new Error('مفتاح GitHub مش مسموحله يحط إعدادات ('+r.status+')');var pk=await r.json();
+  var r=await fetch(R+'/secrets/public-key',{headers:H});if(!r.ok)throw new Error('مفتاح GitHub مش مسموحله يحط إعدادات ('+r.status+')'+(r.status===403||r.status===404?' — ادّي المفتاح صلاحية «Secrets: Read and write» على مستودع bunyan، أو حط GEMINI_KEY و DATA_TOKEN بإيدك في Settings ← Secrets':''));var pk=await r.json();
   var put=async function(n,v){var q=await fetch(R+'/secrets/'+n,{method:'PUT',headers:H,body:JSON.stringify({encrypted_value:bnySeal(pk.key,v),key_id:pk.key_id})});if(!(q.status===201||q.status===204))throw new Error(n+' '+q.status)};
   await put('DATA_TOKEN',c.token);res.secrets=1;if(gk){await put('GEMINI_KEY',gk);res.secrets=2}res.ok=!!gk;
   if(res.ok){try{await fetch(R+'/workflows/autofix.yml/dispatches',{method:'POST',headers:H,body:JSON.stringify({ref:'main'})})}catch(e){}}

@@ -47,7 +47,7 @@ const fails=[],notes=[];const F=m=>{fails.push(m);console.log('❌ '+m)},OK=m=>c
    const btns=[...document.querySelectorAll('#app button,#app label')].filter(vis).map(b=>b.textContent.trim());
    [/تنزيل PDF/,/ابعت العقد/,/طباعة/,/عقد جديد/,/النموذج الأصلي/,/^🪪 هوية المستأجر/,/^🪪 هوية المؤجر/].forEach(re=>{const n=btns.filter(t=>re.test(t)).length;if(n!==1)o.push(L+': button '+re+' x'+n)});
    const sigMove=btns.filter(t=>/حرّك/.test(t)).length;if(sigMove>1)o.push(L+': move-signature button x'+sigMove);
-   const pt=(document.getElementById('ctpaper')||{}).innerText||'';['Landlord Name','Tenant Mobile No.','رقم موبايل المستأجر','Tenant Signature'].forEach(k=>{if(pt.indexOf(k)<0)o.push(L+': paper missing «'+k+'»')});
+   const pt=(document.getElementById('ctpaper')||{}).innerText||'';(S.ct.lay==='tc'?['Landlord','Mobile','رقم موبايل المستأجر','Tenant Signature']:['Landlord Name','Tenant Mobile No.','رقم موبايل المستأجر','Tenant Signature']).forEach(k=>{if(pt.indexOf(k)<0)o.push(L+': paper missing «'+k+'»')});
    if(/LandLord|Mobile No\.\s*\n|• تاريخ العقد/.test(pt))o.push(L+': old paper labels still there');
    const ui=bnyUiCheck();ui.forEach(x=>o.push(L+' ui: '+x));
    if(typeof ctUndo!=='function'||typeof ctWSign!=='function')o.push(L+': undo / witness signature missing');{const h=document.querySelector('#ctpaper h1 small'),d=document.querySelector('#ctpaper .ctdate');if((h&&vis(h))||(d&&vis(d)))o.push(L+': title subtitle / date line should be hidden')}
