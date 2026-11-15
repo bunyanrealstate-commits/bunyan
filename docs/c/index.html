@@ -6029,6 +6029,8 @@ var R=[
   check:function(){return window.hkShare&&window.updPut?[]:['مشاركة العقد والأبديت مع حكيم مش شغالة']},fix:null},
  {id:'updcols',area:'الأبديت',t:'مكانش ينفع تغيّر ترتيب أعمدة صورة الأبديت، والسعر والنوع كانوا مش بارزين',
   check:function(){if(S.tab!=='upd')return [];var o=[];if(typeof window.updCols!=='function')o.push('زرار ترتيب الأعمدة مش موجود');var t=document.querySelector('#updposter:not(.fz) tr.r:not(.rb) td.ty');if(t&&!bnyIsRed(getComputedStyle(t).color))o.push('نوع الشقة مش باللون الأحمر');return o},fix:null},
+ {id:'hmlib',area:'القايمة',t:'أسامه قال «مكتبتي» بتبان على اللاب ومش ظاهرة على الموبايل — اتحطت في القايمة الرئيسية',
+  check:function(){var pn=document.getElementById('hmp');return pn&&AUTH&&pn.offsetParent&&innerWidth<=860&&!document.getElementById('hmlib')?['«📚 مكتبتي» مش في قايمة الموبايل']:[]},fix:null},
  {id:'hdgap',area:'الأحاديث',t:'أسامه قال الأحاديث كتير — تظهر مرة كل ساعة بس',
   check:function(){return []},fix:null},
  {id:'tilefold',area:'الشكل',t:'أسامه عايز كل الكروت اللي بتنزل لستة (◂ / ▾) تبقى كروت مربعة زي الداشبورد وتفتح في شباك — في كل البرنامج',
@@ -7958,5 +7960,13 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&OPEN)closeT
 #tfm .tfb{overflow:auto;padding:10px 14px 16px;-webkit-overflow-scrolling:touch}#tfm .tfb>*{display:revert}
 html.tfopen body{overflow:hidden}
 </style>
+<script id="hmlibjs">
+/* «📚 مكتبتي» كان جوه قايمة الحساب بس (بتبان على اللاب) — على الموبايل بقى زرار في القايمة الرئيسية زي «تذكيراتي» */
+(function(){
+function add(){var pn=document.getElementById('hmp');if(!pn||!AUTH||document.getElementById('hmlib')||!document.getElementById('mbooks'))return;var b=document.createElement('button');b.id='hmlib';b.type='button';b.textContent='📚 مكتبتي';b.title='كتبك ومتابعة القراية';
+ b.onclick=function(){try{bnyCloseMenus&&bnyCloseMenus()}catch(e){}S.tab='books';render();try{scrollTo(0,0)}catch(e){}};var c=document.getElementById('hmrem')||document.getElementById('cpmi');c?pn.insertBefore(b,c):pn.appendChild(b)}
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{add()}catch(e){}return o};document.addEventListener('click',function(){setTimeout(function(){try{add()}catch(e){}},30)},true);
+})();</script>
+<style id="hmlibcss">@media (min-width:861px){#hmlib{display:none!important}}@media (max-width:860px){#who .ump #mbooks{display:none!important}}</style>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
