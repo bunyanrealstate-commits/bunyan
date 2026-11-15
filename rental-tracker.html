@@ -6718,7 +6718,7 @@ var R=[
  {id:'updedit',area:'الأبديت',t:'أسامه عايز يكتب اسم جنب كل رقم موبايل، ويعدّل أي حاجة في الصورة — بقى يدوس على أي كلمة في المعاينة ويعدلها',
   check:function(){if(S.tab!=='upd'||!window.__updPrev)return [];var p=document.getElementById('updposter');if(!p)return [];var o=[];if(!p.querySelector('[data-e=title]'))o.push('العنوان في المعاينة مش بيتعدل بالدوس');if(!p.querySelector('[data-e=ph]'))o.push('الأرقام في المعاينة مش بتتعدل بالدوس');return o},fix:null},
  {id:'updcolbar',area:'الأبديت',t:'أسامه عايز يضيف أكتر من رقم على الأبديت، ويضيف/يمسح أعمدة ويرتبها بالسحب، والتاريخ تحت العنوان، والمفروش تيراكوتا، والكلام الصغير يبان',
-  check:function(){if(S.tab!=='upd'||!window.updModeNow||!document.querySelector('#updwrap'))return [];var o=[];if(!document.getElementById('ucolbar'))o.push('لستة أعمدة الأبديت (السحب لفوق/لتحت) مش ظاهرة');if(!document.getElementById('updphb'))o.push('زرار «أرقام التواصل» مش ظاهر');if(updModeNow()==='f'){var d=updData();if(!d.m2)o.push('أبديت المفروش لسه على التاريخ/اللون القديم')}return o},fix:null},
+  check:function(){if(S.tab!=='upd'||!window.updModeNow||!document.querySelector('#updwrap'))return [];var o=[];if(!document.querySelector(".usx[data-sec='k']"))o.push('سطر «الأعمدة» مش ظاهر في الأبديت');if(!document.querySelector(".usx[data-sec='p']"))o.push('سطر «أرقام التواصل» مش ظاهر في الأبديت');if(updModeNow()==='f'){var d=updData();if(!d.m2)o.push('أبديت المفروش لسه على التاريخ/اللون القديم')}return o},fix:null},
  {id:'updfurn',area:'الأبديت',t:'أسامه طلب أبديت للمفروش لوحده (بلون مختلف) وتاريخ الأبديت يتنقل — زرارين «غير مفروش / مفروش» كل واحد ليه بياناته وصورته؛ وكان أبديت غير المفروش بيدخل جوه المفروش من مشاركة حكيم (اتفصلوا)',
   check:function(){if(S.tab!=='upd'||!window.updModeNow)return [];var o=[];if(document.querySelector('#app .card')&&!document.getElementById('updmode'))o.push('زرار «مفروش / غير مفروش» مش ظاهر في الأبديت');if(updModeNow()==='f'){var d=updData(),u=updDataU(),ids={};(u.villas||[]).forEach(function(v){ids[v.id]=1});if(!d.fmark||(d.villas||[]).some(function(v){return ids[v.id]}))o.push('أبديت غير المفروش دخل جوه أبديت المفروش');var p=document.getElementById('updposter');if(p&&!p.classList.contains('fz'))o.push('صورة المفروش بنفس لون غير المفروش')}return o},fix:null},
  {id:'hdout',area:'الكمبيوتر',t:'أسامه عايز زرار دخول وخروج واضح على الكمبيوتر — الخروج كان مستخبي جوه قايمة الاسم (بقى تحت القايمة الجانبية)',
@@ -7122,7 +7122,7 @@ function poster(){var d=load(),P=PM(),U0=[];d.villas.forEach(function(v){(v.unit
  if(!L.length)h+="<p class='emp'>Add villas and flats to show them here</p>";
  h+="<div class='ft3'>"+(d.hf&&d.hf.fee?'':"<div data-e='ft:fee'><small>"+LB('fee','CONTRACT FEE')+"</small><b>"+n(d.fee)+" AED</b></div>")+(d.hf&&d.hf.dep?'':"<div data-e='ft:dep'><small>"+LB('dep','SECURITY DEPOSIT')+"</small><b>"+E(d.dep||'')+"</b></div>")+(d.comm?"<div data-e='ft:comm'><small>"+LB('comm','COMMISSION')+"</small><b>"+E(d.comm)+"</b></div>":"")+(d.fx||[]).map(function(x,i){return (x.h||x.v)?"<div data-e='fx:"+i+"'><small>"+E(x.h||'')+"</small><b>"+E(x.v||'')+"</b></div>":''}).join('')+"</div>"+
   (d.notes?"<div class='gn' data-e='notes'>"+E(d.notes).replace(/\n/g,'<br>')+"</div>":"")+
-  "<div class='ct3"+(phs(d).length>1?' mph':'')+"'><div class='wa'><svg viewBox='0 0 32 32' width='34' height='34'><path fill='#fff' d='M16 3C8.8 3 3 8.7 3 15.8c0 2.5.7 4.9 2 6.9L3 29l6.5-2c1.9 1 4.1 1.6 6.5 1.6 7.2 0 13-5.7 13-12.8S23.2 3 16 3zm0 23.3c-2.1 0-4.1-.6-5.8-1.7l-.4-.3-3.9 1.2 1.2-3.7-.3-.4a10.4 10.4 0 0 1-1.8-5.9C5 10 9.9 5.3 16 5.3S27 10 27 15.8 22.1 26.3 16 26.3zm6-7.8c-.3-.2-2-1-2.3-1.1-.3-.1-.5-.2-.8.2l-1 1.3c-.2.2-.4.3-.7.1-.3-.2-1.4-.5-2.7-1.7-1-.9-1.7-2-1.9-2.3-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6l-1-2.5c-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.9s1.2 3.4 1.4 3.6c.2.2 2.4 3.7 5.9 5.1 2.9 1.1 3.5.9 4.1.8.6-.1 2-.8 2.3-1.6.3-.8.3-1.5.2-1.6-.1-.1-.3-.2-.6-.4z'/></svg></div><div class='cx'><small data-e='lab:call'>"+LB('call','BOOK YOUR VIEWING · CALL OR WHATSAPP')+"</small><div class='phs' data-e='ph'>"+phl(d).map(function(x){return "<div class='pi'>"+(x.n?"<small class='pnm'>"+E(x.n)+"</small>":"")+"<b>"+E(x.p)+"</b></div>"}).join('')+"</div></div></div>"+(DP==='b'?"<div class='dtb'>"+DTH+"</div>":'')+"</div></div>";return h}
+  "<div class='ct3"+(phs(d).length>1?' mph':'')+"'><div class='wa'><svg viewBox='0 0 32 32' width='34' height='34'><path fill='#fff' d='M16 3C8.8 3 3 8.7 3 15.8c0 2.5.7 4.9 2 6.9L3 29l6.5-2c1.9 1 4.1 1.6 6.5 1.6 7.2 0 13-5.7 13-12.8S23.2 3 16 3zm0 23.3c-2.1 0-4.1-.6-5.8-1.7l-.4-.3-3.9 1.2 1.2-3.7-.3-.4a10.4 10.4 0 0 1-1.8-5.9C5 10 9.9 5.3 16 5.3S27 10 27 15.8 22.1 26.3 16 26.3zm6-7.8c-.3-.2-2-1-2.3-1.1-.3-.1-.5-.2-.8.2l-1 1.3c-.2.2-.4.3-.7.1-.3-.2-1.4-.5-2.7-1.7-1-.9-1.7-2-1.9-2.3-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6l-1-2.5c-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.9s1.2 3.4 1.4 3.6c.2.2 2.4 3.7 5.9 5.1 2.9 1.1 3.5.9 4.1.8.6-.1 2-.8 2.3-1.6.3-.8.3-1.5.2-1.6-.1-.1-.3-.2-.6-.4z'/></svg></div><div class='cx'><small data-e='lab:call'>"+LB('call','BOOK YOUR VIEWING · CALL OR WHATSAPP')+"</small><div class='phs' data-e='ph'>"+phl(d).filter(function(x){return x.p}).map(function(x){return "<div class='pi'>"+(x.n?"<small class='pnm'>"+E(x.n)+"</small>":"")+"<b>"+E(x.p)+"</b></div>"}).join('')+"</div></div></div>"+(DP==='b'?"<div class='dtb'>"+DTH+"</div>":'')+"</div></div>";return h}
 window.updTab=function(){var d=load();setTimeout(fit,0);var op=window.__updOpen||'';
  /* compact: each villa is one line; tap it to open its flats (one at a time) */
  var vh=d.villas.map(function(v,vi){var U=v.units||[],nb=U.filter(function(a){return a.booked}).length,isO=op===v.id;
@@ -7136,12 +7136,15 @@ window.updTab=function(){var d=load();setTimeout(fit,0);var op=window.__updOpen|
   "<button class='p usend' onclick='updShare()'>📤 ابعت الصورة على الواتساب</button>"+
   "<div class='uicons'>"+ic('updPrev','👀',PV?'اخفي الصورة':'شوف الصورة',PV)+ic('updSave','💾','احفظ')+ic('updText','💬','ابعت نص')+ic('updGroup','👥',d.gname?'✓ '+E(d.gname):'الجروب',!!d.gname)+"</div>"+
   "<div class='uedh'"+(PV?"":" hidden")+">✏️ دوس على أي كلمة أو رقم في الصورة وعدّله</div><div id='updprev'"+(PV?"":" class='hid'")+">"+poster()+"</div></div>"+
-  "<div class='card u2'><div class='usec'><b>🏡 الفلل والشقق</b></div>"+vh+
-  "<div class='ugrid'><button class='p' onclick='updVilla()'>➕ فيلا</button><button onclick='updToggleBk()'>"+(d.hideBooked?'👁 أظهر المحجوز':'🙈 اخفي المحجوز')+"</button></div></div>"+
-  "<div class='card u2'><details id='udes'"+(DS?' open':'')+" ontoggle='window.__updDes=this.open?1:0'><summary><b>🎨 شكل الصورة</b><small>الألوان • الأعمدة • الأرقام • الكلام</small></summary>"+
-  (MODE==='f'?"<div class='ulbl'>لون الصورة</div><div id='fzpick'>"+[['n','كحلي','#1b2a4a','#c79a3a'],['c','تيراكوتا','#7a3b24','#c8683f'],['o','خشب','#4a3a2a','#a8763e'],['s','زيتوني','#2f4a3a','#b58a4c'],['r','وردي','#5a2a3c','#c98b8f']].map(function(t){var on=(d.fzt||'c')===t[0];return "<button type='button' class='"+(on?'on':'')+"' onclick=\"updFz('"+t[0]+"')\"><i style='background:linear-gradient(135deg,"+t[2]+" 55%,"+t[3]+" 55%)'></i>"+t[1]+"</button>"}).join('')+"</div>":"")+
-  colList(d)+
-  "<div class='ugrid'><button id='updphb' onclick='updPhones()'>📞 الأرقام ("+phs(d).length+")</button><button onclick='updSet()'>⚙️ الإعدادات</button><button class='wide' id='updxb' onclick='updX()'>📊 تعديل حر (زي الإكسيل)</button></div></details></div></div>"};
+  "<div class='card u2 usecs'>"+
+  sec('v','🏡','الفلل والشقق',d.villas.length+' فيلا • '+tot+' شقة',vh+"<div class='ugrid'><button class='p' onclick='updVilla()'>➕ فيلا</button><button onclick='updToggleBk()'>"+(d.hideBooked?'👁 أظهر المحجوز':'🙈 اخفي المحجوز')+"</button></div>")+
+  (MODE==='f'?sec('c','🎨','لون الصورة',({n:'كحلي',c:'تيراكوتا',o:'خشب',s:'زيتوني',r:'وردي'})[d.fzt||'c'],"<div id='fzpick'>"+[['n','كحلي','#1b2a4a','#c79a3a'],['c','تيراكوتا','#7a3b24','#c8683f'],['o','خشب','#4a3a2a','#a8763e'],['s','زيتوني','#2f4a3a','#b58a4c'],['r','وردي','#5a2a3c','#c98b8f']].map(function(t){var on=(d.fzt||'c')===t[0];return "<button type='button' class='"+(on?'on':'')+"' onclick=\"updFz('"+t[0]+"')\"><i style='background:linear-gradient(135deg,"+t[2]+" 55%,"+t[3]+" 55%)'></i>"+t[1]+"</button>"}).join('')+"</div>"):'')+
+  sec('k','🧱','الأعمدة',colOrder(d).filter(function(k){return !(d.hc||{})[k]}).length+' ظاهر',colList(d))+
+  sec('p','📞','أرقام التواصل',phs(d).length+' رقم',phInline(d))+
+  sec('t','🔤','كلام الصورة','العنوان • التاريخ • التأمين',txtInline(d))+
+  "<button type='button' class='usr' onclick='updSet()'><i>⚙️</i><span><b>الأسعار والدفعات</b><small>نظام الدفعات • الإيجار الشهري</small></span><em>↗</em></button>"+
+  "<button type='button' class='usr' id='updxb' onclick='updX()'><i>📊</i><span><b>تعديل حر (زي الإكسيل)</b><small>كل الأعمدة والصفوف مرة واحدة</small></span><em>↗</em></button>"+
+  "</div></div>"};
 window.updOpen=function(id){window.__updOpen=window.__updOpen===id?'':id;render()};
 window.updPrev=function(){window.__updPrev=!window.__updPrev;render();if(window.__updPrev)setTimeout(function(){var e=document.getElementById('updprev');e&&e.scrollIntoView({behavior:'smooth',block:'start'})},80)};
 function fit(){var w=document.getElementById('updprev'),p=document.getElementById('updposter');if(!w||!p)return;if(w.classList.contains('hid')){p.style.transform='none';return}var k=Math.min(1,w.clientWidth/720);p.style.transform=k<1?'scale('+k+')':'none';w.style.height=Math.ceil(p.offsetHeight*k)+'px'}
@@ -7206,6 +7209,24 @@ function blankF(){var td0=new Date().toISOString().slice(0,10),U=[];try{(S.units
  return {fmark:1,title:'FURNISHED STUDIOS',phone:'0528091984',fee:0,dep:'1 Month',group:'',notes:'',hideBooked:false,at:0,pm:'single',pn:1,showMo:true,flOn:1,hc:{pay:true},hf:{fee:true},lab:{mo:'MONTHLY RENT'},dtpos:'u',fzt:'c',m2:1,villas:U.length?[{id:id(),name:'BUNYAN FURNISHED',area:'Abu Dhabi',units:U}]:[]}}
 window.updMode=function(m){m=m==='f'?'f':'u';if(m===MODE)return;try{keep(1)}catch(e){}MODE=m;try{localStorage.setItem('bny_updmode',m)}catch(e){}D=null;load();try{pull()}catch(e){}render();toast(m==='f'?'🛋️ أبديت المفروش':'🏢 أبديت غير المفروش')};
 window.updModeNow=function(){return MODE};
+/* ===== update tab sections: a line you tap to open and edit inside (one open at a time) ===== */
+function sec(k,ic,t,sub,body){var on=window.__updSec===k;return "<div class='usx"+(on?' on':'')+"' data-sec='"+k+"'><button type='button' class='usr' onclick=\"updSec('"+k+"')\"><i>"+ic+"</i><span><b>"+t+"</b><small>"+sub+"</small></span><em>"+(on?'▴':'▾')+"</em></button>"+(on?"<div class='usb'>"+body+"</div>":"")+"</div>"}
+window.updSec=function(k){window.__updSec=window.__updSec===k?'':k;render();if(window.__updSec)setTimeout(function(){var e=document.querySelector(".usx[data-sec='"+k+"']");if(e){var r=e.getBoundingClientRect();if(r.top<70||r.top>innerHeight*.6)e.scrollIntoView({behavior:'smooth',block:'start'})}},40)};
+var prevT=0;function refPrev(){clearTimeout(prevT);prevT=setTimeout(function(){var w=document.getElementById('updprev');if(w&&!w.classList.contains('hid')){w.innerHTML=poster();fit()}},250)}
+function phInline(d){var L=phl(d);if(!L.length)L=[{p:'',n:''}];return "<p class='mu uhint'>الاسم اختياري (مثال: OSAMA) — كل رقم بيظهر تحت في الصورة</p>"+L.map(function(x,i){return "<div class='uphr'><input value='"+E(x.n)+"' placeholder='الاسم' oninput=\"updPhI("+i+",'n',this.value)\"><input inputmode='tel' value='"+E(x.p)+"' placeholder='05xxxxxxxx' oninput=\"updPhI("+i+",'p',this.value)\">"+(L.length>1?"<button type='button' class='ubtn ux' onclick='updPhI("+i+",\"del\")'>🗑</button>":"")+"</div>"}).join('')+"<button type='button' id='updphb' class='uadd' onclick='updPhI(-1,\"add\")'>➕ رقم تاني</button>"}
+window.updPhI=function(i,k,v){var d=load(),L=phl(d);if(!L.length)L=[{p:'',n:''}];
+ if(k==='add'){L.push({p:'',n:''})}else if(k==='del'){L.splice(i,1)}else{L[i]=L[i]||{p:'',n:''};L[i][k]=v}
+ var all=[d.phone].concat(d.phones||[]);/* keep empty rows while typing */
+ if(k==='add'){d.phones=(d.phones||[]).concat(['​']);d.phnm=(d.phnm||[]);keep();render();var ins=document.querySelectorAll('.uphr input');ins.length&&ins[ins.length-2].focus();return}
+ if(k==='del'){all.splice(i,1);var nm=(d.phnm||[]).slice();nm.splice(i,1);d.phone=all[0]||'';d.phones=all.slice(1);d.phnm=nm;keep();render();return}
+ if(k==='p'){all[i]=v;d.phone=all[0]||'';d.phones=all.slice(1)}else{var nm2=(d.phnm||[]).slice();nm2[i]=v;d.phnm=nm2}keep();refPrev()};
+function txtInline(d){var lab=d.lab||{},inp=function(l,k,v,ph,num){return "<label>"+l+"</label><input"+(num?" type='number' inputmode='decimal'":"")+" value='"+E(v||'')+"' placeholder='"+E(ph||'')+"' oninput=\"updTI('"+k+"',this.value)\">"};
+ return "<div class='uxt2'>"+inp('العنوان','title',d.title,'AVAILABLE UNITS')+
+  "<label>مكان التاريخ</label><select onchange=\"updTI('dtpos',this.value,1)\">"+[['u','تحت العنوان'],['r','فوق يمين'],['l','فوق شمال'],['b','تحت خالص'],['h','من غير تاريخ']].map(function(o){return "<option value='"+o[0]+"'"+((d.dtpos||'r')===o[0]?' selected':'')+">"+o[1]+"</option>"}).join('')+"</select>"+
+  inp('كلمة التاريخ','lab.upd',lab.upd,'UPDATED')+inp('التأمين','dep',d.dep,'1 Month')+inp('رسوم العقد (رقم)','fee',d.fee,'0',1)+inp('العمولة (فاضية = مش هتظهر)','comm',d.comm,'50/50')+inp('الكلام اللي فوق الأرقام','lab.call',lab.call,'BOOK YOUR VIEWING · CALL OR WHATSAPP')+
+  "<label>ملاحظات تحت الجدول</label><textarea rows='2' oninput=\"updTI('notes',this.value)\">"+E(d.notes||'')+"</textarea></div>"}
+window.updTI=function(k,v,rr){var d=load();if(/^lab\./.test(k)){d.lab=d.lab||{};d.lab[k.slice(4)]=v}else d[k]=v;keep();if(rr)render();else refPrev()};
+
 /* ===== column chips on the update tab: drag to reorder (left→right like the image), ✕ to remove, ➕ to add ===== */
 function colList(d){var o=colOrder(d),hc=d.hc||{},nm=function(k){return cName(d,k)||UXD[k]||'عمود'};
  return "<div id='ucolbar'><div class='ulbl'>الأعمدة <small>اسحب من ⠿ لفوق أو لتحت — اللي فوق = أول عمود من الشمال</small></div><div class='ucl-l' onpointerdown='updCLDrag(event)'>"+
@@ -7261,8 +7282,8 @@ async function pushTo(file,data){var c=cfg();if(!c)return;var A=api(c);A.u=A.u.r
 window.updDataU=function(){if(MODE==='u')return load();var x=null;try{x=JSON.parse(localStorage.getItem(KS)||'null')}catch(e){}return x||{villas:[],at:0}};
 window.updPutU=function(x,bk){if(MODE==='u')return updPut(x,bk);if(!x||!x.villas)return;try{localStorage.setItem(KS,JSON.stringify(x))}catch(e){}if(bk)pushTo('upd.json',x)};
 /* a furnished list that isn't really one (got the unfurnished villas) starts over from the furnished studios */
-function phl(d){var N=d.phnm||[];return [d.phone].concat(d.phones||[]).map(function(x,i){return {p:String(x||'').trim(),n:String(N[i]||'').trim()}}).filter(function(x){return x.p})}
-function phs(d){return [d.phone].concat(d.phones||[]).map(function(x){return String(x||'').trim()}).filter(Boolean)}
+function phl(d){var N=d.phnm||[];return [d.phone].concat(d.phones||[]).map(function(x,i){return {p:String(x||'').replace(/\u200b/g,'').trim(),n:String(N[i]||'').trim(),e:String(x||'')==='\u200b'}}).filter(function(x){return x.p||x.e})}
+function phs(d){return [d.phone].concat(d.phones||[]).map(function(x){return String(x||'').replace(/\u200b/g,'').trim()}).filter(Boolean)}
 function fzM2(){if(MODE==='f'&&D&&D.fmark&&!D.m2){D.m2=1;D.dtpos='u';D.fzt='c';keep()}}
 function flOn(){if(MODE==='f'&&D&&D.fmark&&!D.flOn){D.flOn=1;D.hc=D.hc||{};D.hc.fl=false;keep()}}
 function cleanF(){if(MODE!=='f'||!D||D.fmark)return;var b=blankF();b.at=Date.now();D=b;keep()}
@@ -7287,8 +7308,8 @@ async function direct(payload){var W=NW(),d=load();if(!W||!d.gname)return false;
 window.updDirect=direct;
 function txt(){var d=load(),o=['🏠 *'+(d.title||'')+'* — AVAILABLE NOW','🗓 '+new Date().toLocaleDateString('en-GB'),''];d.villas.forEach(function(v){var L=(v.units||[]).filter(shown);if(!L.length)return;o.push('🏡 *'+v.name+'*'+(v.area?' — '+v.area:''));if(v.note)o.push('📝 '+v.note);if(v.loc)o.push('📍 '+v.loc);
   L.forEach(function(a){o.push('• '+[lab(FL,a.floor,2),a.no&&('Flat '+a.no),typeEn(a)].filter(Boolean).join(' | ')+' — '+(a.booked?'❌ BOOKED':cols().filter(function(x){return x.v(a)}).map(function(x){return (x.mo?'Monthly':x.h)+' '+n(x.v(a))}).join(' / ')));if(a.note)o.push('   📝 '+a.note)});o.push('')});
- o.push('📝 Contract fee: '+n(d.fee)+' AED','🔐 Security deposit: '+(d.dep||''));if(d.notes)o.push(d.notes);o.push('📞 '+phl(d).map(function(x){return (x.n?x.n+': ':'')+x.p}).join(' / '));return o.join('\n')}
-function caption(){var d=load(),o=['🏠 *'+(d.title||'')+'* — AVAILABLE NOW'];d.villas.forEach(function(v){if(!(v.units||[]).some(shown))return;o.push('🏡 '+v.name+(v.loc?'\n📍 '+v.loc:''))});o.push('📝 Contract fee: '+n(d.fee)+' AED • 🔐 Deposit: '+(d.dep||''));o.push('📞 '+phl(d).map(function(x){return (x.n?x.n+': ':'')+x.p}).join(' / '));return o.join('\n')}
+ o.push('📝 Contract fee: '+n(d.fee)+' AED','🔐 Security deposit: '+(d.dep||''));if(d.notes)o.push(d.notes);o.push('📞 '+phl(d).filter(function(x){return x.p}).map(function(x){return (x.n?x.n+': ':'')+x.p}).join(' / '));return o.join('\n')}
+function caption(){var d=load(),o=['🏠 *'+(d.title||'')+'* — AVAILABLE NOW'];d.villas.forEach(function(v){if(!(v.units||[]).some(shown))return;o.push('🏡 '+v.name+(v.loc?'\n📍 '+v.loc:''))});o.push('📝 Contract fee: '+n(d.fee)+' AED • 🔐 Deposit: '+(d.dep||''));o.push('📞 '+phl(d).filter(function(x){return x.p}).map(function(x){return (x.n?x.n+': ':'')+x.p}).join(' / '));return o.join('\n')}
 window.__updCaption=caption;
 function openUrl(u){try{if(!(window.bnyOpenWa&&bnyOpenWa(u)))window.open(u,'_blank')}catch(e){}}
 window.updText=async function(){var t=txt(),d=load();if(await direct({text:t,mime:'text/plain'}))return;var go=function(){openUrl(d.group?d.group:'https://wa.me/?text='+encodeURIComponent(t))};try{navigator.clipboard.writeText(t).then(function(){toast(d.group?'📋 نسخت الأبديت — الجروب هيفتح، دوس مطوّل والصق وابعت':'📋 نسخت الأبديت وهفتح واتساب');setTimeout(go,600)},go)}catch(e){go()}};
@@ -8469,6 +8490,24 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);try{add()}catch(e
 #ucolbar .ucl button{margin:0!important;padding:4px 9px!important;min-height:0!important;font-size:11.5px!important;border-radius:9px!important;flex:0 0 auto}
 #ucolbar .ucl.off{opacity:.55;border-style:dashed}#ucolbar .ucl.drg{z-index:5;box-shadow:0 10px 24px rgba(0,0,0,.18);border-color:#1473e6;cursor:grabbing}
 #ucolbar .uca{width:100%;margin:8px 0 0!important;padding:8px!important;border-style:dashed!important;font-weight:800;font-size:13px!important}
+</style>
+<style id="updsecscss">
+#updwrap .usecs{padding:6px!important;display:flex;flex-direction:column;gap:6px}
+#updwrap .usx{border:1.5px solid var(--bd,#dde3ea);border-radius:16px;overflow:hidden;background:var(--card,#fff);transition:border-color .15s}
+#updwrap .usx.on{border-color:#1473e6;box-shadow:0 4px 14px rgba(20,115,230,.10)}
+#updwrap .usr{width:100%;margin:0!important;display:flex!important;align-items:center;gap:12px;padding:12px 14px!important;border:0!important;border-radius:0!important;background:transparent!important;text-align:start;min-height:0!important;box-shadow:none!important;color:inherit!important}
+#updwrap .usecs>.usr{border:1.5px solid var(--bd,#dde3ea)!important;border-radius:16px!important;background:var(--card,#fff)!important}
+#updwrap .usr i{font-style:normal;font-size:20px;width:38px;height:38px;flex:0 0 38px;border-radius:12px;display:grid;place-items:center;background:var(--bg2,#f1f4f7)}
+#updwrap .usx.on .usr i{background:#e8f1ff}
+#updwrap .usr span{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}#updwrap .usr b{font-size:14.5px;font-weight:800}#updwrap .usr small{font-size:11.5px;opacity:.65;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#updwrap .usr em{font-style:normal;opacity:.5;font-size:15px}
+#updwrap .usb{padding:4px 12px 12px;border-top:1px dashed var(--bd,#dde3ea)}
+#updwrap .usb .ugrid{margin-top:10px}
+#updwrap .uhint{font-size:12px;margin:8px 0 4px}
+#updwrap .uphr{display:flex;gap:6px;margin:6px 0}#updwrap .uphr input{flex:1;min-width:0;margin:0!important}#updwrap .uphr input+input{flex:1.3}#updwrap .uphr button{margin:0!important;flex:0 0 auto}
+#updwrap .uadd{width:100%;margin:6px 0 0!important;border-style:dashed!important;font-weight:800}
+#updwrap .uxt2{display:grid;grid-template-columns:1fr;gap:4px;padding-top:6px}#updwrap .uxt2 label{font-size:12px;font-weight:700;margin-top:6px}#updwrap .uxt2 input,#updwrap .uxt2 select,#updwrap .uxt2 textarea{margin:0!important;width:100%;box-sizing:border-box}
+#updwrap .usb #fzpick{padding-top:10px}#updwrap .usb #ucolbar{padding-top:4px!important}#updwrap .usb #ucolbar .ulbl{margin-top:8px}
 </style>
 </body>
 </html>
