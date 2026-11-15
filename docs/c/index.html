@@ -6157,6 +6157,10 @@ var R=[
   check:function(){var p=$('#updposter');if(!p||!p.classList.contains('fz'))return [];var t=p.querySelector('tr.r:not(.rb) td.ty');if(!t)return [];var m=getComputedStyle(p).getPropertyValue('--m').trim(),c=getComputedStyle(t).color,x=document.createElement('i');x.style.color=m;document.body.appendChild(x);var mc=getComputedStyle(x).color;x.remove();return m&&c!==mc?['نوع الشقة في أبديت المفروش مش بلون الثيم']:[]},fix:null},
  {id:'remshift',area:'شكل الصفحات',t:'صفحة «⏰ تذكيراتي» كانت بتتنط: كارت «🔔 حالة التنبيهات» كان بيستنى رد الموبايل وبعدين يتحط فوق التذكيرات فيزقها 344px لتحت',
   check:function(){var o=[];if(window.bnyRemStSync===false)o.push('كارت حالة التنبيهات بيتحط متأخر فوق التذكيرات');return o},fix:function(){window.bnyRemStSync=true;return 'كارت حالة التنبيهات بقى يترسم فوراً من آخر حالة أو يتحط في آخر الصفحة'}},
+ {id:'libtap',area:'مكتبتي',t:'أسامه قال: الكتب اللي في مكتبتي لازم تفتح بدوسة من غير ما يدوّر عليها — البرنامج بقى يدوّر عليها وينزّلها ويفتحها لوحده، والكتاب الحالي واللي بعده بينزلوا في الخلفية',
+  check:function(){if(S.tab!=='books'||!AUTH||window.HBUILD)return [];var o=[];if(typeof window.bkGo!=='function'||typeof window.bkAttachBuf!=='function')o.push('التنزيل الأوتوماتيك للكتب مش شغال');var g=document.querySelector('#lib2 .lbk');if(g&&!g.querySelector('.lmore'))o.push('زرار «⋯» للتفاصيل مش ظاهر على الكتب');return o},fix:null},
+ {id:'libfocus',area:'مكتبتي',t:'أسامه عايز ينتظم في كتاب واحد لحد آخره وبعدين اللي بعده — لو داس على كتاب تاني وهو لسه في كتاب لازم البرنامج يفكّره ويخليه «اللي بعده»، ولما يخلص يقترح اللي بعده',
+  check:function(){if(S.tab!=='books'||!AUTH||window.HBUILD)return [];var o=[];if(typeof window.lbTap!=='function'||window.lbOpen.toString().indexOf('lbTap')<0)o.push('الدوسة على كتاب مش بتراعي «كتاب واحد لحد آخره»');var h=document.querySelector('#lib2 .lhero');if(h&&!h.querySelector('.lplan'))o.push('خطة الكتاب (هتخلصه إمتى + اللي بعده) مش ظاهرة');return o},fix:null},
  {id:'look',area:'الشاشة',t:'كلام مقطوع، حاجة طالعة برّه الشاشة، زراير راكبة على بعض، زراير كبيرة أو متبعترة',
   check:function(){try{return (window.bnyUiCheck&&bnyUiCheck()||[]).filter(function(x){return !/الكلام طالع برّه خانته/.test(x)})}catch(e){return []}},fix:null}
 ];
@@ -8115,6 +8119,8 @@ window.bkUpload=function(id){pick(async function(f){toast('⏳ بجهّز الك
  b.pg=I.n;if(I.cv&&!b.cv)b.cv=I.cv;b.f={n:f.name,s:f.size};await fput(b.id,new Blob([buf],{type:'application/pdf'}));save();render();toast('✅ «'+b.t+'» جاهز — '+I.n+' صفحة');bkRead(b.id)}catch(e){toast('⚠️ الملف ده مش PDF سليم')}})};
 /* ---- search free online library (Internet Archive) and download straight into «مكتبتي» ---- */
 window.bkAddBuf=async function(buf,name,meta){var I=await info(buf),b={id:Math.random().toString(36).slice(2,10),t:(meta&&meta.t)||(I.t&&String(I.t).trim().length>2?String(I.t).trim():name.replace(/\.pdf$/i,'')),a:(meta&&meta.a)||I.a||'',sh:'now',sd:today(),cur:0,pg:I.n,cv:I.cv||'',f:{n:name,s:buf.byteLength},src:meta&&meta.src};B().push(b);await fput(b.id,new Blob([buf],{type:'application/pdf'}));save();render();toast('✅ «'+b.t+'» نزل — '+I.n+' صفحة');bkRead(b.id)};
+window.bkAttachBuf=async function(id,buf,name,src){var b=bk(id);if(!b)return null;var I=await info(buf);b.pg=I.n;if(I.cv&&!b.cv)b.cv=I.cv;b.f={n:name,s:buf.byteLength};if(src)b.src=src;await fput(b.id,new Blob([buf],{type:'application/pdf'}));save();return b};
+window.__bkNet=function(){return {getJSON:getJSON,getBuf:getBuf}};
 function cap(){try{var C=window.Capacitor;return C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.CapacitorHttp}catch(e){return null}}
 async function getJSON(u){try{var r=await fetch(u);if(r.ok)return await r.json()}catch(e){}var H=cap();if(H){var x=await H.get({url:u,responseType:'json'});return typeof x.data==='string'?JSON.parse(x.data):x.data}throw new Error('net')}
 async function getBuf(u,prog){try{var r=await fetch(u);if(!r.ok)throw 0;var tot=+r.headers.get('content-length')||0;if(r.body&&r.body.getReader){var rd=r.body.getReader(),ch=[],n=0;for(;;){var q=await rd.read();if(q.done)break;ch.push(q.value);n+=q.value.length;prog&&prog(n,tot)}var out=new Uint8Array(n),o=0;ch.forEach(function(c){out.set(c,o);o+=c.length});return out.buffer}return await r.arrayBuffer()}catch(e){var H=cap();if(!H)throw e;prog&&prog(-1,0);var x=await H.get({url:u,responseType:'blob'});var b64=x.data,bin=atob(b64),u8=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);return u8.buffer}}
@@ -8295,6 +8301,99 @@ html.dark #lib2{--lp:#1d1a15;--lc:#26221b;--lb:#3a3326;--lt:#efe6d6;--lm:#b5a68c
 .lgo2{display:flex;gap:8px;margin:12px 0}.lgo2 button{flex:1;margin:0!important;font-size:17px!important;font-weight:900}
 .lbs .dlg{width:min(460px,100%)!important}.lbsh{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px}.lbsh>div:last-child{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.lbsh b{font-size:17px;font-weight:900;line-height:1.4}.lbsh span{font-size:13px;opacity:.75;font-weight:700}.lbsh small{font-size:12px;opacity:.7;font-weight:600}.lbsh .lrt{color:#d98a1c;opacity:1}.lbsh .lbar{height:8px;border-radius:8px;background:rgba(120,100,60,.15);overflow:hidden;margin:6px 0 2px}.lbsh .lbar i{display:block;height:100%;background:linear-gradient(90deg,#2fa36f,#1f7a55)}
 .lnt{font-size:13px;line-height:1.7;margin:0 0 10px;opacity:.85}.lba{display:flex;flex-direction:column;gap:8px}.lba button{margin:0!important;width:100%;padding:12px!important;font-weight:800;border-radius:14px!important}.lba button.dl{color:#b3261e!important;background:#fdecec!important;border-color:#f3b8b4!important}.lbs .lx{width:100%;margin:10px 0 0!important}
+</style>
+<script id="libfocus">
+/* مكتبتي — أسامه: «الكتب دي خليها موجودة، اضغط عليها تفتح على طول من غير ما أدوّر عليها، وخليني أنتظم في كتاب واحد لحد آخره وبعدين اللي بعده».
+   - دوسة على أي كتاب: لو ملفه على الجهاز بيفتح، لو لأ البرنامج بيدوّر عليه في «أرشيف الإنترنت» وينزّله ويفتحه لوحده.
+   - الكتاب اللي بتقرأه + اللي بعده بيتنزلوا في الخلفية عشان يبقوا جاهزين.
+   - وضع «كتاب واحد لحد آخره»: لو دوست على كتاب تاني وانت لسه في كتاب، بيفكّرك ويديك تحطه «اللي بعده».
+   - لما تخلص كتاب بيقترح عليك اللي بعده على طول، وفي الكارت فوق: هتخلصه إمتى بمعدّلك وكام صفحة في اليوم تخلّصه في شهر. */
+(function(){if(window.HBUILD)return;
+function E(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function B(){S.books=S.books||[];return S.books}function bk(id){return B().filter(function(x){return x.id===id})[0]}
+function ds(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function have(id){return !!(window.__bkHave&&__bkHave[id])}
+function norm(t){return String(t||'').replace(/[ً-ْـ]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/[^؀-ۿa-zA-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim().toLowerCase()}
+function auth(b){return String(b.a||'').replace(/^(ترجمة|تحرير)\s*/,'').split(/[،,(]/)[0].trim()}
+function focusOn(){return S.bfocus!==false}
+function nowB(){return B().filter(function(b){return b.sh==='now'}).sort(function(a,b){return (b.rd||0)-(a.rd||0)})}
+function queue(){S.bq=(S.bq||[]).filter(function(id){var b=bk(id);return b&&b.sh==='want'});return S.bq}
+function nextB(){var q=queue();if(q.length)return bk(q[0]);return B().filter(function(b){return b.sh==='want'})[0]||null}
+window.bnyLibNext=nextB;
+/* ---- find the book on Internet Archive and download it, no searching by hand ---- */
+var GET={};window.__bkGetting=GET;
+function score(d,b){var t=norm(Array.isArray(d.title)?d.title[0]:d.title),bt=norm(b.t).replace(/\(.*\)/,'').trim(),c=norm(Array.isArray(d.creator)?d.creator.join(' '):d.creator||''),a=norm(auth(b)),s=0;
+ if(t===bt)s+=60;else if(t.indexOf(bt)>=0||bt.indexOf(t)>=0&&t.length>3)s+=35;else{var w=bt.split(' ').filter(function(x){return x.length>2}),h=w.filter(function(x){return t.indexOf(x)>=0}).length;s+=w.length?Math.round(25*h/w.length):0}
+ if(a){var aw=a.split(' ').filter(function(x){return x.length>2}),ah=aw.filter(function(x){return c.indexOf(x)>=0||t.indexOf(x)>=0}).length;s+=aw.length?Math.round(25*ah/aw.length):0}
+ s+=Math.min(15,Math.log10((+d.downloads||0)+1)*4);return s}
+async function findIA(b){var N=window.__bkNet&&__bkNet();if(!N)throw new Error('net');if(b.ia&&b.iaf)return {id:b.ia,f:b.iaf,sz:b.iasz||0};
+ var bt=String(b.t).replace(/\(.*\)/,'').trim(),qs=['title:('+bt+') AND creator:('+auth(b)+')','title:('+bt+')','('+bt+' '+auth(b)+')'],docs=[],seen={};
+ for(var i=0;i<qs.length&&docs.length<6;i++){try{var j=await N.getJSON('https://archive.org/advancedsearch.php?q='+encodeURIComponent(qs[i]+' AND mediatype:texts')+'&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=downloads&rows=12&sort[]=downloads+desc&output=json');((j.response&&j.response.docs)||[]).forEach(function(d){if(!seen[d.identifier]){seen[d.identifier]=1;docs.push(d)}})}catch(e){if(i===0)throw e}}
+ docs=docs.map(function(d){return {d:d,s:score(d,b)}}).filter(function(x){return x.s>=40}).sort(function(x,y){return y.s-x.s}).slice(0,5);
+ for(var k=0;k<docs.length;k++){var d=docs[k].d;try{var m=await N.getJSON('https://archive.org/metadata/'+encodeURIComponent(d.identifier)),F=(m.files||[]).filter(function(f){return /\.pdf$/i.test(f.name)&&!/_text\.pdf$/i.test(f.name)&&(!+f.size||+f.size<180*1048576)});
+  if(!F.length)continue;F.sort(function(x,y){return String(x.name).localeCompare(String(y.name),'ar',{numeric:true})});b.ia=d.identifier;b.iaf=F[0].name;b.iasz=+F[0].size||0;if(F.length>1)b.iav=F.length;try{save()}catch(e){}return {id:b.ia,f:b.iaf,sz:b.iasz}}catch(e){}}
+ return null}
+async function fetchBook(b,prog){var N=__bkNet(),r=await findIA(b);if(!r)return false;var url='https://archive.org/download/'+encodeURIComponent(r.id)+'/'+String(r.f).split('/').map(encodeURIComponent).join('/');
+ var buf=await N.getBuf(url,function(n,t){prog&&prog(n,t||r.sz)});await bkAttachBuf(b.id,buf,r.f,'https://archive.org/details/'+r.id);return true}
+function ov(b){var o=document.createElement('div');o.className='ov lfo';o.innerHTML="<div class='dlg'><div class='lfoh'>"+(window.__lgc?__lgc(b.id,1):'')+"<div><b>"+E(b.t)+"</b><small>"+E(b.a||'')+"</small><p class='lfos'>🔎 بدوّر على الكتاب…</p><div class='lfob'><i></i></div></div></div><button type='button' class='lx'>إلغاء</button></div>";document.body.appendChild(o);return o}
+window.bkGo=async function(id){var b=bk(id);if(!b)return;if(have(id))return bkRead0(id);if(b.paper)return bkPage(id);
+ var o=ov(b),st=o.querySelector('.lfos'),bar=o.querySelector('.lfob i'),gone=false;o.querySelector('.lx').onclick=function(){gone=true;o.remove()};
+ try{var p=GET[id]||(GET[id]=fetchBook(b,function(n,t){if(gone)return;if(n<0){st.textContent='⬇️ بينزل…';return}st.textContent='⬇️ بينزل… '+(t?Math.min(99,Math.round(n/t*100))+'%':Math.round(n/1048576)+' MB');bar.style.width=(t?Math.min(99,n/t*100):30)+'%'}));
+  if(GET[id]&&GET[id].__bg){st.textContent='⬇️ بينزل في الخلفية… استنى ثواني'}
+  var ok=await p;delete GET[id];if(gone)return;o.remove();if(ok){render();bkRead0(id)}else miss(b)}
+ catch(e){delete GET[id];if(gone)return;o.remove();var w=document.createElement('div');w.className='ov';w.innerHTML="<div class='dlg'><h2>⚠️ مقدرتش أنزّله دلوقتي</h2><p class='mu'>غالباً النت ضعيف أو مقطوع. جرّب تاني بعد شوية.</p><div class='bt'><button type='button' class='c0'>قفل</button><button type='button' class='p c1'>🔁 جرّب تاني</button></div></div>";document.body.appendChild(w);w.querySelector('.c0').onclick=function(){w.remove()};w.querySelector('.c1').onclick=function(){w.remove();bkGo(id)}}};
+function miss(b){var w=document.createElement('div');w.className='ov';var q=String(b.t).replace(/\(.*\)/,'').trim()+' '+auth(b);w.innerHTML="<div class='dlg'><h2>📕 «"+E(b.t)+"» مش لاقيه أوتوماتيك</h2><p class='mu'>المكتبة المجانية ملهاش نسخة مطابقة. اختار:</p><div class='lba'><button type='button' class='p' data-k='s'>🔎 وريني النتايج وأنا أختار</button><button type='button' data-k='u'>📎 عندي ملفه PDF</button><button type='button' data-k='p'>📗 عندي نسخة ورق — سجّل الصفحات بس</button></div><button type='button' class='lx'>قفل</button></div>";document.body.appendChild(w);
+ w.onclick=function(e){if(e.target===w||e.target.classList.contains('lx')){w.remove();return}var k=e.target.dataset&&e.target.dataset.k;if(!k)return;w.remove();if(k==='s')bkSearch(q);else if(k==='u')bkUpload(b.id);else{b.paper=1;save();render();bkPage(b.id)}}}
+/* bkRead without a file used to ask for an upload — now it downloads it */
+var bkRead0=window.bkRead;window.bkRead=function(id){if(have(id))return bkRead0(id);return bkGo(id)};
+/* ---- quiet background download of the book you're reading + the next one ---- */
+var bgT=0;function bg(){clearTimeout(bgT);bgT=setTimeout(function(){try{if(typeof AUTH==='undefined'||!AUTH||document.hidden||navigator.onLine===false)return;var c=nowB()[0],n=nextB();[c,n].forEach(function(b){if(!b||b.paper||have(b.id)||GET[b.id]||b.bgf>2)return;b.bgf=(b.bgf||0)+1;var p=GET[b.id]=fetchBook(b).then(function(ok){delete GET[b.id];if(ok&&S.tab==='books')render();return ok},function(e){delete GET[b.id];throw e});p.__bg=1;p.catch(function(){})})}catch(e){}},2500)}
+/* ---- one book till the end ---- */
+function left(b){return b.pg?Math.max(0,b.pg-(+b.cur||0)):0}
+function pace(b){var L=(b.log||[]).filter(function(l){return (new Date()-new Date(l.d))/864e5<=14}),p=L.reduce(function(s,l){return s+(+l.p||0)},0);return p/14}
+window.lbTap=function(id){var b=bk(id);if(!b)return;
+ if(b.sh==='now'){if(focusOn()){var c=nowB()[0];if(c&&c.id!==id){b.rd=Date.now();save()}}return bkGo(id)}
+ if(b.sh==='done')return lbInfo(id);
+ var c=focusOn()?nowB()[0]:null;if(!c)return lbStart(id);
+ var lf=left(c),v=pace(c),dd=v>0&&lf?Math.ceil(lf/v):0,w=document.createElement('div');w.className='ov lbs';
+ w.innerHTML="<div class='dlg'><h2>📖 خلّص كتاب واحد الأول</h2><div class='lbsh'>"+(window.__lgc?__lgc(c.id,0):'')+"<div><small>انت لسه في</small><b>"+E(c.t)+"</b>"+(c.pg?"<div class='lbar'><i style='width:"+Math.round((+c.cur||0)/c.pg*100)+"%'></i></div><small>فاضلك "+lf+" صفحة"+(dd?' • حوالي '+dd+' يوم بمعدّلك':'')+"</small>":"")+"</div></div><p class='mu' style='margin:0 0 10px'>التركيز في كتاب واحد لحد آخره بيخليك تخلّص فعلاً وتفتكر اللي قريته. «"+E(b.t)+"» هيستناك.</p><div class='lba'><button type='button' class='p' data-k='c'>📖 كمّل «"+E(c.t)+"»</button><button type='button' data-k='q'>📌 خليه اللي بعده</button><button type='button' data-k='s'>🔁 بدّل: ابدأ ده وأجّل اللي معايا</button></div><button type='button' class='lx'>قفل</button></div>";
+ document.body.appendChild(w);w.onclick=function(e){if(e.target===w||e.target.classList.contains('lx')){w.remove();return}var k=e.target.closest('button')&&e.target.closest('button').dataset.k;if(!k)return;w.remove();
+  if(k==='c')bkGo(c.id);else if(k==='q'){var q=queue().filter(function(x){return x!==id});q.unshift(id);S.bq=q;save();render();toast('📌 «'+b.t+'» هو اللي بعده — وهينزل لوحده');bg()}
+  else{c.sh='want';var q2=queue().filter(function(x){return x!==c.id&&x!==id});q2.unshift(c.id);S.bq=q2;save();lbStart(id)}}};
+var lbStart0=window.lbStart;window.lbStart=function(id){S.bq=queue().filter(function(x){return x!==id});lbStart0(id);if(!have(id))setTimeout(function(){bkGo(id)},300)};
+window.lbInfo=window.lbOpen;window.lbOpen=function(id){return lbTap(id)};
+window.lbQueue=function(id){var b=bk(id);if(!b)return;var q=queue().filter(function(x){return x!==id});q.unshift(id);S.bq=q;save();render();toast('📌 «'+b.t+'» هو اللي بعده')};
+/* when a book is finished → suggest the next one right away */
+var mv0=window.bkMove;window.bkMove=function(id,sh){var r=mv0.apply(this,arguments);if(sh==='done'){var n=0,t=setInterval(function(){n++;var b=bk(id);if(!b||n>600){clearInterval(t);return}if(b.sh==='done'){clearInterval(t);setTimeout(function(){offerNext(b)},500)}else if(!document.querySelector('.ov .stars')&&n>3)clearInterval(t)},300)}return r};
+function offerNext(done){if(nowB().length)return;var n=nextB();if(!n)return;var w=document.createElement('div');w.className='ov lbs';w.innerHTML="<div class='dlg'><h2>🎉 خلصت «"+E(done.t)+"»!</h2><p class='mu' style='margin:0 0 10px'>كمّل السلسلة — اللي بعده:</p><div class='lbsh'>"+(window.__lgc?__lgc(n.id,1):'')+"<div><b>"+E(n.t)+"</b><span>"+E(n.a||'')+"</span>"+(have(n.id)?"<small>📄 جاهز على الموبايل</small>":"")+"</div></div><div class='lba'><button type='button' class='p' data-k='y'>▶️ ابدأه دلوقتي</button><button type='button' data-k='o'>📌 اختار كتاب تاني</button></div><button type='button' class='lx'>بعدين</button></div>";
+ document.body.appendChild(w);w.onclick=function(e){if(e.target===w||e.target.classList.contains('lx')){w.remove();return}var k=e.target.closest('button')&&e.target.closest('button').dataset.k;if(!k)return;w.remove();if(k==='y')lbStart(n.id);else{window.lbShelf&&lbShelf('want')}}}
+window.bnyLibOfferNext=offerNext;
+/* ---- extras on the page ---- */
+function deco(){var a=document.getElementById('lib2');if(!a)return;
+ /* each book card: small ⋯ for details (edit / quotes / delete) — the card itself opens the book */
+ a.querySelectorAll('.lbk').forEach(function(x){if(x.querySelector('.lmore'))return;var m=String(x.getAttribute('onclick')||'').match(/'([^']+)'/);if(!m)return;var id=m[1],b=bk(id);var d=document.createElement('button');d.type='button';d.className='lmore';d.textContent='⋯';d.title='تفاصيل';d.onclick=function(e){e.stopPropagation();lbInfo(id)};x.appendChild(d);
+  if(b&&GET[id]){var g=document.createElement('span');g.className='lfl lgt';g.textContent='⬇️';x.appendChild(g)}
+  if(b&&queue()[0]===id&&!x.querySelector('.lnx')){var q=document.createElement('span');q.className='lnx';q.textContent='📌 اللي بعده';x.appendChild(q)}});
+ var h=a.querySelector('.lhero');if(!h||h.querySelector('.lplan'))return;var c=nowB()[0],gb=h.querySelector('.lgo');
+ if(c&&gb&&!have(c.id)&&!c.paper){gb.setAttribute('onclick',"bkGo('"+c.id+"')");gb.textContent=GET[c.id]?'⬇️ بينزل… دوس تفتحه':(+c.cur>1?'📖 كمّل من صفحة '+c.cur:'📖 افتح الكتاب')}
+ if(!c&&gb){var n0=nextB();if(n0){gb.setAttribute('onclick',"lbStart('"+n0.id+"')");gb.textContent='▶️ ابدأ «'+n0.t+'»';var em=h.querySelector('.lempty b');if(em)em.textContent='الكتاب اللي عليه الدور'}}
+ var p=document.createElement('div');p.className='lplan';var s='';
+ if(c&&c.pg){var lf=left(c),v=pace(c),dd=v>0&&lf?Math.ceil(lf/v):0,m30=Math.max(1,Math.ceil(lf/30));if(lf){var dt=new Date();dt.setDate(dt.getDate()+dd);s+="<div>🏁 "+(dd?'بمعدّلك هتخلصه يوم <b>'+dt.toLocaleDateString('ar-EG',{day:'numeric',month:'long'})+'</b>':'فاضلك <b>'+lf+'</b> صفحة')+" • <b>"+m30+"</b> صفحة في اليوم تخلّصه في شهر</div>"}}
+ var n=nextB();if(c&&n)s+="<div class='lnxt' onclick=\"lbInfo('"+n.id+"')\">📚 اللي بعده: <b>"+E(n.t)+"</b>"+(have(n.id)?' <small>📄 جاهز</small>':'')+"</div>";
+ s+="<label class='lfoc'><input type='checkbox' "+(focusOn()?'checked':'')+" onchange='S.bfocus=this.checked;save();render()'> 🎯 كتاب واحد لحد آخره</label>";
+ p.innerHTML=s;h.appendChild(p)}
+var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(S.tab==='books'&&typeof AUTH!=='undefined'&&AUTH){deco();bg()}}catch(e){}return o};
+setTimeout(function(){try{bg()}catch(e){}},12000);
+})();</script>
+<style id="libfocuscss">
+#lib2 .lbk .lmore{position:absolute;top:2px;right:calc(50% - 46px);width:26px;height:26px;min-height:0!important;padding:0!important;margin:0!important;border-radius:50%!important;background:rgba(255,255,255,.92)!important;border:1px solid rgba(0,0,0,.12)!important;color:#3a3226!important;font-size:15px!important;font-weight:900;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.2)!important}
+#lib2 .lbk .lgt{left:auto;right:calc(50% - 44px);top:30px}
+#lib2 .lbk .lnx{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);background:#d98a1c;color:#fff;font-size:10px;font-weight:900;padding:2px 7px;border-radius:9px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+#lib2 .lplan{display:flex;flex-direction:column;gap:6px;margin-top:12px;font-size:12.5px;font-weight:700;color:var(--lm);line-height:1.6}#lib2 .lplan b{color:var(--lt)}
+#lib2 .lnxt{cursor:pointer;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.55);border:1px dashed #e2c98f}html.dark #lib2 .lnxt{background:rgba(0,0,0,.2)}
+#lib2 .lfoc{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;cursor:pointer}#lib2 .lfoc input{width:auto;margin:0}
+.lfo .dlg{width:min(420px,100%)!important}.lfoh{display:flex;gap:14px;align-items:center}.lfoh>div:last-child{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.lfoh b{font-size:16px;font-weight:900;line-height:1.4}.lfoh small{opacity:.7;font-weight:700}.lfos{margin:8px 0 4px;font-weight:800;font-size:13px}
+.lfob{height:8px;border-radius:8px;background:rgba(120,100,60,.15);overflow:hidden}.lfob i{display:block;height:100%;width:4%;background:linear-gradient(90deg,#2fa36f,#1f7a55);transition:width .3s}.lfo .lx{width:100%;margin:12px 0 0!important}
 </style>
 <style id="trbar2css">
 #trbar{left:auto!important;right:12px!important;transform:none!important;bottom:calc(18px + env(safe-area-inset-bottom,0px))!important;width:auto!important;max-width:calc(100vw - 130px)!important;min-width:0;padding:8px 8px 8px 10px!important;gap:8px!important;border-radius:16px!important;font-size:12.5px!important;overflow:hidden;animation:trin .25s ease}
