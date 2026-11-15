@@ -1,0 +1,31 @@
+name: Build Maktabati (native library app)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['library-app/**','.github/workflows/library.yml']
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.9' }
+      - name: Build
+        working-directory: library-app
+        run: gradle --no-daemon assembleDebug 2>&1 | tee /tmp/build.log; test ${PIPESTATUS[0]} -eq 0
+      - name: Save build log on failure
+        if: failure()
+        run: |
+          mkdir -p /tmp/log && cp /tmp/build.log /tmp/log/build.log
+          cd /tmp/log && git init -q -b apk-library-log && git config user.name github-actions && git config user.email actions@github.com
+          git add . && git commit -q -m "build log" && git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git apk-library-log
+      - name: Publish APK to branch apk-library
+        run: |
+          mkdir /tmp/out && cp library-app/app/build/outputs/apk/debug/app-debug.apk /tmp/out/Maktabati.apk
+          cd /tmp/out && git init -q -b apk-library && git config user.name github-actions && git config user.email actions@github.com
+          git add . && git commit -q -m "Build Maktabati APK" && git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git apk-library
