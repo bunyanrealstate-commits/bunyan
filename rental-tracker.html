@@ -761,7 +761,7 @@ function unitCard(u){const a=ua(u),t=today(),end=addM(pd(u.start),u.cm),rem=Math
  h+=(window.availI?availI(u):'')+`<button onclick="mInst('${u.id}')" style='margin-top:8px'>+ دفعة</button></div>`;
  h+=`<div class='card'><h2>🛋 الأثاث</h2><p>التكلفة <b>${$(u.furn||0)}</b> • ${u.fp?'مدفوع ✓ '+fsrcLbl(u):'لم يُدفع بعد'} <button onclick="tog('${u.id}')">${u.fp?'لم يُدفع بعد':'مدفوع ✓'}</button></p>${furRec(u)}${capLine(u)}</div>`;
  h+=`<div class='card'><h2>👤 عقود المستأجرين</h2>`;
- u.leases.forEach((L,k)=>{const m=mp(u,L);h+=`<div class='li lse'><div class='lsi'><div class='lsn'><b>${esc(L.tenant||'مستأجر')}</b> <span class='tg'>${L.sch?(Math.round((+L.cmo||0)*100)/100)+' شهر • '+L.months+' دفعات':(L.xd>0&&L.orig===L.months?(L.months-1)+' شهر و '+L.xd+' يوم':L.months+' شهر')}</span> <span class='mu'>من ${L.start}</span></div>${L.exit?`<div class='lsx'>⏹ خرج ${L.exit}${L.pen?' • شرط جزائي '+$(L.pen)+(L.penp?' ✓':''):' • بدون شرط'}</div>`:''}<div class='kv'><div><small>الإيجار/شهر</small><b>${$(L.rent)}</b></div><div><small>يدفع يوم</small><b>${L.day||pd(L.start).getDate()}</b></div>${L.inet?`<div><small>إنترنت</small><b>${$(L.inet)}</b></div>`:''}${L.advm?`<div><small>دفع مقدماً</small><b>${L.advm} شهر</b></div>`:''}${L.sch&&L.sch[0]?`<div><small>الدفعة الأولى</small><b>${$(L.sch[0].a)}</b></div>`:''}${L.fee&&L.adv?`<div><small>رسوم العقد</small><b>${$(L.adv)}</b></div>`:''}${L.stubA?`<div><small>أيام البداية (${L.stubd} يوم)</small><b>${$(L.stubA)}</b></div>`:''}${window.depOf&&depOf(L)?`<div><small>التأمين</small><b>${depOf(L).mode==='chq'?'شيك ضمان':'نقدي'} ${$(depOf(L).a)}${depOf(L).r?' (رُد)':''}</b></div>`:''}${window.chqList&&chqList(L).length?`<div><small>شيكات معي</small><b>${chqList(L).length}</b></div>`:''}<div><small>ربح شهري</small><b class='${cls(m)}'>${$(m)}</b></div><div><small>متبقٍ للتسليم</small><b>${Math.max(0,L.months-L.rcv.length)} ${L.sch?'دفعة':'شهر'}</b></div></div>${L.rent<a.tr?`<div class='neg lsw'>الإيجار أقل من المطلوب لهدفك (${$(a.tr)})</div>`:''}</div><div class='lsb'>${L.exit||L.rcv.length>=L.months?'':`<button class='p' onclick="mPay('${u.id}',${k})">💵 استلام مبلغ</button>`}${L.exit?'':`<button onclick="mStop('${u.id}',${k})">⏹ وقف العقد</button>`}<button onclick="mLease('${u.id}',${k})">✎</button><button class='x' onclick="delL('${u.id}',${k})">✕</button></div></div>${L.exit?`<div class='pnb ${L.pen&&!L.penp?'due':''}'><span>⏹ العقد موقوف منذ ${L.exit}${L.pen?' • غرامة الخروج المبكر <b>'+$(L.pen)+'</b> — '+(L.penp?'<b class=pos>✓ تم تحصيلها</b>':'<b class=neg>⚠ لم تُحصَّل بعد</b>'):' • بدون غرامة'}</span>${L.pen?`<button onclick="togPen('${u.id}',${k})">${L.penp?'↩ لم يدفعها':'💰 تم تحصيلها'}</button>`:''}<button onclick="mStop('${u.id}',${k})">✎ الغرامة</button><button onclick="resumeL('${u.id}',${k})">↩ استئناف العقد</button></div>`:''}${window.chqRow?chqRow(u,L,k):''}<div class='chips'>${Array.from({length:L.months},(_,i)=>`<span class='chip ${L.rcv.includes(i)?'on':(ppA(L,i)>0?'part':'')}' ${!L.rcv.includes(i)&&ppA(L,i)>0?`title='الباقي ${$(la(L,i))}'`:''} onclick="togR('${u.id}',${k},${i})">${payD(L,i).toLocaleDateString(LOC())}${L.sch?`<br><small>${$(L.sch[i].a)}</small>`:''}</span>`).join('')}</div>${(L.pp||[]).length?`<div class='mu' style='font-size:13px;margin-top:4px'>💵 ${L.pp.map((x,q)=>`مدفوع مقدماً من شهر ${x.i+1}: <b>${$(x.a)}</b>${L.rcv.includes(x.i)?'':` (الباقي ${$(la(L,x.i))})`} <button class='x' style='padding:0 6px;min-height:0' onclick="delPP('${u.id}',${k},${q})">✕</button>`).join(' • ')}</div>`:''}`});
+ u.leases.forEach((L,k)=>{const m=mp(u,L);h+=`<div class='li lse'><div class='lsi'><div class='lsn'><b>${esc(L.tenant||'مستأجر')}</b> <span class='tg'>${L.sch?(Math.round((+L.cmo||0)*100)/100)+' شهر • '+L.months+' دفعات':(L.xd>0&&L.orig===L.months?(L.months-1)+' شهر و '+L.xd+' يوم':L.months+' شهر')}</span> <span class='mu'>من ${L.start}</span></div>${L.exit?`<div class='lsx'>⏹ خرج ${L.exit}${L.pen?' • شرط جزائي '+$(L.pen)+(L.penp?' ✓':''):' • بدون شرط'}</div>`:''}<div class='kv'><div><small>الإيجار/شهر</small><b>${$(L.rent)}</b></div><div><small>يدفع يوم</small><b>${L.day||pd(L.start).getDate()}</b></div>${L.inet?`<div><small>إنترنت</small><b>${$(L.inet)}</b></div>`:''}${L.advm?`<div><small>دفع مقدماً</small><b>${L.advm} شهر</b></div>`:''}${L.sch&&L.sch[0]?`<div><small>الدفعة الأولى</small><b>${$(L.sch[0].a)}</b></div>`:''}${L.fee&&L.adv?`<div><small>رسوم العقد</small><b>${$(L.adv)}</b></div>`:''}${L.stubA?`<div><small>أيام البداية (${L.stubd} يوم)</small><b>${$(L.stubA)}</b></div>`:''}${window.depOf&&depOf(L)?`<div><small>التأمين</small><b>${depOf(L).mode==='chq'?'شيك ضمان':'نقدي'} ${$(depOf(L).a)}${depOf(L).r?' (رُد)':''}</b></div>`:''}${window.chqList&&chqList(L).length?`<div><small>شيكات معي</small><b>${chqList(L).length}</b></div>`:''}<div><small>ربح شهري</small><b class='${cls(m)}'>${$(m)}</b></div><div><small>متبقٍ للتسليم</small><b>${Math.max(0,L.months-L.rcv.length)} ${L.sch?'دفعة':'شهر'}</b></div></div>${L.rent<a.tr?`<div class='neg lsw'>الإيجار أقل من المطلوب لهدفك (${$(a.tr)})</div>`:''}</div><div class='lsb'>${L.exit||L.rcv.length>=L.months?'':`<button class='p' onclick="mPay('${u.id}',${k})">💵 استلام مبلغ</button>`}${L.rcv&&L.rcv.length?`<button onclick="rcptOpen('${u.id}',${k})">🧾 سند قبض</button>`:''}${L.exit?'':`<button onclick="mStop('${u.id}',${k})">⏹ وقف العقد</button>`}<button onclick="mLease('${u.id}',${k})">✎</button><button class='x' onclick="delL('${u.id}',${k})">✕</button></div></div>${L.exit?`<div class='pnb ${L.pen&&!L.penp?'due':''}'><span>⏹ العقد موقوف منذ ${L.exit}${L.pen?' • غرامة الخروج المبكر <b>'+$(L.pen)+'</b> — '+(L.penp?'<b class=pos>✓ تم تحصيلها</b>':'<b class=neg>⚠ لم تُحصَّل بعد</b>'):' • بدون غرامة'}</span>${L.pen?`<button onclick="togPen('${u.id}',${k})">${L.penp?'↩ لم يدفعها':'💰 تم تحصيلها'}</button>`:''}<button onclick="mStop('${u.id}',${k})">✎ الغرامة</button><button onclick="resumeL('${u.id}',${k})">↩ استئناف العقد</button></div>`:''}${window.chqRow?chqRow(u,L,k):''}<div class='chips'>${Array.from({length:L.months},(_,i)=>`<span class='chip ${L.rcv.includes(i)?'on':(ppA(L,i)>0?'part':'')}' ${!L.rcv.includes(i)&&ppA(L,i)>0?`title='الباقي ${$(la(L,i))}'`:''} onclick="togR('${u.id}',${k},${i})">${payD(L,i).toLocaleDateString(LOC())}${L.sch?`<br><small>${$(L.sch[i].a)}</small>`:''}</span>`).join('')}</div>${(L.pp||[]).length?`<div class='mu' style='font-size:13px;margin-top:4px'>💵 ${L.pp.map((x,q)=>`مدفوع مقدماً من شهر ${x.i+1}: <b>${$(x.a)}</b>${L.rcv.includes(x.i)?'':` (الباقي ${$(la(L,x.i))})`} <button class='x' style='padding:0 6px;min-height:0' onclick="delPP('${u.id}',${k},${q})">✕</button>`).join(' • ')}</div>`:''}`});
  h+=`<button class='p' onclick="mLease('${u.id}')" style='margin-top:8px'>+ عقد مستأجر</button></div>`;
  h+=`<div class='card'><h2>💸 مصاريف الاستديو</h2>${uexp(u)||`<p class='mu'>لا توجد مصاريف.</p>`}<button onclick="mExp(null,'${u.id}')" style='margin-top:8px'>+ مصروف على الاستديو</button></div>`;
  return h}
@@ -9354,6 +9354,186 @@ function go(){try{if(typeof AUTH==='undefined'||!AUTH||!S||S.flutLinked)return;v
  var c=window.bnyLinkMake&&bnyLinkMake();if(!c)return;var k='bny_flut_try',l=+(localStorage.getItem(k)||0);if(Date.now()-l<6*3600000)return;localStorage.setItem(k,String(Date.now()));
  location.href='bnyapp://link?c='+encodeURIComponent(c)}catch(e){}}
 setTimeout(go,9000);
+})();</script>
+<script id="rcpt">/* 🧾 سند قبض الإيجار — من كارت العقد: بيتملا من بيانات المستأجر + توقيع المستلم + PDF وواتساب */
+(function(){
+var CSS=`#rcov{position:fixed;inset:0;z-index:9000;background:rgba(10,20,35,.55);overflow:auto;padding:max(12px,env(safe-area-inset-top)) 10px 40px}
+#rcov .rcw{max-width:1100px;margin:0 auto;background:var(--card,#fff);color:var(--tx,#0e0f12);border-radius:16px;padding:14px;display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:16px;direction:rtl}
+@media(max-width:860px){#rcov .rcw{grid-template-columns:minmax(0,1fr)}#rcov .rcpv{order:-1}#rcov .rch{order:-2}}
+#rcov .rch{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px}
+#rcov .rch b{font-size:18px}#rcov .rch button{border:0;background:transparent;font-size:22px;color:inherit;cursor:pointer}
+#rcov .rcf{display:flex;flex-direction:column;gap:10px;min-width:0}
+#rcov .rcf label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:600;color:var(--mu,#5d6270)}
+#rcov .rcf input,#rcov .rcf select,#rcov .rcf textarea{font:inherit;font-size:15px;padding:8px 10px;border:1px solid var(--bd,#d6d9e0);border-radius:10px;background:var(--bg,#f4f6f9);color:inherit;width:100%;min-width:0;box-sizing:border-box}
+#rcov .r2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#rcov .lgs,#rcov .bts{display:flex;gap:6px;flex-wrap:wrap}#rcov .lgs button,#rcov .bts button{flex:1;padding:10px 8px;border-radius:99px;border:1px solid var(--bd,#d6d9e0);background:var(--card,#fff);color:inherit;font:inherit;font-weight:700;cursor:pointer}
+#rcov .lgs button.on,#rcov .bts .p{background:#1473e6;border-color:#1473e6;color:#fff}
+#rcov .sgb{border:1px dashed var(--bd,#d6d9e0);border-radius:12px;padding:8px}
+#rcov .sgh{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:600;color:var(--mu,#5d6270);margin-bottom:6px}
+#rcov .sgh button{padding:4px 12px;border-radius:99px;border:1px solid var(--bd,#d6d9e0);background:var(--card,#fff);color:inherit;font:inherit;cursor:pointer}
+#rcov #rcpad{width:100%;height:auto;aspect-ratio:700/220;background:#fff;border-radius:8px;touch-action:none;display:block}
+#rcov .scale{position:relative;overflow:hidden;min-width:0}#rcov .fit{width:794px;transform-origin:top right;position:absolute;top:0;right:0}
+#rcov [hidden]{display:none!important}
+#rcov .rcm{font-size:13px;color:var(--mu,#5d6270);min-height:18px}
+`+`#rcpaper{width:794px;min-height:560px;margin:0;background:#fff;color:#14213d;border-radius:6px;box-shadow:0 10px 30px rgba(20,33,61,.18);padding:30px 34px 26px;position:relative;font-family:'IBM Plex Sans Arabic',Tahoma,sans-serif;direction:rtl;overflow:hidden}
+#rcpaper .band{position:absolute;inset:0 0 auto 0;height:8px;background:linear-gradient(90deg,#1473e6,#0d9488)}
+#rcpaper .ph{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-top:6px}
+#rcpaper .brand{display:flex;flex-direction:column;align-items:flex-start;direction:ltr}
+#rcpaper .brand b{font-size:30px;letter-spacing:4px;color:#1b4764;font-weight:700;line-height:1}
+#rcpaper .brand span{font-size:11px;letter-spacing:3px;color:#1473e6;font-weight:600;margin-top:3px}
+#rcpaper .ttl{text-align:center}
+#rcpaper .ttl h2{margin:0;font-size:26px;color:#14213d}
+#rcpaper .ttl small{display:block;font-size:13px;letter-spacing:3px;color:#5a6475;direction:ltr;font-weight:600}
+#rcpaper .meta{display:flex;flex-direction:column;gap:6px;font-size:13px;min-width:170px}
+#rcpaper .meta div{display:flex;justify-content:space-between;gap:10px;border:1px solid #c9d2de;border-radius:8px;padding:5px 9px;background:#f3f7fd}
+#rcpaper .meta i{font-style:normal;color:#5a6475}
+#rcpaper .meta b{font-variant-numeric:tabular-nums;direction:ltr}
+#rcpaper .amt{display:flex;align-items:stretch;gap:0;margin:18px 0 6px;border:2px solid #1473e6;border-radius:10px;overflow:hidden}
+#rcpaper .amt .k{background:#1473e6;color:#fff;font-weight:700;padding:10px 14px;display:flex;flex-direction:column;justify-content:center;font-size:14px;line-height:1.3}
+#rcpaper .amt .k small{font-size:10.5px;letter-spacing:1.5px;opacity:.9;direction:ltr}
+#rcpaper .amt .v{flex:1;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:#14213d;font-variant-numeric:tabular-nums;direction:ltr;letter-spacing:1px}
+#rcpaper .lines{display:flex;flex-direction:column;gap:0;margin-top:12px}
+#rcpaper .ln{display:grid;grid-template-columns:150px 1fr 150px;align-items:end;gap:10px;padding:9px 0;border-bottom:1px dotted #c9d2de;font-size:15px}
+#rcpaper .ln .a{color:#5a6475;font-weight:600;font-size:13.5px}
+#rcpaper .ln .e{color:#5a6475;font-weight:600;font-size:12px;direction:ltr;text-align:left;letter-spacing:.3px}
+#rcpaper .ln .x{font-weight:700;color:#14213d;text-align:center;min-height:22px;word-break:break-word}
+#rcpaper .ln .x .en{display:block;font-size:12.5px;font-weight:500;color:#5a6475;direction:ltr}
+#rcpaper .chk{display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
+#rcpaper .chk span{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+#rcpaper .chk span::before{content:"";width:13px;height:13px;border:1.5px solid #14213d;border-radius:3px;display:inline-block;background:#fff}
+#rcpaper .chk span.on::before{background:#1473e6;border-color:#1473e6;box-shadow:inset 0 0 0 2px #fff}
+#rcpaper .sig{display:grid;grid-template-columns:1fr 1fr 1fr;gap:26px;margin-top:30px;text-align:center;font-size:13px}
+#rcpaper .sig div{border-top:1.5px solid #14213d;padding-top:6px;font-weight:700;color:#14213d}
+#rcpaper .sig div small{display:block;color:#5a6475;font-weight:500;direction:ltr;font-size:11px;letter-spacing:.5px}
+#rcpaper .sig .nm{font-weight:600;color:#1b4764;min-height:20px;margin:0 0 6px;font-size:14px;border-bottom:1.5px solid #14213d;padding-bottom:6px}
+#rcpaper .sig>div{border-top:none!important;padding-top:0!important}
+#rcpaper .sig{align-items:end}
+#rcpaper .stamp{width:96px;height:96px;border:2px dashed #b9c4d3;border-radius:50%;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;color:#9aa7b8;font-size:11px}
+#rcpaper .foot{margin-top:18px;display:flex;justify-content:space-between;gap:10px;font-size:11.5px;color:#5a6475;border-top:1px solid #c9d2de;padding-top:8px;flex-wrap:wrap}
+#rcpaper .note{margin-top:10px;font-size:13px;color:#14213d;background:#f3f7fd;border-radius:8px;padding:7px 10px}
+#rcpaper .wm{position:absolute;inset:auto 0 70px 0;text-align:center;font-size:110px;font-weight:700;color:rgba(20,115,230,.045);letter-spacing:14px;direction:ltr;pointer-events:none}
+#rcpaper.L-ar .E,#rcpaper.L-en .A{display:none!important}
+#rcpaper.L-en{direction:ltr}
+#rcpaper.L-ar .ln,#rcpaper.L-en .ln{grid-template-columns:170px 1fr}
+#rcpaper.L-en .ln .e{order:-1;font-size:13.5px;color:#5a6475}
+#rcpaper.L-en .ttl small{font-size:26px;letter-spacing:2px;color:#14213d;font-weight:700}
+#rcpaper.L-en .x .en,#rcpaper.L-ar .x .en{font-size:15px;font-weight:700;color:#14213d;display:inline}
+#rcpaper.L-en .meta i,#rcpaper.L-en .x{text-align:left}
+#rcpaper.L-ar .x{text-align:right}
+#rcpaper.L-ar .chk,#rcpaper.L-en .chk{justify-content:flex-start}
+#rcpaper .x .A{font-size:15px;font-weight:700;color:#14213d}
+#rcpaper.L-en .brand{align-items:flex-end}
+#rcpaper.L-en .amt .k small{font-size:14px;letter-spacing:1px;opacity:1}
+#rcpaper.L-en .sig small{font-size:13px;color:#14213d;font-weight:700}
+#rcpaper .sigimg{height:66px;max-width:200px;object-fit:contain;display:block;margin:0 auto -14px}`;
+var PAPER=`<div id="rcpaper"> <div class="band"></div> <div class="ph"> <div class="meta"> <div><i><span class="A">رقم السند</span><span class="E">Receipt No.</span></i><b id="v_no"></b></div> <div><i><span class="A">التاريخ</span><span class="E">Date</span></i><b id="v_dt"></b></div> </div> <div class="ttl"><h2 class="A">سند قبض</h2><small class="E">RECEIPT VOUCHER</small></div> <div class="brand" style="min-width:170px"></div> </div> <div class="amt"><div class="k"><span class="A">المبلغ</span><small class="E">AMOUNT</small></div><div class="v" id="v_amt"></div><div class="k" style="background:#0d9488"><span class="A">درهم</span><small class="E">AED</small></div></div> <div class="lines"> <div class="ln"><div class="a A">استلمنا من السيد/ة</div><div class="x" id="v_from"></div><div class="e E">Received from</div></div> <div class="ln" id="l_tid"><div class="a A">رقم الهوية</div><div class="x" id="v_tid" style="direction:ltr"></div><div class="e E">Emirates ID</div></div> <div class="ln"><div class="a A">مبلغ وقدره</div><div class="x"><span class="A" id="v_wa"></span><span class="en E" id="v_we"></span></div><div class="e E">The sum of</div></div> <div class="ln"><div class="a A">وذلك عن</div><div class="x" id="v_for"></div><div class="e E">Being payment of</div></div> <div class="ln"><div class="a A">العنوان</div><div class="x" id="v_unit"></div><div class="e E">Property</div></div> <div class="ln"><div class="a A">عن الفترة</div><div class="x"><span class="A" id="v_pa"></span><span class="E en" id="v_pe"></span></div><div class="e E">Period</div></div> <div class="ln"><div class="a A">طريقة الدفع</div><div class="x"><div class="chk"><span id="c_cash"><b class="A">نقداً</b> <b class="E">Cash</b></span><span id="c_chq"><b class="A">شيك</b> <b class="E">Cheque</b></span><span id="c_tr"><b class="A">تحويل</b> <b class="E">Transfer</b></span></div><span class="en" id="v_chq"></span></div><div class="e E">Payment method</div></div> </div> <div class="note" id="v_nt" hidden></div> <div class="sig"> <div><img class="sigimg" id="v_sig" alt="" hidden><p class="nm" id="v_rcv"></p><span class="A">المستلم</span><small class="E">Received by</small></div> <div><div class="stamp"><span class="A">الختم</span>&nbsp;<span class="E">Stamp</span></div></div> <div><p class="nm" id="v_from2"></p><span class="A">المستأجر</span><small class="E">Tenant</small></div> </div> <div class="foot"><span></span><span id="v_ph" style="direction:ltr"></span></div>`;
+/* المبلغ بالحروف — عربي */
+function arWords(n){
+  n=Math.floor(n);if(n===0)return 'صفر';
+  const ones=['','واحد','اثنان','ثلاثة','أربعة','خمسة','ستة','سبعة','ثمانية','تسعة','عشرة','أحد عشر','اثنا عشر','ثلاثة عشر','أربعة عشر','خمسة عشر','ستة عشر','سبعة عشر','ثمانية عشر','تسعة عشر'];
+  const tens=['','','عشرون','ثلاثون','أربعون','خمسون','ستون','سبعون','ثمانون','تسعون'];
+  const hund=['','مائة','مائتان','ثلاثمائة','أربعمائة','خمسمائة','ستمائة','سبعمائة','ثمانمائة','تسعمائة'];
+  const u99=x=>{if(x<20)return ones[x];const o=x%10,t=Math.floor(x/10);return o?ones[o]+' و'+tens[t]:tens[t]};
+  const u999=x=>{const h=Math.floor(x/100),r=x%100;return [hund[h],r?u99(r):''].filter(Boolean).join(' و')};
+  const grp=(x,one,two,few,many)=>{if(x===1)return one;if(x===2)return two;if(x>=3&&x<=10)return u999(x)+' '+few;return u999(x)+' '+many};
+  const parts=[];const m=Math.floor(n/1e6),th=Math.floor((n%1e6)/1000),r=n%1000;
+  if(m)parts.push(grp(m,'مليون','مليونان','ملايين','مليون'));
+  if(th)parts.push(grp(th,'ألف','ألفان','آلاف','ألف'));
+  if(r)parts.push(u999(r));
+  return parts.join(' و');
+}
+/* English */
+function enWords(n){
+  n=Math.floor(n);if(n===0)return 'Zero';
+  const a=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'],t=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  const h=x=>{let s='';if(x>=100){s+=a[Math.floor(x/100)]+' Hundred';x%=100;if(x)s+=' '}if(x>=20){s+=t[Math.floor(x/10)];if(x%10)s+='-'+a[x%10]}else if(x)s+=a[x];return s};
+  const p=[];const m=Math.floor(n/1e6),th=Math.floor((n%1e6)/1000),r=n%1000;
+  if(m)p.push(h(m)+' Million');if(th)p.push(h(th)+' Thousand');if(r)p.push(h(r));return p.join(' ');
+}
+
+var LS={get:function(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+function g(id){return document.getElementById(id)}
+function iso2(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function dmy(s){if(!s)return '';var p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
+function num(v){var x=parseFloat(String(v).replace(/[,\s]/g,'').replace(/[٠-٩]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'.indexOf(d)}));return isNaN(x)?0:x}
+function fmt(x){return x.toLocaleString('en-US',{minimumFractionDigits:x%1?2:0,maximumFractionDigits:2})}
+var F=['no','dt','from','tid','amt','pm','chqno','for','unit','p1','p2','rcv','ph','nt'],lang='ar',ctx=null;
+function form(){return `<div class="rch"><b>🧾 سند قبض</b><button type="button" id="rcx" aria-label="قفل">✕</button></div>
+<div class="rcf">
+ <div class="lgs"><button type="button" data-l="ar">عربي</button><button type="button" data-l="en">English</button><button type="button" data-l="both">عربي + English</button></div>
+ <div class="r2"><label>رقم السند<input id="rc_no" inputmode="numeric"></label><label>التاريخ<input id="rc_dt" type="date"></label></div>
+ <label>استلمنا من<input id="rc_from"></label>
+ <label>رقم الهوية<input id="rc_tid" dir="ltr" inputmode="numeric" placeholder="784-xxxx-xxxxxxx-x"></label>
+ <div class="r2"><label>المبلغ (درهم)<input id="rc_amt" inputmode="decimal"></label><label>طريقة الدفع<select id="rc_pm"><option value="cash">نقداً</option><option value="chq">شيك</option><option value="tr">تحويل بنكي</option></select></label></div>
+ <label id="rc_chqw" hidden>رقم الشيك / التحويل<input id="rc_chqno"></label>
+ <label>وذلك عن<input id="rc_for"></label>
+ <label>العنوان / الوحدة<input id="rc_unit"></label>
+ <div class="r2"><label>الفترة من<input id="rc_p1" type="date"></label><label>إلى<input id="rc_p2" type="date"></label></div>
+ <div class="r2"><label>المستلم<input id="rc_rcv"></label><label>موبايل<input id="rc_ph" inputmode="tel"></label></div>
+ <div class="sgb"><div class="sgh"><span>✍️ توقيع المستلم — امضي بصباعك</span><button type="button" id="rcclr">امسح</button></div><canvas id="rcpad" width="700" height="220"></canvas></div>
+ <label>ملاحظات<textarea id="rc_nt" rows="2"></textarea></label>
+ <div class="bts"><button type="button" class="p" id="rcpdf">📄 PDF وابعته</button><button type="button" id="rcpng">🖼 صورة</button></div>
+ <div class="rcm" id="rcmsg"></div>
+</div>
+<div class="rcpv"><div class="scale" id="rcscale"><div class="fit" id="rcfit">`+PAPER+`</div></div></div>`}
+function V(){var v={};F.forEach(function(k){v[k]=g('rc_'+k).value});return v}
+function fit(){var sc=g('rcscale'),f=g('rcfit'),p=g('rcpaper');if(!sc||!p)return;var k=Math.min(1,sc.clientWidth/794);f.style.transform='scale('+k+')';sc.style.height=(p.offsetHeight*k)+'px'}
+function paint(){
+ var v=V(),a=num(v.amt),P=g('rcpaper');if(!P)return;var q=function(id){return P.querySelector('#'+id)};
+ q('v_no').textContent=v.no||'—';q('v_dt').textContent=dmy(v.dt);q('v_amt').textContent=a?fmt(a):'';
+ q('v_from').textContent=v.from;q('v_from2').textContent=v.from;var fils=Math.round((a%1)*100);
+ q('v_wa').textContent=a?arWords(a)+' درهم'+(fils?' و'+arWords(fils)+' فلس':'')+' فقط لا غير':'';
+ q('v_we').textContent=a?enWords(a)+' UAE Dirhams'+(fils?' and '+fils+' Fils':'')+' Only':'';
+ var isDef=/^\s*إيجار غرفة وصالة\s*$/.test(v.for),fo=q('v_for');fo.innerHTML='';
+ if(lang==='en'&&isDef)fo.textContent='Rent of 1 Bedroom & Hall (1 BHK)';else{fo.append(v.for);if(lang==='both'&&isDef){var e=document.createElement('span');e.className='en';e.textContent='Rent of 1 Bedroom & Hall (1 BHK)';fo.append(e)}}
+ q('v_unit').textContent=v.unit;q('v_tid').textContent=v.tid;q('l_tid').hidden=!v.tid.trim();
+ q('v_pa').textContent=v.p1||v.p2?('من '+dmy(v.p1)+'  إلى '+dmy(v.p2)):'';q('v_pe').textContent=v.p1||v.p2?('From '+dmy(v.p1)+'  To '+dmy(v.p2)):'';
+ ['cash','chq','tr'].forEach(function(k){q('c_'+k).classList.toggle('on',v.pm===k)});g('rc_chqw').hidden=v.pm==='cash';
+ q('v_chq').textContent=v.pm!=='cash'&&v.chqno?((v.pm==='chq'?'Cheque No. ':'Ref. ')+v.chqno):'';
+ q('v_rcv').textContent=v.rcv;q('v_ph').textContent=v.ph?'📞 '+v.ph:'';q('v_nt').hidden=!v.nt.trim();q('v_nt').textContent=v.nt;
+ var sg=LS.get('rc_sig');q('v_sig').hidden=!sg;if(sg)q('v_sig').src=sg;
+ P.className='L-'+lang;document.querySelectorAll('#rcov .lgs button').forEach(function(b){b.classList.toggle('on',b.dataset.l===lang)});
+ LS.set('rc_me',{rcv:v.rcv,ph:v.ph});LS.set('rc_lang',lang);fit()}
+function pad(){var c=g('rcpad'),x=c.getContext('2d'),dr=false,last=null,has=false;x.lineWidth=4.2;x.lineCap='round';x.lineJoin='round';x.strokeStyle='#14213d';
+ var pos=function(e){var r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.width/r.width,y:(e.clientY-r.top)*c.height/r.height}};
+ var old=LS.get('rc_sig');if(old){var im=new Image();im.onload=function(){x.drawImage(im,0,0,c.width,c.height)};im.src=old}
+ c.addEventListener('pointerdown',function(e){dr=true;last=pos(e);try{c.setPointerCapture(e.pointerId)}catch(_){}});
+ c.addEventListener('pointermove',function(e){if(!dr)return;var p=pos(e);x.beginPath();x.moveTo(last.x,last.y);x.lineTo(p.x,p.y);x.stroke();last=p;has=true});
+ var end=function(){if(!dr)return;dr=false;if(has){LS.set('rc_sig',c.toDataURL('image/png'));paint()}};
+ c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);c.addEventListener('pointerleave',end);
+ g('rcclr').onclick=function(){x.clearRect(0,0,c.width,c.height);has=false;LS.set('rc_sig',null);paint()}}
+function phoneOf(s){var ph=String(s||'').replace(/[^\d]/g,'');if(/^05\d{8}$/.test(ph))ph='971'+ph.slice(1);if(/^5\d{8}$/.test(ph))ph='971'+ph;return ph}
+function blob64(b){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(String(r.result).split(',')[1])};r.onerror=rej;r.readAsDataURL(b)})}
+function fname(ext){var v=V();return 'receipt-'+(v.no||'0')+'-'+((v.from||'tenant').trim().replace(/\s+/g,'-'))+'.'+ext}
+async function canvasOf(){var f=g('rcfit'),t=f.style.transform;f.style.transform='none';try{window._sc=2.5;return await snap(g('rcpaper'))}finally{f.style.transform=t;window._sc=null}}
+async function out(kind){
+ var v=V();if(!num(v.amt)||!v.from.trim()){g('rcmsg').textContent='اكتب اسم المستأجر والمبلغ الأول.';return}
+ g('rcmsg').textContent='⏳ بيتجهز…';var cv,b,nm;
+ try{cv=await canvasOf()}catch(e){g('rcmsg').textContent='⚠️ مقدرتش أعمل السند';return}
+ if(kind==='png'){b=await new Promise(function(r){cv.toBlob(r,'image/png')});nm=fname('png')}
+ else{var PW=595,PH=420,M=14,k=Math.min((PW-2*M)/cv.width,(PH-2*M)/cv.height),dw=cv.width*k,dh=cv.height*k,bs=atob(cv.toDataURL('image/jpeg',.95).split(',')[1]),u=new Uint8Array(bs.length);for(var i=0;i<bs.length;i++)u[i]=bs.charCodeAt(i);
+  b=buildPdf([{jpg:u,iw:cv.width,ih:cv.height,dw:dw,dh:dh,x:(PW-dw)/2,y:(PH-dh)/2}],PW,PH);nm=fname('pdf')}
+ var n=parseInt(v.no,10);if(n)LS.set('rc_last',Math.max(n,LS.get('rc_last')||0));
+ var L=ctx&&ctx.L,ph=phoneOf(L&&L.phone),msg=(lang==='en'?'Hello '+v.from+'\nRent receipt — AED '+fmt(num(v.amt)):'مرحبا '+v.from+' 👋\nده سند استلام الإيجار — '+fmt(num(v.amt))+' درهم');
+ var C=window.Capacitor,W=C&&C.Plugins&&C.Plugins.WaBiz,mime=kind==='png'?'image/png':'application/pdf';
+ if(W&&W.sendFile){try{await W.sendFile({data:await blob64(b),name:nm,phone:ph,text:msg,mime:mime});g('rcmsg').textContent=ph?'📤 فتحت واتساب على شات المستأجر — دوس إرسال':'📤 اختار المستأجر في واتساب ودوس إرسال';return}catch(e){}}
+ try{var file=new File([b],nm,{type:mime});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text:msg});g('rcmsg').textContent='✅ اتبعت';return}}catch(e){if(e&&e.name==='AbortError'){g('rcmsg').textContent='';return}}
+ try{saveFile(b,nm);g('rcmsg').textContent='✅ اتحفظ: '+nm}catch(e){g('rcmsg').textContent='⚠️ مقدرتش أحفظه'}}
+window.rcptOpen=function(uid,k){
+ var u=(S.units||[]).find(function(x){return x.id===uid}),L=u&&u.leases&&u.leases[k];ctx={u:u,L:L};
+ if(!g('rccss')){var st=document.createElement('style');st.id='rccss';st.textContent=CSS;document.head.appendChild(st)}
+ var ov=document.createElement('div');ov.id='rcov';ov.innerHTML='<div class="rcw">'+form()+'</div>';document.body.appendChild(ov);
+ lang=LS.get('rc_lang')||'ar';var me=LS.get('rc_me')||{},t=new Date();
+ var i=-1;if(L){var rc=(L.rcv||[]).slice().sort(function(a,b){return a-b});i=rc.length?rc[rc.length-1]:0}
+ var amt=L?((L.rav&&L.rav[i]!=null)?L.rav[i]:la(L,i)):'';
+ var p1=L?payD(L,i):t,p2=L&&i+1<(L.months||0)?payD(L,i+1):new Date(p1.getFullYear(),p1.getMonth()+1,p1.getDate());p2=new Date(p2.getFullYear(),p2.getMonth(),p2.getDate()-1);
+ var d={no:String((LS.get('rc_last')||0)+1).padStart(4,'0'),dt:iso2(t),from:L?(L.tenant||''):'',tid:L?(L.tid||''):'',amt:amt?Math.round(amt*100)/100:'',pm:'cash',chqno:'',for:'إيجار غرفة وصالة',unit:u?(u.name||''):'',p1:iso2(p1),p2:iso2(p2),rcv:me.rcv||((typeof A!=='undefined'&&A&&A.u)||''),ph:me.ph||'',nt:''};
+ F.forEach(function(kk){g('rc_'+kk).value=d[kk]});
+ F.forEach(function(kk){g('rc_'+kk).addEventListener('input',paint);g('rc_'+kk).addEventListener('change',paint)});
+ document.querySelectorAll('#rcov .lgs button').forEach(function(b){b.onclick=function(){lang=b.dataset.l;paint()}});
+ g('rcx').onclick=function(){ov.remove();removeEventListener('resize',fit)};ov.addEventListener('click',function(e){if(e.target===ov){ov.remove()}});
+ g('rcpdf').onclick=function(){out('pdf')};g('rcpng').onclick=function(){out('png')};
+ addEventListener('resize',fit);pad();paint();setTimeout(fit,50)};
 })();</script>
 </body>
 </html>
