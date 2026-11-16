@@ -225,4 +225,35 @@ class Engine {
     r['eq'] = r['A']! - r['L']!;
     return r;
   }
+
+  /* ───── المواعيد: دفعات الشركة، الإيجارات، نهاية العقود، المصاريف (items في القديم) ───── */
+  static String nthT(int k, num of, String last) { final o = of.ceil(); if (!(o > 1)) return ''; return k >= o ? ' ($last $k/$o)' : ' ($k من $o)'; }
+  static int dd(String d) => ((ms(pd(d)) - ms(today())) / 864e5).round();
+  List<Map<String, dynamic>> items() {
+    final t = today(); final r = <Map<String, dynamic>>[];
+    void P(String ty, String id, String d, String label, num amt, List<int> offs, [Map<String, dynamic>? x]) => r.add({'ty': ty, 'id': id, 'd': d, 'label': label, 'amt': amt, 'offs': offs, ...?x});
+    for (final u in SU()) {
+      final inst = objs(u['inst']);
+      for (var k = 0; k < inst.length; k++) {
+        final i = inst[k]; if (truthy(i['p'])) continue;
+        final g = inst.where((j) => truthy(j['rn']) == truthy(i['rn'])).toList();
+        P('inst', '${u['id']}i$k', str(i['d']), 'دفعة ${str(u['company']).isEmpty ? 'الشركة' : str(u['company'])} - ${str(u['name'])}${truthy(i['rn']) ? ' — العقد المجدد' : ''}${nthT(g.indexOf(i) + 1, g.length, 'الأخيرة')}', n0(i['a']), [30, 21, 14, 7, 2, 0], {'u': u['id'], 'k': k});
+      }
+      final ls = objs(u['leases']);
+      for (var k = 0; k < ls.length; k++) {
+        final L = ls[k]; final rc = rcv(L);
+        for (var i = 0; i < months(L); i++) { if (!rc.contains(i)) P('rent', '${u['id']}l${k}_$i', iso(payD(L, i)), 'إيجار ${str(L['tenant']).isEmpty ? 'مستأجر' : str(L['tenant'])} - ${str(u['name'])}${nthT(i + 1, months(L), 'آخر إيجار')}', la(L, i), [1, 0], {'u': u['id'], 'k': k, 'i': i}); }
+        P('end', '${u['id']}e$k', iso(lend(L)), 'انتهاء عقد ${str(L['tenant']).isEmpty ? 'المستأجر' : str(L['tenant'])} - ${str(u['name'])}', 0, [30, 14, 7, 0], {'u': u['id'], 'k': k});
+      }
+      P('cend', '${u['id']}c', iso(addM(pd(u['start']), n(u['cm']))), 'انتهاء عقد الشركة - ${str(u['name'])}', 0, [0], {'u': u['id']});
+    }
+    final debts = objs(S['debts']); for (var k = 0; k < debts.length; k++) { P('debt', 'd$k', str(debts[k]['d']), 'دفعة مستحقة عليّ: ${str(debts[k]['w'])}', n0(debts[k]['a']), [0]); }
+    final recv = objs(S['recv']); for (var k = 0; k < recv.length; k++) { P('recv', 'r$k', str(recv[k]['d']), 'مستحقات لي: ${str(recv[k]['w'])}', n0(recv[k]['a']), [0]); }
+    final se = SE();
+    for (var k = 0; k < se.length; k++) {
+      final x = se[k]; final cnt = truthy(x['n']) ? n(x['n']).toInt() : 1;
+      for (var i = 0; i < cnt; i++) { final d = iso(addM(pd(x['d']), i)); if (!pd(d).isBefore(t)) P('exp', 'x${k}_$i', d, 'مصروف: ${str(x['w'])}', n0(x['a']), [0]); }
+    }
+    return r;
+  }
 }

@@ -4,6 +4,9 @@ import '../core/engine.dart';
 import '../core/js.dart';
 import 'theme.dart';
 import 'shell.dart';
+import 'units.dart';
+import 'dialogs.dart';
+import '../core/actions.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -25,6 +28,8 @@ class HomePage extends StatelessWidget {
         Expanded(child: _Stat('🧾 الإيجار المقبوض', rp['rev']!)),
       ]),
       const SizedBox(height: 14),
+      _Upcoming(e),
+      const SizedBox(height: 10),
       Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Text('📊 المركز المالي', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
         const SizedBox(height: 8),
@@ -60,4 +65,49 @@ class _Stat extends StatelessWidget {
         Text(money(v), style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: sign(v))),
         if (sub != null) Text(sub!, style: const TextStyle(color: kMuted, fontSize: 11)),
       ])));
+}
+
+/// المتأخر والقادم خلال 30 يوم — دوس على الإيجار تسجّله اتدفع
+class _Upcoming extends StatelessWidget {
+  final Engine e;
+  const _Upcoming(this.e);
+  @override
+  Widget build(BuildContext context) {
+    final all = e.items().where((x) => ['rent', 'inst', 'exp', 'end', 'cend', 'debt', 'recv'].contains(x['ty'])).toList()
+      ..sort((a, b) => str(a['d']).compareTo(str(b['d'])));
+    final late = all.where((x) => (x['ty'] == 'rent' || x['ty'] == 'inst' || x['ty'] == 'debt') && Engine.dd(x['d']) < 0).toList();
+    final soon = all.where((x) { final d = Engine.dd(x['d']); return d >= 0 && d <= 30; }).toList();
+    if (late.isEmpty && soon.isEmpty) return const SizedBox();
+    Widget row(Map<String, dynamic> x) {
+      final d = Engine.dd(x['d']);
+      final ic = {'rent': '💰', 'inst': '🏢', 'exp': '🧾', 'end': '📄', 'cend': '🏁', 'debt': '⬆️', 'recv': '⬇️'}[x['ty']] ?? '•';
+      final when = d < 0 ? 'متأخر ${-d} يوم' : d == 0 ? 'النهارده' : d == 1 ? 'بكره' : 'بعد $d يوم';
+      return InkWell(
+        onTap: () async {
+          final u = x['u'] == null ? null : Act.unit(str(x['u']));
+          if (u == null) return;
+          if (x['ty'] == 'rent') {
+            final k = x['k'] as int, i = x['i'] as int; final L = objs(u['leases'])[k];
+            if (!await lockOk(context, [str(x['d'])]) || !context.mounted) return;
+            if (await confirmDlg(context, 'تأكيد استلام ${money(Engine.la(L, i))} من ${str(L['tenant'])} — ${str(u['name'])} (دفعة ${i + 1})؟')) { await Act.rentPaid(u, k, i); if (context.mounted) toast(context, '✅ اتسجل'); }
+          } else { Navigator.of(context).push(MaterialPageRoute(builder: (_) => UnitDetail(u))); }
+        },
+        child: Padding(padding: const EdgeInsets.symmetric(vertical: 7), child: Row(children: [
+          Text(ic), const SizedBox(width: 8),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(str(x['label']), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+            Text('${str(x['d'])} • $when', style: TextStyle(color: d < 0 ? kRed : kMuted, fontSize: 12)),
+          ])),
+          if ((x['amt'] as num) != 0) Text(money(x['amt'] as num), style: TextStyle(fontWeight: FontWeight.w900, color: x['ty'] == 'rent' || x['ty'] == 'recv' ? kGreen : kRed)),
+        ])),
+      );
+    }
+    return Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      if (late.isNotEmpty) ...[Text('⚠️ متأخر (${late.length})', style: const TextStyle(fontWeight: FontWeight.w900, color: kRed, fontSize: 16)), for (final x in late.take(20)) row(x), const Divider()],
+      Text('📅 الـ30 يوم الجايين (${soon.length})', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+      if (soon.isEmpty) const Text('مفيش حاجة', style: TextStyle(color: kMuted)),
+      for (final x in soon.take(30)) row(x),
+      const Text('دوس على الإيجار علشان تسجّل إنه اتدفع', style: TextStyle(color: kMuted, fontSize: 11)),
+    ])));
+  }
 }
