@@ -39,6 +39,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final e = Engine(Store.I.S, WS: Ws.I.resolve());
+    debugPrint('BNYDBG home ws=${Ws.I.resolve()} key=$key');
     final cash = e.cashNow(); final rp = e.rcvP(); final f = e.fpos();
     final mine = Store.I.S['pmode'] == 'me';
     return ListView(padding: const EdgeInsets.all(14), children: [

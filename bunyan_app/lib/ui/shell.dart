@@ -51,7 +51,9 @@ class _ShellState extends State<Shell> {
     final st = Store.I;
     if (!st.loaded) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     if (!st.linked && lst(st.S['units']).isEmpty) return const LinkScreen();
-    final pages = [const HomePage(), const UnitsPage(), const ExpensesPage(), const MorePage()];
+    // مش const: لازم الصفحة تتبني من جديد لما المجموعة أو البيانات تتغير
+    debugPrint('BNYDBG shell ws=${Ws.I.resolve()} v=${Ws.I.value}');
+    final pages = <Widget>[HomePage(key: ValueKey('h${Ws.I.resolve()}')), UnitsPage(key: ValueKey('u${Ws.I.resolve()}')), ExpensesPage(key: ValueKey('e${Ws.I.resolve()}')), MorePage(key: ValueKey('m${Ws.I.resolve()}'))];
     return Directionality(
       textDirection: Tr.dir,
       child: Scaffold(
@@ -94,7 +96,7 @@ class _ShellState extends State<Shell> {
         for (final g in gs)
           Padding(
             padding: const EdgeInsetsDirectional.only(end: 6),
-            child: ChoiceChip(label: Text(str(g['name']), style: const TextStyle(fontSize: 12)), selected: cur == g['id'], onSelected: (_) => Ws.I.value = str(g['id'])),
+            child: ChoiceChip(label: Text(str(g['name']), style: const TextStyle(fontSize: 12)), selected: cur == g['id'], onSelected: (_) { debugPrint('BNYDBG tap ${g['id']}'); Ws.I.value = str(g['id']); }),
           ),
       ]),
     );
