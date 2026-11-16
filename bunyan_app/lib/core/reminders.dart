@@ -1,5 +1,6 @@
 /// تذكيراتي: نفس بيانات القديم (S.rem) + إشعارات على الموبايل
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tzd;
 import 'package:timezone/timezone.dart' as tz;
@@ -42,10 +43,14 @@ class Rem {
   }
 
   /// نعيد جدولة كل التذكيرات الشغالة (لحد 60 جاية)
+  /// لو بنيان القديم لسه متسطّب، هو اللي بيرن (علشان التذكير ميجيش مرتين)
+  static Future<bool> oldInstalled() async { try { return await const MethodChannel('bny/link').invokeMethod<bool>('hasOld') ?? false; } catch (_) { return false; } }
+
   static Future<int> schedule() async {
     if (kIsWeb) return 0;
     await init();
     await _n.cancelAll();
+    if (await oldInstalled()) return 0;
     final now = DateTime.now().millisecondsSinceEpoch; var k = 0;
     const det = NotificationDetails(android: AndroidNotificationDetails('bny_rem', 'تذكيراتي', channelDescription: 'تذكيرات بنيان', importance: Importance.max, priority: Priority.high, playSound: true, enableVibration: true));
     for (final r in objs(Store.I.S['rem'])) {
