@@ -22,7 +22,7 @@ class ExpensesPage extends StatelessWidget {
         if (l.isEmpty) Padding(padding: EdgeInsets.all(30), child: Text(Tr.t('مفيش مصاريف'), textAlign: TextAlign.center)),
         for (final x in l) Card(child: ListTile(
           title: Text(str(x['w']).isEmpty ? Tr.t('مصروف') : str(x['w']), style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text('${str(x['d'])}${truthy(x['u']) ? '  •  ${str(e.U(x['u'])?['name'])}' : ''}${n0(x['n']) > 1 ? '  •  يتكرر ${str(x['n'])} شهور' : ''}'),
+          subtitle: Text('${str(x['d'])}${truthy(x['u']) ? '  •  ${Priv.un(e.U(x['u'])?['name'])}' : ''}${n0(x['n']) > 1 ? '  •  يتكرر ${str(x['n'])} شهور' : ''}'),
           trailing: Text(money(n0(x['a'])), style: const TextStyle(fontWeight: FontWeight.bold)),
           onTap: () => edit(context, x),
           onLongPress: () async {

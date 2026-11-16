@@ -35,6 +35,9 @@ jobs:
           if 'com.bunyan.furnished' not in s: s=s.replace('<queries>','<queries><package android:name="com.bunyan.furnished"/>',1) if '<queries>' in s else s.replace('</manifest>','<queries><package android:name="com.bunyan.furnished"/></queries></manifest>',1)
           open(p,'w').write(s)
           PY
+          # البصمة (local_auth) محتاجة ثيم AppCompat + dependency
+          for f in android/app/src/main/res/values/styles.xml android/app/src/main/res/values-night/styles.xml; do [ -f $f ] && sed -i 's#parent="@android:style/Theme.Light.NoTitleBar"#parent="Theme.AppCompat.Light.NoActionBar"#; s#parent="@android:style/Theme.Black.NoTitleBar"#parent="Theme.AppCompat.NoActionBar"#' $f || true; done
+          grep -q 'USE_BIOMETRIC' android/app/src/main/AndroidManifest.xml || sed -i 's#<application#<uses-permission android:name="android.permission.USE_BIOMETRIC"/>\n    <application#' android/app/src/main/AndroidManifest.xml
           mkdir -p ~/.android && cp ../keystore/debug.keystore ~/.android/debug.keystore
           # توقيع ثابت لكل النسخ (علشان التحديث يتسطّب فوق القديم)
           python3 - <<'PY'
@@ -54,10 +57,10 @@ jobs:
               if 'coreLibraryDesugaringEnabled' not in s:
                   if p.endswith('.kts'):
                       s=s.replace('compileOptions {','compileOptions {\n        isCoreLibraryDesugaringEnabled = true',1)
-                      s+='\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")\n}\n'
+                      s+='\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")\n    implementation("androidx.appcompat:appcompat:1.7.0")\n}\n'
                   else:
                       s=s.replace('compileOptions {','compileOptions {\n        coreLibraryDesugaringEnabled true',1)
-                      s+="\ndependencies {\n    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'\n}\n"
+                      s+="\ndependencies {\n    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'\n    implementation 'androidx.appcompat:appcompat:1.7.0'\n}\n"
               open(p,'w').write(s); print('patched',p)
           PY
           grep -n "signingConfig" android/app/build.gradle* || true

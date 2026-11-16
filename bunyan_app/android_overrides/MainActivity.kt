@@ -7,12 +7,12 @@ import android.content.Intent
 import android.content.pm.PackageInstaller
 import android.os.Build
 import java.io.File
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 /** بيستقبل كود الربط اللي بنيان القديم بيبعته لوحده (bnyapp://link?c=...) */
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
     private var link: String? = null
     private var ch: MethodChannel? = null
     override fun configureFlutterEngine(engine: FlutterEngine) {

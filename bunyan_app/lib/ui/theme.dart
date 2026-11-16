@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../core/store.dart';
+import '../core/js.dart';
 
 /// ألوان بنيان (نفس البرنامج القديم)
 const kAc = Color(0xFF1473E6), kAcD = Color(0xFF126AD3), kInk = Color(0xFF0E0F12), kMuted = Color(0xFF62646D), kBg = Color(0xFFEAF6F3), kBd = Color(0xFFD6D7DD),
@@ -27,7 +29,20 @@ ThemeData bunyanTheme() => ThemeData(
 
 final _nf = NumberFormat('#,##0', 'en');
 /// زي $() في بنيان: رقم بالدرهم
-String money(num v) { final r = v.isNaN ? 0 : v.round(); return '${r < 0 ? '-' : ''}${_nf.format(r.abs())}'; }
+String money(num v) { if (Priv.on) return '•••••'; final r = v.isNaN ? 0 : v.round(); return '${r < 0 ? '-' : ''}${_nf.format(r.abs())}'; }
+
+/// 👁 العين: إخفاء الأرقام وأسماء الاستديوهات (زي القديم)
+class Priv {
+  static bool get on => Store.I.cfg['hide'] == true;
+  /// اسم الاستديو
+  static String un(dynamic name) => on ? '••••' : str(name);
+  /// نص فيه أسماء استديوهات (زي التنبيهات)
+  static String txt(String s) {
+    if (!on) return s;
+    var o = s; for (final u in objs(Store.I.S['units'])) { final n = str(u['name']); if (n.length > 1) o = o.replaceAll(n, '••••'); }
+    return o.replaceAll(RegExp(r'\d[\d,]{2,}'), '•••');
+  }
+}
 Color sign(num v) => v < 0 ? kRed : kGreen;
 
 /// كارت بنيان: شريط ملوّن فوق + لون خفيف + عنوان بنفس اللون (زي cardsep في القديم)
@@ -71,7 +86,7 @@ class BStat extends StatelessWidget {
           Expanded(child: Padding(padding: const EdgeInsets.fromLTRB(12, 10, 12, 10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(l, style: const TextStyle(color: kMuted, fontSize: 12, fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
-            Text(text ?? money(v), style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: Color.alphaBlend(Colors.black.withOpacity(.08), col))),
+            Text(text != null ? (Priv.on ? '•••' : text!) : money(v), style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: Color.alphaBlend(Colors.black.withOpacity(.08), col))),
             if (sub != null) Text(sub!, style: const TextStyle(color: kMuted, fontSize: 11)),
           ]))),
         ])),

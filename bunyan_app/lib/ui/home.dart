@@ -22,7 +22,7 @@ class _Renew extends StatelessWidget {
     return Padding(padding: const EdgeInsets.only(top: 14), child: BCard(c: const Color(0xFF0891B2), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(Tr.t('🔄 عقود قربت تخلص — هتجدد؟'), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
       for (final x in R) Padding(padding: const EdgeInsets.only(top: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('${str((x['L'] as Obj)['tenant']).isEmpty ? 'مستأجر' : str((x['L'] as Obj)['tenant'])} — ${str((x['u'] as Obj)['name'])}', style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text('${str((x['L'] as Obj)['tenant']).isEmpty ? 'مستأجر' : str((x['L'] as Obj)['tenant'])} — ${Priv.un((x['u'] as Obj)['name'])}', style: const TextStyle(fontWeight: FontWeight.bold)),
         Text('${(x['n'] as int) > 0 ? 'بيخلص بعد ${x['n']} يوم' : (x['n'] == 0 ? 'بيخلص النهارده' : 'خلص من ${-(x['n'] as int)} يوم')} • ${iso(x['e'] as DateTime)}', style: const TextStyle(fontSize: 12, color: kMuted)),
         Wrap(spacing: 6, children: [
           FilledButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => LeaseEdit(x['u'] as Obj, null, renew: x['L'] as Obj))), child: Text(Tr.t('🔄 تجديد'))),
@@ -132,7 +132,7 @@ class _Upcoming extends StatelessWidget {
         child: Padding(padding: const EdgeInsets.symmetric(vertical: 7), child: Row(children: [
           Text(ic), const SizedBox(width: 8),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(str(x['label']), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+            Text(Priv.txt(str(x['label'])), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
             Text('${str(x['d'])} • $when', style: TextStyle(color: d < 0 ? kRed : kMuted, fontSize: 12)),
           ])),
           if ((x['amt'] as num) != 0) Text(money(x['amt'] as num), style: TextStyle(fontWeight: FontWeight.w900, color: x['ty'] == 'rent' || x['ty'] == 'recv' ? kGreen : kRed)),
@@ -169,7 +169,7 @@ class _Alert extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2), decoration: BoxDecoration(color: Colors.white.withOpacity(.22), borderRadius: BorderRadius.circular(99)), child: Text('🔔 ${al.length} ${Tr.t('تنبيه')}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12))),
         const SizedBox(height: 6),
-        Text('$when: ${str(x['label'])}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14.5, height: 1.5)),
+        Text('$when: ${Priv.txt(str(x['label']))}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14.5, height: 1.5)),
       ]),
     );
   }

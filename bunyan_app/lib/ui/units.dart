@@ -83,7 +83,7 @@ class _UnitCard extends StatelessWidget {
         Padding(padding: const EdgeInsets.only(top: 6), child: CircleAvatar(radius: 5, backgroundColor: dot)),
         const SizedBox(width: 10),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(str(u['name']), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: kNavy)),
+          Text(Priv.un(u['name']), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: kNavy)),
           Text([if (L != null && truthy(L['tenant'])) str(L['tenant']), str(u['company'])].where((x) => x.isNotEmpty).join(' • '), style: const TextStyle(color: kMuted, fontSize: 12.5, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
           Text('${s.soon ? '⏳ ' : ''}${Tr.t('عقد الشركة لحد')} ${iso(s.e)}${s.late ? ' • ${s.od} ${Tr.t('متأخر')}' : ''}', style: TextStyle(color: s.late ? kRed : (s.soon ? kTerra : kMuted), fontSize: 11.5)),
           if (L == null) Text(Tr.t('فاضية — مفيش مستأجر'), style: const TextStyle(color: kTerra, fontSize: 12, fontWeight: FontWeight.w700)),
@@ -115,7 +115,7 @@ class _UnitDetailState extends State<UnitDetail> {
     final t = today();
     final insts = objs(u['inst']);
     return Directionality(textDirection: Tr.dir, child: Scaffold(
-      appBar: AppBar(title: Text(str(u['name'])), actions: [IconButton(tooltip: Tr.t('حذف الاستديو'), icon: const Icon(Icons.delete_outline, color: kRed), onPressed: () async {
+      appBar: AppBar(title: Text(Priv.un(u['name'])), actions: [IconButton(tooltip: Tr.t('حذف الاستديو'), icon: const Icon(Icons.delete_outline, color: kRed), onPressed: () async {
         if (!await confirmDlg(context, Tr.t('هل تريد حذف الاستديو بكل دفعاتها وعقودها ومصاريفها وتمويلها وتأميناته؟ الرصيد النقدي هيرجع زي ما كان قبل ما تضيفه.'), ok: Tr.t('🗑 احذف')) || !context.mounted) return;
         await Act.delUnit(u, Ws.I.resolve()); if (context.mounted) Navigator.pop(context);
       }), IconButton(tooltip: Tr.t('تعديل الاستديو'), icon: const Icon(Icons.edit), onPressed: () async {

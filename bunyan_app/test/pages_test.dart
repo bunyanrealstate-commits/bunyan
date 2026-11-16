@@ -43,9 +43,9 @@ void main() {
     expect(ex, isNull, reason: '$name: $ex');
   }
 
-  for (final lang in ['ar', 'en']) {
-    testWidgets('كل الصفحات تفتح ($lang)', (t) async {
-      Store.I.cfg['lang'] = lang;
+  for (final (lang, hide) in [('ar', false), ('en', false), ('ar', true)]) {
+    testWidgets('كل الصفحات تفتح ($lang${hide ? ' + العين' : ''})', (t) async {
+      Store.I.cfg['lang'] = lang; Store.I.cfg['hide'] = hide;
       final gs = [...objs(Store.I.S['groups']).map((g) => str(g['id']))];
       for (final g in gs) {
         Ws.I.value = g;

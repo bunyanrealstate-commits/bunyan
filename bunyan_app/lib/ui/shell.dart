@@ -5,6 +5,7 @@ import '../core/js.dart';
 import 'theme.dart';
 import 'groups.dart';
 import 'accounts.dart';
+import 'eye.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'home.dart';
 import 'units.dart';
@@ -72,6 +73,7 @@ class _ShellState extends State<Shell> {
           titleSpacing: 12,
           title: Row(children: [
             Column(mainAxisSize: MainAxisSize.min, children: [SvgPicture.asset('assets/logo.svg', height: 24), const Text('Furnished', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF1D4B66), letterSpacing: 1.6, height: 1.2))]),
+            const EyeBtn(),
             const SizedBox(width: 12),
             Expanded(child: _groupPicker()),
           ]),

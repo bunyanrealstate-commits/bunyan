@@ -67,7 +67,7 @@ class ChequesPage extends StatelessWidget {
           for (final x in R.take(200)) Card(child: ListTile(
             dense: true,
             leading: Text(str((x['c'] as Map)['d']).compareTo(td) <= 0 ? '🟢' : '📑'),
-            title: Text('${str((x['L'] as Obj)['tenant']).isEmpty ? 'مستأجر' : str((x['L'] as Obj)['tenant'])} • ${str((x['u'] as Obj)['name'])}'),
+            title: Text('${str((x['L'] as Obj)['tenant']).isEmpty ? 'مستأجر' : str((x['L'] as Obj)['tenant'])} • ${Priv.un((x['u'] as Obj)['name'])}'),
             subtitle: Text('${str((x['c'] as Map)['no']).isEmpty ? '' : 'رقم ${(x['c'] as Map)['no']} • '}${(x['c'] as Map)['d']}'),
             trailing: Text(money(n0((x['c'] as Map)['a'])), style: const TextStyle(fontWeight: FontWeight.bold)),
             onTap: () => Chq.edit(context, x['L'] as Obj, x['q'] as int),
