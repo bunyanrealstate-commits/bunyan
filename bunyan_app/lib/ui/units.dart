@@ -7,6 +7,7 @@ import 'shell.dart';
 import '../core/actions.dart';
 import 'dialogs.dart';
 import 'lease_edit.dart';
+import 'unit_edit.dart';
 
 class UnitsPage extends StatelessWidget {
   const UnitsPage({super.key});
@@ -14,9 +15,12 @@ class UnitsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final e = Engine(Store.I.S, WS: Ws.I.resolve());
     final us = e.SU();
-    if (us.isEmpty) return ListView(children: const [Padding(padding: EdgeInsets.all(40), child: Text('مفيش وحدات في المجموعة دي', textAlign: TextAlign.center))]);
-    return ListView(padding: const EdgeInsets.all(14), children: [
-      for (final u in us) _UnitCard(u),
+    return Stack(children: [
+      ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 90), children: [
+        if (us.isEmpty) const Padding(padding: EdgeInsets.all(40), child: Text('مفيش وحدات في المجموعة دي', textAlign: TextAlign.center)),
+        for (final u in us) _UnitCard(u),
+      ]),
+      Positioned(left: 16, bottom: 16, child: FloatingActionButton.extended(heroTag: 'nu', onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const UnitEdit(null))), icon: const Icon(Icons.add_home), label: const Text('استديو جديد'))),
     ]);
   }
 }
@@ -76,7 +80,11 @@ class _UnitDetailState extends State<UnitDetail> {
     final t = today();
     final insts = objs(u['inst']);
     return Directionality(textDirection: TextDirection.rtl, child: Scaffold(
-      appBar: AppBar(title: Text(str(u['name']))),
+      appBar: AppBar(title: Text(str(u['name'])), actions: [IconButton(tooltip: 'تعديل الاستديو', icon: const Icon(Icons.edit), onPressed: () async {
+        final ds = [for (final i in objs(u['inst'])) if (truthy(i['p'])) str(i['d'])];
+        if (!await lockOk(context, ds) || !context.mounted) return;
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => UnitEdit(str(u['id']))));
+      })]),
       floatingActionButton: FloatingActionButton.extended(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => LeaseEdit(u, null))), icon: const Icon(Icons.person_add), label: const Text('عقد مستأجر جديد')),
       body: ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 90), children: [
         Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
