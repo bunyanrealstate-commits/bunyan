@@ -12,6 +12,7 @@ import 'cheques.dart';
 import 'lock.dart';
 import 'sim.dart';
 import 'contract.dart';
+import 'ai.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
@@ -26,6 +27,7 @@ class MorePage extends StatelessWidget {
         subtitle: Text('${st.cfg['repo'] ?? ''}\n${st.syncMsg}'),
         isThreeLine: true,
       )),
+      Card(child: ListTile(leading: const Text('🤖', style: TextStyle(fontSize: 22)), title: const Text('اسأل بنيان (المساعد)'), subtitle: const Text('Gemini المجاني — بيجاوب من أرقامك'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AiPage())))),
       Card(child: ListTile(leading: const Text('📒', style: TextStyle(fontSize: 22)), title: const Text('الحسابات'), subtitle: const Text('الرصيد، التأمينات، قفل الشهور، الدفتر'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AccountsPage())))),
       Card(child: ListTile(leading: const Text('📑', style: TextStyle(fontSize: 22)), title: const Text('الشيكات اللي معايا'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChequesPage())))),
       Card(child: ListTile(leading: const Text('⏰', style: TextStyle(fontSize: 22)), title: const Text('تذكيراتي'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RemindersPage())))),
