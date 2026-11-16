@@ -22,8 +22,14 @@ import 'package:bunyan/ui/ai.dart';
 import 'package:bunyan/ui/lease_edit.dart';
 import 'package:bunyan/ui/unit_edit.dart';
 import 'package:bunyan/ui/i18n.dart';
+import 'package:bunyan/ui/theme.dart';
+import 'package:flutter/services.dart';
 
 void main() {
+  setUpAll(() async {
+    final l = FontLoader('Plex')..addFont(rootBundle.load('fonts/PlexArabic-500.ttf'))..addFont(rootBundle.load('fonts/PlexArabic-700.ttf'));
+    await l.load();
+  });
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     Store.I.S = jsonDecode(File('test/fixture.json').readAsStringSync()) as Map<String, dynamic>;
@@ -33,7 +39,7 @@ void main() {
 
   Future<void> show(WidgetTester t, Widget w, String name) async {
     t.view.physicalSize = const Size(1080, 2400); t.view.devicePixelRatio = 2.6;
-    await t.pumpWidget(MaterialApp(home: Directionality(textDirection: TextDirection.rtl, child: Scaffold(body: w))));
+    await t.pumpWidget(MaterialApp(theme: bunyanTheme(), home: Directionality(textDirection: TextDirection.rtl, child: Scaffold(body: w))));
     await t.pump(const Duration(milliseconds: 300));
     final ex = t.takeException();
     expect(ex, isNull, reason: '$name: $ex');

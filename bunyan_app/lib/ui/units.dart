@@ -224,5 +224,5 @@ class _UnitDetailState extends State<UnitDetail> {
   }
 
   Widget _pill(String t, Color c) => Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: c.withOpacity(.12), borderRadius: BorderRadius.circular(10)), child: Text(t, style: TextStyle(color: c, fontSize: 11, fontWeight: FontWeight.bold)));
-  Widget _kv(String k, String v) => Padding(padding: const EdgeInsets.symmetric(vertical: 2), child: Row(children: [Text('$k: ', style: const TextStyle(color: kMuted)), Expanded(child: Text(v, style: const TextStyle(fontWeight: FontWeight.bold)))]));
+  Widget _kv(String k, String v) => Padding(padding: const EdgeInsets.symmetric(vertical: 2), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Flexible(child: Text('$k: ', style: const TextStyle(color: kMuted))), Expanded(child: Text(v, style: const TextStyle(fontWeight: FontWeight.bold)))]));
 }
