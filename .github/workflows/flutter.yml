@@ -84,7 +84,7 @@ jobs:
         continue-on-error: true
         working-directory: bunyan_app
         run: |
-          flutter build web --release --base-href /bunyan/app/ 2>&1 | tail -5
+          flutter build web --release --no-web-resources-cdn --base-href /bunyan/app/ 2>&1 | tail -5
           cd /tmp && rm -rf pub && git clone -q --depth 1 https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git pub && cd pub
           git config user.name gh && git config user.email gh@github.com
           rm -rf docs/app && mkdir -p docs/app && cp -r $GITHUB_WORKSPACE/bunyan_app/build/web/. docs/app/
