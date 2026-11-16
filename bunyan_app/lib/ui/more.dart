@@ -42,7 +42,7 @@ class MorePage extends StatelessWidget {
       Card(child: ListTile(leading: const Text('🛡', style: TextStyle(fontSize: 22)), title: Text(Tr.t('المراقب والشكاوى')), subtitle: Text(Tr.t('فحص البيانات + «مش عاجبني»')), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MonitorPage())))),
       Card(child: ListTile(leading: const Text('🗑', style: TextStyle(fontSize: 22)), title: Text(Tr.t('سلة المحذوفات')), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TrashPage())))),
       Card(child: ListTile(leading: const Text('🔒', style: TextStyle(fontSize: 22)), title: Text(Tr.t('قفل التطبيق برقم سري')), subtitle: Text(AppLock.on ? Tr.t('مفعّل') : Tr.t('مش مفعّل')), trailing: const Icon(Icons.chevron_left), onTap: () => lockSettings(context))),
-      Card(child: ListTile(leading: const Text('🌐', style: TextStyle(fontSize: 22)), title: const Text('اللغة / Language'), trailing: SegmentedButton<String>(segments: const [ButtonSegment(value: 'ar', label: Text('عربي')), ButtonSegment(value: 'en', label: Text('EN'))], selected: {Tr.lang}, onSelectionChanged: (x) => Tr.set(x.first)))),
+      Card(child: ListTile(leading: const Text('🌐', style: TextStyle(fontSize: 22)), title: Text(Tr.t('اللغة / Language')), trailing: SegmentedButton<String>(segments: [ButtonSegment(value: 'ar', label: Text(Tr.t('عربي'))), ButtonSegment(value: 'en', label: Text('EN'))], selected: {Tr.lang}, onSelectionChanged: (x) => Tr.set(x.first)))),
       const SizedBox(height: 8),
       Text(Tr.t('🕘 سجل النشاط'), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
       for (final e in h) Card(child: ListTile(

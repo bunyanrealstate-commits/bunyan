@@ -10,7 +10,8 @@ import 'shell.dart';
 
 /// الحسابات: الرصيد النقدي، التأمينات، قفل الشهور، الدفتر — نفس accTab في القديم
 class AccountsPage extends StatefulWidget {
-  const AccountsPage({super.key});
+  final bool inTab;
+  const AccountsPage({super.key, this.inTab = false});
   @override
   State<AccountsPage> createState() => _AccState();
 }
@@ -35,7 +36,7 @@ class _AccState extends State<AccountsPage> {
     final locks = lst(S['locks']).map(str).toSet();
     final ymK = months.keys.toList()..sort((a, b) => b.compareTo(a));
     return Directionality(textDirection: Tr.dir, child: Scaffold(
-      appBar: AppBar(title: Text(Tr.t('الحسابات'))),
+      appBar: widget.inTab ? null : AppBar(title: Text(Tr.t('الحسابات'))),
       body: ListView(padding: const EdgeInsets.all(12), children: [
         Card(child: ListTile(
           leading: const Text('💰', style: TextStyle(fontSize: 24)),

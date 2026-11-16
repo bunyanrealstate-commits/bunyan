@@ -12,53 +12,85 @@ import 'cheques.dart';
 import 'unit_boxes.dart';
 import 'unit_edit.dart';
 
-class UnitsPage extends StatelessWidget {
+/// حالة الاستديو (زي فلاتر القديم: مؤجر / شاغر / متأخر / ينتهي قريب)
+class _St {
+  final bool rented, late, ending;
+  final Obj? L;
+  _St(this.rented, this.late, this.ending, this.L);
+  static _St of(Obj u) {
+    final t = today(); final act = objs(u['leases']).where((L) => !truthy(L['exit']) && !Engine.lend(L).isBefore(t) && !pd(L['start']).isAfter(t)).toList();
+    var late = false;
+    for (final L in objs(u['leases'])) { final rc = Engine.rcv(L); for (var i = 0; i < Engine.months(L); i++) { if (!Engine.payD(L, i).isAfter(t) && !rc.contains(i)) late = true; } }
+    final L = act.isNotEmpty ? act.first : (objs(u['leases']).isNotEmpty ? objs(u['leases']).last : null);
+    final ending = act.isNotEmpty && Engine.lend(act.first).difference(t).inDays <= 30;
+    return _St(act.isNotEmpty, late, ending, L);
+  }
+}
+
+class UnitsPage extends StatefulWidget {
   const UnitsPage({super.key});
+  @override
+  State<UnitsPage> createState() => _UnitsState();
+}
+
+class _UnitsState extends State<UnitsPage> {
+  String q = '', f = 'all';
   @override
   Widget build(BuildContext context) {
     final e = Engine(Store.I.S, WS: Ws.I.resolve());
-    final us = e.SU();
+    final all = e.SU(); final st = {for (final u in all) u['id']: _St.of(u)};
+    bool ok(Obj u) { final s = st[u['id']]!; return f == 'all' || (f == 'r' && s.rented) || (f == 'v' && !s.rented) || (f == 'l' && s.late) || (f == 'e' && s.ending); }
+    final us = all.where((u) => ok(u) && (q.isEmpty || '${u['name']} ${u['company']} ${objs(u['leases']).map((L) => L['tenant']).join(' ')}'.toLowerCase().contains(q.toLowerCase()))).toList();
+    Widget chip(String k, String l, int n, Color c) => Padding(padding: const EdgeInsetsDirectional.only(end: 6, bottom: 6), child: ChoiceChip(
+          label: Text('$l $n', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: f == k ? Colors.white : kInk)), selected: f == k, showCheckmark: false,
+          avatar: k == 'all' ? null : CircleAvatar(radius: 5, backgroundColor: c), selectedColor: kAc, backgroundColor: Colors.white, onSelected: (_) => setState(() => f = k)));
     return Stack(children: [
       ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 90), children: [
-        if (us.isEmpty) Padding(padding: EdgeInsets.all(40), child: Text(Tr.t('مفيش وحدات في المجموعة دي'), textAlign: TextAlign.center)),
-        for (final u in us) _UnitCard(u),
+        TextField(decoration: InputDecoration(prefixIcon: const Icon(Icons.search), hintText: Tr.t('ابحث: استديو، شركة، مستأجر'), isDense: true), onChanged: (v) => setState(() => q = v.trim())),
+        const SizedBox(height: 10),
+        Wrap(children: [
+          chip('all', Tr.t('الكل'), all.length, kAc),
+          chip('r', Tr.t('مؤجر'), all.where((u) => st[u['id']]!.rented).length, kOk),
+          chip('v', Tr.t('شاغر'), all.where((u) => !st[u['id']]!.rented).length, Colors.grey),
+          chip('l', Tr.t('متأخر'), all.where((u) => st[u['id']]!.late).length, kRed),
+          chip('e', Tr.t('ينتهي قريب'), all.where((u) => st[u['id']]!.ending).length, Colors.orange),
+        ]),
+        Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: Text('${us.length} ${Tr.t('استديو')}', style: const TextStyle(color: kMuted, fontWeight: FontWeight.w700))),
+        if (us.isEmpty) Padding(padding: const EdgeInsets.all(40), child: Text(Tr.t('مفيش وحدات في المجموعة دي'), textAlign: TextAlign.center)),
+        if (us.isNotEmpty) Container(
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFBFD3F5), width: 1.2), boxShadow: const [BoxShadow(color: Color(0x332563EB), blurRadius: 22, offset: Offset(0, 8), spreadRadius: -8)]),
+          child: ClipRRect(borderRadius: BorderRadius.circular(16), child: Column(children: [
+            Container(height: 6, color: const Color(0xFF2563EB)),
+            for (final (i, u) in us.indexed) ...[if (i > 0) const Divider(height: 1), _UnitCard(u, st[u['id']]!)],
+          ])),
+        ),
       ]),
-      Positioned(left: 16, bottom: 16, child: FloatingActionButton.extended(heroTag: 'nu', onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const UnitEdit(null))), icon: const Icon(Icons.add_home), label: Text(Tr.t('استديو جديد')))),
+      PositionedDirectional(end: 16, bottom: 16, child: FloatingActionButton.extended(heroTag: 'nu', onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const UnitEdit(null))), icon: const Icon(Icons.add), label: Text(Tr.t('استديو')))),
     ]);
   }
 }
 
 class _UnitCard extends StatelessWidget {
-  final Obj u;
-  const _UnitCard(this.u);
+  final Obj u; final _St s;
+  const _UnitCard(this.u, this.s);
   @override
   Widget build(BuildContext context) {
-    final ls = objs(u['leases']);
-    final t = today();
-    return Card(child: InkWell(
-      borderRadius: BorderRadius.circular(18),
+    final L = s.L;
+    final dot = s.late ? kRed : (s.rented ? kOk : Colors.grey);
+    return InkWell(
       onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => UnitDetail(u))),
-      child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Expanded(child: Text(str(u['name']), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16))),
-          Text(str(u['company']), style: const TextStyle(color: kMuted, fontSize: 12)),
-        ]),
-        const SizedBox(height: 6),
-        if (ls.isEmpty) Text(Tr.t('فاضية — مفيش مستأجر'), style: TextStyle(color: kTerra, fontWeight: FontWeight.bold)),
-        for (final L in ls) ...[
-          Builder(builder: (_) {
-            final rc = Engine.rcv(L); var due = 0;
-            for (var i = 0; i < Engine.months(L); i++) { if (!Engine.payD(L, i).isAfter(t) && !rc.contains(i)) due++; }
-            return Row(children: [
-              Expanded(child: Text('👤 ${str(L['tenant'])}', style: const TextStyle(fontWeight: FontWeight.bold))),
-              Text('${money(n0(L['rent']))} / شهر', style: const TextStyle(fontSize: 12)),
-              const SizedBox(width: 8),
-              if (due > 0) Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: const Color(0xFFFDECEC), borderRadius: BorderRadius.circular(10)), child: Text('$due متأخر', style: const TextStyle(color: kRed, fontSize: 11, fontWeight: FontWeight.bold))),
-            ]);
-          }),
-        ],
+      child: Padding(padding: const EdgeInsets.fromLTRB(14, 12, 14, 12), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(padding: const EdgeInsets.only(top: 6), child: CircleAvatar(radius: 5, backgroundColor: dot)),
+        const SizedBox(width: 10),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(str(u['name']), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: kNavy)),
+          Text([if (L != null && truthy(L['tenant'])) str(L['tenant']), str(u['company'])].where((x) => x.isNotEmpty).join(' • '), style: const TextStyle(color: kMuted, fontSize: 12.5, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+          if (L != null) Text('${s.rented ? Tr.t('حتى') : Tr.t('انتهى')} ${iso(Engine.lend(L))}${s.late ? ' • ${Tr.t('متأخر')}' : ''}', style: TextStyle(color: s.late ? kRed : kMuted, fontSize: 11.5)),
+          if (L == null) Text(Tr.t('فاضية — مفيش مستأجر'), style: const TextStyle(color: kTerra, fontSize: 12, fontWeight: FontWeight.w700)),
+        ])),
+        if (L != null && s.rented) Text(money(n0(L['rent'])), style: const TextStyle(color: kGreen, fontWeight: FontWeight.w800, fontSize: 16)),
       ])),
-    ));
+    );
   }
 }
 

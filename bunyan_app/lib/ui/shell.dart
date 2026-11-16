@@ -4,6 +4,8 @@ import '../core/store.dart';
 import '../core/js.dart';
 import 'theme.dart';
 import 'groups.dart';
+import 'accounts.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'home.dart';
 import 'units.dart';
 import 'link.dart';
@@ -58,34 +60,51 @@ class _ShellState extends State<Shell> {
     if (!st.loaded) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     if (!st.linked && lst(st.S['units']).isEmpty) return const LinkScreen();
     // مش const: لازم الصفحة تتبني من جديد لما المجموعة أو البيانات تتغير
+    final tabs = [
+      [Icons.home_outlined, Tr.t('الداشبورد')], [Icons.apartment_outlined, Tr.t('الاستديوهات')], [Icons.bar_chart, Tr.t('الحسابات')],
+      [Icons.receipt_long_outlined, Tr.t('المصاريف')], [Icons.groups_outlined, Tr.t('المجموعات')], [Icons.menu, Tr.t('المزيد')],
+    ];
     return Directionality(
       textDirection: Tr.dir,
       child: Scaffold(
         appBar: AppBar(
+          toolbarHeight: 62,
+          titleSpacing: 12,
           title: Row(children: [
-            const Text('BUNYAN', style: TextStyle(fontWeight: FontWeight.w900, color: kGreen, letterSpacing: 2)),
-            const SizedBox(width: 10),
+            SvgPicture.asset('assets/logo.svg', height: 34),
+            const SizedBox(width: 12),
             Expanded(child: _groupPicker()),
           ]),
           actions: [
             IconButton(
               tooltip: Tr.t('مزامنة'),
               onPressed: st.syncing ? null : () async { final m = await st.sync(); if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m))); },
-              icon: st.syncing ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(Icons.sync, color: st.cfg['dirty'] == true ? kTerra : kGreen),
+              icon: st.syncing ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(Icons.sync, color: st.cfg['dirty'] == true ? kTerra : kAc),
             ),
           ],
+          bottom: PreferredSize(preferredSize: const Size.fromHeight(46), child: Container(
+            decoration: const BoxDecoration(color: Color(0xF5FFFFFF), border: Border(bottom: BorderSide(color: Color(0xFF8D97A8), width: .6))),
+            child: SingleChildScrollView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 6), child: Row(children: [
+              for (var i = 0; i < tabs.length; i++) InkWell(
+                onTap: () => setState(() => tab = i),
+                child: Container(
+                  height: 46, padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(border: Border(bottom: BorderSide(color: tab == i ? kAcD : Colors.transparent, width: 3))),
+                  child: Row(children: [
+                    Icon(tabs[i][0] as IconData, size: 18, color: tab == i ? kAcD : const Color(0xFF454852)),
+                    const SizedBox(width: 6),
+                    Text(tabs[i][1] as String, style: TextStyle(fontSize: 14, fontWeight: tab == i ? FontWeight.w800 : FontWeight.w600, color: tab == i ? kAcD : const Color(0xFF454852))),
+                  ]),
+                ),
+              ),
+            ])),
+          )),
         ),
-        body: RefreshIndicator(onRefresh: () async { await st.sync(); }, child: ListenableBuilder(listenable: Listenable.merge([Store.I, Ws.I]), builder: (_, __) { final w = Ws.I.resolve(); return KeyedSubtree(key: ValueKey('$tab|$w|${Tr.lang}'), child: [const HomePage(), const UnitsPage(), const ExpensesPage(), const MorePage()][tab]); })),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: tab,
-          onDestinationSelected: (i) => setState(() => tab = i),
-          destinations: [
-            NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: Tr.t('الداشبورد')),
-            NavigationDestination(icon: Icon(Icons.apartment_outlined), selectedIcon: Icon(Icons.apartment), label: Tr.t('الوحدات')),
-            NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: Tr.t('المصاريف')),
-            NavigationDestination(icon: Icon(Icons.more_horiz), label: Tr.t('المزيد')),
-          ],
-        ),
+        body: RefreshIndicator(onRefresh: () async { await st.sync(); }, child: ListenableBuilder(listenable: Listenable.merge([Store.I, Ws.I]), builder: (_, __) {
+          final w = Ws.I.resolve();
+          final page = [const HomePage(), const UnitsPage(), const AccountsPage(inTab: true), const ExpensesPage(), const GroupsPage(inTab: true), const MorePage()][tab];
+          return KeyedSubtree(key: ValueKey('$tab|$w|${Tr.lang}'), child: page);
+        })),
       ),
     );
   }
@@ -101,9 +120,10 @@ class _ShellState extends State<Shell> {
       DropdownMenuItem(value: '__m', child: Text(Tr.t('⚙ إدارة المجموعات'))),
     ];
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10), decoration: BoxDecoration(color: kSand, borderRadius: BorderRadius.circular(12)),
+      height: 40, padding: const EdgeInsets.symmetric(horizontal: 12), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF0F766E), Color(0xFF14B8A6)]), borderRadius: BorderRadius.circular(99), boxShadow: const [BoxShadow(color: Color(0x330D9488), blurRadius: 10, offset: Offset(0, 3))]),
       child: DropdownButtonHideUnderline(child: DropdownButton<String>(
-        value: items.any((x) => x.value == cur) ? cur : null, isExpanded: true, style: const TextStyle(fontSize: 14, color: kInk, fontWeight: FontWeight.w700, fontFamily: 'Plex'),
+        value: items.any((x) => x.value == cur) ? cur : null, isExpanded: true, dropdownColor: Colors.white, iconEnabledColor: Colors.white, style: const TextStyle(fontSize: 14, color: kInk, fontWeight: FontWeight.w700, fontFamily: 'Plex'),
+        selectedItemBuilder: (_) => [for (final it in items) Align(alignment: AlignmentDirectional.centerStart, child: Text(it.value == '-' ? Tr.t('بدون مجموعة') : it.value == '__m' ? '' : str(gs.where((g) => g['id'] == it.value).firstOrNull?['name']), overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14)))],
         items: items,
         onChanged: (v) {
           if (v == null) return;

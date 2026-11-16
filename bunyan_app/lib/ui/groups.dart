@@ -10,7 +10,8 @@ import 'dialogs.dart';
 
 /// 📂 المجموعات (الشراكات) + 🤝 فلوس الشراكة + طريقة الحساب (للمجموعة / حصتي)
 class GroupsPage extends StatefulWidget {
-  const GroupsPage({super.key});
+  final bool inTab;
+  const GroupsPage({super.key, this.inTab = false});
   @override
   State<GroupsPage> createState() => _GroupsPageState();
 }
@@ -36,7 +37,7 @@ class _GroupsPageState extends State<GroupsPage> {
   Widget build(BuildContext context) {
     final mine = S['pmode'] == 'me';
     return Directionality(textDirection: Tr.dir, child: Scaffold(
-      appBar: AppBar(title: Text(Tr.t('📂 المجموعات والشراكة'))),
+      appBar: widget.inTab ? null : AppBar(title: Text(Tr.t('📂 المجموعات والشراكة'))),
       body: ListView(padding: const EdgeInsets.all(14), children: [
         Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(Tr.t('🧮 طريقة حساب الأرقام'), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
