@@ -1,0 +1,14 @@
+name: Dev SDK mirror (Dart for local engine tests)
+on: { workflow_dispatch: {} }
+permissions: { contents: write }
+jobs:
+  sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Dart SDK and push split parts to branch devsdk
+        run: |
+          mkdir out && cd out
+          curl -sSL -o dart.zip https://storage.googleapis.com/dart-archive/channels/stable/release/3.5.4/sdk/dartsdk-linux-x64-release.zip
+          ls -la dart.zip && split -b 45m dart.zip dart.zip.part- && rm dart.zip && ls -la
+          git init -q -b devsdk && git config user.name gh && git config user.email gh@github.com
+          git add . && git commit -q -m "dart sdk 3.5.4" && git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git devsdk
