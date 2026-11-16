@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/store.dart';
 import '../core/js.dart';
 import 'theme.dart';
+import 'forecast.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
@@ -16,6 +17,7 @@ class MorePage extends StatelessWidget {
         subtitle: Text('${st.cfg['repo'] ?? ''}\n${st.syncMsg}'),
         isThreeLine: true,
       )),
+      Card(child: ListTile(leading: const Text('🔮', style: TextStyle(fontSize: 22)), title: const Text('التوقعات — الرصيد سنة قدام'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ForecastPage())))),
       const SizedBox(height: 8),
       const Text('🕘 سجل النشاط', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
       for (final e in h) Card(child: ListTile(

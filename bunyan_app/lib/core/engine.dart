@@ -256,4 +256,77 @@ class Engine {
     }
     return r;
   }
+
+  /* ───── حركات الفلوس الجاية (events) والتوقع (project) ───── */
+  List<Map<String, dynamic>> events() {
+    final t = today(); final ev = <Map<String, dynamic>>[];
+    DateTime cl(dynamic d) { final x = pd(d); return x.isBefore(t) ? t : x; }
+    for (final u in SU()) {
+      const f = 1.0;
+      for (final i in objs(u['inst'])) { if (!truthy(i['p']) && truthy(i['a']) && truthy(i['d'])) ev.add({'d': cl(i['d']), 'a': -n(i['a']) * f, 'l': '${str(u['name'])} – دفعة ${str(u['company']).isEmpty ? 'الشركة' : str(u['company'])}'}); }
+      if (!truthy(u['fp']) && truthy(u['furn'])) ev.add({'d': t, 'a': -n(u['furn']) * f, 'l': '${str(u['name'])} – أثاث'});
+      if (truthy(u['salv'])) { final d = addM(pd(u['start']), n(u['cm'])); if (!d.isBefore(t)) ev.add({'d': d, 'a': n(u['salv']) * f, 'l': '${str(u['name'])} – استرداد الأثاث'}); }
+      for (final L in objs(u['leases'])) {
+        final rc = rcv(L);
+        for (var i = 0; i < months(L); i++) {
+          if (!rc.contains(i)) ev.add({'d': cl(iso(payD(L, i))), 'a': la(L, i) * f, 'l': '${str(u['name'])} – إيجار ${str(L['tenant']).isEmpty ? 'مستأجر' : str(L['tenant'])}'});
+          if (truthy(L['icost']) && payD(L, i).isAfter(t)) ev.add({'d': cl(iso(payD(L, i))), 'a': -n(L['icost']) * lf(L, i) * f, 'l': '${str(u['name'])} – إنترنت'});
+        }
+        if (truthy(L['rme']) && truthy(L['router']) && pd(L['start']).isAfter(t)) ev.add({'d': cl(L['start']), 'a': -n(L['router']) * f, 'l': '${str(u['name'])} – راوتر'});
+        if (truthy(L['pen']) && !truthy(L['penp']) && truthy(L['exit'])) ev.add({'d': cl(L['exit']), 'a': n(L['pen']) * f, 'l': '${str(u['name'])} – شرط جزائي'});
+      }
+    }
+    for (final x in objs(S['debts'])) { ev.add({'d': cl(x['d']), 'a': -n(x['a']), 'l': str(x['w'])}); }
+    for (final x in objs(S['recv'])) { ev.add({'d': cl(x['d']), 'a': n(x['a']), 'l': str(x['w'])}); }
+    for (final x in SE()) { final cnt = truthy(x['n']) ? n(x['n']).toInt() : 1; for (var i = 0; i < cnt; i++) { final d = addM(pd(x['d']), i); if (d.isAfter(t)) ev.add({'d': d, 'a': -n(x['a']), 'l': str(x['w'])}); } }
+    // ترتيب ثابت زي Array.sort في JS
+    final idx = {for (var i = 0; i < ev.length; i++) ev[i]: i};
+    ev.sort((a, b) { final c = (a['d'] as DateTime).compareTo(b['d'] as DateTime); return c != 0 ? c : idx[a]!.compareTo(idx[b]!); });
+    return ev;
+  }
+
+  Map<String, dynamic> project(List<Map<String, dynamic>> ev) {
+    final lim = addM(today(), 12); var b = cashNow(); var min = b; var minD = today(); final m = <int, Map<String, dynamic>>{}; final order = <int>[];
+    for (final e in ev) {
+      final a = e['a'] as double; final d = e['d'] as DateTime; b += a;
+      if (!d.isAfter(lim) && b < min) { min = b; minD = d; }
+      final k = mkey(d); if (!m.containsKey(k)) { m[k] = {'d': d, 'i': 0.0, 'o': 0.0}; order.add(k); }
+      if (a > 0) { m[k]!['i'] = (m[k]!['i'] as double) + a; } else { m[k]!['o'] = (m[k]!['o'] as double) - a; }
+      m[k]!['end'] = b;
+    }
+    final rows = [for (final k in order) m[k]!]..sort((x, y) => (x['d'] as DateTime).compareTo(y['d'] as DateTime));
+    return {'min': min, 'minD': minD, 'rows': rows};
+  }
+
+  /* ───── الربح على أساس الاستحقاق (accr) ───── */
+  Map<String, double> accr() {
+    final t = today(); final tm = ms(t); var rentE = 0.0, pen = 0.0, coC = 0.0, fuC = 0.0, isC = 0.0, exC = 0.0;
+    for (final u in SU()) {
+      final f = sh(u); final cm = truthy(u['cm']) ? n(u['cm']) : 1.0; final b = pd(u['start']); final e = addM(b, n(u['cm']));
+      final span = ms(e) - ms(b); final el = cm * math.max(0.0, math.min(1.0, (tm - ms(b)) / (span == 0 ? 1 : span)));
+      for (final L in objs(u['leases'])) {
+        var m = 0.0; final M = months(L);
+        for (var i = 0; i < M; i++) {
+          final d0 = payD(L, i);
+          if (!d0.isAfter(t)) {
+            final d1 = i < M - 1 ? payD(L, i + 1) : lend(L);
+            final fr = math.max(0.0, math.min(1.0, (tm - ms(d0)) / math.max(1, ms(d1) - ms(d0)))); final lfi = lf(L, i) * fr;
+            rentE += (rv(L, i) + (same(L['advp'], i) ? n0(L['advA']) : 0) + ppA(L, i)) * fr * f; isC += n0(L['icost']) * lfi * f; m += lfi;
+          }
+        }
+        final lmv = lm(L);
+        isC += m * (truthy(L['rme']) ? n0(L['router']) / (lmv == 0 ? 1 : lmv) : 0) * f;
+        if (truthy(L['pen']) && truthy(L['penp']) && truthy(L['exit']) && !pd(L['exit']).isAfter(t)) pen += n(L['pen']) * f;
+        if (!pd(L['start']).isAfter(t)) { if (!L.containsKey('advA') && !L.containsKey('stubA')) { rentE += n0(L['adv']) * f; } else { rentE += n0(L['stubA']) * f; } }
+      }
+      coC += (truthy(u['total']) ? n(u['total']) : isumOf(u)) / cm * el * f;
+      fuC += (n0(u['furn']) / cm * el - (el >= cm ? n0(u['salv']) : 0)) * f;
+    }
+    for (final x in SE()) {
+      final un = truthy(x['u']) ? U(x['u']) : null; final f = un != null ? sh(un) : shg(x['g']); final cnt = truthy(x['n']) ? n(x['n']).toInt() : 1;
+      for (var i = 0; i < cnt; i++) { if (!addM(pd(x['d']), i).isAfter(t)) exC += n(x['a']) * f; }
+    }
+    final earned = rentE + pen, cost = coC + fuC + isC + exC;
+    return {'earned': earned, 'cost': cost, 'profit': earned - cost, 'rentE': rentE, 'pen': pen, 'coC': coC, 'fuC': fuC, 'isC': isC, 'exC': exC};
+  }
 }
