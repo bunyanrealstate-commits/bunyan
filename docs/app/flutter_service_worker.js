@@ -5,7 +5,7 @@ const CACHE_NAME = 'flutter-app-cache';
 
 const RESOURCES = {"index.html": "dcba966f13a6fd406ab30ac76e3085fa",
 "/": "dcba966f13a6fd406ab30ac76e3085fa",
-"flutter_bootstrap.js": "048adb65a2c1fd3b70f9ae975dc1550a",
+"flutter_bootstrap.js": "1f88b25f77985d2dee0cdacd6d014a5d",
 "canvaskit/skwasm.worker.js": "89990e8c92bcb123999aa81f7e203b1c",
 "canvaskit/chromium/canvaskit.js": "671c6b4f8fcc199dcc551c7bb125f239",
 "canvaskit/chromium/canvaskit.wasm": "b1ac05b29c127d86df4bcfbf50dd902a",
@@ -20,9 +20,9 @@ const RESOURCES = {"index.html": "dcba966f13a6fd406ab30ac76e3085fa",
 "assets/FontManifest.json": "b149f420962da8b8be73d1968a24c0fa",
 "assets/shaders/ink_sparkle.frag": "ecc85a2e95f5e9f53123dcaf8cb9b6ce",
 "assets/fonts/MaterialIcons-Regular.otf": "a33d1bcb14c0b68818eb51eb726e23d7",
-"assets/fonts/PlexArabic-700.ttf": "924660357fd925b3af384b721da72932",
-"assets/fonts/PlexArabic-500.ttf": "4a4d7738c066e9b5bfe04626573475c5",
-"assets/fonts/PlexArabic-600.ttf": "4350daf4d2d03c870614b25c16d9972a",
+"assets/fonts/PlexArabic-700.ttf": "b973752189a4ca1bca88843b0f0f6628",
+"assets/fonts/PlexArabic-500.ttf": "fc10ab710894f7bf90eac8cf776141b4",
+"assets/fonts/PlexArabic-600.ttf": "7ca87a8e8a3a339e53501ebd577f0e30",
 "assets/NOTICES": "7799b389c342e571955fd15c71c8b2a1",
 "assets/AssetManifest.bin": "a278ad52daea3a100d1164a6a1db7dd0",
 "assets/AssetManifest.json": "b37a37ea8b58dabf8eb4f7b0a08bd9d3",
@@ -34,7 +34,7 @@ const RESOURCES = {"index.html": "dcba966f13a6fd406ab30ac76e3085fa",
 "icons/Icon-maskable-192.png": "c457ef57daa1d16f64b27b786ec2ea3c",
 "manifest.json": "6b800cd95f66d4ee385b41e36a1fb6b3",
 "version.json": "8ab04d1db306b15af4ee02e68d70733c",
-"main.dart.js": "deb3c13a193d0c3ddffd29d5fd340d44"};
+"main.dart.js": "62fcd655ffd203957faa9a6d95240a5c"};
 // The application shell files that are downloaded before a service worker can
 // start.
 const CORE = ["main.dart.js",

@@ -49181,7 +49181,12 @@ $1(a){var s,r,q,p,o,n,m,l=null
 for(s=this.a,r=s.ix(),q=r.length,p=0,o=0,n=0;n<r.length;r.length===q||(0,A.r)(r),++n){m=s.N2(r[n])
 p+=A.aG(m.h(0,"lossPast"))
 o+=A.aG(m.h(0,"lossFut"))}if(p+o<1)return B.az
-return new A.at(B.qv,A.cD(A.a([A.cC(new A.lc("\ud83d\udcc9 \u062e\u0633\u0627\u0631\u0629 \u0623\u064a\u0627\u0645 \u0641\u0627\u0636\u064a\u0629 \u0641\u0627\u062a\u062a",-p,l,l),1),B.hU,A.cC(new A.lc("\u23f3 \u0623\u064a\u0627\u0645 \u0641\u0627\u0636\u064a\u0629 \u062c\u0627\u064a\u0629",-o,"\u0644\u0648 \u0645\u0627 \u0627\u062a\u0623\u062c\u0631\u062a\u0634",l),1)],t.p),B.I,B.p,B.F),l)},
+s=A.a([],t.p)
+r=p>=1
+if(r)s.push(A.cC(new A.lc("\ud83d\udcc9 \u062e\u0633\u0627\u0631\u0629 \u0623\u064a\u0627\u0645 \u0641\u0627\u0636\u064a\u0629 \u0641\u0627\u062a\u062a",-p,l,l),1))
+if(r&&o>=1)s.push(B.hU)
+if(o>=1)s.push(A.cC(new A.lc("\u23f3 \u0623\u064a\u0627\u0645 \u0641\u0627\u0636\u064a\u0629 \u062c\u0627\u064a\u0629",-o,"\u0644\u0648 \u0645\u0627 \u0627\u062a\u0623\u062c\u0631\u062a\u0634",l),1))
+return new A.at(B.qv,A.cD(s,B.I,B.p,B.F),l)},
 $S:458}
 A.lc.prototype={
 F(a){var s=null,r=A.S(this.c,s,s,s,B.o7,s,s),q=this.d,p=A.bA(q)
