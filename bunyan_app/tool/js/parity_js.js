@@ -1,0 +1,10 @@
+const {chromium}=require('playwright');const fs=require('fs');const DATA=process.argv[2],days=process.argv[3].split(',');
+(async()=>{const b=await chromium.launch();const c=await b.newContext();await c.route('https://api.github.com/**',r=>r.fulfill({status:404,body:'{}'}));await c.route('https://ntfy.sh/**',r=>r.fulfill({status:200,body:''}));await c.route('https://generativelanguage.googleapis.com/**',r=>r.fulfill({status:404,body:'{}'}));
+const p=await c.newPage();await p.goto('http://localhost:8765/index.html');await p.waitForTimeout(1500);
+await p.evaluate(()=>{var x=document.getElementById('bio');x&&x.classList.remove('on')});
+await p.fill('#lu','osama');await p.fill('#lp','1234');if(await p.$('#lp2'))await p.fill('#lp2','1234');await p.click('.dlg button.p');await p.waitForTimeout(1200);
+const out=await p.evaluate(([d,days])=>{window.__noSave=1;Object.assign(S,JSON.parse(d));const o={};const RD=Date;
+ for(const pm of ['grp','me']){S.pmode=pm;for(const day of days){const FIX=new RD(day+'T12:00:00').getTime();function FD(){var a=[].slice.call(arguments);return a.length?new (Function.prototype.bind.apply(RD,[null].concat(a)))():new RD(FIX)}FD.now=()=>FIX;FD.UTC=RD.UTC;FD.parse=RD.parse;FD.prototype=RD.prototype;
+  for(const ws of ['all','-',...(S.groups||[]).map(g=>g.id)]){setW(ws);window.Date=FD;try{const r=rcvP(),f=fpos();o[pm+'|'+day+'|'+ws]={cash:Math.round(cashNow()),profit:Math.round(r.profit),rev:Math.round(r.rev),cost:Math.round(r.cost),eq:Math.round(f.eq),A:Math.round(f.A),L:Math.round(f.L),rcv:Math.round(f.rcv),unr:Math.round(f.unr),preCo:Math.round(f.preCo),accCo:Math.round(f.accCo)}}catch(e){o[pm+'|'+day+'|'+ws]={err:e.message}}finally{window.Date=RD}}}}
+ return o},[fs.readFileSync(DATA,'utf8'),days]);
+console.log(JSON.stringify(out));await b.close()})();
