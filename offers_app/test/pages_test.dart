@@ -9,6 +9,9 @@ import 'package:offers/ui/search.dart';
 import 'package:offers/ui/villas.dart';
 import 'package:offers/ui/import.dart';
 import 'package:offers/ui/settings.dart';
+import 'package:offers/ui/groups.dart';
+import 'package:offers/core/auto.dart';
+import 'package:offers/core/model.dart';
 import 'fixture.dart';
 
 void main() {
@@ -28,5 +31,19 @@ void main() {
     await show(t, const VillaPage('v1'), 'villa');
     await show(t, const ImportPage('v1'), 'import');
     await show(t, const SettingsPage(), 'settings');
+    await show(t, const GroupsPage(), 'groups');
+  });
+  test('أبديت الجروب: يلاقي فيلا الغانم 25 ويحدثها', () {
+    final meta = {'villa': 'RD 66 , VILLA 25', 'company': 'ALGHANIM REAL ESTATE', 'no': '2', 'type': '2bk2b', 'p1': 72000};
+    final v = findVilla('Alghanim', meta)!;
+    expect(v['id'], 'v3');
+    final r = applyUpdate(v, [meta, {'no': '10', 'type': '3bk', 'p1': 90000}, {'no': '12', 'type': 'st', 'p1': 30000}]);
+    expect(r, contains('اتحجزت: 7'));
+    expect(r, contains('جديدة: 12'));
+    expect(r, contains('2: 70,000→72,000'));
+    final nv = findVilla('Apex', {'villa': 'Villa 40'})!;
+    expect(nv['no'], '40');
+    expect(Store.I.villas.length, 4);
+    expect(villaNoOf('فيلا رقم 7'), '7');
   });
 }

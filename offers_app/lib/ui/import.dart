@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import '../core/model.dart';
 import '../core/store.dart';
 import '../core/ai.dart';
+import '../core/auto.dart';
 import 'theme.dart';
 
 String _n(dynamic s) => str(s).toUpperCase().replaceAll(RegExp(r'[^A-Z0-9؀-ۿ]'), '').replaceAll(RegExp(r'^0+'), '');
@@ -87,25 +88,11 @@ class _ImportState extends State<ImportPage> {
   }
 
   Future<void> _apply(List<Obj> missing) async {
-    final us = (v['units'] as List?) ?? (v['units'] = <dynamic>[]);
-    var add = 0, upd = 0;
-    for (final r in rows.where((r) => r['_on'] == true)) {
-      final m = match(r);
-      final t = m ?? <String, dynamic>{'id': uid(), 'videos': <dynamic>[]};
-      t['no'] = str(r['no']); if (str(r['floor']).isNotEmpty) t['floor'] = str(r['floor']);
-      if (kTypes.any((k) => k[0] == r['type'])) t['type'] = r['type']; if (str(r['tx']).isNotEmpty) t['tx'] = r['tx'];
-      if (numOf(r['p1']) > 0) t['p1'] = numOf(r['p1']);
-      if (numOf(r['p3']) > 0) t['p3'] = numOf(r['p3']); if (numOf(r['mo']) > 0) t['mo'] = numOf(r['mo']);
-      if (str(r['note']).isNotEmpty) t['note'] = r['note'];
-      t['avail'] = r['booked'] != true;
-      if (m == null) { us.add(t); add++; } else { upd++; }
-    }
-    if (missingBooked) { for (final u in missing) { u['avail'] = false; } }
-    final d = DateTime.now(); v['upd'] = '${d.day}/${d.month}';
+    final r = applyUpdate(v, rows.where((r) => r['_on'] == true).map((r) => Map<String, dynamic>.from(r)..remove('_on')).toList(), missingBooked: missingBooked);
     if (str(v['company']).isEmpty && vcomp.isNotEmpty) v['company'] = vcomp;
     await Store.I.save();
     if (!mounted) return;
-    toast(context, '✅ $add جديدة • $upd اتحدثت${missingBooked && missing.isNotEmpty ? ' • ${missing.length} اتعلمت محجوزة' : ''}');
+    toast(context, '✅ $r');
     Navigator.pop(context);
   }
 }

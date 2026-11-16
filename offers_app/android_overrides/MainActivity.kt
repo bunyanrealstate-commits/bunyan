@@ -25,6 +25,14 @@ class MainActivity : FlutterActivity() {
                 "installPerm" -> { try { startActivity(Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))); res.success(true) } catch (e: Exception) { res.success(false) } }
                 "install" -> { try { install(File(call.argument<String>("path")!!)); res.success(true) } catch (e: Exception) { res.success(false) } }
                 "contacts" -> contacts(res)
+                "autoCfg" -> { Auto.put(this, "cfg", org.json.JSONObject().put("key", call.argument<String>("key") ?: "").put("prompt", call.argument<String>("prompt") ?: "").put("groups", org.json.JSONArray(call.argument<List<String>>("groups") ?: listOf<String>()))); res.success(true) }
+                "autoRun" -> Thread { val n = Auto.run(applicationContext); runOnUiThread { res.success(n) } }.start()
+                "autoTake" -> { val r = Auto.arr(this, "res").toString(); Auto.put(this, "res", "[]"); res.success(r) }
+                "autoSeen" -> res.success(Auto.obj(this, "seen").toString())
+                "notifOn" -> res.success((android.provider.Settings.Secure.getString(contentResolver, "enabled_notification_listeners") ?: "").contains(packageName))
+                "notifPerm" -> { try { startActivity(Intent("android.settings.NOTIFICATION_LISTENER_SETTINGS")); res.success(true) } catch (e: Exception) { res.success(false) } }
+                "perms" -> { val l = ArrayList<String>(); if (Build.VERSION.SDK_INT >= 33) { l.add("android.permission.POST_NOTIFICATIONS"); l.add("android.permission.READ_MEDIA_IMAGES") } else l.add(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                    val need = l.filter { checkSelfPermission(it) != android.content.pm.PackageManager.PERMISSION_GRANTED }; if (need.isNotEmpty() && Build.VERSION.SDK_INT >= 23) requestPermissions(need.toTypedArray(), 56); res.success(need.isEmpty()) }
                 "wa" -> res.success(wa(call.argument<String>("phone") ?: "", call.argument<String>("text") ?: "", call.argument<List<String>>("uris") ?: listOf()))
                 else -> res.notImplemented()
             }

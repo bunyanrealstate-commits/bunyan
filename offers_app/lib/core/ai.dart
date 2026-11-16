@@ -62,7 +62,19 @@ class Ai {
 
   /// صورة الأبديت → [{no, floor, type, p3, mo, booked, note}]
   static Future<List<Obj>> readUpdate(Uint8List img, {String mime = 'image/jpeg'}) async {
-    const p = '''دي صورة "أبديت" من شركة عقارات في الإمارات فيها شقق فيلا وأسعارها.
+    final t = await _ask(updatePrompt, [img], mime: mime);
+    return parseRows(t);
+  }
+
+  static List<Obj> parseRows(String t) {
+    final j = jsonDecode(t.substring(t.indexOf('['), t.lastIndexOf(']') + 1)) as List;
+    return j.whereType<Map>().map((m) => m.cast<String, dynamic>()).toList();
+  }
+
+  /// للأبديت التلقائي من الجروبات: أي صورة مش أبديت → []
+  static const autoPrompt = 'لو الصورة دي مش جدول أو أبديت شقق/استديوهات للإيجار (صورة عادية، شخص، مكان، شات…) رجّع [] بس.\n\n' + updatePrompt;
+
+  static const updatePrompt = '''دي صورة "أبديت" من شركة عقارات في الإمارات فيها شقق فيلا وأسعارها.
 طلّع كل الشقق في JSON array بالشكل ده بالظبط:
 [{"no":"رقم الشقة/الاستديو (عمود Flat أو Apt أو Studio No)","floor":"G أو 1 أو 2 أو 3 أو R أو فاضي","type":"st|1bk|1bk2b|2bk|2bk2b|3bk|x","tx":"اسم النوع لو x","p1":سعر السنة دفعة واحدة (1 Payment / 1 Cheque) أو 0,"p3":سعر السنة على 3 دفعات (3 Payments / 3 Cheques) أو 0,"mo":رقم الإيجار الشهري أو 0,"booked":true لو مكتوب BOOKED/محجوز/مشطوب,"note":"أي ملاحظة قصيرة"}]
 - STUDIO = st • 1BHK / 1 B/R hall = 1bk • 1BHK + 2 bath = 1bk2b • 2BHK = 2bk • 2BHK 2 bath = 2bk2b • 3BHK = 3bk
@@ -72,10 +84,6 @@ class Ai {
 - اسم الفيلا زي "VILLA 25" ورقم الشارع "RD 66" والمنطقة.
 - الأرقام من غير فواصل. ومتخترعش شقق مش في الصورة.
 وكمان لو اسم الفيلا أو رقمها أو الشركة مكتوب، رجّعهم في أول عنصر كـ "villa":"...","company":"...","area":"..."''';
-    final t = await _ask(p, [img], mime: mime);
-    final j = jsonDecode(t.substring(t.indexOf('['), t.lastIndexOf(']') + 1)) as List;
-    return j.whereType<Map>().map((m) => m.cast<String, dynamic>()).toList();
-  }
 
   /// أول صورة من الفيديو → رقم الشقة (لو باين رقم الباب)
   static Future<String> readUnitNo(Uint8List thumb) async {
