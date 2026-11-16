@@ -82,7 +82,7 @@ class _SearchState extends State<SearchPage> {
       final v = x['v'] as Obj, u = x['u'] as Obj;
       final uris = <String>[];
       for (final id in (u['videos'] as List?)?.map(str) ?? const <String>[]) { final r = await Media.uri(id); if (r != null) uris.add(r); }
-      j.add({'uris': uris, 'text': unitCaption(v, u, pay)});
+      j.add({'uris': uris, 'text': unitCaption(v, u, pay, en: c['lang'] == 'en')});
     }
     await rememberClient(c);
     setState(() { jobs = j; done = 0; client = c; picked.clear(); });

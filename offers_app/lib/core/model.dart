@@ -13,6 +13,7 @@ const kTypes = [
   ['3bk', '3 غرف وصالة'],
   ['x', 'نوع تاني'],
 ];
+const kTypesEn = {'st': 'Studio', '1bk': '1 Bedroom Hall', '1bk2b': '1 Bedroom Hall, 2 Bath', '2bk': '2 Bedroom Hall', '2bk2b': '2 Bedroom Hall, 2 Bath', '3bk': '3 Bedroom Hall', 'x': 'Apartment'};
 String typeName(dynamic k) => kTypes.where((t) => t[0] == k).map((t) => t[1]).firstOrNull ?? 'شقة';
 const kFloors = [['G', 'أرضي'], ['1', 'أول'], ['2', 'تاني'], ['3', 'تالت'], ['R', 'روف']];
 String floorName(dynamic k) => kFloors.where((t) => t[0] == '$k').map((t) => t[1]).firstOrNull ?? '';
@@ -92,15 +93,15 @@ String clientMsg(List<Map<String, dynamic>> picks) {
   return b.toString();
 }
 
-/// رسالة قصيرة تحت فيديو كل شقة: السعر حسب طريقة الدفع اللي العميل عايزها + اللوكيشن
-String unitCaption(Obj v, Obj u, String pay) {
+/// رسالة قصيرة تحت فيديو كل شقة: السعر حسب طريقة الدفع اللي العميل عايزها + اللوكيشن (عربي أو إنجليزي)
+String unitCaption(Obj v, Obj u, String pay, {bool en = false}) {
   final o = <String>[];
   final p1 = Price.p1(u), p3 = Price.p3(u), mo = Price.mo(u);
   final hasVid = ((u['videos'] as List?) ?? const []).isNotEmpty;
-  if (!hasVid) o.add('🏠 ${typeName(u['type'])}');
-  void a1() { if (p1 > 0) o.add('💰 ${money(p1)} درهم — دفعة واحدة'); }
-  void a3() { if (p3 > 0) o.add('💰 ${money(p3)} درهم — 3 دفعات'); }
-  void am() { if (mo > 0) o.add('💰 ${money(mo)} درهم شهري'); }
+  if (!hasVid) o.add('🏠 ${en ? kTypesEn[str(u['type'])] ?? 'Apartment' : typeName(u['type'])}');
+  void a1() { if (p1 > 0) o.add(en ? '💰 AED ${money(p1)} / year — 1 payment' : '💰 ${money(p1)} درهم — دفعة واحدة'); }
+  void a3() { if (p3 > 0) o.add(en ? '💰 AED ${money(p3)} / year — 3 payments' : '💰 ${money(p3)} درهم — 3 دفعات'); }
+  void am() { if (mo > 0) o.add(en ? '💰 AED ${money(mo)} / month' : '💰 ${money(mo)} درهم شهري'); }
   if (pay == '1') { a1(); } else if (pay == '3') { a3(); } else if (pay == 'mo') { am(); } else { a1(); am(); if (p1 <= 0 && mo <= 0) a3(); }
   if (str(v['loc']).isNotEmpty) o.add('📍 ${v['loc']}');
   return o.join('\n');

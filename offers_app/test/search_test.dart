@@ -22,6 +22,7 @@ void main() {
   test('رسالة قصيرة تحت الفيديو', () {
     final v = vs[2], u = objs(v['units'])[0];
     expect(unitCaption(v, u, '1'), '🏠 غرفتين وصالة وحمامين\n💰 70,000 درهم — دفعة واحدة');
+    expect(unitCaption(v, u, '1', en: true), '🏠 2 Bedroom Hall, 2 Bath\n💰 AED 70,000 / year — 1 payment');
     final v1 = vs[0], u2 = objs(v1['units'])[1]..['videos'] = ['x'];
     expect(unitCaption(v1, u2, 'mo'), '💰 3,500 درهم شهري\n📍 https://maps.google.com/?q=24.3,54.6');
   });

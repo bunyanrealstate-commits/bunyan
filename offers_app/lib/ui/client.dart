@@ -5,14 +5,32 @@ import 'theme.dart';
 
 /// اختيار العميل: سيرش بالاسم من جهات الاتصال (اللي على الواتساب) أو اكتب الرقم
 /// بيرجع {'n': الاسم, 'p': الرقم} أو {'p': ''} لو عايز تختار الشات بنفسك
-Future<Map<String, String>?> pickClient(BuildContext context) => showModalBottomSheet<Map<String, String>>(context: context, isScrollControlled: true, useSafeArea: true, builder: (_) => const Directionality(textDirection: TextDirection.rtl, child: _Pick()));
+Future<Map<String, String>?> pickClient(BuildContext context) async {
+  final c = await showModalBottomSheet<Map<String, String>>(context: context, isScrollControlled: true, useSafeArea: true, builder: (_) => const Directionality(textDirection: TextDirection.rtl, child: _Pick()));
+  if (c == null || !context.mounted) return null;
+  final def = guessLang(c);
+  final l = await showDialog<String>(context: context, builder: (ctx) => Directionality(textDirection: TextDirection.rtl, child: SimpleDialog(title: Text('لغة الرسالة${(c['n'] ?? '').isNotEmpty ? ' لـ ${c['n']}' : ''}'), children: [
+        for (final o in const [['ar', '🇦🇪 عربي'], ['en', '🇬🇧 English']])
+          SimpleDialogOption(onPressed: () => Navigator.pop(ctx, o[0]), child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Row(children: [Icon(o[0] == def ? Icons.radio_button_checked : Icons.radio_button_off, color: kAc), const SizedBox(width: 10), Text(o[1], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700))]))),
+      ])));
+  if (l == null) return null;
+  return {...c, 'lang': l};
+}
 
-List<Map<String, String>> recentClients() => ((Store.I.cfg['recent'] as List?) ?? const []).whereType<Map>().map((m) => {'n': '${m['n'] ?? ''}', 'p': '${m['p'] ?? ''}'}).toList();
+List<Map<String, String>> recentClients() => ((Store.I.cfg['recent'] as List?) ?? const []).whereType<Map>().map((m) => {'n': '${m['n'] ?? ''}', 'p': '${m['p'] ?? ''}', 'lang': '${m['lang'] ?? ''}'}).toList();
+
+/// لغة الرسالة: اللي اتبعتله بيها قبل كده، وإلا لو اسمه مكتوب إنجليزي → إنجليزي
+String guessLang(Map<String, String> c) {
+  final r = recentClients().where((x) => x['p'] == c['p'] && (x['lang'] ?? '').isNotEmpty).firstOrNull;
+  if (r != null) return r['lang']!;
+  final n = c['n'] ?? '';
+  return n.isNotEmpty && RegExp(r'[A-Za-z]').hasMatch(n) && !RegExp('[\u0600-\u06FF]').hasMatch(n) ? 'en' : 'ar';
+}
 
 Future<void> rememberClient(Map<String, String> c) async {
   if ((c['p'] ?? '').isEmpty) return;
   final l = recentClients()..removeWhere((x) => x['p'] == c['p']);
-  l.insert(0, {'n': c['n'] ?? '', 'p': c['p']!});
+  l.insert(0, {'n': c['n'] ?? '', 'p': c['p']!, 'lang': c['lang'] ?? 'ar'});
   Store.I.cfg['recent'] = l.take(15).toList();
   await Store.I.saveCfg();
 }
