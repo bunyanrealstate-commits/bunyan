@@ -1,11 +1,13 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'i18n.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import '../core/store.dart';
 import '../core/engine.dart';
 import '../core/contract.dart';
+import '../core/ct_pdf.dart';
 import '../core/js.dart';
 import 'ct_css.dart';
 import 'theme.dart';
@@ -25,7 +27,7 @@ class _CtState extends State<ContractPage> {
   int v = 0;
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() { super.initState(); CtPdf.loader ??= rootBundle.load; _load(); }
   void _load() { final f = Ct.F(S); c = {for (final k in Ct.keys) k: TextEditingController(text: f[k] == null ? '' : '${f[k]}')}; }
 
   Future<void> _set(String k, String val) async {
@@ -48,7 +50,7 @@ class _CtState extends State<ContractPage> {
   Future<void> _pdf() async {
     if (!Ct.hasPaper(S)) { toast(context, Tr.t('مفيش نموذج عقد محفوظ — اعمل النموذج مرة واحدة من بنيان القديم')); return; }
     late final List<int> bytes;
-    try { bytes = await Printing.convertHtml(format: PdfPageFormat.a4, html: _doc()); } catch (e) { if (mounted) toast(context, Tr.t('الـ PDF مش متاح هنا — طلّعه من تطبيق الموبايل')); return; }
+    try { bytes = await CtPdf.build(str(Ct.ct(S)['html'])); } catch (e) { if (mounted) toast(context, '⚠️ $e'); return; }
     final nm = str(Ct.F(S)['tn']).trim().replaceAll(RegExp(r'\s+'), '-');
     await Printing.sharePdf(bytes: Uint8List.fromList(bytes), filename: 'contract-${nm.isEmpty ? 'contract' : nm}.pdf');
   }
@@ -79,7 +81,7 @@ class _CtState extends State<ContractPage> {
         const SizedBox(height: 8),
         FilledButton.icon(onPressed: _pdf, icon: const Icon(Icons.share), label: Text(Tr.t('📄 طلّع PDF وابعته')), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50))),
         const SizedBox(height: 12),
-        if (has) SizedBox(height: 520, child: PdfPreview(key: ValueKey(v), build: (fmt) => Printing.convertHtml(format: PdfPageFormat.a4, html: _doc()), canChangePageFormat: false, canChangeOrientation: false, canDebug: false, allowPrinting: true, allowSharing: true)),
+        if (has) SizedBox(height: 520, child: PdfPreview(key: ValueKey(v), build: (fmt) => CtPdf.build(str(Ct.ct(S)['html'])), canChangePageFormat: false, canChangeOrientation: false, canDebug: false, allowPrinting: true, allowSharing: true)),
       ]),
     ));
   }

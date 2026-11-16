@@ -18,6 +18,8 @@ dependencies:
   crypto: ^3.0.5
   printing: ^5.13.2
   share_plus: ^10.1.4
+  html: ^0.15.4
+  pdf: ^3.11.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
