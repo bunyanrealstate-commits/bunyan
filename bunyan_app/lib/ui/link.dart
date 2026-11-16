@@ -35,7 +35,7 @@ class _LinkScreenState extends State<LinkScreen> {
           const SizedBox(height: 30),
           const Text('انقل بياناتك من بنيان القديم', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
           const SizedBox(height: 8),
-          const Text('1) افتح بنيان القديم ← القايمة ← «ربط جهاز جديد» وانسخ الكود\n2) ارجع هنا — هيتلصق لوحده وكل الوحدات والعقود والحسابات هتنزل', style: TextStyle(height: 1.8)),
+          const Text('1) افتح بنيان القديم ← القايمة ← «💻 اربط جهاز تاني» ← انسخ الكود\n2) ارجع هنا — هيتلصق لوحده وكل الوحدات والعقود والحسابات هتنزل', style: TextStyle(height: 1.8)),
           const SizedBox(height: 14),
           TextField(controller: c, maxLines: 4, textDirection: TextDirection.ltr, decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'BNYLINK-…')),
           const SizedBox(height: 12),
