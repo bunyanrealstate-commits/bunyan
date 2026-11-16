@@ -43,6 +43,23 @@ class _AccState extends State<AccountsPage> {
           trailing: const Icon(Icons.edit),
           onTap: _setCash,
         )),
+        Row(children: [
+          Expanded(child: OutlinedButton(onPressed: () => _draw(true), child: const Text('🙋 سحب لحاجاتي'))),
+          const SizedBox(width: 8),
+          Expanded(child: OutlinedButton(onPressed: () => _draw(false), child: const Text('🤝 سحب لشريك'))),
+        ]),
+        Builder(builder: (_) {
+          final g = (ws == 'all' || ws == '-') ? '' : ws;
+          final ad = objs(S['adj']).where((a) => ws == 'all' || str(a['g']) == g).toList()..sort((a, b) => n0(b['at']).compareTo(n0(a['at'])));
+          if (ad.isEmpty) return const SizedBox.shrink();
+          return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            _h('💸 حركات النقدي (سحب / تمويل / دفعات)'),
+            for (final a in ad.take(60)) ListTile(dense: true, title: Text(str(a['w']), maxLines: 2, overflow: TextOverflow.ellipsis),
+              subtitle: Text(iso(DateTime.fromMillisecondsSinceEpoch(n0(a['at']).toInt()))),
+              trailing: Text(money(n0(a['a'])), style: TextStyle(fontWeight: FontWeight.bold, color: n0(a['a']) < 0 ? kRed : kGreen)),
+              onLongPress: a['k'] == 'draw' ? () => _delAdj(a) : null),
+          ]);
+        }),
         _h('🔐 التأمينات', action: TextButton.icon(onPressed: () => _dep(null), icon: const Icon(Icons.add), label: const Text('تأمين'))),
         Card(child: Padding(padding: const EdgeInsets.all(10), child: Text('محجوز عندك: ${money(held)}  •  عدد: ${deps.length}'))),
         for (final d in deps) Card(child: ListTile(
@@ -85,6 +102,42 @@ class _AccState extends State<AccountsPage> {
     final tv = t == t.roundToDouble() ? t.toInt() : t;
     if (ws == '-') { S['cash'] = tv; } else { final gc = S['gc'] is Map<String, dynamic> ? S['gc'] as Map<String, dynamic> : (S['gc'] = <String, dynamic>{}); gc[ws] = tv; }
     await Store.I.save(log: '💰 عدّلت الرصيد النقدي');
+    if (mounted) setState(() {});
+  }
+
+  /// نفس cmDraw: سحب شخصي أو لشريك — بيتخصم من النقدي ومش بيأثر على الربح
+  Future<void> _draw(bool mine) async {
+    final g = (ws == 'all' || ws == '-') ? '' : ws;
+    final gr = objs(S['groups']).where((x) => x['id'] == g).firstOrNull;
+    final nm = str(gr?['name']).replaceFirst(RegExp(r'^\s*مع\s+'), '');
+    final ps = <String>['__me', ...nm.isEmpty ? <String>[] : nm.split(RegExp(r'\s+و(?=\S)')).map((x) => x.trim()).where((x) => x.isNotEmpty)];
+    for (final a in objs(S['adj'])) { if (truthy(a['p']) && truthy(a['k']) && str(a['g']) == g && !ps.contains(str(a['p']))) ps.add(str(a['p'])); }
+    final me = str(Store.I.cfg['u']).isEmpty ? 'أنا' : str(Store.I.cfg['u']);
+    String? p = '__me';
+    if (!mine) {
+      p = await pickDlg(context, 'مين اللي سحب؟', [for (final x in ps.where((x) => x != '__me')) [x, x], ['__other', 'شخص تاني…']], ps.length > 1 ? ps[1] : '__other');
+      if (p == null || !mounted) return;
+    }
+    final o = await formDlg(context, mine ? '🙋 سحب لحاجاتي الشخصية' : '🤝 سحب لشريك', [
+      if (p == '__other') FieldSpec('x', 'اسمه'),
+      FieldSpec('a', 'المبلغ', type: 'n'), FieldSpec('d', 'التاريخ', type: 'd', v: Act.td()), FieldSpec('w', 'السبب / ملاحظة'),
+    ]);
+    if (o == null) return;
+    final a = (double.tryParse(o['a'] ?? '') ?? 0).abs();
+    if (a == 0) { if (mounted) toast(context, 'اكتب المبلغ'); return; }
+    final who = p == '__other' ? ((o['x'] ?? '').trim().isEmpty ? 'شخص' : o['x']!.trim()) : p!;
+    final d = o['d'] ?? Act.td();
+    final at = (d.isNotEmpty && d != Act.td()) ? pd(d).millisecondsSinceEpoch + 12 * 3600000 : Act.now();
+    final w = o['w'] ?? '';
+    final l = S['adj'] is List ? S['adj'] as List : (S['adj'] = <dynamic>[]);
+    l.add({'id': Act.uid(), 'at': at, 'a': -(a == a.roundToDouble() ? a.toInt() : a), 'k': 'draw', 'p': who, 'g': g, 'w': 'سحب ${who == '__me' ? 'شخصي ($me)' : 'لـ $who'}${w.isNotEmpty ? ' — $w' : ''}', 'n': w});
+    await Store.I.save(log: '💸 سحب ${money(a)} — ${who == '__me' ? me : who}');
+    if (mounted) { setState(() {}); toast(context, 'اتسجل السحب: ${money(a)} — بيتخصم من النقدي ومش بيأثر على الربح'); }
+  }
+
+  Future<void> _delAdj(Obj a) async {
+    if (!await confirmDlg(context, 'تمسح «${str(a['w'])}»؟', ok: 'امسح')) return;
+    (S['adj'] as List).remove(a); await Store.I.save(log: '🗑 مسحت ${str(a['w'])}');
     if (mounted) setState(() {});
   }
 
