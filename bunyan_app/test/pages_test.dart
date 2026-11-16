@@ -32,9 +32,7 @@ void main() {
   });
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    Store.I.S = jsonDecode(File('test/fixture.json').readAsStringSync()) as Map<String, dynamic>;
-    Store.I.loaded = true;
-    Store.I.cfg = {'repo': '', 'token': '', 'lang': 'ar'};
+    await Store.I.initTest(jsonDecode(File('test/fixture.json').readAsStringSync()) as Map<String, dynamic>);
   });
 
   Future<void> show(WidgetTester t, Widget w, String name) async {

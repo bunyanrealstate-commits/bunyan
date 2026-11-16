@@ -40,7 +40,12 @@ class Store extends ChangeNotifier {
 
   Map<String, dynamic> strip(Map<String, dynamic> s) { final o = Map<String, dynamic>.of(s); o.remove('tab'); return o; }
 
+  /// للاختبارات: بيانات في الذاكرة من غير ملفات
+  bool testMode = false;
+  Future<void> initTest(Map<String, dynamic> s) async { _p = await SharedPreferences.getInstance(); S = s; cfg = {'lang': 'ar'}; loaded = true; testMode = true; resetPrev(); }
+
   Future<void> _persist() async {
+    if (testMode) return;
     final t = jsonOut(strip(S));
     if (kIsWeb) { await _p.setString('bny_state', t); }
     else {
