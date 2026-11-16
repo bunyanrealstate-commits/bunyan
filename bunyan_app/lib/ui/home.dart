@@ -67,9 +67,9 @@ class HomePage extends StatelessWidget {
       Builder(builder: (_) { var lp = 0.0, lf = 0.0; for (final u in e.SU()) { final o = e.occ(u); lp += o['lossPast'] as double; lf += o['lossFut'] as double; }
         if (lp + lf < 1) return const SizedBox.shrink();
         return Padding(padding: const EdgeInsets.only(top: 10), child: Row(children: [
-          Expanded(child: _Stat('📉 خسارة أيام فاضية فاتت', -lp)),
-          const SizedBox(width: 10),
-          Expanded(child: _Stat('⏳ أيام فاضية جاية', -lf, sub: 'لو ما اتأجرتش')),
+          if (lp >= 1) Expanded(child: _Stat('📉 خسارة أيام فاضية فاتت', -lp)),
+          if (lp >= 1 && lf >= 1) const SizedBox(width: 10),
+          if (lf >= 1) Expanded(child: _Stat('⏳ أيام فاضية جاية', -lf, sub: 'لو ما اتأجرتش')),
         ])); }),
       _Renew(e),
       const SizedBox(height: 14),
