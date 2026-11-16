@@ -26,6 +26,8 @@ jobs:
           p='android/app/src/main/AndroidManifest.xml';s=open(p).read()
           f='<intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="bnyapp"/></intent-filter>'
           if 'bnyapp' not in s: s=s.replace('</activity>',f+'</activity>',1)
+          if 'REQUEST_INSTALL_PACKAGES' not in s: s=s.replace('<application','<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>\n    <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION"/>\n    <application',1)
+          if 'UpdRx' not in s: s=s.replace('</application>','<receiver android:name=".UpdRx" android:exported="false"/></application>',1)
           if 'com.bunyan.furnished' not in s: s=s.replace('<queries>','<queries><package android:name="com.bunyan.furnished"/>',1) if '<queries>' in s else s.replace('</manifest>','<queries><package android:name="com.bunyan.furnished"/></queries></manifest>',1)
           open(p,'w').write(s)
           PY

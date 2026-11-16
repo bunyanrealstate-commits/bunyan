@@ -8,6 +8,7 @@ import 'link.dart';
 import 'more.dart';
 import 'expenses.dart';
 import '../core/native.dart';
+import '../core/updater.dart';
 
 /// المجموعة المختارة (زي WS في بنيان القديم)
 class Ws extends ValueNotifier<String> {
@@ -34,9 +35,10 @@ class _ShellState extends State<Shell> {
     Store.I.addListener(_r); Ws.I.addListener(_r);
     Native.init();
     Native.takeLink().then((ok) { if (!ok && Store.I.linked) Store.I.sync(); });
+    Future.delayed(const Duration(seconds: 5), () => Updater.check());
     WidgetsBinding.instance.addObserver(_life);
   }
-  late final _life = _Life(() { Native.takeLink().then((ok) { if (!ok && Store.I.linked) Store.I.sync(); }); });
+  late final _life = _Life(() { Native.takeLink().then((ok) { if (!ok && Store.I.linked) Store.I.sync(); }); Updater.check().then((m) { if (m != null && mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m))); }); });
   void _r() { if (mounted) setState(() {}); }
   @override
   void dispose() { Store.I.removeListener(_r); Ws.I.removeListener(_r); WidgetsBinding.instance.removeObserver(_life); super.dispose(); }

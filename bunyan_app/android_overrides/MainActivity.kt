@@ -1,6 +1,12 @@
 package com.bunyan.bunyan
 
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInstaller
+import android.os.Build
+import java.io.File
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -17,6 +23,8 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "take" -> { val l = link; link = null; res.success(l) }
                 "openOld" -> { val i = packageManager.getLaunchIntentForPackage("com.bunyan.furnished"); if (i != null) { startActivity(i); res.success(true) } else res.success(false) }
+                "version" -> res.success(try { val pi = packageManager.getPackageInfo(packageName, 0); if (Build.VERSION.SDK_INT >= 28) pi.longVersionCode else @Suppress("DEPRECATION") pi.versionCode.toLong() } catch (e: Exception) { 0L })
+                "install" -> { try { install(File(call.argument<String>("path")!!)); res.success(true) } catch (e: Exception) { res.success(false) } }
                 else -> res.notImplemented()
             }
         }
@@ -25,5 +33,29 @@ class MainActivity : FlutterActivity() {
         super.onNewIntent(intent)
         val d = intent.dataString
         if (d != null) { link = d; ch?.invokeMethod("ping", null) }
+    }
+
+    /** تحديث لوحده: أول مرة أندرويد بيسأل، وبعد كده بيتسطّب من غير ما تعمل حاجة */
+    private fun install(f: File) {
+        val pi = packageManager.packageInstaller
+        val p = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
+        p.setAppPackageName(packageName)
+        if (Build.VERSION.SDK_INT >= 31) p.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
+        val id = pi.createSession(p)
+        pi.openSession(id).use { s ->
+            s.openWrite("app.apk", 0, f.length()).use { out -> f.inputStream().use { it.copyTo(out) }; s.fsync(out) }
+            val i = Intent(this, UpdRx::class.java)
+            val pend = PendingIntent.getBroadcast(this, 77, i, PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0))
+            s.commit(pend.intentSender)
+        }
+    }
+}
+
+class UpdRx : BroadcastReceiver() {
+    override fun onReceive(ctx: Context, intent: Intent) {
+        if (intent.getIntExtra(PackageInstaller.EXTRA_STATUS, -999) == PackageInstaller.STATUS_PENDING_USER_ACTION) {
+            @Suppress("DEPRECATION") val c = intent.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)
+            if (c != null) { c.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); try { ctx.startActivity(c) } catch (_: Exception) {} }
+        }
     }
 }
