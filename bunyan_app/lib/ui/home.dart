@@ -8,6 +8,7 @@ import 'units.dart';
 import 'dialogs.dart';
 import '../core/actions.dart';
 import 'lease_edit.dart';
+import 'monitor.dart';
 
 /// 🔄 عقود قربت تخلص — هتجدد؟ (renewCard)
 class _Renew extends StatelessWidget {
@@ -40,6 +41,7 @@ class HomePage extends StatelessWidget {
     final cash = e.cashNow(); final rp = e.rcvP(); final f = e.fpos();
     final mine = Store.I.S['pmode'] == 'me';
     return ListView(padding: const EdgeInsets.all(14), children: [
+      const MonBanner(),
       Row(children: [
         Expanded(child: _Stat('💵 الرصيد النقدي', cash)),
         const SizedBox(width: 10),

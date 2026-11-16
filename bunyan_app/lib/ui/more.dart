@@ -13,6 +13,7 @@ import 'lock.dart';
 import 'sim.dart';
 import 'contract.dart';
 import 'ai.dart';
+import 'monitor.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
@@ -35,6 +36,7 @@ class MorePage extends StatelessWidget {
       Card(child: ListTile(leading: const Text('🔮', style: TextStyle(fontSize: 22)), title: const Text('التوقعات — الرصيد سنة قدام'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ForecastPage())))),
       Card(child: ListTile(leading: const Text('📝', style: TextStyle(fontSize: 22)), title: const Text('عقد العميل (PDF)'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ContractPage())))),
       Card(child: ListTile(leading: const Text('🧮', style: TextStyle(fontSize: 22)), title: const Text('المحاكي — أفتح استديو جديد؟'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SimPage())))),
+      Card(child: ListTile(leading: const Text('🛡', style: TextStyle(fontSize: 22)), title: const Text('المراقب والشكاوى'), subtitle: const Text('فحص البيانات + «مش عاجبني»'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MonitorPage())))),
       Card(child: ListTile(leading: const Text('🗑', style: TextStyle(fontSize: 22)), title: const Text('سلة المحذوفات'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TrashPage())))),
       Card(child: ListTile(leading: const Text('🔒', style: TextStyle(fontSize: 22)), title: const Text('قفل التطبيق برقم سري'), subtitle: Text(AppLock.on ? 'مفعّل' : 'مش مفعّل'), trailing: const Icon(Icons.chevron_left), onTap: () => lockSettings(context))),
       const SizedBox(height: 8),
