@@ -19,6 +19,12 @@ void main() {
     expect(r.map((x) => (x['u'] as Obj)['id']).toList(), ['g2', 'g7']);
     expect(Price.text(r.first['u'] as Obj).contains('70,000 درهم في السنة دفعة واحدة'), true);
   });
+  test('رسالة قصيرة تحت الفيديو', () {
+    final v = vs[2], u = objs(v['units'])[0];
+    expect(unitCaption(v, u, '1'), '🏠 غرفتين وصالة وحمامين\n💰 70,000 درهم — دفعة واحدة');
+    final v1 = vs[0], u2 = objs(v1['units'])[1]..['videos'] = ['x'];
+    expect(unitCaption(v1, u2, 'mo'), '💰 3,500 درهم شهري\n📍 https://maps.google.com/?q=24.3,54.6');
+  });
   test('رسالة العميل', () {
     final r = Search.run(vs, types: {'1bk'}, pay: 'mo', budget: 3500);
     final m = clientMsg(r.take(1).toList());

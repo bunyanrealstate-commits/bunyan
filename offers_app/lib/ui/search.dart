@@ -5,6 +5,7 @@ import '../core/media.dart';
 import '../core/native.dart';
 import 'theme.dart';
 import 'thumb.dart';
+import 'client.dart';
 
 /// 🔎 العميل عايز إيه؟ النوع + الدفع + الميزانية ← المتاح ← ابعته على الواتساب
 class SearchPage extends StatefulWidget {
@@ -40,7 +41,8 @@ class _SearchState extends State<SearchPage> {
             Padding(padding: const EdgeInsets.symmetric(vertical: 10), child: Text(res.isEmpty ? (Store.I.villas.isEmpty ? 'لسه مفيش فلل — ضيفها من تبويب «الفلل»' : 'مفيش حاجة متاحة بالمواصفات دي — جرّب «± 20%» أو «أي حاجة»') : '${res.length} شقة متاحة — علّم اللي عايز تبعته', style: const TextStyle(fontWeight: FontWeight.w700, color: kMuted))),
             for (final x in res) _row(x),
           ]),
-          floatingActionButton: sel.isEmpty ? null : FloatingActionButton.extended(onPressed: () => _send(sel), backgroundColor: const Color(0xFF25D366), icon: const Icon(Icons.send, color: Colors.white), label: Text('ابعت ${sel.length} للعميل', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700))),
+          bottomNavigationBar: _queueBar(),
+          floatingActionButton: sel.isEmpty || jobs.isNotEmpty ? null : FloatingActionButton.extended(onPressed: () => _send(sel), backgroundColor: const Color(0xFF25D366), icon: const Icon(Icons.send, color: Colors.white), label: Text('ابعت ${sel.length} للعميل', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700))),
         );
       });
 
@@ -67,14 +69,47 @@ class _SearchState extends State<SearchPage> {
     ]))));
   }
 
+  /// كل شقة رسالة لوحدها: الفيديو وتحته السعر واللوكيشن — واحدة ورا التانية
+  List<Map<String, dynamic>> jobs = [];
+  int done = 0;
+  Map<String, String> client = {};
+
   Future<void> _send(List<Map<String, dynamic>> sel) async {
-    final o = await formDlg(context, '📲 رقم العميل', [const FS('p', 'رقم الواتساب (فاضي = تختار الشات بنفسك)', num: true)], ok: 'افتح الواتساب');
-    if (o == null || !mounted) return;
-    final uris = <String>[];
-    for (final x in sel) { for (final id in ((x['u'] as Obj)['videos'] as List?)?.map(str) ?? const <String>[]) { final u = await Media.uri(id); if (u != null) uris.add(u); } }
-    final r = await Native.sendWa(phone: o['p'] ?? '', text: clientMsg(sel), uris: uris);
+    final c = await pickClient(context);
+    if (c == null || !mounted) return;
+    final j = <Map<String, dynamic>>[];
+    for (final x in sel) {
+      final v = x['v'] as Obj, u = x['u'] as Obj;
+      final uris = <String>[];
+      for (final id in (u['videos'] as List?)?.map(str) ?? const <String>[]) { final r = await Media.uri(id); if (r != null) uris.add(r); }
+      j.add({'uris': uris, 'text': unitCaption(v, u, pay)});
+    }
+    await rememberClient(c);
+    setState(() { jobs = j; done = 0; client = c; picked.clear(); });
+    await _next();
+  }
+
+  Future<void> _next() async {
+    if (done >= jobs.length) return;
+    final j = jobs[done];
+    final r = await Native.sendWa(phone: client['p'] ?? '', text: j['text'] as String, uris: (j['uris'] as List).cast<String>());
     if (!mounted) return;
-    toast(context, r == 'wa' ? '📤 فتحت شات العميل ومعاه ${uris.length} فيديو والرسالة — دوس إرسال' : r == 'fail' ? '⚠️ مقدرتش أفتح الواتساب' : '📤 اختار العميل ودوس إرسال');
-    setState(() => picked.clear());
+    if (r == 'fail') { toast(context, '⚠️ مقدرتش أفتح الواتساب'); return; }
+    setState(() => done++);
+    if (done >= jobs.length) { toast(context, '✅ خلصت — اتبعت ${jobs.length} شقة'); Future.delayed(const Duration(seconds: 2), () { if (mounted) setState(() => jobs = []); }); }
+  }
+
+  Widget? _queueBar() {
+    if (jobs.isEmpty || done >= jobs.length) return null;
+    final who = (client['n'] ?? '').isNotEmpty ? client['n']! : ((client['p'] ?? '').isNotEmpty ? '+${client['p']}' : 'العميل');
+    return SafeArea(child: Container(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+      decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: kBd))),
+      child: Row(children: [
+        Expanded(child: Text('📤 $who — اتبعت $done من ${jobs.length}\nدوس إرسال في الواتساب وارجع هنا', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13))),
+        TextButton(onPressed: () => setState(() => jobs = []), child: const Text('إلغاء')),
+        FilledButton.icon(style: FilledButton.styleFrom(backgroundColor: const Color(0xFF25D366)), onPressed: _next, icon: const Icon(Icons.send, color: Colors.white), label: Text('ابعت ${done + 1}', style: const TextStyle(color: Colors.white))),
+      ]),
+    ));
   }
 }

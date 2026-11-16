@@ -24,11 +24,42 @@ class MainActivity : FlutterActivity() {
                 "canInstall" -> res.success(if (Build.VERSION.SDK_INT >= 26) packageManager.canRequestPackageInstalls() else true)
                 "installPerm" -> { try { startActivity(Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))); res.success(true) } catch (e: Exception) { res.success(false) } }
                 "install" -> { try { install(File(call.argument<String>("path")!!)); res.success(true) } catch (e: Exception) { res.success(false) } }
+                "contacts" -> contacts(res)
                 "wa" -> res.success(wa(call.argument<String>("phone") ?: "", call.argument<String>("text") ?: "", call.argument<List<String>>("uris") ?: listOf()))
                 else -> res.notImplemented()
             }
         }
     }
+    private var pend: MethodChannel.Result? = null
+    private fun contacts(res: MethodChannel.Result) {
+        if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(android.Manifest.permission.READ_CONTACTS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            pend = res; requestPermissions(arrayOf(android.Manifest.permission.READ_CONTACTS), 55); return
+        }
+        Thread { val l = readContacts(); runOnUiThread { res.success(l) } }.start()
+    }
+    override fun onRequestPermissionsResult(code: Int, perms: Array<out String>, grants: IntArray) {
+        super.onRequestPermissionsResult(code, perms, grants)
+        if (code != 55) return
+        val r = pend ?: return; pend = null
+        if (grants.isNotEmpty() && grants[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) Thread { val l = readContacts(); runOnUiThread { r.success(l) } }.start() else r.success(listOf<Map<String, String>>())
+    }
+    /** جهات الاتصال: اللي عندها واتساب (عادي أو بيزنس) الأول، وبعدين باقي الأرقام */
+    private fun readContacts(): List<Map<String, String>> {
+        val out = ArrayList<Map<String, String>>()
+        try {
+            contentResolver.query(android.provider.ContactsContract.Data.CONTENT_URI, arrayOf(android.provider.ContactsContract.Data.DISPLAY_NAME, android.provider.ContactsContract.Data.DATA1),
+                android.provider.ContactsContract.Data.MIMETYPE + " IN (?,?)", arrayOf("vnd.android.cursor.item/vnd.com.whatsapp.profile", "vnd.android.cursor.item/vnd.com.whatsapp.w4b.profile"), null)?.use { c ->
+                while (c.moveToNext()) { val n = c.getString(0) ?: ""; val j = (c.getString(1) ?: "").substringBefore("@"); if (j.isNotEmpty()) out.add(mapOf("n" to n, "p" to j, "wa" to "1")) }
+            }
+        } catch (_: Exception) {}
+        try {
+            contentResolver.query(android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI, arrayOf(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER), null, null, null)?.use { c ->
+                while (c.moveToNext()) { val n = c.getString(0) ?: ""; val p = c.getString(1) ?: ""; if (p.isNotEmpty()) out.add(mapOf("n" to n, "p" to p, "wa" to "")) }
+            }
+        } catch (_: Exception) {}
+        return out
+    }
+
     override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); if (intent.dataString != null) link = intent.dataString }
 
     private fun has(p: String) = try { packageManager.getPackageInfo(p, 0); true } catch (e: Exception) { false }

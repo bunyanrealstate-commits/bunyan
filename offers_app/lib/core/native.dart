@@ -24,6 +24,25 @@ class Native {
     await Share.share(text); return 'share';
   }
 
+  /// أسماء العملاء من جهات الاتصال (اللي على الواتساب الأول)
+  static List<Map<String, String>>? _contacts;
+  static Future<List<Map<String, String>>> contacts() async {
+    if (_contacts != null && _contacts!.isNotEmpty) return _contacts!;
+    if (kIsWeb) return [];
+    try {
+      final r = await ch.invokeMethod<List>('contacts') ?? [];
+      final seen = <String>{};
+      final out = <Map<String, String>>[];
+      for (final m in r.whereType<Map>()) {
+        final p = phone('${m['p'] ?? ''}');
+        if (p.length < 8 || !seen.add(p)) continue;
+        out.add({'n': '${m['n'] ?? ''}', 'p': p, 'wa': '${m['wa'] ?? ''}'});
+      }
+      out.sort((a, b) => a['n']!.compareTo(b['n']!));
+      return _contacts = out;
+    } catch (_) { return []; }
+  }
+
   static Future<bool> takeLink() async {
     if (kIsWeb) return false;
     try { final l = await ch.invokeMethod<String>('take'); if (l == null || !l.contains('c=')) return false; return Store.I.link(Uri.parse(l).queryParameters['c'] ?? ''); } catch (_) { return false; }

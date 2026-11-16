@@ -91,3 +91,17 @@ String clientMsg(List<Map<String, dynamic>> picks) {
   b.write('\nلو حابب تعاين أو تحجز كلمني 🙏');
   return b.toString();
 }
+
+/// رسالة قصيرة تحت فيديو كل شقة: السعر حسب طريقة الدفع اللي العميل عايزها + اللوكيشن
+String unitCaption(Obj v, Obj u, String pay) {
+  final o = <String>[];
+  final p1 = Price.p1(u), p3 = Price.p3(u), mo = Price.mo(u);
+  final hasVid = ((u['videos'] as List?) ?? const []).isNotEmpty;
+  if (!hasVid) o.add('🏠 ${typeName(u['type'])}');
+  void a1() { if (p1 > 0) o.add('💰 ${money(p1)} درهم — دفعة واحدة'); }
+  void a3() { if (p3 > 0) o.add('💰 ${money(p3)} درهم — 3 دفعات'); }
+  void am() { if (mo > 0) o.add('💰 ${money(mo)} درهم شهري'); }
+  if (pay == '1') { a1(); } else if (pay == '3') { a3(); } else if (pay == 'mo') { am(); } else { a1(); am(); if (p1 <= 0 && mo <= 0) a3(); }
+  if (str(v['loc']).isNotEmpty) o.add('📍 ${v['loc']}');
+  return o.join('\n');
+}
