@@ -20,14 +20,14 @@ class _Renew extends StatelessWidget {
     final R = e.renewList(Store.I.snz);
     if (R.isEmpty) return const SizedBox.shrink();
     return Padding(padding: const EdgeInsets.only(top: 10), child: Card(color: const Color(0xFFFFF7E6), child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(L.t('🔄 عقود قربت تخلص — هتجدد؟'), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
+      Text(Tr.t('🔄 عقود قربت تخلص — هتجدد؟'), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
       for (final x in R) Padding(padding: const EdgeInsets.only(top: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('${str((x['L'] as Obj)['tenant']).isEmpty ? 'مستأجر' : str((x['L'] as Obj)['tenant'])} — ${str((x['u'] as Obj)['name'])}', style: const TextStyle(fontWeight: FontWeight.bold)),
         Text('${(x['n'] as int) > 0 ? 'بيخلص بعد ${x['n']} يوم' : (x['n'] == 0 ? 'بيخلص النهارده' : 'خلص من ${-(x['n'] as int)} يوم')} • ${iso(x['e'] as DateTime)}', style: const TextStyle(fontSize: 12, color: kMuted)),
         Wrap(spacing: 6, children: [
-          FilledButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => LeaseEdit(x['u'] as Obj, null, renew: x['L'] as Obj))), child: Text(L.t('🔄 تجديد'))),
-          OutlinedButton(onPressed: () async { final u = x['u'] as Obj, L = x['L'] as Obj; L['rn'] = 'offer'; u['offer'] = iso(x['e'] as DateTime); await Store.I.save(log: '📢 الاستديو ${str(u['name'])} معروض للإيجار من ${u['offer']}'); if (context.mounted) toast(context, L.t('اتعلم إن الاستديو معروض للإيجار')); }, child: Text(L.t('📢 أعرض الاستديو'))),
-          TextButton(onPressed: () => Store.I.snooze('${(x['u'] as Obj)['id']}_${x['k']}'), child: Text(L.t('بعدين'))),
+          FilledButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => LeaseEdit(x['u'] as Obj, null, renew: x['L'] as Obj))), child: Text(Tr.t('🔄 تجديد'))),
+          OutlinedButton(onPressed: () async { final u = x['u'] as Obj, L = x['L'] as Obj; L['rn'] = 'offer'; u['offer'] = iso(x['e'] as DateTime); await Store.I.save(log: '📢 الاستديو ${str(u['name'])} معروض للإيجار من ${u['offer']}'); if (context.mounted) toast(context, Tr.t('اتعلم إن الاستديو معروض للإيجار')); }, child: Text(Tr.t('📢 أعرض الاستديو'))),
+          TextButton(onPressed: () => Store.I.snooze('${(x['u'] as Obj)['id']}_${x['k']}'), child: Text(Tr.t('بعدين'))),
         ]),
       ])),
     ]))));
@@ -44,22 +44,22 @@ class HomePage extends StatelessWidget {
     return ListView(padding: const EdgeInsets.all(14), children: [
       const MonBanner(),
       Row(children: [
-        Expanded(child: _Stat(L.t('💵 الرصيد النقدي'), cash)),
+        Expanded(child: _Stat(Tr.t('💵 الرصيد النقدي'), cash)),
         const SizedBox(width: 10),
-        Expanded(child: _Stat(mine ? L.t('📈 ربحي حتى اليوم') : L.t('📈 ربح المجموعة حتى اليوم'), rp['profit']!, sub: 'على الإيجار المقبوض (${(rp['mo']! * 10).round() / 10} شهر)')),
+        Expanded(child: _Stat(mine ? Tr.t('📈 ربحي حتى اليوم') : Tr.t('📈 ربح المجموعة حتى اليوم'), rp['profit']!, sub: 'على الإيجار المقبوض (${(rp['mo']! * 10).round() / 10} شهر)')),
       ]),
       const SizedBox(height: 10),
       Row(children: [
-        Expanded(child: _Stat(L.t('🏦 صافي حقوقك'), f['eq']!)),
+        Expanded(child: _Stat(Tr.t('🏦 صافي حقوقك'), f['eq']!)),
         const SizedBox(width: 10),
-        Expanded(child: _Stat(L.t('🧾 الإيجار المقبوض'), rp['rev']!)),
+        Expanded(child: _Stat(Tr.t('🧾 الإيجار المقبوض'), rp['rev']!)),
       ]),
       const SizedBox(height: 10),
       Builder(builder: (_) { final an = e.annW(); return Row(children: [
-        Expanded(child: _Stat(L.t('🎯 الربح المتوقع على مدة العقود'), an['p'] as double, sub: L.t('بعد كل التكاليف والمصاريف'))),
+        Expanded(child: _Stat(Tr.t('🎯 الربح المتوقع على مدة العقود'), an['p'] as double, sub: Tr.t('بعد كل التكاليف والمصاريف'))),
         const SizedBox(width: 10),
         Expanded(child: Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(L.t('🏠 نسبة الإشغال'), style: TextStyle(color: kMuted, fontSize: 12, fontWeight: FontWeight.bold)),
+          Text(Tr.t('🏠 نسبة الإشغال'), style: TextStyle(color: kMuted, fontSize: 12, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           Text('${((an['occ'] as double) * 100).round()}%', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: kGreen)),
           LinearProgressIndicator(value: (an['occ'] as double).clamp(0, 1), color: kGreen, backgroundColor: kSand),
@@ -68,30 +68,30 @@ class HomePage extends StatelessWidget {
       Builder(builder: (_) { var lp = 0.0, lf = 0.0; for (final u in e.SU()) { final o = e.occ(u); lp += o['lossPast'] as double; lf += o['lossFut'] as double; }
         if (lp + lf < 1) return const SizedBox.shrink();
         return Padding(padding: const EdgeInsets.only(top: 10), child: Row(children: [
-          if (lp >= 1) Expanded(child: _Stat(L.t('📉 خسارة أيام فاضية فاتت'), -lp)),
+          if (lp >= 1) Expanded(child: _Stat(Tr.t('📉 خسارة أيام فاضية فاتت'), -lp)),
           if (lp >= 1 && lf >= 1) const SizedBox(width: 10),
-          if (lf >= 1) Expanded(child: _Stat(L.t('⏳ أيام فاضية جاية'), -lf, sub: L.t('لو ما اتأجرتش'))),
+          if (lf >= 1) Expanded(child: _Stat(Tr.t('⏳ أيام فاضية جاية'), -lf, sub: Tr.t('لو ما اتأجرتش'))),
         ])); }),
       _Renew(e),
       const SizedBox(height: 14),
       _Upcoming(e),
       const SizedBox(height: 10),
       Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(L.t('📊 المركز المالي'), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+        Text(Tr.t('📊 المركز المالي'), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
         const SizedBox(height: 8),
-        Text(L.t('اللي ليك'), style: TextStyle(color: kGreen, fontWeight: FontWeight.bold)),
-        for (final k in [['cash', L.t('الكاش')], ['rcv', L.t('إيجارات مستحقة لسه متحصلتش')], ['accU', L.t('إيجار مكتسب لسه مجاش ميعاده')], ['preCo', L.t('إيجار شركات مدفوع مقدم')], ['preI', L.t('نت/راوتر مدفوع مقدم')], ['fur', L.t('قيمة الأثاث المتبقية')], ['depP', L.t('تأمينات دفعتها')], ['gpm', L.t('فلوس الشراكة')]])
+        Text(Tr.t('اللي ليك'), style: TextStyle(color: kGreen, fontWeight: FontWeight.bold)),
+        for (final k in [['cash', Tr.t('الكاش')], ['rcv', Tr.t('إيجارات مستحقة لسه متحصلتش')], ['accU', Tr.t('إيجار مكتسب لسه مجاش ميعاده')], ['preCo', Tr.t('إيجار شركات مدفوع مقدم')], ['preI', Tr.t('نت/راوتر مدفوع مقدم')], ['fur', Tr.t('قيمة الأثاث المتبقية')], ['depP', Tr.t('تأمينات دفعتها')], ['gpm', Tr.t('فلوس الشراكة')]])
           if ((f[k[0]] ?? 0).abs() >= 1) _row(k[1], f[k[0]]!),
         const Divider(),
-        Text(L.t('اللي عليك'), style: TextStyle(color: kRed, fontWeight: FontWeight.bold)),
-        for (final k in [['due', L.t('دفعات شركات مستحقة')], ['accCo', L.t('إيجار شركات مستهلك ولسه مدفعتوش')], ['unr', L.t('إيجار مقبوض مقدم')], ['furPay', L.t('أثاث لسه متدفعش')], ['depH', L.t('تأمينات مستأجرين معاك')], ['ptn', L.t('نصيب الشركاء')]])
+        Text(Tr.t('اللي عليك'), style: TextStyle(color: kRed, fontWeight: FontWeight.bold)),
+        for (final k in [['due', Tr.t('دفعات شركات مستحقة')], ['accCo', Tr.t('إيجار شركات مستهلك ولسه مدفعتوش')], ['unr', Tr.t('إيجار مقبوض مقدم')], ['furPay', Tr.t('أثاث لسه متدفعش')], ['depH', Tr.t('تأمينات مستأجرين معاك')], ['ptn', Tr.t('نصيب الشركاء')]])
           if ((f[k[0]] ?? 0).abs() >= 1) _row(k[1], f[k[0]]!),
         const Divider(),
-        _row(L.t('صافي حقوقك'), f['eq']!, bold: true),
+        _row(Tr.t('صافي حقوقك'), f['eq']!, bold: true),
       ]))),
       const SizedBox(height: 10),
       Text(Store.I.syncMsg.isEmpty ? '' : 'المزامنة: ${Store.I.syncMsg}', style: const TextStyle(color: kMuted, fontSize: 12), textAlign: TextAlign.center),
-      if (lst(Store.I.S['units']).isEmpty) Padding(padding: EdgeInsets.all(30), child: Text(L.t('لسه مفيش بيانات — اسحب لتحت علشان تتزامن'), textAlign: TextAlign.center)),
+      if (lst(Store.I.S['units']).isEmpty) Padding(padding: EdgeInsets.all(30), child: Text(Tr.t('لسه مفيش بيانات — اسحب لتحت علشان تتزامن'), textAlign: TextAlign.center)),
     ]);
   }
 
@@ -127,7 +127,7 @@ class _Upcoming extends StatelessWidget {
     Widget row(Map<String, dynamic> x) {
       final d = Engine.dd(x['d']);
       final ic = {'rent': '💰', 'inst': '🏢', 'exp': '🧾', 'end': '📄', 'cend': '🏁', 'debt': '⬆️', 'recv': '⬇️'}[x['ty']] ?? '•';
-      final when = d < 0 ? 'متأخر ${-d} يوم' : d == 0 ? L.t('النهارده') : d == 1 ? L.t('بكره') : 'بعد $d يوم';
+      final when = d < 0 ? 'متأخر ${-d} يوم' : d == 0 ? Tr.t('النهارده') : d == 1 ? Tr.t('بكره') : 'بعد $d يوم';
       return InkWell(
         onTap: () async {
           final u = x['u'] == null ? null : Act.unit(str(x['u']));
@@ -135,7 +135,7 @@ class _Upcoming extends StatelessWidget {
           if (x['ty'] == 'rent') {
             final k = x['k'] as int, i = x['i'] as int; final L = objs(u['leases'])[k];
             if (!await lockOk(context, [str(x['d'])]) || !context.mounted) return;
-            if (await confirmDlg(context, 'تأكيد استلام ${money(Engine.la(L, i))} من ${str(L['tenant'])} — ${str(u['name'])} (دفعة ${i + 1})؟')) { await Act.rentPaid(u, k, i); if (context.mounted) toast(context, L.t('✅ اتسجل')); }
+            if (await confirmDlg(context, 'تأكيد استلام ${money(Engine.la(L, i))} من ${str(L['tenant'])} — ${str(u['name'])} (دفعة ${i + 1})؟')) { await Act.rentPaid(u, k, i); if (context.mounted) toast(context, Tr.t('✅ اتسجل')); }
           } else { Navigator.of(context).push(MaterialPageRoute(builder: (_) => UnitDetail(u))); }
         },
         child: Padding(padding: const EdgeInsets.symmetric(vertical: 7), child: Row(children: [
@@ -151,9 +151,9 @@ class _Upcoming extends StatelessWidget {
     return Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       if (late.isNotEmpty) ...[Text('⚠️ متأخر (${late.length})', style: const TextStyle(fontWeight: FontWeight.w900, color: kRed, fontSize: 16)), for (final x in late.take(20)) row(x), const Divider()],
       Text('📅 الـ30 يوم الجايين (${soon.length})', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
-      if (soon.isEmpty) Text(L.t('مفيش حاجة'), style: TextStyle(color: kMuted)),
+      if (soon.isEmpty) Text(Tr.t('مفيش حاجة'), style: TextStyle(color: kMuted)),
       for (final x in soon.take(30)) row(x),
-      Text(L.t('دوس على الإيجار علشان تسجّل إنه اتدفع'), style: TextStyle(color: kMuted, fontSize: 11)),
+      Text(Tr.t('دوس على الإيجار علشان تسجّل إنه اتدفع'), style: TextStyle(color: kMuted, fontSize: 11)),
     ])));
   }
 }

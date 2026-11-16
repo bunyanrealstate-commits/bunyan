@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../core/store.dart';
 
-class L {
+class Tr {
   static String get lang => Store.I.cfg['lang'] == 'en' ? 'en' : 'ar';
   static bool get en => lang == 'en';
   static TextDirection get dir => en ? TextDirection.ltr : TextDirection.rtl;

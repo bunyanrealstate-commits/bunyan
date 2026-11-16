@@ -47,44 +47,44 @@ class _UnitEditState extends State<UnitEdit> {
   @override
   Widget build(BuildContext context) {
     final groups = objs(Store.I.S['groups']);
-    final fso = [['cash', L.t('من الرصيد النقدي في البرنامج')], ['me', L.t('من أموالي الخاصة (رأس مال يُسترد من الإيجار)')], ['mix', L.t('جزء من الرصيد النقدي وجزء من أموالي الخاصة')], ['gp', L.t('من فلوس الشراكة (دعم الشركاء)')], ['old', L.t('دُفع سابقاً (دون خصم من أي رصيد)')], ['', L.t('لم يُدفع بعد')]];
-    if (!isNew && op.fsrcOf(u!) == 'split') fso.insert(0, ['split', L.t('مقسّم: من النقدي / الشراكة / الجيب')]);
-    return Directionality(textDirection: L.dir, child: Scaffold(
-      appBar: AppBar(title: Text(isNew ? L.t('استديو جديد') : L.t('تعديل استديو'))),
+    final fso = [['cash', Tr.t('من الرصيد النقدي في البرنامج')], ['me', Tr.t('من أموالي الخاصة (رأس مال يُسترد من الإيجار)')], ['mix', Tr.t('جزء من الرصيد النقدي وجزء من أموالي الخاصة')], ['gp', Tr.t('من فلوس الشراكة (دعم الشركاء)')], ['old', Tr.t('دُفع سابقاً (دون خصم من أي رصيد)')], ['', Tr.t('لم يُدفع بعد')]];
+    if (!isNew && op.fsrcOf(u!) == 'split') fso.insert(0, ['split', Tr.t('مقسّم: من النقدي / الشراكة / الجيب')]);
+    return Directionality(textDirection: Tr.dir, child: Scaffold(
+      appBar: AppBar(title: Text(isNew ? Tr.t('استديو جديد') : Tr.t('تعديل استديو'))),
       body: ListView(padding: const EdgeInsets.all(14), children: [
-        _tf('name', L.t('اسم الاستديو')),
-        DropdownButtonFormField<String>(value: groups.any((x) => x['id'] == g) ? g : '', decoration: InputDecoration(labelText: L.t('المجموعة (الشراكة)'), border: OutlineInputBorder()),
-          items: [DropdownMenuItem(value: '', child: Text(L.t('بدون مجموعة'))), for (final x in groups) DropdownMenuItem(value: str(x['id']), child: Text(str(x['name'])))],
+        _tf('name', Tr.t('اسم الاستديو')),
+        DropdownButtonFormField<String>(value: groups.any((x) => x['id'] == g) ? g : '', decoration: InputDecoration(labelText: Tr.t('المجموعة (الشراكة)'), border: OutlineInputBorder()),
+          items: [DropdownMenuItem(value: '', child: Text(Tr.t('بدون مجموعة'))), for (final x in groups) DropdownMenuItem(value: str(x['id']), child: Text(str(x['name'])))],
           onChanged: (v) => setState(() => g = v ?? '')),
         const SizedBox(height: 10),
-        _tf('company', L.t('اسم الشركة')),
-        _date(L.t('بداية العقد (مع الشركة)'), start, (v) => setState(() => start = v)),
-        _tf('grace', L.t('أيام السماح قبل بداية العقد (0 إن لم يوجد)'), num: true),
-        _tf('cm', L.t('المدة بالشهور (12 أو 15...)'), num: true),
-        _tf('total', L.t('المبلغ الإجمالي'), num: true),
+        _tf('company', Tr.t('اسم الشركة')),
+        _date(Tr.t('بداية العقد (مع الشركة)'), start, (v) => setState(() => start = v)),
+        _tf('grace', Tr.t('أيام السماح قبل بداية العقد (0 إن لم يوجد)'), num: true),
+        _tf('cm', Tr.t('المدة بالشهور (12 أو 15...)'), num: true),
+        _tf('total', Tr.t('المبلغ الإجمالي'), num: true),
         if (isNew) ...[
-          _h(L.t('دفعات الشركة')),
-          _date(L.t('ميعاد أول دفعة للشركة (فاضي = بداية العقد)'), pstart, (v) => setState(() => pstart = v), clear: true),
-          _tf('first', L.t('مبلغ أول دفعة (فاضي = الإجمالي ÷ عدد الدفعات)'), num: true),
-          CheckboxListTile(value: mo, onChanged: (v) => setState(() => mo = v ?? false), title: Text(L.t('الدفع شهرياً للشركة (دفعة كل شهر)')), controlAffinity: ListTileControlAffinity.leading, contentPadding: EdgeInsets.zero),
-          if (!mo) _tf('n', L.t('عدد الدفعات على مدة العقد'), num: true),
-          _tf('paidN', L.t('كم دفعة تم دفعها حتى الآن؟'), num: true),
+          _h(Tr.t('دفعات الشركة')),
+          _date(Tr.t('ميعاد أول دفعة للشركة (فاضي = بداية العقد)'), pstart, (v) => setState(() => pstart = v), clear: true),
+          _tf('first', Tr.t('مبلغ أول دفعة (فاضي = الإجمالي ÷ عدد الدفعات)'), num: true),
+          CheckboxListTile(value: mo, onChanged: (v) => setState(() => mo = v ?? false), title: Text(Tr.t('الدفع شهرياً للشركة (دفعة كل شهر)')), controlAffinity: ListTileControlAffinity.leading, contentPadding: EdgeInsets.zero),
+          if (!mo) _tf('n', Tr.t('عدد الدفعات على مدة العقد'), num: true),
+          _tf('paidN', Tr.t('كم دفعة تم دفعها حتى الآن؟'), num: true),
         ],
-        _h(L.t('الأثاث')),
-        _tf('furn', L.t('الأثاث: التكلفة'), num: true),
-        DropdownButtonFormField<String>(value: fso.any((x) => x[0] == fsrc) ? fsrc : '', isExpanded: true, decoration: InputDecoration(labelText: L.t('الأثاث: من أين تم دفعه؟'), border: OutlineInputBorder()),
+        _h(Tr.t('الأثاث')),
+        _tf('furn', Tr.t('الأثاث: التكلفة'), num: true),
+        DropdownButtonFormField<String>(value: fso.any((x) => x[0] == fsrc) ? fsrc : '', isExpanded: true, decoration: InputDecoration(labelText: Tr.t('الأثاث: من أين تم دفعه؟'), border: OutlineInputBorder()),
           items: [for (final x in fso) DropdownMenuItem(value: x[0], child: Text(x[1], overflow: TextOverflow.ellipsis))], onChanged: (v) => setState(() => fsrc = v ?? '')),
-        if (fsrc == 'mix') ...[const SizedBox(height: 10), _tf('fmx', L.t('المبلغ من أموالي الخاصة (والباقي من الرصيد النقدي)'), num: true)],
-        if (paidFromCash) ...[const SizedBox(height: 10), _tf('pmx', L.t('دفعات الشركة اللي اتدفعت من الرصيد: كام منها كان من أموالي الخاصة؟ (0 = كلها من النقدي)'), num: true)],
+        if (fsrc == 'mix') ...[const SizedBox(height: 10), _tf('fmx', Tr.t('المبلغ من أموالي الخاصة (والباقي من الرصيد النقدي)'), num: true)],
+        if (paidFromCash) ...[const SizedBox(height: 10), _tf('pmx', Tr.t('دفعات الشركة اللي اتدفعت من الرصيد: كام منها كان من أموالي الخاصة؟ (0 = كلها من النقدي)'), num: true)],
         if (isNew) ...[
-          _h(L.t('دفعات الشركة المدفوعة الآن')),
-          DropdownButtonFormField<String>(value: src, isExpanded: true, decoration: InputDecoration(labelText: L.t('من أين دُفعت؟ (حصتك)'), border: OutlineInputBorder()),
-            items: [DropdownMenuItem(value: 'cash', child: Text(L.t('من الرصيد النقدي في البرنامج'))), DropdownMenuItem(value: 'me', child: Text(L.t('من أموالي الخاصة'))), DropdownMenuItem(value: 'mix', child: Text(L.t('جزء من الرصيد وجزء من أموالي'))), DropdownMenuItem(value: '', child: Text(L.t('دُفعت سابقاً (دون خصم)')))],
+          _h(Tr.t('دفعات الشركة المدفوعة الآن')),
+          DropdownButtonFormField<String>(value: src, isExpanded: true, decoration: InputDecoration(labelText: Tr.t('من أين دُفعت؟ (حصتك)'), border: OutlineInputBorder()),
+            items: [DropdownMenuItem(value: 'cash', child: Text(Tr.t('من الرصيد النقدي في البرنامج'))), DropdownMenuItem(value: 'me', child: Text(Tr.t('من أموالي الخاصة'))), DropdownMenuItem(value: 'mix', child: Text(Tr.t('جزء من الرصيد وجزء من أموالي'))), DropdownMenuItem(value: '', child: Text(Tr.t('دُفعت سابقاً (دون خصم)')))],
             onChanged: (v) => setState(() => src = v ?? '')),
-          if (src == 'mix') ...[const SizedBox(height: 10), _tf('mx', L.t('المبلغ من أموالي الخاصة (والباقي من الرصيد)'), num: true)],
+          if (src == 'mix') ...[const SizedBox(height: 10), _tf('mx', Tr.t('المبلغ من أموالي الخاصة (والباقي من الرصيد)'), num: true)],
         ],
         const SizedBox(height: 18),
-        FilledButton(onPressed: _save, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)), child: Text(L.t('حفظ'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+        FilledButton(onPressed: _save, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)), child: Text(Tr.t('حفظ'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
         const SizedBox(height: 30),
       ]),
     ));

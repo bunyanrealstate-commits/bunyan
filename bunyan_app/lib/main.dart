@@ -19,7 +19,7 @@ class BunyanApp extends StatelessWidget {
         title: 'بنيان',
         debugShowCheckedModeBanner: false,
         theme: bunyanTheme(),
-        locale: Locale(L.lang),
+        locale: Locale(Tr.lang),
         supportedLocales: const [Locale('ar'), Locale('en')],
         localizationsDelegates: const [GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
         home: const LockGate(child: Shell()),

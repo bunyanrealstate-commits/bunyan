@@ -39,31 +39,31 @@ class _SimState extends State<SimPage> {
     final f = n0(s['share']) / 100; final up = r['up'] as double, inj = r['inj'] as double, res = r['res'] as double;
     final pay = r['pay'] as int;
     String mn(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}';
-    return Directionality(textDirection: L.dir, child: Scaffold(
-      appBar: AppBar(title: Text(L.t('🧮 أفتح استديو جديد؟'))),
+    return Directionality(textDirection: Tr.dir, child: Scaffold(
+      appBar: AppBar(title: Text(Tr.t('🧮 أفتح استديو جديد؟'))),
       body: ListView(padding: const EdgeInsets.all(12), children: [
         Card(color: r['has'] != true ? kSand : (r['ok'] == true ? const Color(0xFFE6F4EC) : const Color(0xFFFDECEA)), child: Padding(padding: const EdgeInsets.all(14), child: Text(
-          r['has'] != true ? L.t('اكتب إجمالي إيجار الشركة والإيجار الشهري المتوقع علشان تشوف النتيجة.')
+          r['has'] != true ? Tr.t('اكتب إجمالي إيجار الشركة والإيجار الشهري المتوقع علشان تشوف النتيجة.')
               : '${r['ok'] == true ? '✅ تقدر تفتحه. الرصيد مش هينزل تحت الاحتياطي حتى مع الدفعات الجاية.' : '⚠️ مش مناسب دلوقتي. الرصيد هينزل ${money(res - (pw['min'] as double))} تحت الاحتياطي في ${mn(pw['minD'] as DateTime)}.'}${r['low'] == true ? ' وربح الاستديو أقل من هدفك.' : ''}',
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)))),
         Wrap(spacing: 8, runSpacing: 8, children: [
-          _st(L.t('المبلغ المطلوب دلوقتي'), money(up), 'دفعة أولى + أثاث${f < 1 ? ' (حصتك)' : ''}${inj > 0 ? ' • من النقدي ${money(up - inj)} ومن أموالي ${money(inj)}' : ''}'),
-          _st(L.t('إجمالي ربح الاستديو'), money(r['gain'] as double), L.t('آخر العقد'), cv: r['gain'] as double),
-          _st(L.t('متوسط الربح الشهري'), money(r['mavg'] as double), '', cv: r['mavg'] as double),
-          _st(L.t('العائد على الاستثمار'), up > 0 ? '${(r['roi'] as double).toStringAsFixed(0)}%' : '—', '', cv: r['roi'] as double),
-          _st(L.t('استرداد الفلوس'), pay < 0 ? L.t('مش هيتسدد') : pay == 0 ? L.t('فوراً') : 'بعد $pay شهر', L.t('لحد ما الاستديو يرجّع اللي اتصرف'), cv: pay < 0 ? -1 : null),
-          _st(L.t('أقل رصيد بعد الاستديو'), money(pw['min'] as double), '${mn(pw['minD'] as DateTime)}${pb['min'] != pw['min'] ? ' • من غيره ${money(pb['min'] as double)}' : ''}', cv: (pw['min'] as double) - res),
-          _st(L.t('أقل إيجار شهري يحقق هدفك'), money(r['mr'] as double), 'هدف الربح ${(r['tp'] as double).round()}%'),
+          _st(Tr.t('المبلغ المطلوب دلوقتي'), money(up), 'دفعة أولى + أثاث${f < 1 ? ' (حصتك)' : ''}${inj > 0 ? ' • من النقدي ${money(up - inj)} ومن أموالي ${money(inj)}' : ''}'),
+          _st(Tr.t('إجمالي ربح الاستديو'), money(r['gain'] as double), Tr.t('آخر العقد'), cv: r['gain'] as double),
+          _st(Tr.t('متوسط الربح الشهري'), money(r['mavg'] as double), '', cv: r['mavg'] as double),
+          _st(Tr.t('العائد على الاستثمار'), up > 0 ? '${(r['roi'] as double).toStringAsFixed(0)}%' : '—', '', cv: r['roi'] as double),
+          _st(Tr.t('استرداد الفلوس'), pay < 0 ? Tr.t('مش هيتسدد') : pay == 0 ? Tr.t('فوراً') : 'بعد $pay شهر', Tr.t('لحد ما الاستديو يرجّع اللي اتصرف'), cv: pay < 0 ? -1 : null),
+          _st(Tr.t('أقل رصيد بعد الاستديو'), money(pw['min'] as double), '${mn(pw['minD'] as DateTime)}${pb['min'] != pw['min'] ? ' • من غيره ${money(pb['min'] as double)}' : ''}', cv: (pw['min'] as double) - res),
+          _st(Tr.t('أقل إيجار شهري يحقق هدفك'), money(r['mr'] as double), 'هدف الربح ${(r['tp'] as double).round()}%'),
         ]),
         const SizedBox(height: 10),
         Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(L.t('رصيدي: مع الاستديو ومن غيره'), style: TextStyle(fontWeight: FontWeight.w900)),
+          Text(Tr.t('رصيدي: مع الاستديو ومن غيره'), style: TextStyle(fontWeight: FontWeight.w900)),
           const SizedBox(height: 8),
           SizedBox(height: 180, child: CustomPaint(size: Size.infinite, painter: _Chart(e.cashNow(), pw['rows'] as List, pb['rows'] as List, res))),
-          Text(L.t('الخط الأخضر = لو فتحته • الرمادي = من غيره • الأحمر المنقط = الاحتياطي'), style: TextStyle(fontSize: 12, color: kMuted)),
+          Text(Tr.t('الخط الأخضر = لو فتحته • الرمادي = من غيره • الأحمر المنقط = الاحتياطي'), style: TextStyle(fontSize: 12, color: kMuted)),
         ]))),
         const SizedBox(height: 6),
-        Text(L.t('بيانات الاستديو'), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
+        Text(Tr.t('بيانات الاستديو'), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
         const SizedBox(height: 6),
         for (final x in F) Padding(padding: const EdgeInsets.only(bottom: 8), child: TextField(controller: c[x[0]], keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: x[1], border: const OutlineInputBorder(), isDense: true), onChanged: (v) => _ch(x[0], v))),
       ]),

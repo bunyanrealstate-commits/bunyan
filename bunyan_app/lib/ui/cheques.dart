@@ -27,9 +27,9 @@ class Chq {
     final l = list(L); L['chq'] = l;
     final c = q == null ? {'no': '', 'd': Act.td(), 'a': (n0(L['rent']) + n0(L['inet'])).round()} : l[q];
     final r = await formDlg(context, '${q == null ? 'شيك جديد' : 'شيك'} — ${str(L['tenant']).isEmpty ? 'مستأجر' : str(L['tenant'])}', [
-      FieldSpec('no', L.t('رقم الشيك'), v: str(c['no'])),
-      FieldSpec('d', L.t('التاريخ'), type: 'd', v: truthy(c['d']) ? str(c['d']) : Act.td()),
-      FieldSpec('a', L.t('المبلغ'), type: 'n', v: n0(c['a']) == n0(c['a']).roundToDouble() ? n0(c['a']).toInt() : n0(c['a'])),
+      FieldSpec('no', Tr.t('رقم الشيك'), v: str(c['no'])),
+      FieldSpec('d', Tr.t('التاريخ'), type: 'd', v: truthy(c['d']) ? str(c['d']) : Act.td()),
+      FieldSpec('a', Tr.t('المبلغ'), type: 'n', v: n0(c['a']) == n0(c['a']).roundToDouble() ? n0(c['a']).toInt() : n0(c['a'])),
     ]);
     if (r == null) return;
     final a = double.tryParse(r['a'] ?? '') ?? 0;
@@ -40,7 +40,7 @@ class Chq {
   }
 
   static Future<void> del(BuildContext context, Obj L, int q) async {
-    if (!await confirmDlg(context, L.t('تمسح الشيك ده؟'), ok: L.t('امسح'))) return;
+    if (!await confirmDlg(context, Tr.t('تمسح الشيك ده؟'), ok: Tr.t('امسح'))) return;
     final l = list(L); l.removeAt(q); L['chq'] = l;
     await Store.I.save(log: '🗑 مسحت شيك — ${str(L['tenant'])}');
   }
@@ -57,10 +57,10 @@ class ChequesPage extends StatelessWidget {
       R.sort((a, b) => str((a['c'] as Map)['d']).compareTo(str((b['c'] as Map)['d'])));
       final sc = objs(Store.I.S['dep']).where((x) => x['mode'] == 'chq' && !truthy(x['r'])).toList();
       final td = Act.td();
-      return Directionality(textDirection: L.dir, child: Scaffold(
-        appBar: AppBar(title: Text(L.t('📑 الشيكات اللي معايا'))),
+      return Directionality(textDirection: Tr.dir, child: Scaffold(
+        appBar: AppBar(title: Text(Tr.t('📑 الشيكات اللي معايا'))),
         body: ListView(padding: const EdgeInsets.all(12), children: [
-          Text(L.t('للعلم فقط: الشيك ضمان لالتزام المستأجر بالدفع، ومش بيغيّر الحسابات. دوس على الشيك تعدّله، ودوس مطوّل تمسحه.'), style: TextStyle(color: kMuted)),
+          Text(Tr.t('للعلم فقط: الشيك ضمان لالتزام المستأجر بالدفع، ومش بيغيّر الحسابات. دوس على الشيك تعدّله، ودوس مطوّل تمسحه.'), style: TextStyle(color: kMuted)),
           const SizedBox(height: 8),
           Card(child: ListTile(title: Text('شيكات الإيجار: ${R.length}'), subtitle: Text(money(R.fold<double>(0, (s, x) => s + n0((x['c'] as Map)['a'])))))),
           if (sc.isNotEmpty) Card(child: ListTile(title: Text('شيكات التأمين: ${sc.length}'), subtitle: Text(money(sc.fold<double>(0, (s, x) => s + n0(x['a'])))))),

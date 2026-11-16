@@ -70,7 +70,7 @@ class _LeaseEditState extends State<LeaseEdit> {
   }
   void _rebuildKeep() {
     final lk = [for (var i = 0; i < f.rows.length; i++) if (f.rows[i].lock) i];
-    if (lk.length > 1 || (lk.length == 1 && lk[0] != 0)) { toast(context, L.t('فيه دفعات مستلمة بعد الأولى — عدّل مبالغ الجدول يدوياً أو اضغط إعادة بناء')); return; }
+    if (lk.length > 1 || (lk.length == 1 && lk[0] != 0)) { toast(context, Tr.t('فيه دفعات مستلمة بعد الأولى — عدّل مبالغ الجدول يدوياً أو اضغط إعادة بناء')); return; }
     if (f.start.isEmpty || !(f.rent > 0) || !(f.cmo > 0)) return;
     final b = LeaseB.build(start: f.start, cmo: f.cmo, rent: f.rent, day: f.day, m0: f.m0);
     final nr = [for (var i = 0; i < b.length; i++) LRow(b[i]['d'], b[i]['a'], first: i == 0)];
@@ -103,23 +103,23 @@ class _LeaseEditState extends State<LeaseEdit> {
   @override
   Widget build(BuildContext context) {
     final total = f.rows.fold<num>(0, (s, r) => s + r.a); final want = (f.rent * f.cmo).round(); final df = total - want; final bad = df.abs() > .5 && want > 0;
-    return Directionality(textDirection: L.dir, child: Scaffold(
-      appBar: AppBar(title: Text(edit ? L.t('📄 تعديل عقد المستأجر') : L.t('📄 عقد مستأجر جديد'))),
+    return Directionality(textDirection: Tr.dir, child: Scaffold(
+      appBar: AppBar(title: Text(edit ? Tr.t('📄 تعديل عقد المستأجر') : Tr.t('📄 عقد مستأجر جديد'))),
       body: ListView(padding: const EdgeInsets.all(14), children: [
-        _tf('tenant', L.t('اسم المستأجر'), (v) => f.tenant = v),
-        _tf('phone', L.t('واتساب المستأجر (مع كود الدولة)'), (v) => f.phone = v, ltr: true, hint: '9715xxxxxxxx'),
-        Row(children: [Expanded(child: _tf('tid', L.t('🪪 رقم الهوية (للعقد)'), (v) => f.tid = v)), const SizedBox(width: 8), Expanded(child: _tf('nat', L.t('الجنسية'), (v) => f.nat = v))]),
-        _h(L.t('مدة العقد والإيجار')),
-        _date(L.t('بداية العقد'), f.start, locked ? null : (v) => _set('start', v)),
-        _tf('cmo', L.t('مدة العقد (بالشهور)'), (v) => _set('cmo', v), num: true),
-        Wrap(spacing: 6, children: [for (final x in [[1, L.t('شهر')], [2, L.t('شهرين')], [3, L.t('3 شهور')], [6, L.t('6 شهور')], [12, L.t('سنة')]]) ActionChip(label: Text('${x[1]}'), onPressed: () { c['cmo']!.text = '${x[0]}'; _set('cmo', '${x[0]}'); })]),
+        _tf('tenant', Tr.t('اسم المستأجر'), (v) => f.tenant = v),
+        _tf('phone', Tr.t('واتساب المستأجر (مع كود الدولة)'), (v) => f.phone = v, ltr: true, hint: '9715xxxxxxxx'),
+        Row(children: [Expanded(child: _tf('tid', Tr.t('🪪 رقم الهوية (للعقد)'), (v) => f.tid = v)), const SizedBox(width: 8), Expanded(child: _tf('nat', Tr.t('الجنسية'), (v) => f.nat = v))]),
+        _h(Tr.t('مدة العقد والإيجار')),
+        _date(Tr.t('بداية العقد'), f.start, locked ? null : (v) => _set('start', v)),
+        _tf('cmo', Tr.t('مدة العقد (بالشهور)'), (v) => _set('cmo', v), num: true),
+        Wrap(spacing: 6, children: [for (final x in [[1, Tr.t('شهر')], [2, Tr.t('شهرين')], [3, Tr.t('3 شهور')], [6, Tr.t('6 شهور')], [12, Tr.t('سنة')]]) ActionChip(label: Text('${x[1]}'), onPressed: () { c['cmo']!.text = '${x[0]}'; _set('cmo', '${x[0]}'); })]),
         const SizedBox(height: 8),
-        _tf('rent', L.t('الإيجار الشهري'), (v) => _set('rent', v), num: true),
-        _tf('day', L.t('يوم الدفع كل شهر (فارغ = نفس يوم البداية)'), (v) => _set('day', v), num: true),
-        _tf('m0', L.t('الدفعة الأولى تغطي كم شهراً؟'), (v) => _set('m0', v), num: true),
-        Text(L.t('مثال: العقد يبدأ يوم 1 والمستأجر يدفع يوم 15: الدفعة الأولى شهر ونصف حتى يوم 15، ثم الإيجار كل 15، وآخر دفعة نصف شهر لتكتمل المدة.'), style: TextStyle(color: kMuted, fontSize: 12, height: 1.6)),
-        _h(L.t('جدول الدفعات')),
-        if (f.rows.isEmpty) Text(L.t('اكتب الإيجار الشهري ومدة العقد ليُبنى الجدول.'), style: TextStyle(color: kMuted)),
+        _tf('rent', Tr.t('الإيجار الشهري'), (v) => _set('rent', v), num: true),
+        _tf('day', Tr.t('يوم الدفع كل شهر (فارغ = نفس يوم البداية)'), (v) => _set('day', v), num: true),
+        _tf('m0', Tr.t('الدفعة الأولى تغطي كم شهراً؟'), (v) => _set('m0', v), num: true),
+        Text(Tr.t('مثال: العقد يبدأ يوم 1 والمستأجر يدفع يوم 15: الدفعة الأولى شهر ونصف حتى يوم 15، ثم الإيجار كل 15، وآخر دفعة نصف شهر لتكتمل المدة.'), style: TextStyle(color: kMuted, fontSize: 12, height: 1.6)),
+        _h(Tr.t('جدول الدفعات')),
+        if (f.rows.isEmpty) Text(Tr.t('اكتب الإيجار الشهري ومدة العقد ليُبنى الجدول.'), style: TextStyle(color: kMuted)),
         for (var i = 0; i < f.rows.length; i++) _row(i),
         Container(
           margin: const EdgeInsets.only(top: 6), padding: const EdgeInsets.all(10),
@@ -127,30 +127,30 @@ class _LeaseEditState extends State<LeaseEdit> {
           child: Text('قيمة العقد (${money(f.rent)} × ${_s(f.cmo)}): ${money(want)} • مجموع الدفعات: ${money(total)} (${f.rows.length})${bad ? ' • ⚠️ الفرق ${df > 0 ? '+' : ''}${money(df)} — راجع الجدول' : (want > 0 ? ' ✓ مطابق' : '')}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5)),
         ),
         Wrap(spacing: 8, children: [
-          OutlinedButton(onPressed: () => setState(() { final l = f.rows.isNotEmpty ? pd(f.rows.last.d) : pd(f.start.isEmpty ? Act.td() : f.start); f.rows.add(LRow(iso(LeaseB.addMo(l, 1)), f.rent.round())); man = true; _renum(false); }), child: Text(L.t('+ دفعة'))),
-          if (canBuild) OutlinedButton(onPressed: () => setState(() { man = false; _rebuild(); }), child: Text(L.t('🔄 إعادة بناء الجدول'))),
+          OutlinedButton(onPressed: () => setState(() { final l = f.rows.isNotEmpty ? pd(f.rows.last.d) : pd(f.start.isEmpty ? Act.td() : f.start); f.rows.add(LRow(iso(LeaseB.addMo(l, 1)), f.rent.round())); man = true; _renum(false); }), child: Text(Tr.t('+ دفعة'))),
+          if (canBuild) OutlinedButton(onPressed: () => setState(() { man = false; _rebuild(); }), child: Text(Tr.t('🔄 إعادة بناء الجدول'))),
         ]),
         if (!edit) ...[
-          _h(L.t('الدفعة الأولى')),
-          DropdownButtonFormField<String>(value: f.pm0, decoration: InputDecoration(labelText: L.t('طريقة دفع الدفعة الأولى'), border: OutlineInputBorder()),
-            items: [DropdownMenuItem(value: 'cash', child: Text(L.t('نقداً'))), DropdownMenuItem(value: 'bank', child: Text(L.t('تحويل بنكي'))), DropdownMenuItem(value: 'chq', child: Text(L.t('شيك')))],
+          _h(Tr.t('الدفعة الأولى')),
+          DropdownButtonFormField<String>(value: f.pm0, decoration: InputDecoration(labelText: Tr.t('طريقة دفع الدفعة الأولى'), border: OutlineInputBorder()),
+            items: [DropdownMenuItem(value: 'cash', child: Text(Tr.t('نقداً'))), DropdownMenuItem(value: 'bank', child: Text(Tr.t('تحويل بنكي'))), DropdownMenuItem(value: 'chq', child: Text(Tr.t('شيك')))],
             onChanged: (v) => setState(() { f.pm0 = v ?? 'cash'; _renum(true); })),
-          CheckboxListTile(value: f.firstPaid, onChanged: (v) => setState(() { f.firstPaid = v ?? false; _renum(true); }), title: Text(L.t('تم استلام الدفعة الأولى الآن (مطلوب: إيجار شهر على الأقل)')), controlAffinity: ListTileControlAffinity.leading, contentPadding: EdgeInsets.zero),
+          CheckboxListTile(value: f.firstPaid, onChanged: (v) => setState(() { f.firstPaid = v ?? false; _renum(true); }), title: Text(Tr.t('تم استلام الدفعة الأولى الآن (مطلوب: إيجار شهر على الأقل)')), controlAffinity: ListTileControlAffinity.leading, contentPadding: EdgeInsets.zero),
         ],
-        _h(L.t('الشيكات')),
-        CheckboxListTile(value: f.chqOn, onChanged: (v) => setState(() { f.chqOn = v ?? false; _renum(true); }), title: Text(edit ? L.t('إعادة كتابة الشيكات من الجدول (يمسح شيكاتي الحالية)') : L.t('شيك لكل دفعة قادمة (ضمان — للعلم فقط ولا يغيّر الحسابات)')), controlAffinity: ListTileControlAffinity.leading, contentPadding: EdgeInsets.zero),
-        if (f.chqOn) _tf('cno', L.t('رقم أول شيك (الباقي بيتعدّ لوحده)'), (v) => setState(() { f.cno = v; _renum(true); })),
-        _h(L.t('التأمين المسترد')),
-        DropdownButtonFormField<String>(value: f.dk, decoration: InputDecoration(labelText: L.t('نوع التأمين'), border: OutlineInputBorder()),
-          items: [DropdownMenuItem(value: '', child: Text(L.t('بدون تأمين'))), DropdownMenuItem(value: 'chq', child: Text(L.t('شيك ضمان بدون تاريخ'))), DropdownMenuItem(value: 'cash', child: Text(L.t('تأمين نقدي')))],
+        _h(Tr.t('الشيكات')),
+        CheckboxListTile(value: f.chqOn, onChanged: (v) => setState(() { f.chqOn = v ?? false; _renum(true); }), title: Text(edit ? Tr.t('إعادة كتابة الشيكات من الجدول (يمسح شيكاتي الحالية)') : Tr.t('شيك لكل دفعة قادمة (ضمان — للعلم فقط ولا يغيّر الحسابات)')), controlAffinity: ListTileControlAffinity.leading, contentPadding: EdgeInsets.zero),
+        if (f.chqOn) _tf('cno', Tr.t('رقم أول شيك (الباقي بيتعدّ لوحده)'), (v) => setState(() { f.cno = v; _renum(true); })),
+        _h(Tr.t('التأمين المسترد')),
+        DropdownButtonFormField<String>(value: f.dk, decoration: InputDecoration(labelText: Tr.t('نوع التأمين'), border: OutlineInputBorder()),
+          items: [DropdownMenuItem(value: '', child: Text(Tr.t('بدون تأمين'))), DropdownMenuItem(value: 'chq', child: Text(Tr.t('شيك ضمان بدون تاريخ'))), DropdownMenuItem(value: 'cash', child: Text(Tr.t('تأمين نقدي')))],
           onChanged: (v) => setState(() => f.dk = v ?? '')),
-        if (f.dk.isNotEmpty) ...[const SizedBox(height: 8), _tf('da', L.t('مبلغ التأمين (فارغ = إيجار شهر)'), (v) => f.da = double.tryParse(v), num: true)],
-        if (f.dk == 'chq') _tf('dno', L.t('رقم شيك التأمين'), (v) => f.dno = v),
-        _h(L.t('رسوم كتابة العقد')),
-        _tf('fee', L.t('المبلغ الذي دفعه المستأجر (0 إن لم يكن هناك رسوم)'), (v) => f.fee = double.tryParse(v) ?? 0, num: true),
-        Text(L.t('تُحسب إيراداً لك في تاريخ بداية العقد، ولا تدخل في الإيجار ولا في الشيكات.'), style: TextStyle(color: kMuted, fontSize: 12)),
+        if (f.dk.isNotEmpty) ...[const SizedBox(height: 8), _tf('da', Tr.t('مبلغ التأمين (فارغ = إيجار شهر)'), (v) => f.da = double.tryParse(v), num: true)],
+        if (f.dk == 'chq') _tf('dno', Tr.t('رقم شيك التأمين'), (v) => f.dno = v),
+        _h(Tr.t('رسوم كتابة العقد')),
+        _tf('fee', Tr.t('المبلغ الذي دفعه المستأجر (0 إن لم يكن هناك رسوم)'), (v) => f.fee = double.tryParse(v) ?? 0, num: true),
+        Text(Tr.t('تُحسب إيراداً لك في تاريخ بداية العقد، ولا تدخل في الإيجار ولا في الشيكات.'), style: TextStyle(color: kMuted, fontSize: 12)),
         const SizedBox(height: 16),
-        FilledButton(onPressed: _save, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)), child: Text(L.t('حفظ العقد'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+        FilledButton(onPressed: _save, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)), child: Text(Tr.t('حفظ العقد'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
         const SizedBox(height: 30),
       ]),
     ));
@@ -162,7 +162,7 @@ class _LeaseEditState extends State<LeaseEdit> {
     final u = Act.unit(str(widget.u['id'])) ?? widget.u;
     final L = LeaseSave.save(Store.I.S, u, widget.k, f, uid: Act.uid, now: Act.now());
     await Store.I.save(log: edit ? '✏️ عدّلت عقد ${str(L['tenant'])} — ${str(u['name'])}' : '📄 عقد جديد: ${str(L['tenant'])} — ${str(u['name'])}');
-    if (mounted) { toast(context, edit ? L.t('تم تعديل العقد') : L.t('تم حفظ العقد وجدول الدفعات')); Navigator.pop(context); }
+    if (mounted) { toast(context, edit ? Tr.t('تم تعديل العقد') : Tr.t('تم حفظ العقد وجدول الدفعات')); Navigator.pop(context); }
   }
 
   Widget _row(int i) {
@@ -181,7 +181,7 @@ class _LeaseEditState extends State<LeaseEdit> {
         onChanged: (v) { r.a = num.tryParse(v) ?? 0; man = true; },
       )),
       r.lock ? const Padding(padding: EdgeInsets.all(8), child: Text('✓', style: TextStyle(color: kGreen, fontWeight: FontWeight.bold)))
-          : IconButton(onPressed: () { if (f.rows.length <= 1) { toast(context, L.t('لازم يكون في العقد دفعة واحدة على الأقل')); return; } setState(() { f.rows.removeAt(i); man = true; _renum(false); }); }, icon: const Icon(Icons.close, size: 18)),
+          : IconButton(onPressed: () { if (f.rows.length <= 1) { toast(context, Tr.t('لازم يكون في العقد دفعة واحدة على الأقل')); return; } setState(() { f.rows.removeAt(i); man = true; _renum(false); }); }, icon: const Icon(Icons.close, size: 18)),
     ]));
   }
 

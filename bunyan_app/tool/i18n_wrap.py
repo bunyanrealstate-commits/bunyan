@@ -1,4 +1,4 @@
-# بيلف النصوص العربي الثابتة في lib/ui بـ L.t('...') علشان الترجمة، ويشيل const من اللي بقى فيه L.
+# بيلف النصوص العربي الثابتة في lib/ui بـ Tr.t('...') علشان الترجمة، ويشيل const من اللي بقى فيه L.
 import re,glob,json,sys
 AR=re.compile('[؀-ۿ]')
 def scan_str(s,i):
@@ -34,9 +34,9 @@ def process(src):
             body=lit[1:-1]
             line_start=src.rfind('\n',0,i)+1; line=src[line_start:i]
             ok = (not raw and c=="'" and not lit.startswith("'''") and AR.search(body) and '$' not in body
-                  and not re.search(r'\bcase\s*$',line) and not re.match(r'\s*(static\s+)?const\s+[\w<>, ]*\s*\w+\s*=',line) and not src[:i].endswith('L.t(')
+                  and not re.search(r'\bcase\s*$',line) and not re.match(r'\s*(static\s+)?const\s+[\w<>, ]*\s*\w+\s*=',line) and not src[:i].endswith('Tr.t(')
                   and not re.search(r'\b(String|bool|int|double)\??\s+\w+\s*=\s*$',line) and not re.search(r'RegExp\(\s*$',line))
-            if ok: out.append('L.t('+lit+')'); wrapped+=1
+            if ok: out.append('Tr.t('+lit+')'); wrapped+=1
             else: out.append(lit)
             i=j; continue
         out.append(c); i+=1
@@ -65,7 +65,7 @@ def deconst(s):
             elif mm: b=k+mm.start(1)
             else: continue
             e=match_end(s,b); seg=s[b:e]
-            if 'L.t(' in seg or 'L.dir' in seg:
+            if 'Tr.t(' in seg or 'Tr.dir' in seg:
                 s=s[:m.start()]+s[k:]; changed=True; break
     return s
 tot=0
@@ -73,7 +73,7 @@ for f in sorted(glob.glob('lib/ui/*.dart')):
     if f.endswith(('ct_css.dart','i18n.dart')): continue
     s=open(f,encoding='utf-8').read()
     s2,w=process(s)
-    s2=s2.replace('TextDirection.rtl','L.dir')
+    s2=s2.replace('TextDirection.rtl','Tr.dir')
     if s2!=s:
         s2=deconst(s2)
         if "import 'i18n.dart';" not in s2: s2=s2.replace("import 'package:flutter/material.dart';","import 'package:flutter/material.dart';\nimport 'i18n.dart';",1)

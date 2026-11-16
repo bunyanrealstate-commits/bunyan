@@ -17,15 +17,15 @@ class _TrashPageState extends State<TrashPage> {
   @override
   Widget build(BuildContext context) {
     final t = objs(S['trash']).reversed.toList();
-    return Directionality(textDirection: L.dir, child: Scaffold(
-      appBar: AppBar(title: Text(L.t('🗑 سلة المحذوفات'))),
+    return Directionality(textDirection: Tr.dir, child: Scaffold(
+      appBar: AppBar(title: Text(Tr.t('🗑 سلة المحذوفات'))),
       body: ListView(padding: const EdgeInsets.all(14), children: [
-        Text(L.t('اللي بتمسحه بيفضل هنا 30 يوم وتقدر ترجعه.'), style: TextStyle(color: kMuted)),
-        if (t.isEmpty) Padding(padding: EdgeInsets.all(30), child: Text(L.t('السلة فاضية'), textAlign: TextAlign.center)),
+        Text(Tr.t('اللي بتمسحه بيفضل هنا 30 يوم وتقدر ترجعه.'), style: TextStyle(color: kMuted)),
+        if (t.isEmpty) Padding(padding: EdgeInsets.all(30), child: Text(Tr.t('السلة فاضية'), textAlign: TextAlign.center)),
         for (final r in t) Card(child: ListTile(
           title: Text(str(r['l']), style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text(DateTime.fromMillisecondsSinceEpoch(n0(r['at']).toInt()).toString().substring(0, 16)),
-          trailing: TextButton(onPressed: () => _restore(r), child: Text(L.t('↩ رجّعه'))),
+          trailing: TextButton(onPressed: () => _restore(r), child: Text(Tr.t('↩ رجّعه'))),
         )),
       ]),
     ));
@@ -48,6 +48,6 @@ class _TrashPageState extends State<TrashPage> {
     }
     (S['trash'] as List).remove(r);
     await Store.I.save(log: '↩ رجّعت من السلة: ${str(r['l'])}');
-    if (mounted) { setState(() {}); toast(context, L.t('↩ رجع')); }
+    if (mounted) { setState(() {}); toast(context, Tr.t('↩ رجع')); }
   }
 }

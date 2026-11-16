@@ -53,7 +53,7 @@ class _ShellState extends State<Shell> {
     if (!st.linked && lst(st.S['units']).isEmpty) return const LinkScreen();
     final pages = [const HomePage(), const UnitsPage(), const ExpensesPage(), const MorePage()];
     return Directionality(
-      textDirection: L.dir,
+      textDirection: Tr.dir,
       child: Scaffold(
         appBar: AppBar(
           title: Row(children: [
@@ -63,7 +63,7 @@ class _ShellState extends State<Shell> {
           ]),
           actions: [
             IconButton(
-              tooltip: L.t('مزامنة'),
+              tooltip: Tr.t('مزامنة'),
               onPressed: st.syncing ? null : () async { final m = await st.sync(); if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m))); },
               icon: st.syncing ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(Icons.sync, color: st.cfg['dirty'] == true ? kTerra : kGreen),
             ),
@@ -74,10 +74,10 @@ class _ShellState extends State<Shell> {
           selectedIndex: tab,
           onDestinationSelected: (i) => setState(() => tab = i),
           destinations: [
-            NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: L.t('الداشبورد')),
-            NavigationDestination(icon: Icon(Icons.apartment_outlined), selectedIcon: Icon(Icons.apartment), label: L.t('الوحدات')),
-            NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: L.t('المصاريف')),
-            NavigationDestination(icon: Icon(Icons.more_horiz), label: L.t('المزيد')),
+            NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: Tr.t('الداشبورد')),
+            NavigationDestination(icon: Icon(Icons.apartment_outlined), selectedIcon: Icon(Icons.apartment), label: Tr.t('الوحدات')),
+            NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: Tr.t('المصاريف')),
+            NavigationDestination(icon: Icon(Icons.more_horiz), label: Tr.t('المزيد')),
           ],
         ),
       ),

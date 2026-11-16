@@ -34,8 +34,8 @@ class _AccState extends State<AccountsPage> {
     for (final x in Engine(S, WS: 'all').ledger()) { final ym = str(x['d']).substring(0, 7); months[ym] = (months[ym] ?? 0) + (x['a'] as double); }
     final locks = lst(S['locks']).map(str).toSet();
     final ymK = months.keys.toList()..sort((a, b) => b.compareTo(a));
-    return Directionality(textDirection: L.dir, child: Scaffold(
-      appBar: AppBar(title: Text(L.t('الحسابات'))),
+    return Directionality(textDirection: Tr.dir, child: Scaffold(
+      appBar: AppBar(title: Text(Tr.t('الحسابات'))),
       body: ListView(padding: const EdgeInsets.all(12), children: [
         Card(child: ListTile(
           leading: const Text('💰', style: TextStyle(fontSize: 24)),
@@ -45,23 +45,23 @@ class _AccState extends State<AccountsPage> {
           onTap: _setCash,
         )),
         Row(children: [
-          Expanded(child: OutlinedButton(onPressed: () => _draw(true), child: Text(L.t('🙋 سحب لحاجاتي')))),
+          Expanded(child: OutlinedButton(onPressed: () => _draw(true), child: Text(Tr.t('🙋 سحب لحاجاتي')))),
           const SizedBox(width: 8),
-          Expanded(child: OutlinedButton(onPressed: () => _draw(false), child: Text(L.t('🤝 سحب لشريك')))),
+          Expanded(child: OutlinedButton(onPressed: () => _draw(false), child: Text(Tr.t('🤝 سحب لشريك')))),
         ]),
         Builder(builder: (_) {
           final g = (ws == 'all' || ws == '-') ? '' : ws;
           final ad = objs(S['adj']).where((a) => ws == 'all' || str(a['g']) == g).toList()..sort((a, b) => n0(b['at']).compareTo(n0(a['at'])));
           if (ad.isEmpty) return const SizedBox.shrink();
           return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _h(L.t('💸 حركات النقدي (سحب / تمويل / دفعات)')),
+            _h(Tr.t('💸 حركات النقدي (سحب / تمويل / دفعات)')),
             for (final a in ad.take(60)) ListTile(dense: true, title: Text(str(a['w']), maxLines: 2, overflow: TextOverflow.ellipsis),
               subtitle: Text(iso(DateTime.fromMillisecondsSinceEpoch(n0(a['at']).toInt()))),
               trailing: Text(money(n0(a['a'])), style: TextStyle(fontWeight: FontWeight.bold, color: n0(a['a']) < 0 ? kRed : kGreen)),
               onLongPress: a['k'] == 'draw' ? () => _delAdj(a) : null),
           ]);
         }),
-        _h(L.t('🔐 التأمينات'), action: TextButton.icon(onPressed: () => _dep(null), icon: const Icon(Icons.add), label: Text(L.t('تأمين')))),
+        _h(Tr.t('🔐 التأمينات'), action: TextButton.icon(onPressed: () => _dep(null), icon: const Icon(Icons.add), label: Text(Tr.t('تأمين')))),
         Card(child: Padding(padding: const EdgeInsets.all(10), child: Text('محجوز عندك: ${money(held)}  •  عدد: ${deps.length}'))),
         for (final d in deps) Card(child: ListTile(
           dense: true,
@@ -70,7 +70,7 @@ class _AccState extends State<AccountsPage> {
           onTap: () => _dep(d),
           onLongPress: () => _delDep(d),
         )),
-        _h(L.t('🔒 قفل الشهور')),
+        _h(Tr.t('🔒 قفل الشهور')),
         Wrap(spacing: 6, runSpacing: 6, children: [
           for (final ym in ymK.take(18)) FilterChip(
             label: Text('$ym  ${money(months[ym]!)}'), selected: locks.contains(ym),
@@ -79,7 +79,7 @@ class _AccState extends State<AccountsPage> {
           ),
         ]),
         _h('📒 الدفتر (${lg.length})'),
-        TextField(decoration: InputDecoration(prefixIcon: Icon(Icons.search), hintText: L.t('دوّر'), border: OutlineInputBorder(), isDense: true), onChanged: (v) => setState(() => q = v.trim())),
+        TextField(decoration: InputDecoration(prefixIcon: Icon(Icons.search), hintText: Tr.t('دوّر'), border: OutlineInputBorder(), isDense: true), onChanged: (v) => setState(() => q = v.trim())),
         const SizedBox(height: 6),
         for (final x in lg.take(400)) ListTile(
           dense: true,
@@ -95,14 +95,14 @@ class _AccState extends State<AccountsPage> {
   Widget _h(String t, {Widget? action}) => Padding(padding: const EdgeInsets.only(top: 14, bottom: 6), child: Row(children: [Expanded(child: Text(t, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15))), if (action != null) action]));
 
   Future<void> _setCash() async {
-    if (ws == 'all') { toast(context, L.t('اختر مجموعة أولاً من فوق، وبعدين اكتب رصيدها')); return; }
+    if (ws == 'all') { toast(context, Tr.t('اختر مجموعة أولاً من فوق، وبعدين اكتب رصيدها')); return; }
     final e = Engine(S, WS: ws);
-    final r = await formDlg(context, L.t('الرصيد النقدي الفعلي دلوقتي'), [FieldSpec('v', L.t('الرصيد'), type: 'n', v: e.cashNow().round())]);
+    final r = await formDlg(context, Tr.t('الرصيد النقدي الفعلي دلوقتي'), [FieldSpec('v', Tr.t('الرصيد'), type: 'n', v: e.cashNow().round())]);
     if (r == null) return;
     final t = (double.tryParse(r['v'] ?? '') ?? 0) - e.mvO(0);
     final tv = t == t.roundToDouble() ? t.toInt() : t;
     if (ws == '-') { S['cash'] = tv; } else { final gc = S['gc'] is Map<String, dynamic> ? S['gc'] as Map<String, dynamic> : (S['gc'] = <String, dynamic>{}); gc[ws] = tv; }
-    await Store.I.save(log: L.t('💰 عدّلت الرصيد النقدي'));
+    await Store.I.save(log: Tr.t('💰 عدّلت الرصيد النقدي'));
     if (mounted) setState(() {});
   }
 
@@ -113,20 +113,20 @@ class _AccState extends State<AccountsPage> {
     final nm = str(gr?['name']).replaceFirst(RegExp(r'^\s*مع\s+'), '');
     final ps = <String>['__me', ...nm.isEmpty ? <String>[] : nm.split(RegExp(r'\s+و(?=\S)')).map((x) => x.trim()).where((x) => x.isNotEmpty)];
     for (final a in objs(S['adj'])) { if (truthy(a['p']) && truthy(a['k']) && str(a['g']) == g && !ps.contains(str(a['p']))) ps.add(str(a['p'])); }
-    final me = str(Store.I.cfg['u']).isEmpty ? L.t('أنا') : str(Store.I.cfg['u']);
+    final me = str(Store.I.cfg['u']).isEmpty ? Tr.t('أنا') : str(Store.I.cfg['u']);
     String? p = '__me';
     if (!mine) {
-      p = await pickDlg(context, L.t('مين اللي سحب؟'), [for (final x in ps.where((x) => x != '__me')) [x, x], ['__other', L.t('شخص تاني…')]], ps.length > 1 ? ps[1] : '__other');
+      p = await pickDlg(context, Tr.t('مين اللي سحب؟'), [for (final x in ps.where((x) => x != '__me')) [x, x], ['__other', Tr.t('شخص تاني…')]], ps.length > 1 ? ps[1] : '__other');
       if (p == null || !mounted) return;
     }
-    final o = await formDlg(context, mine ? L.t('🙋 سحب لحاجاتي الشخصية') : L.t('🤝 سحب لشريك'), [
-      if (p == '__other') FieldSpec('x', L.t('اسمه')),
-      FieldSpec('a', L.t('المبلغ'), type: 'n'), FieldSpec('d', L.t('التاريخ'), type: 'd', v: Act.td()), FieldSpec('w', L.t('السبب / ملاحظة')),
+    final o = await formDlg(context, mine ? Tr.t('🙋 سحب لحاجاتي الشخصية') : Tr.t('🤝 سحب لشريك'), [
+      if (p == '__other') FieldSpec('x', Tr.t('اسمه')),
+      FieldSpec('a', Tr.t('المبلغ'), type: 'n'), FieldSpec('d', Tr.t('التاريخ'), type: 'd', v: Act.td()), FieldSpec('w', Tr.t('السبب / ملاحظة')),
     ]);
     if (o == null) return;
     final a = (double.tryParse(o['a'] ?? '') ?? 0).abs();
-    if (a == 0) { if (mounted) toast(context, L.t('اكتب المبلغ')); return; }
-    final who = p == '__other' ? ((o['x'] ?? '').trim().isEmpty ? L.t('شخص') : o['x']!.trim()) : p!;
+    if (a == 0) { if (mounted) toast(context, Tr.t('اكتب المبلغ')); return; }
+    final who = p == '__other' ? ((o['x'] ?? '').trim().isEmpty ? Tr.t('شخص') : o['x']!.trim()) : p!;
     final d = o['d'] ?? Act.td();
     final at = (d.isNotEmpty && d != Act.td()) ? pd(d).millisecondsSinceEpoch + 12 * 3600000 : Act.now();
     final w = o['w'] ?? '';
@@ -137,7 +137,7 @@ class _AccState extends State<AccountsPage> {
   }
 
   Future<void> _delAdj(Obj a) async {
-    if (!await confirmDlg(context, 'تمسح «${str(a['w'])}»؟', ok: L.t('امسح'))) return;
+    if (!await confirmDlg(context, 'تمسح «${str(a['w'])}»؟', ok: Tr.t('امسح'))) return;
     (S['adj'] as List).remove(a); await Store.I.save(log: '🗑 مسحت ${str(a['w'])}');
     if (mounted) setState(() {});
   }
@@ -155,7 +155,7 @@ class _AccState extends State<AccountsPage> {
   }
 
   Future<void> _delDep(Obj d) async {
-    if (!await confirmDlg(context, 'تمسح تأمين «${str(d['w'])}»؟', ok: L.t('امسح'))) return;
+    if (!await confirmDlg(context, 'تمسح تأمين «${str(d['w'])}»؟', ok: Tr.t('امسح'))) return;
     (S['dep'] as List).remove(d); await Store.I.save(log: '🗑 حذفت تأمين ${str(d['w'])}');
     if (mounted) setState(() {});
   }
@@ -163,15 +163,15 @@ class _AccState extends State<AccountsPage> {
   /// نفس mDep: k t|c, mode cash|chq, w, a, d, r
   Future<void> _dep(Obj? d) async {
     final x = d ?? {};
-    final k = await pickDlg(context, L.t('نوع التأمين'), [['t', L.t('مستلم من مستأجر (محجوز عندي)')], ['c', L.t('دفعته أنا لحد')]], truthy(x['k']) ? str(x['k']) : 't');
+    final k = await pickDlg(context, Tr.t('نوع التأمين'), [['t', Tr.t('مستلم من مستأجر (محجوز عندي)')], ['c', Tr.t('دفعته أنا لحد')]], truthy(x['k']) ? str(x['k']) : 't');
     if (k == null || !mounted) return;
-    final md = await pickDlg(context, L.t('اتدفع إزاي؟'), [['cash', L.t('كاش')], ['chq', L.t('شيك')]], truthy(x['mode']) ? str(x['mode']) : 'cash');
+    final md = await pickDlg(context, Tr.t('اتدفع إزاي؟'), [['cash', Tr.t('كاش')], ['chq', Tr.t('شيك')]], truthy(x['mode']) ? str(x['mode']) : 'cash');
     if (md == null || !mounted) return;
-    final r0 = await formDlg(context, d == null ? L.t('تأمين جديد') : L.t('تعديل تأمين'), [
-      FieldSpec('w', L.t('الاسم'), v: str(x['w'])),
-      FieldSpec('a', L.t('المبلغ'), type: 'n', v: truthy(x['a']) ? x['a'] : ''),
-      FieldSpec('d', L.t('التاريخ'), type: 'd', v: truthy(x['d']) ? str(x['d']) : Act.td()),
-      FieldSpec('r', L.t('تاريخ الرد (فاضي = لسه)'), type: 'd', v: str(x['r'])),
+    final r0 = await formDlg(context, d == null ? Tr.t('تأمين جديد') : Tr.t('تعديل تأمين'), [
+      FieldSpec('w', Tr.t('الاسم'), v: str(x['w'])),
+      FieldSpec('a', Tr.t('المبلغ'), type: 'n', v: truthy(x['a']) ? x['a'] : ''),
+      FieldSpec('d', Tr.t('التاريخ'), type: 'd', v: truthy(x['d']) ? str(x['d']) : Act.td()),
+      FieldSpec('r', Tr.t('تاريخ الرد (فاضي = لسه)'), type: 'd', v: str(x['r'])),
     ]);
     if (r0 == null) return;
     final r = {...r0, 'k': k, 'mode': md};

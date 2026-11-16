@@ -20,10 +20,10 @@ class UnitsPage extends StatelessWidget {
     final us = e.SU();
     return Stack(children: [
       ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 90), children: [
-        if (us.isEmpty) Padding(padding: EdgeInsets.all(40), child: Text(L.t('مفيش وحدات في المجموعة دي'), textAlign: TextAlign.center)),
+        if (us.isEmpty) Padding(padding: EdgeInsets.all(40), child: Text(Tr.t('مفيش وحدات في المجموعة دي'), textAlign: TextAlign.center)),
         for (final u in us) _UnitCard(u),
       ]),
-      Positioned(left: 16, bottom: 16, child: FloatingActionButton.extended(heroTag: 'nu', onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const UnitEdit(null))), icon: const Icon(Icons.add_home), label: Text(L.t('استديو جديد')))),
+      Positioned(left: 16, bottom: 16, child: FloatingActionButton.extended(heroTag: 'nu', onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const UnitEdit(null))), icon: const Icon(Icons.add_home), label: Text(Tr.t('استديو جديد')))),
     ]);
   }
 }
@@ -44,7 +44,7 @@ class _UnitCard extends StatelessWidget {
           Text(str(u['company']), style: const TextStyle(color: kMuted, fontSize: 12)),
         ]),
         const SizedBox(height: 6),
-        if (ls.isEmpty) Text(L.t('فاضية — مفيش مستأجر'), style: TextStyle(color: kTerra, fontWeight: FontWeight.bold)),
+        if (ls.isEmpty) Text(Tr.t('فاضية — مفيش مستأجر'), style: TextStyle(color: kTerra, fontWeight: FontWeight.bold)),
         for (final L in ls) ...[
           Builder(builder: (_) {
             final rc = Engine.rcv(L); var due = 0;
@@ -82,44 +82,44 @@ class _UnitDetailState extends State<UnitDetail> {
   Widget build(BuildContext context) {
     final t = today();
     final insts = objs(u['inst']);
-    return Directionality(textDirection: L.dir, child: Scaffold(
-      appBar: AppBar(title: Text(str(u['name'])), actions: [IconButton(tooltip: L.t('حذف الاستديو'), icon: const Icon(Icons.delete_outline, color: kRed), onPressed: () async {
-        if (!await confirmDlg(context, L.t('هل تريد حذف الاستديو بكل دفعاتها وعقودها ومصاريفها وتمويلها وتأميناته؟ الرصيد النقدي هيرجع زي ما كان قبل ما تضيفه.'), ok: L.t('🗑 احذف')) || !context.mounted) return;
+    return Directionality(textDirection: Tr.dir, child: Scaffold(
+      appBar: AppBar(title: Text(str(u['name'])), actions: [IconButton(tooltip: Tr.t('حذف الاستديو'), icon: const Icon(Icons.delete_outline, color: kRed), onPressed: () async {
+        if (!await confirmDlg(context, Tr.t('هل تريد حذف الاستديو بكل دفعاتها وعقودها ومصاريفها وتمويلها وتأميناته؟ الرصيد النقدي هيرجع زي ما كان قبل ما تضيفه.'), ok: Tr.t('🗑 احذف')) || !context.mounted) return;
         await Act.delUnit(u, Ws.I.resolve()); if (context.mounted) Navigator.pop(context);
-      }), IconButton(tooltip: L.t('تعديل الاستديو'), icon: const Icon(Icons.edit), onPressed: () async {
+      }), IconButton(tooltip: Tr.t('تعديل الاستديو'), icon: const Icon(Icons.edit), onPressed: () async {
         final ds = [for (final i in objs(u['inst'])) if (truthy(i['p'])) str(i['d'])];
         if (!await lockOk(context, ds) || !context.mounted) return;
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => UnitEdit(str(u['id']))));
       })]),
-      floatingActionButton: FloatingActionButton.extended(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => LeaseEdit(u, null))), icon: const Icon(Icons.person_add), label: Text(L.t('عقد مستأجر جديد'))),
+      floatingActionButton: FloatingActionButton.extended(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => LeaseEdit(u, null))), icon: const Icon(Icons.person_add), label: Text(Tr.t('عقد مستأجر جديد'))),
       body: ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 90), children: [
         RenBox(u, () { if (mounted) setState(() {}); }),
         GraceBox(u),
         Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          _kv(L.t('الشركة'), str(u['company'])),
-          _kv(L.t('بداية العقد'), str(u['start'])),
-          _kv(L.t('مدة العقد'), '${str(u['cm'])} شهر'),
-          _kv(L.t('إجمالي الإيجار'), money(truthy(u['total']) ? n(u['total']) : Engine.isumOf(u))),
-          _kv(L.t('الأثاث'), money(n0(u['furn']))),
+          _kv(Tr.t('الشركة'), str(u['company'])),
+          _kv(Tr.t('بداية العقد'), str(u['start'])),
+          _kv(Tr.t('مدة العقد'), '${str(u['cm'])} شهر'),
+          _kv(Tr.t('إجمالي الإيجار'), money(truthy(u['total']) ? n(u['total']) : Engine.isumOf(u))),
+          _kv(Tr.t('الأثاث'), money(n0(u['furn']))),
           Builder(builder: (_) { final e = Engine(Store.I.S, WS: 'all'); final p = e.projU(u); final a = e.ua(u); final o = e.occ(u);
             return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              _kv(L.t('📉 سعر اليوم عند الشركة'), money(o['c'] as double)),
-              _kv(L.t('أيام فاضية'), '${o['vac']} يوم'),
-              if ((o['lossPast'] as double) > 0) _kv(L.t('اتخسر في أيام فاتت'), money(o['lossPast'] as double)),
-              if ((o['lossFut'] as double) > 0) _kv(L.t('هيتخسر لو فضل فاضي'), money(o['lossFut'] as double)),
-              if ((o['free'] as int) > 0) _kv(L.t('🎁 أيام إيجار قبل بداية الشركة'), '${o['free']} يوم = ${money(o['freeVal'] as double)}'),
+              _kv(Tr.t('📉 سعر اليوم عند الشركة'), money(o['c'] as double)),
+              _kv(Tr.t('أيام فاضية'), '${o['vac']} يوم'),
+              if ((o['lossPast'] as double) > 0) _kv(Tr.t('اتخسر في أيام فاتت'), money(o['lossPast'] as double)),
+              if ((o['lossFut'] as double) > 0) _kv(Tr.t('هيتخسر لو فضل فاضي'), money(o['lossFut'] as double)),
+              if ((o['free'] as int) > 0) _kv(Tr.t('🎁 أيام إيجار قبل بداية الشركة'), '${o['free']} يوم = ${money(o['freeVal'] as double)}'),
               for (final g in (o['gaps'] as List).take(6)) Text('   • فاضي من ${g['a']} لـ ${g['b']} (${g['dys']} يوم)', style: const TextStyle(fontSize: 12, color: kMuted)),
-              if (p != null) _kv(L.t('🎯 الربح المتوقع'), money(p['p'] as double)),
-              _kv(L.t('🏠 شهور مأجّرة'), '${((a['occ']! * 10).round() / 10)} من ${str(u['cm'])}'),
-              if (a['vac']! > 0 && a['need']! > 0) _kv(L.t('أقل إيجار للشهور الفاضية'), '${money(a['need']!)} / شهر'),
+              if (p != null) _kv(Tr.t('🎯 الربح المتوقع'), money(p['p'] as double)),
+              _kv(Tr.t('🏠 شهور مأجّرة'), '${((a['occ']! * 10).round() / 10)} من ${str(u['cm'])}'),
+              if (a['vac']! > 0 && a['need']! > 0) _kv(Tr.t('أقل إيجار للشهور الفاضية'), '${money(a['need']!)} / شهر'),
             ]); }),
           const Divider(),
-          Text(L.t('💳 دفعات الشركة — دوس على الدفعة علشان تسجّلها'), style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(Tr.t('💳 دفعات الشركة — دوس على الدفعة علشان تسجّلها'), style: TextStyle(fontWeight: FontWeight.bold)),
           for (var k = 0; k < insts.length; k++) InkWell(
             onTap: () => _inst(k),
             child: Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: Row(children: [
               Expanded(child: Text(str(insts[k]['d']))), Text(money(n0(insts[k]['a']))), const SizedBox(width: 8),
-              _pill(truthy(insts[k]['p']) ? L.t('✅ مدفوعة') : (pd(insts[k]['d']).isAfter(t) ? L.t('⏳ لسه') : L.t('⚠️ مستحقة')), truthy(insts[k]['p']) ? kGreen : kTerra),
+              _pill(truthy(insts[k]['p']) ? Tr.t('✅ مدفوعة') : (pd(insts[k]['d']).isAfter(t) ? Tr.t('⏳ لسه') : Tr.t('⚠️ مستحقة')), truthy(insts[k]['p']) ? kGreen : kTerra),
             ])),
           ),
         ]))),
@@ -134,30 +134,30 @@ class _UnitDetailState extends State<UnitDetail> {
       Row(children: [
         Expanded(child: Text('👤 ${str(L['tenant'])}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16))),
         PopupMenuButton<String>(itemBuilder: (_) => [
-          if (!truthy(L['exit'])) PopupMenuItem(value: 'stop', child: Text(L.t('⛔ وقف العقد (خروج المستأجر)'))),
-          if (truthy(L['exit'])) PopupMenuItem(value: 'resume', child: Text(L.t('▶️ استئناف العقد'))),
-          if (truthy(L['exit']) && n0(L['pen']) > 0) PopupMenuItem(value: 'pen', child: Text(truthy(L['penp']) ? L.t('↩️ لغي استلام الشرط الجزائي') : L.t('💰 استلمت الشرط الجزائي'))),
-          PopupMenuItem(value: 'renew', child: Text(L.t('🔄 تجديد العقد (عقد جديد بعده)'))),
-          PopupMenuItem(value: 'chq', child: Text(L.t('📑 شيك جديد'))),
+          if (!truthy(L['exit'])) PopupMenuItem(value: 'stop', child: Text(Tr.t('⛔ وقف العقد (خروج المستأجر)'))),
+          if (truthy(L['exit'])) PopupMenuItem(value: 'resume', child: Text(Tr.t('▶️ استئناف العقد'))),
+          if (truthy(L['exit']) && n0(L['pen']) > 0) PopupMenuItem(value: 'pen', child: Text(truthy(L['penp']) ? Tr.t('↩️ لغي استلام الشرط الجزائي') : Tr.t('💰 استلمت الشرط الجزائي'))),
+          PopupMenuItem(value: 'renew', child: Text(Tr.t('🔄 تجديد العقد (عقد جديد بعده)'))),
+          PopupMenuItem(value: 'chq', child: Text(Tr.t('📑 شيك جديد'))),
           if (_depOf(L) != null && !truthy(_depOf(L)!['r'])) PopupMenuItem(value: 'refund', child: Text('🔐 رد التأمين (${money(n0(_depOf(L)!['a']))})')),
-          PopupMenuItem(value: 'del', child: Text(L.t('🗑 حذف العقد'), style: TextStyle(color: kRed))),
+          PopupMenuItem(value: 'del', child: Text(Tr.t('🗑 حذف العقد'), style: TextStyle(color: kRed))),
         ], onSelected: (v) => _leaseMenu(k, v)),
-        IconButton(tooltip: L.t('تعديل العقد'), icon: const Icon(Icons.edit_outlined), onPressed: () async {
-          if (truthy(L['exit'])) { toast(context, L.t('العقد موقوف — استأنفه الأول')); return; }
-          if (!truthy(L['sch'])) { toast(context, L.t('العقد ده معمول بالطريقة القديمة — عدّله من بنيان القديم')); return; }
+        IconButton(tooltip: Tr.t('تعديل العقد'), icon: const Icon(Icons.edit_outlined), onPressed: () async {
+          if (truthy(L['exit'])) { toast(context, Tr.t('العقد موقوف — استأنفه الأول')); return; }
+          if (!truthy(L['sch'])) { toast(context, Tr.t('العقد ده معمول بالطريقة القديمة — عدّله من بنيان القديم')); return; }
           final ds = [str(L['start']), for (final i in Engine.rcv(L)) iso(Engine.payD(L, i))];
           if (!await lockOk(context, ds) || !context.mounted) return;
           Navigator.of(context).push(MaterialPageRoute(builder: (_) => LeaseEdit(u, k)));
         }),
       ]),
       if (truthy(L['phone'])) Text(str(L['phone']), style: const TextStyle(color: kMuted)),
-      _kv(L.t('من'), '${str(L['start'])} لـ ${iso(Engine.lend(L))}'),
-      _kv(L.t('الإيجار'), money(n0(L['rent']))),
-      if (_depOf(L) != null) _kv(L.t('🔐 التأمين'), '${money(n0(_depOf(L)!['a']))} ${str(_depOf(L)!['mode']) == 'chq' ? '(شيك ضمان)' : 'كاش'}${truthy(_depOf(L)!['r']) ? ' • اترد ${_depOf(L)!['r']}' : ''}'),
+      _kv(Tr.t('من'), '${str(L['start'])} لـ ${iso(Engine.lend(L))}'),
+      _kv(Tr.t('الإيجار'), money(n0(L['rent']))),
+      if (_depOf(L) != null) _kv(Tr.t('🔐 التأمين'), '${money(n0(_depOf(L)!['a']))} ${str(_depOf(L)!['mode']) == 'chq' ? '(شيك ضمان)' : 'كاش'}${truthy(_depOf(L)!['r']) ? ' • اترد ${_depOf(L)!['r']}' : ''}'),
       for (final (q, c) in Chq.list(L).indexed) InkWell(onTap: () async { await Chq.edit(context, L, q); if (mounted) setState(() {}); }, onLongPress: () async { await Chq.del(context, L, q); if (mounted) setState(() {}); },
         child: Padding(padding: const EdgeInsets.symmetric(vertical: 2), child: Text('📑 ${str(c['no']).isEmpty ? 'شيك' : 'شيك ${c['no']}'} • ${c['d']} • ${money(n0(c['a']))}', style: const TextStyle(fontSize: 12, color: kMuted)))),
       const Divider(),
-      Text(L.t('دوس على الشهر علشان تسجّل إنه اتدفع'), style: TextStyle(color: kMuted, fontSize: 12)),
+      Text(Tr.t('دوس على الشهر علشان تسجّل إنه اتدفع'), style: TextStyle(color: kMuted, fontSize: 12)),
       for (var i = 0; i < Engine.months(L); i++) Builder(builder: (_) {
         final d = Engine.payD(L, i); final got = Engine.rcv(L).contains(i);
         return InkWell(onTap: () => _rent(k, i, got), child: Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: Row(children: [
@@ -178,24 +178,24 @@ class _UnitDetailState extends State<UnitDetail> {
     if (v == 'chq') { await Chq.edit(context, L, null); if (mounted) setState(() {}); return; }
     if (v == 'refund') {
       final d = _depOf(L)!;
-      final o = await formDlg(context, 'رد التأمين — ${str(L['tenant'])}', [FieldSpec('r', L.t('تاريخ الرد'), type: 'd', v: Act.td())]);
+      final o = await formDlg(context, 'رد التأمين — ${str(L['tenant'])}', [FieldSpec('r', Tr.t('تاريخ الرد'), type: 'd', v: Act.td())]);
       if (o == null) return;
       d['r'] = truthy(o['r']) ? o['r'] : Act.td(); d['rat'] = str(d['mode']) == 'chq' ? 0 : Act.now();
       await Store.I.save(log: '🔐 رديت التأمين ${money(n0(d['a']))} — ${str(L['tenant'])}');
-      if (mounted) { setState(() {}); toast(context, L.t('✅ اتسجل رد التأمين')); }
+      if (mounted) { setState(() {}); toast(context, Tr.t('✅ اتسجل رد التأمين')); }
       return;
     }
     final ds = [str(L['start']), for (final i in Engine.rcv(L)) iso(Engine.payD(L, i))];
     if (!await lockOk(context, ds) || !mounted) return;
     if (v == 'stop') {
-      final o = await formDlg(context, 'وقف العقد — ${str(L['tenant'])}', [FieldSpec('exit', L.t('تاريخ وقف العقد (خروج المستأجر)'), type: 'd', v: truthy(L['exit']) ? L['exit'] : Act.td()), FieldSpec('pen', L.t('غرامة الخروج المبكر (الشرط الجزائي) — 0 إن لم توجد'), type: 'n', v: str(L['pen'] ?? 0))]);
+      final o = await formDlg(context, 'وقف العقد — ${str(L['tenant'])}', [FieldSpec('exit', Tr.t('تاريخ وقف العقد (خروج المستأجر)'), type: 'd', v: truthy(L['exit']) ? L['exit'] : Act.td()), FieldSpec('pen', Tr.t('غرامة الخروج المبكر (الشرط الجزائي) — 0 إن لم توجد'), type: 'n', v: str(L['pen'] ?? 0))]);
       if (o == null || !mounted) return;
       final pen = double.tryParse(o['pen'] ?? '') ?? 0;
-      final paid = pen > 0 && await confirmDlg(context, 'هل دفع المستأجر الغرامة (${money(pen)})؟', ok: L.t('أيوه دفع'));
+      final paid = pen > 0 && await confirmDlg(context, 'هل دفع المستأجر الغرامة (${money(pen)})؟', ok: Tr.t('أيوه دفع'));
       await Act.stopLease(u, k, o['exit'] ?? Act.td(), pen, paid);
-    } else if (v == 'resume') { if (await confirmDlg(context, L.t('استئناف العقد وإلغاء الوقف والغرامة؟'))) await Act.resumeLease(u, k); }
+    } else if (v == 'resume') { if (await confirmDlg(context, Tr.t('استئناف العقد وإلغاء الوقف والغرامة؟'))) await Act.resumeLease(u, k); }
     else if (v == 'pen') { await Act.togPen(u, k); }
-    else if (v == 'del') { if (await confirmDlg(context, 'حذف عقد «${str(L['tenant'])}»؟\n(تقدر ترجعه بعدين من «🗑 سلة المحذوفات»)', ok: L.t('🗑 احذف'))) await Act.delLease(u, k, Ws.I.resolve()); }
+    else if (v == 'del') { if (await confirmDlg(context, 'حذف عقد «${str(L['tenant'])}»؟\n(تقدر ترجعه بعدين من «🗑 سلة المحذوفات»)', ok: Tr.t('🗑 احذف'))) await Act.delLease(u, k, Ws.I.resolve()); }
   }
 
   Future<void> _rent(int k, int i, bool got) async {
@@ -203,7 +203,7 @@ class _UnitDetailState extends State<UnitDetail> {
     if (!await lockOk(context, [iso(Engine.payD(L, i))])) return;
     if (!mounted) return;
     if (got) {
-      if (await confirmDlg(context, 'إلغاء استلام دفعة ${i + 1} من ${str(L['tenant'])}؟', ok: L.t('إلغاء الاستلام'))) await Act.rentUnpaid(u, k, i);
+      if (await confirmDlg(context, 'إلغاء استلام دفعة ${i + 1} من ${str(L['tenant'])}؟', ok: Tr.t('إلغاء الاستلام'))) await Act.rentUnpaid(u, k, i);
     } else {
       if (await confirmDlg(context, 'تأكيد استلام ${money(Engine.la(L, i))} من ${str(L['tenant'])} — ${str(u['name'])} (دفعة ${i + 1})؟')) {
         await Act.rentPaid(u, k, i);
@@ -216,8 +216,8 @@ class _UnitDetailState extends State<UnitDetail> {
     final i = objs(u['inst'])[k];
     if (!await lockOk(context, [str(i['d'])])) return;
     if (!mounted) return;
-    if (truthy(i['p'])) { if (await confirmDlg(context, 'إلغاء تسجيل دفعة الشركة ${money(n0(i['a']))}؟', ok: L.t('إلغاء'))) await Act.instUnpay(u, k); return; }
-    final opts = <List<String>>[['', L.t('دون خصم من الرصيد (دُفعت من بره البرنامج)')], ['cash', L.t('من الرصيد النقدي في البرنامج')], if (Act.gpOK(u)) ['gp', L.t('من فلوس الشراكة (دعم الشركاء)')]];
+    if (truthy(i['p'])) { if (await confirmDlg(context, 'إلغاء تسجيل دفعة الشركة ${money(n0(i['a']))}؟', ok: Tr.t('إلغاء'))) await Act.instUnpay(u, k); return; }
+    final opts = <List<String>>[['', Tr.t('دون خصم من الرصيد (دُفعت من بره البرنامج)')], ['cash', Tr.t('من الرصيد النقدي في البرنامج')], if (Act.gpOK(u)) ['gp', Tr.t('من فلوس الشراكة (دعم الشركاء)')]];
     final def = (k == 0 && Act.gpOK(u) && !objs(u['inst']).asMap().entries.any((e) => e.key != 0 && truthy(e.value['p']))) ? 'gp' : '';
     final src = await pickDlg(context, 'تسجيل دفعة للشركة — ${money(n0(i['a']))}\nمن أين دُفعت؟', opts, def);
     if (src != null) await Act.instPay(u, k, src);

@@ -23,29 +23,29 @@ class _LinkScreenState extends State<LinkScreen> {
     if ((d?.text ?? '').contains('BNYLINK-')) { c.text = d!.text!; _go(); }
   }
   Future<void> _go() async {
-    if (!Store.I.link(c.text)) { setState(() => msg = L.t('⚠️ الكود مش مظبوط')); return; }
-    setState(() { busy = true; msg = L.t('⏳ بنزّل كل بياناتك من بنيان…'); });
+    if (!Store.I.link(c.text)) { setState(() => msg = Tr.t('⚠️ الكود مش مظبوط')); return; }
+    setState(() { busy = true; msg = Tr.t('⏳ بنزّل كل بياناتك من بنيان…'); });
     final m = await Store.I.sync();
     if (mounted) setState(() { busy = false; msg = m; });
   }
   @override
-  Widget build(BuildContext context) => Directionality(textDirection: L.dir, child: Scaffold(
+  Widget build(BuildContext context) => Directionality(textDirection: Tr.dir, child: Scaffold(
         body: SafeArea(child: ListView(padding: const EdgeInsets.all(22), children: [
           const SizedBox(height: 30),
           const Text('BUNYAN', textAlign: TextAlign.center, style: TextStyle(fontSize: 34, fontWeight: FontWeight.w900, color: kGreen, letterSpacing: 4)),
           const Text('Furnished', textAlign: TextAlign.center, style: TextStyle(color: kMuted)),
           const SizedBox(height: 30),
-          Text(L.t('بياناتك هتنزل لوحدها'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+          Text(Tr.t('بياناتك هتنزل لوحدها'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
           const SizedBox(height: 8),
-          Text(L.t('افتح بنيان القديم مرة واحدة بس — هو هيفتح التطبيق ده لوحده ويبعتله كل بياناتك.'), style: TextStyle(height: 1.8, fontSize: 15)),
+          Text(Tr.t('افتح بنيان القديم مرة واحدة بس — هو هيفتح التطبيق ده لوحده ويبعتله كل بياناتك.'), style: TextStyle(height: 1.8, fontSize: 15)),
           const SizedBox(height: 12),
-          FilledButton.icon(onPressed: () async { if (!await Native.openOld()) setState(() => msg = L.t('بنيان القديم مش متسطّب على الموبايل ده')); }, icon: const Icon(Icons.open_in_new), label: Text(L.t('افتح بنيان القديم'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52))),
+          FilledButton.icon(onPressed: () async { if (!await Native.openOld()) setState(() => msg = Tr.t('بنيان القديم مش متسطّب على الموبايل ده')); }, icon: const Icon(Icons.open_in_new), label: Text(Tr.t('افتح بنيان القديم'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52))),
           const SizedBox(height: 24),
-          Text(L.t('أو لو معاك كود ربط (BNYLINK-…) الصقه هنا:'), style: TextStyle(color: kMuted)),
+          Text(Tr.t('أو لو معاك كود ربط (BNYLINK-…) الصقه هنا:'), style: TextStyle(color: kMuted)),
           const SizedBox(height: 14),
           TextField(controller: c, maxLines: 4, textDirection: TextDirection.ltr, decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'BNYLINK-…')),
           const SizedBox(height: 12),
-          FilledButton(onPressed: busy ? null : _go, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)), child: Text(L.t('اربط وانقل البيانات'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+          FilledButton(onPressed: busy ? null : _go, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)), child: Text(Tr.t('اربط وانقل البيانات'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
           const SizedBox(height: 12),
           Text(msg, textAlign: TextAlign.center),
         ])),

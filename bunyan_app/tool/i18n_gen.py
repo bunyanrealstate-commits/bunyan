@@ -4,7 +4,7 @@ EN=json.load(open('tool/en.json'))
 used=set()
 for f in glob.glob('lib/ui/*.dart'):
     if f.endswith('i18n.dart'): continue
-    for m in re.finditer(r"L\.t\('((?:[^'\\\n]|\\.)*)'\)",open(f).read()): used.add(m.group(1))
+    for m in re.finditer(r"Tr\.t\('((?:[^'\\\n]|\\.)*)'\)",open(f).read()): used.add(m.group(1))
 def dq(s): return "'"+s.replace('\\','\\\\').replace("'","\\'").replace('$','\\$')+"'"
 miss=[u for u in used if not (EN.get(u) or EN.get(u.strip()))]
 if miss: print('MISSING',miss)
@@ -13,7 +13,7 @@ open('lib/ui/i18n.dart','w').write("""/// اللغة: عربي (الأساس) أ
 import 'package:flutter/material.dart';
 import '../core/store.dart';
 
-class L {
+class Tr {
   static String get lang => Store.I.cfg['lang'] == 'en' ? 'en' : 'ar';
   static bool get en => lang == 'en';
   static TextDirection get dir => en ? TextDirection.ltr : TextDirection.rtl;
