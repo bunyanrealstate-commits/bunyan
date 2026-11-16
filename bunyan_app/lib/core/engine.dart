@@ -417,4 +417,29 @@ class Engine {
     }
     return {'p': p - gx, 'gx': gx, 'occ': mW != 0 ? oc / mW : 0.0, 'mW': mW, 's': s0, 'e': e0, 'mo': mo};
   }
+
+  /* ───── دفتر الحسابات (ledger) ───── */
+  List<Map<String, dynamic>> ledger() {
+    final t = today(); final r = <Map<String, dynamic>>[];
+    for (final u in SU()) {
+      final f = sh(u); final nm = str(u['name']);
+      for (final i in objs(u['inst'])) { if (truthy(i['p'])) r.add({'d': str(i['d']), 'u': nm, 'c': 'co', 'w': 'دفعة ${str(u['company']).isEmpty ? 'الشركة' : str(u['company'])}', 'a': -n(i['a']) * f}); }
+      if (truthy(u['fp']) && truthy(u['furn'])) r.add({'d': str(u['start']), 'u': nm, 'c': 'fu', 'w': 'أثاث', 'a': -n(u['furn']) * f});
+      for (final L in objs(u['leases'])) {
+        for (final i in rcv(L)) { final rv0 = idx(L['rav'], i); r.add({'d': iso(payD(L, i)), 'u': nm, 'c': 'rn', 'w': 'إيجار${truthy(L['inet']) ? ' + إنترنت' : ''} ${str(L['tenant'])}', 'a': (rv0 != null ? n(rv0) : la(L, i)) * f}); }
+        if (truthy(L['adv'])) r.add({'d': str(L['start']), 'u': nm, 'c': 'rn', 'w': '${truthy(L['fee']) ? 'رسوم كتابة عقد ' : 'دفعة مقدمة '}${str(L['tenant'])}', 'a': n(L['adv']) * f});
+        for (final x in objs(L['pp'])) { r.add({'d': iso(DateTime.fromMillisecondsSinceEpoch(truthy(x['at']) ? n(x['at']).toInt() : DateTime.now().millisecondsSinceEpoch)), 'u': nm, 'c': 'rn', 'w': 'دفعة مقدمة من إيجار شهر ${n(x['i']).toInt() + 1} ${str(L['tenant'])}', 'a': n0(x['a']) * f}); }
+        if (truthy(L['icost'])) { for (var i = 0; i < months(L); i++) { final d = payD(L, i); if (!d.isAfter(t)) r.add({'d': iso(d), 'u': nm, 'c': 'is', 'w': 'تكلفة إنترنت', 'a': -n(L['icost']) * lf(L, i) * f}); } }
+        if (truthy(L['rme']) && truthy(L['router']) && !pd(L['start']).isAfter(t)) r.add({'d': str(L['start']), 'u': nm, 'c': 'is', 'w': 'راوتر', 'a': -n(L['router']) * f});
+        if (truthy(L['pen']) && truthy(L['penp']) && truthy(L['exit'])) r.add({'d': str(L['exit']), 'u': nm, 'c': 'pn', 'w': 'شرط جزائي', 'a': n(L['pen']) * f});
+      }
+    }
+    for (final x in SE()) {
+      final un = truthy(x['u']) ? U(x['u']) : null; final f = un != null ? sh(un) : shg(x['g']); final cnt = truthy(x['n']) ? n(x['n']).toInt() : 1;
+      for (var i = 0; i < cnt; i++) { final d = addM(pd(x['d']), i); if (!d.isAfter(t)) r.add({'d': iso(d), 'u': un != null ? str(un['name']) : '', 'c': 'ex', 'w': str(x['w']), 'a': -n(x['a']) * f}); }
+    }
+    final idx0 = {for (var i = 0; i < r.length; i++) r[i]: i};
+    r.sort((a, b) { final c = str(b['d']).compareTo(str(a['d'])); return c != 0 ? c : idx0[a]!.compareTo(idx0[b]!); });
+    return r;
+  }
 }
