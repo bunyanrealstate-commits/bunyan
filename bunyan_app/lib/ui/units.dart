@@ -80,7 +80,10 @@ class _UnitDetailState extends State<UnitDetail> {
     final t = today();
     final insts = objs(u['inst']);
     return Directionality(textDirection: TextDirection.rtl, child: Scaffold(
-      appBar: AppBar(title: Text(str(u['name'])), actions: [IconButton(tooltip: 'تعديل الاستديو', icon: const Icon(Icons.edit), onPressed: () async {
+      appBar: AppBar(title: Text(str(u['name'])), actions: [IconButton(tooltip: 'حذف الاستديو', icon: const Icon(Icons.delete_outline, color: kRed), onPressed: () async {
+        if (!await confirmDlg(context, 'هل تريد حذف الاستديو بكل دفعاتها وعقودها ومصاريفها وتمويلها وتأميناته؟ الرصيد النقدي هيرجع زي ما كان قبل ما تضيفه.', ok: '🗑 احذف') || !context.mounted) return;
+        await Act.delUnit(u, Ws.I.resolve()); if (context.mounted) Navigator.pop(context);
+      }), IconButton(tooltip: 'تعديل الاستديو', icon: const Icon(Icons.edit), onPressed: () async {
         final ds = [for (final i in objs(u['inst'])) if (truthy(i['p'])) str(i['d'])];
         if (!await lockOk(context, ds) || !context.mounted) return;
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => UnitEdit(str(u['id']))));
@@ -113,6 +116,12 @@ class _UnitDetailState extends State<UnitDetail> {
     return Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
         Expanded(child: Text('👤 ${str(L['tenant'])}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16))),
+        PopupMenuButton<String>(itemBuilder: (_) => [
+          if (!truthy(L['exit'])) const PopupMenuItem(value: 'stop', child: Text('⛔ وقف العقد (خروج المستأجر)')),
+          if (truthy(L['exit'])) const PopupMenuItem(value: 'resume', child: Text('▶️ استئناف العقد')),
+          if (truthy(L['exit']) && n0(L['pen']) > 0) PopupMenuItem(value: 'pen', child: Text(truthy(L['penp']) ? '↩️ لغي استلام الشرط الجزائي' : '💰 استلمت الشرط الجزائي')),
+          const PopupMenuItem(value: 'del', child: Text('🗑 حذف العقد', style: TextStyle(color: kRed))),
+        ], onSelected: (v) => _leaseMenu(k, v)),
         IconButton(tooltip: 'تعديل العقد', icon: const Icon(Icons.edit_outlined), onPressed: () async {
           if (truthy(L['exit'])) { toast(context, 'العقد موقوف — استأنفه الأول'); return; }
           if (!truthy(L['sch'])) { toast(context, 'العقد ده معمول بالطريقة القديمة — عدّله من بنيان القديم'); return; }
@@ -136,6 +145,21 @@ class _UnitDetailState extends State<UnitDetail> {
         ])));
       }),
     ])));
+  }
+
+  Future<void> _leaseMenu(int k, String v) async {
+    final L = objs(u['leases'])[k];
+    final ds = [str(L['start']), for (final i in Engine.rcv(L)) iso(Engine.payD(L, i))];
+    if (!await lockOk(context, ds) || !mounted) return;
+    if (v == 'stop') {
+      final o = await formDlg(context, 'وقف العقد — ${str(L['tenant'])}', [FieldSpec('exit', 'تاريخ وقف العقد (خروج المستأجر)', type: 'd', v: truthy(L['exit']) ? L['exit'] : Act.td()), FieldSpec('pen', 'غرامة الخروج المبكر (الشرط الجزائي) — 0 إن لم توجد', type: 'n', v: str(L['pen'] ?? 0))]);
+      if (o == null || !mounted) return;
+      final pen = double.tryParse(o['pen'] ?? '') ?? 0;
+      final paid = pen > 0 && await confirmDlg(context, 'هل دفع المستأجر الغرامة (${money(pen)})؟', ok: 'أيوه دفع');
+      await Act.stopLease(u, k, o['exit'] ?? Act.td(), pen, paid);
+    } else if (v == 'resume') { if (await confirmDlg(context, 'استئناف العقد وإلغاء الوقف والغرامة؟')) await Act.resumeLease(u, k); }
+    else if (v == 'pen') { await Act.togPen(u, k); }
+    else if (v == 'del') { if (await confirmDlg(context, 'حذف عقد «${str(L['tenant'])}»؟\n(تقدر ترجعه بعدين من «🗑 سلة المحذوفات»)', ok: '🗑 احذف')) await Act.delLease(u, k, Ws.I.resolve()); }
   }
 
   Future<void> _rent(int k, int i, bool got) async {

@@ -5,6 +5,7 @@ import 'theme.dart';
 import 'forecast.dart';
 import 'groups.dart';
 import 'reminders.dart';
+import 'trash.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
@@ -22,6 +23,7 @@ class MorePage extends StatelessWidget {
       Card(child: ListTile(leading: const Text('⏰', style: TextStyle(fontSize: 22)), title: const Text('تذكيراتي'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RemindersPage())))),
       Card(child: ListTile(leading: const Text('📂', style: TextStyle(fontSize: 22)), title: const Text('المجموعات والشراكة'), subtitle: const Text('فلوس الشراكة، الشركاء، طريقة الحساب'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GroupsPage())))),
       Card(child: ListTile(leading: const Text('🔮', style: TextStyle(fontSize: 22)), title: const Text('التوقعات — الرصيد سنة قدام'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ForecastPage())))),
+      Card(child: ListTile(leading: const Text('🗑', style: TextStyle(fontSize: 22)), title: const Text('سلة المحذوفات'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TrashPage())))),
       const SizedBox(height: 8),
       const Text('🕘 سجل النشاط', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
       for (final e in h) Card(child: ListTile(

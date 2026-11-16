@@ -83,6 +83,60 @@ class Act {
     S['trash'] = t.length > 60 ? t.sublist(t.length - 60) : t;
   }
 
+  /* ───── وقف العقد / الاستئناف / الشرط الجزائي (mStop/resumeL/togPen) ───── */
+  static Future<void> stopLease(Obj u, int k, String exit, double pen, bool penp) async {
+    final L = objs(u['leases'])[k];
+    final orig = truthy(L['orig']) ? n(L['orig']).toInt() : Engine.months(L); var c = 0;
+    for (var i = 0; i < orig; i++) { if (!Engine.payD(L, i).isAfter(pd(exit))) c++; }
+    L['orig'] = orig; L['exit'] = exit; final p = pen < 0 ? 0.0 : pen; L['pen'] = _num(p); L['penp'] = p > 0 && penp; L['months'] = c;
+    L['rcv'] = lst(L['rcv']).where((i) => n(i) < c).toList(); L['pp'] = objs(L['pp']).where((x) => n(x['i']) < c).toList();
+    final rat = _ensureMap(L, 'rat'), rav = _ensureMap(L, 'rav'); final rc = Engine.rcv(L);
+    for (final q in rat.keys.toList()) { if (!rc.contains(int.tryParse(q) ?? -1)) { rat.remove(q); rav.remove(q); } }
+    L['pat'] = L['penp'] == true ? (truthy(L['pat']) ? L['pat'] : now()) : 0;
+    await Store.I.save(log: '⛔ وقفت عقد ${str(L['tenant'])} — ${str(u['name'])} من $exit');
+  }
+  static Future<void> resumeLease(Obj u, int k) async {
+    final L = objs(u['leases'])[k];
+    L['months'] = truthy(L['orig']) ? L['orig'] : L['months']; L['exit'] = ''; L['pen'] = 0; L['penp'] = false; L['pat'] = 0;
+    await Store.I.save(log: '▶️ استأنفت عقد ${str(L['tenant'])} — ${str(u['name'])}');
+  }
+  static Future<void> togPen(Obj u, int k) async {
+    final L = objs(u['leases'])[k]; L['penp'] = !truthy(L['penp']); L['pat'] = L['penp'] == true ? now() : 0;
+    await Store.I.save(log: '💰 ${L['penp'] == true ? 'استلمت' : 'لغيت استلام'} الشرط الجزائي — ${str(L['tenant'])}');
+  }
+
+  /* ───── الحذف (بيروح لسلة المحذوفات زي القديم) ───── */
+  static Future<void> delLease(Obj u, int k, String ws) async {
+    final ls = u['leases'] as List; final L = ls[k] as Obj;
+    ls.removeAt(k);
+    toTrash([{'c': 'units.leases', 'u': u['id'], 'un': u['name'], 'k': k, 'o': L}], 'عقد مستأجر «${str(L['tenant'])}» — ${str(u['name'])}', ws);
+    await Store.I.save(log: '🗑 حذفت عقد ${str(L['tenant'])} — ${str(u['name'])}');
+  }
+  static Future<void> delUnit(Obj u, String ws) async {
+    final id = u['id']; final nm = str(u['name']); final lids = objs(u['leases']).map((l) => l['id']).toList();
+    final gk = <String>[for (final i in objs(u['inst'])) if (truthy(i['gid'])) 'i${i['gid']}', 'f$id', 'c$id'];
+    final parts = <Map<String, dynamic>>[];
+    void rm(String c, bool Function(Obj) drop) {
+      final l = lst(S[c]).toList(); final keep = <dynamic>[];
+      for (var i = 0; i < l.length; i++) { final x = obj(l[i]); if (x != null && drop(x)) { parts.add({'c': c, 'i': i, 'o': x}); } else { keep.add(l[i]); } }
+      if (S.containsKey(c) || keep.isNotEmpty) S[c] = keep;
+    }
+    rm('units', (x) => x['id'] == id);
+    rm('exp', (x) => x['u'] == id);
+    rm('tx', (x) => x['u'] == id);
+    rm('adj', (x) => x['u'] == id || ((x['g'] == str(u['g']) || x['g'] == null) && x['w'] is String && str(x['w']).startsWith('تمويل ') && str(x['w']).contains(' $nm من أموالي')));
+    rm('dep', (x) => x['uid'] == id || lids.contains(x['lid']));
+    for (final a in objs(S['adj'])) {
+      if (truthy(a['ref']) && gk.contains(a['ref']) && truthy(a['gcAdj'])) {
+        if (truthy(u['g'])) { final gc = _ensureMap(S, 'gc'); gc[str(u['g'])] = _num(n0(gc[str(u['g'])]) + n(a['gcAdj'])); } else { S['cash'] = _num(n0(S['cash']) + n(a['gcAdj'])); }
+      }
+    }
+    rm('adj', (x) => truthy(x['ref']) && gk.contains(x['ref']));
+    final gp = S['gp']; if (gp is Map) { for (final g in gp.keys.toList()) { gp[g] = lst(gp[g]).where((x) => !(x is Map && (gk.contains(x['key']) || x['w'] == 'فلوس شراكة لـ $nm'))).toList(); } }
+    toTrash(parts, 'استديو «$nm»${parts.length > 1 ? ' (+${parts.length - 1})' : ''}', ws);
+    await Store.I.save(log: '🗑 حذفت الاستديو $nm');
+  }
+
   /// الأرقام الصحيحة تتكتب int (زي JS)
   static num _num(double v) => v == v.roundToDouble() && v.abs() < 9e15 ? v.toInt() : v;
   static String _fmt(double v) { final r = v.round(); final s = r.abs().toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ','); return r < 0 ? '-$s' : s; }
