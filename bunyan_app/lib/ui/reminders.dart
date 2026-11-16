@@ -29,7 +29,7 @@ class _RemindersPageState extends State<RemindersPage> {
       appBar: AppBar(title: const Text('⏰ تذكيراتي'), actions: [IconButton(tooltip: 'جرّب إشعار', onPressed: () => Rem.test(), icon: const Icon(Icons.notifications_active))]),
       floatingActionButton: FloatingActionButton.extended(onPressed: () => _edit(null), icon: const Icon(Icons.add_alarm), label: const Text('تذكير جديد')),
       body: ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 90), children: [
-        FutureBuilder<bool>(future: Rem.oldInstalled(), builder: (_, s) => s.data == true ? const Card(color: Color(0xFFFFF4E0), child: Padding(padding: EdgeInsets.all(12), child: Text('ℹ️ الإشعارات بتيجي من بنيان القديم دلوقتي علشان متجيش مرتين — لما تمسح القديم، التطبيق ده هو اللي هيرن لوحده.', style: TextStyle(height: 1.6))))) : const SizedBox()),
+        FutureBuilder<bool>(future: Rem.oldInstalled(), builder: (_, s) => s.data == true ? const Card(color: Color(0xFFFFF4E0), child: Padding(padding: EdgeInsets.all(12), child: Text('ℹ️ الإشعارات بتيجي من بنيان القديم دلوقتي علشان متجيش مرتين — لما تمسح القديم، التطبيق ده هو اللي هيرن لوحده.', style: TextStyle(height: 1.6)))) : const SizedBox()),
         if (rs.isEmpty) const Padding(padding: EdgeInsets.all(30), child: Text('مفيش تذكيرات', textAlign: TextAlign.center)),
         for (final r in rs) Builder(builder: (_) {
           final at = Rem.nextAt(r); final past = r['rp'] == 'once' && at <= now; final d = DateTime.fromMillisecondsSinceEpoch(at);
