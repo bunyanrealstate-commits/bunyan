@@ -525,4 +525,30 @@ class Engine {
     r.sort((a, b) => (a['n'] as int).compareTo(b['n'] as int));
     return r;
   }
+
+  /* ───── المحاكي: أفتح استديو جديد؟ (sim/simEv) ───── */
+  List<Map<String, dynamic>> simEv(Map s) {
+    final t = today(); final f = (n0(s['share']) != 0 ? n0(s['share']) : 100) / 100; final ev = <Map<String, dynamic>>[];
+    final nn = math.max(1, n0(s['n']).truncate()); final fi = n0(s['fi']), total = n0(s['total']), cm = n0(s['cm']); final rest = math.max(0.0, total - fi);
+    ev.add({'d': t, 'a': -fi * f});
+    for (var i = 1; i < nn; i++) { ev.add({'d': addM(t, (i * cm / nn).round()), 'a': -rest / (nn - 1) * f}); }
+    if (truthy(s['furn'])) ev.add({'d': t, 'a': -n0(s['furn']) * f});
+    for (var i = 0; i < n0(s['rm']); i++) { ev.add({'d': addM(t, 1 + i), 'a': n0(s['rent']) * f}); }
+    if (truthy(s['salv'])) ev.add({'d': addM(t, cm), 'a': n0(s['salv']) * f});
+    return ev;
+  }
+  static List<Map<String, dynamic>> _ssort(List<Map<String, dynamic>> l) { final ix = {for (var i = 0; i < l.length; i++) l[i]: i}; l.sort((a, b) { final c = (a['d'] as DateTime).compareTo(b['d'] as DateTime); return c != 0 ? c : ix[a]!.compareTo(ix[b]!); }); return l; }
+  Map<String, dynamic> sim(Map s) {
+    final f = n0(s['share']) / 100, t = today();
+    final sev = _ssort(simEv(s)); final base = _ssort(events());
+    final fi = n0(s['fi']), furn = n0(s['furn']), total = n0(s['total']), cm = n0(s['cm']), rent = n0(s['rent']), rm = n0(s['rm']), salv = n0(s['salv']);
+    final inj = math.min(math.max(0.0, n0(s['me'])), (fi + furn) * f);
+    final pw = project(_ssort([...sev, ...base, if (inj != 0) {'d': t, 'a': inj, 'l': 'من أموالي الخاصة'}])); final pb = project(base);
+    final res = n0(S['res']); final ok = (pw['min'] as double) >= res;
+    final tp = S['tp'] == null ? 25.0 : n0(S['tp']);
+    final up = (fi + furn) * f, gain = (rent * rm - total - furn + salv) * f, mavg = gain / math.max(1, cm), roi = up > 0 ? gain / up * 100 : 0.0;
+    final mr = (total + furn - salv) * (1 + tp / 100) / math.max(1, cm);
+    var pay = 0; { var c = 0.0, lo = 0.0, dn = false, done = false; for (final e in sev) { c += e['a'] as double; if (c < lo) lo = c; if (c < 0) dn = true; if (dn && c >= 0) { pay = math.max(0, ((ms(e['d'] as DateTime) - ms(t)) / 2629800000).round()); done = true; break; } } if (!done) pay = lo < 0 ? -1 : 0; }
+    return {'ok': ok, 'has': total > 0 && rent > 0, 'up': up, 'gain': gain, 'mavg': mavg, 'roi': roi, 'mr': mr, 'pay': pay, 'inj': inj, 'res': res, 'tp': tp, 'pw': pw, 'pb': pb, 'low': gain < up * tp / 100};
+  }
 }
