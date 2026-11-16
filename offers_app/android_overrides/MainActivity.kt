@@ -30,7 +30,8 @@ class MainActivity : FlutterActivity() {
                 "autoTake" -> { val r = Auto.arr(this, "res").toString(); Auto.put(this, "res", "[]"); res.success(r) }
                 "autoSeen" -> res.success(Auto.obj(this, "seen").toString())
                 "notifOn" -> res.success((android.provider.Settings.Secure.getString(contentResolver, "enabled_notification_listeners") ?: "").contains(packageName))
-                "notifPerm" -> { try { startActivity(Intent("android.settings.NOTIFICATION_LISTENER_SETTINGS")); res.success(true) } catch (e: Exception) { res.success(false) } }
+                "notifPerm" -> res.success(notifPerm())
+                "appInfo" -> { try { startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))); res.success(true) } catch (e: Exception) { res.success(false) } }
                 "perms" -> { val l = ArrayList<String>(); if (Build.VERSION.SDK_INT >= 33) { l.add("android.permission.POST_NOTIFICATIONS"); l.add("android.permission.READ_MEDIA_IMAGES") } else l.add(android.Manifest.permission.READ_EXTERNAL_STORAGE)
                     val need = l.filter { checkSelfPermission(it) != android.content.pm.PackageManager.PERMISSION_GRANTED }; if (need.isNotEmpty() && Build.VERSION.SDK_INT >= 23) requestPermissions(need.toTypedArray(), 56); res.success(need.isEmpty()) }
                 "wa" -> res.success(wa(call.argument<String>("phone") ?: "", call.argument<String>("text") ?: "", call.argument<List<String>>("uris") ?: listOf()))
@@ -38,6 +39,21 @@ class MainActivity : FlutterActivity() {
             }
         }
     }
+    /** يفتح صفحة السماح بالإشعارات — بيجرب أكتر من طريقة علشان أجهزة هونر/هواوي */
+    private fun notifPerm(): String {
+        val cn = android.content.ComponentName(this, WaListener::class.java).flattenToString()
+        val tries = ArrayList<Intent>()
+        if (Build.VERSION.SDK_INT >= 30) tries.add(Intent("android.settings.NOTIFICATION_LISTENER_DETAIL_SETTINGS").putExtra("android.provider.extra.NOTIFICATION_LISTENER_COMPONENT_NAME", cn))
+        tries.add(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
+        tries.add(Intent("android.settings.NOTIFICATION_LISTENER_SETTINGS"))
+        tries.add(Intent().setClassName("com.android.settings", "com.android.settings.Settings\$NotificationAccessSettingsActivity"))
+        tries.add(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
+        for ((i, t) in tries.withIndex()) {
+            try { t.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); startActivity(t); return if (i == tries.size - 1) "app" else "ok" } catch (_: Exception) {}
+        }
+        return "fail"
+    }
+
     private var pend: MethodChannel.Result? = null
     private fun contacts(res: MethodChannel.Result) {
         if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(android.Manifest.permission.READ_CONTACTS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {

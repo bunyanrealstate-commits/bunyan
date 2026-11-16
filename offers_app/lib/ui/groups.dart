@@ -13,7 +13,7 @@ class GroupsPage extends StatefulWidget {
 }
 
 class _GroupsState extends State<GroupsPage> with WidgetsBindingObserver {
-  bool on = false, loading = true;
+  bool on = false, loading = true, tried = false;
   Map<String, Map> seen = {};
   String q = '';
 
@@ -27,6 +27,14 @@ class _GroupsState extends State<GroupsPage> with WidgetsBindingObserver {
   Future<void> _load() async {
     final o = await AutoUpd.on(), s = await AutoUpd.seen();
     if (mounted) setState(() { on = o; seen = s; loading = false; });
+  }
+
+  Future<void> _perm() async {
+    String r = 'fail';
+    try { r = await Native.ch.invokeMethod<String>('notifPerm') ?? 'fail'; } catch (e) { r = 'fail'; }
+    if (!mounted) return;
+    setState(() => tried = true);
+    if (r == 'fail') toast(context, '⚠️ الموبايل مفتحش الإعدادات — اتبع الخطوات اللي تحت');
   }
 
   Future<void> _toggle(String g, bool b) async {
@@ -58,8 +66,15 @@ class _GroupsState extends State<GroupsPage> with WidgetsBindingObserver {
           leading: Icon(on ? Icons.check_circle : Icons.notifications_active_outlined, color: on ? kOk : kGold),
           title: Text(on ? 'شغال — بيتابع جروبات الشركات' : 'خطوة واحدة: اسمح للتطبيق يشوف إشعارات الواتساب', style: const TextStyle(fontWeight: FontWeight.w800)),
           subtitle: Text(on ? 'الأبديت بيتقري لوحده ويتحدث في الفلل. لازم إشعارات الجروب تكون شغالة (لو مكتوم الواتساب مبيبعتش إشعار — خليه صامت بدل الكتم)' : 'دوس هنا ← دوّر على «عروض الشقق» ← شغّله ← وارجع'),
-          onTap: on ? null : () async { await Native.ch.invokeMethod('notifPerm'); },
+          onTap: on ? null : _perm,
         )),
+        if (!on && tried) Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('لو مالقيتش «عروض الشقق» أو الزرار رمادي ومش بيرضى يتشغل:', style: TextStyle(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 6),
+          const Text('1) دوس الزرار تحت يفتحلك «معلومات التطبيق»\n2) دوس النقط الـ3 ⋮ فوق على الشمال\n3) اختار «السماح بالإعدادات المقيدة» (Allow restricted settings)\n4) ارجع هنا ودوس الكارت الأصفر تاني'),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(onPressed: () async { try { await Native.ch.invokeMethod('appInfo'); } catch (_) {} }, icon: const Icon(Icons.info_outline), label: const Text('افتح معلومات التطبيق')),
+        ]))),
         const SizedBox(height: 8),
         const Text('علّم جروبات الشركات (بيظهر هنا أي جروب يجيلك منه رسالة):', style: TextStyle(fontWeight: FontWeight.w800)),
         const SizedBox(height: 6),
