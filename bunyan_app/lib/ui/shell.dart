@@ -120,7 +120,7 @@ class _ShellState extends State<Shell> {
       DropdownMenuItem(value: '__m', child: Text(Tr.t('⚙ إدارة المجموعات'))),
     ];
     return Container(
-      height: 40, padding: const EdgeInsets.symmetric(horizontal: 12), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF0F766E), Color(0xFF14B8A6)]), borderRadius: BorderRadius.circular(99), boxShadow: const [BoxShadow(color: Color(0x330D9488), blurRadius: 10, offset: Offset(0, 3))]),
+      height: 40, padding: const EdgeInsets.symmetric(horizontal: 12), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF0D9488), Color(0xFF34D399)]), borderRadius: BorderRadius.circular(99), boxShadow: const [BoxShadow(color: Color(0x330D9488), blurRadius: 10, offset: Offset(0, 3))]),
       child: DropdownButtonHideUnderline(child: DropdownButton<String>(
         value: items.any((x) => x.value == cur) ? cur : null, isExpanded: true, dropdownColor: Colors.white, iconEnabledColor: Colors.white, style: const TextStyle(fontSize: 14, color: kInk, fontWeight: FontWeight.w700, fontFamily: 'Plex'),
         selectedItemBuilder: (_) => [for (final it in items) Align(alignment: AlignmentDirectional.centerStart, child: Text(it.value == '-' ? Tr.t('بدون مجموعة') : it.value == '__m' ? '' : str(gs.where((g) => g['id'] == it.value).firstOrNull?['name']), overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14)))],
