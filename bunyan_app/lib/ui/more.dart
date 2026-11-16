@@ -14,6 +14,7 @@ import 'sim.dart';
 import 'contract.dart';
 import 'ai.dart';
 import 'monitor.dart';
+import 'upd.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
@@ -34,6 +35,7 @@ class MorePage extends StatelessWidget {
       Card(child: ListTile(leading: const Text('⏰', style: TextStyle(fontSize: 22)), title: const Text('تذكيراتي'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RemindersPage())))),
       Card(child: ListTile(leading: const Text('📂', style: TextStyle(fontSize: 22)), title: const Text('المجموعات والشراكة'), subtitle: const Text('فلوس الشراكة، الشركاء، طريقة الحساب'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GroupsPage())))),
       Card(child: ListTile(leading: const Text('🔮', style: TextStyle(fontSize: 22)), title: const Text('التوقعات — الرصيد سنة قدام'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ForecastPage())))),
+      Card(child: ListTile(leading: const Text('📢', style: TextStyle(fontSize: 22)), title: const Text('الأبديت (صورة الإعلان)'), subtitle: const Text('نفس قايمة القديم — بتتزامن معاه'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const UpdPage())))),
       Card(child: ListTile(leading: const Text('📝', style: TextStyle(fontSize: 22)), title: const Text('عقد العميل (PDF)'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ContractPage())))),
       Card(child: ListTile(leading: const Text('🧮', style: TextStyle(fontSize: 22)), title: const Text('المحاكي — أفتح استديو جديد؟'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SimPage())))),
       Card(child: ListTile(leading: const Text('🛡', style: TextStyle(fontSize: 22)), title: const Text('المراقب والشكاوى'), subtitle: const Text('فحص البيانات + «مش عاجبني»'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MonitorPage())))),

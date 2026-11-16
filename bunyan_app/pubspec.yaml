@@ -17,6 +17,7 @@ dependencies:
   timezone: ^0.9.4
   crypto: ^3.0.5
   printing: ^5.13.2
+  share_plus: ^10.1.4
 dev_dependencies:
   flutter_test:
     sdk: flutter
