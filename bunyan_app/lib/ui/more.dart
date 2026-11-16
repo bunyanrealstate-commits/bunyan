@@ -8,6 +8,7 @@ import 'reminders.dart';
 import 'trash.dart';
 import 'accounts.dart';
 import 'dialogs.dart';
+import 'cheques.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
@@ -23,6 +24,7 @@ class MorePage extends StatelessWidget {
         isThreeLine: true,
       )),
       Card(child: ListTile(leading: const Text('📒', style: TextStyle(fontSize: 22)), title: const Text('الحسابات'), subtitle: const Text('الرصيد، التأمينات، قفل الشهور، الدفتر'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AccountsPage())))),
+      Card(child: ListTile(leading: const Text('📑', style: TextStyle(fontSize: 22)), title: const Text('الشيكات اللي معايا'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChequesPage())))),
       Card(child: ListTile(leading: const Text('⏰', style: TextStyle(fontSize: 22)), title: const Text('تذكيراتي'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RemindersPage())))),
       Card(child: ListTile(leading: const Text('📂', style: TextStyle(fontSize: 22)), title: const Text('المجموعات والشراكة'), subtitle: const Text('فلوس الشراكة، الشركاء، طريقة الحساب'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GroupsPage())))),
       Card(child: ListTile(leading: const Text('🔮', style: TextStyle(fontSize: 22)), title: const Text('التوقعات — الرصيد سنة قدام'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ForecastPage())))),

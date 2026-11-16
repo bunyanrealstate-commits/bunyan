@@ -55,6 +55,9 @@ class Store extends ChangeNotifier {
   String? _prev;
   String _snap() { final o = Map<String, dynamic>.from(S)..remove('hist')..remove('aiMem')..remove('tab'); return jsonOut(o); }
   void resetPrev() => _prev = _snap();
+  /// «بعدين» في التجديد — نفس rnLater (3 أيام)
+  bool snz(String key) => n0(obj(cfg['snz'])?[key]) > DateTime.now().millisecondsSinceEpoch;
+  Future<void> snooze(String key) async { final m = Map<String, dynamic>.from(obj(cfg['snz']) ?? {}); m[key] = DateTime.now().millisecondsSinceEpoch + 3 * 86400000; cfg['snz'] = m; await _saveCfg(); notifyListeners(); }
   bool canUndo(Map e) => e['rev'] != true && str(e['ch']) != '[]';
   Future<void> undo(Map e) async {
     if (!canUndo(e)) return;

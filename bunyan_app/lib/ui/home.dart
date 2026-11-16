@@ -7,6 +7,30 @@ import 'shell.dart';
 import 'units.dart';
 import 'dialogs.dart';
 import '../core/actions.dart';
+import 'lease_edit.dart';
+
+/// 🔄 عقود قربت تخلص — هتجدد؟ (renewCard)
+class _Renew extends StatelessWidget {
+  final Engine e;
+  const _Renew(this.e);
+  @override
+  Widget build(BuildContext context) {
+    final R = e.renewList(Store.I.snz);
+    if (R.isEmpty) return const SizedBox.shrink();
+    return Padding(padding: const EdgeInsets.only(top: 10), child: Card(color: const Color(0xFFFFF7E6), child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text('🔄 عقود قربت تخلص — هتجدد؟', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
+      for (final x in R) Padding(padding: const EdgeInsets.only(top: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('${str((x['L'] as Obj)['tenant']).isEmpty ? 'مستأجر' : str((x['L'] as Obj)['tenant'])} — ${str((x['u'] as Obj)['name'])}', style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text('${(x['n'] as int) > 0 ? 'بيخلص بعد ${x['n']} يوم' : (x['n'] == 0 ? 'بيخلص النهارده' : 'خلص من ${-(x['n'] as int)} يوم')} • ${iso(x['e'] as DateTime)}', style: const TextStyle(fontSize: 12, color: kMuted)),
+        Wrap(spacing: 6, children: [
+          FilledButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => LeaseEdit(x['u'] as Obj, null, renew: x['L'] as Obj))), child: const Text('🔄 تجديد')),
+          OutlinedButton(onPressed: () async { final u = x['u'] as Obj, L = x['L'] as Obj; L['rn'] = 'offer'; u['offer'] = iso(x['e'] as DateTime); await Store.I.save(log: '📢 الاستديو ${str(u['name'])} معروض للإيجار من ${u['offer']}'); if (context.mounted) toast(context, 'اتعلم إن الاستديو معروض للإيجار'); }, child: const Text('📢 أعرض الاستديو')),
+          TextButton(onPressed: () => Store.I.snooze('${(x['u'] as Obj)['id']}_${x['k']}'), child: const Text('بعدين')),
+        ]),
+      ])),
+    ]))));
+  }
+}
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -45,6 +69,7 @@ class HomePage extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(child: _Stat('⏳ أيام فاضية جاية', -lf, sub: 'لو ما اتأجرتش')),
         ])); }),
+      _Renew(e),
       const SizedBox(height: 14),
       _Upcoming(e),
       const SizedBox(height: 10),

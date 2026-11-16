@@ -463,4 +463,23 @@ class Engine {
     final f = sh(u);
     return {'D': D, 'c': c * f, 'free': free, 'freeVal': preVal * f, 'gaps': G, 'vac': G.fold<int>(0, (s, x) => s + (x['dys'] as int)), 'lossPast': G.fold<double>(0, (s, x) => s + (x['lossPast'] as double)) * f, 'lossFut': G.fold<double>(0, (s, x) => s + (x['lossFut'] as double)) * f};
   }
+
+  /* ───── عقود قربت تخلص (renewList) — snz = أيام التأجيل ───── */
+  List<Map<String, dynamic>> renewList(bool Function(String key) snz) {
+    final r = <Map<String, dynamic>>[]; final t = today();
+    for (final u in SU()) {
+      final ls = objs(u['leases']);
+      for (var k = 0; k < ls.length; k++) {
+        final L = ls[k]; if (truthy(L['exit']) || truthy(L['rn'])) continue;
+        final e = lend(L); final nd = ((ms(e) - ms(t)) / 864e5).round();
+        final span = (ms(e) - ms(pd(L['start']))) / 864e5; final win = math.max(5, math.min(45, (span * 0.25).round()));
+        if (nd < -3 || nd > win) continue;
+        if (ls.any((M) => !identical(M, L) && !pd(M['start']).isBefore(addM(e, -1)) && !truthy(M['exit']))) continue;
+        if (snz('${u['id']}_$k')) continue;
+        r.add({'u': u, 'L': L, 'k': k, 'n': nd, 'e': e});
+      }
+    }
+    r.sort((a, b) => (a['n'] as int).compareTo(b['n'] as int));
+    return r;
+  }
 }

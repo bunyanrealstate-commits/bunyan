@@ -9,8 +9,8 @@ import 'dialogs.dart';
 
 /// عقد مستأجر جديد / تعديل — نفس شاشة «📄 عقد مستأجر جديد» في القديم
 class LeaseEdit extends StatefulWidget {
-  final Obj u; final int? k;
-  const LeaseEdit(this.u, this.k, {super.key});
+  final Obj u; final int? k; final Obj? renew;
+  const LeaseEdit(this.u, this.k, {super.key, this.renew});
   @override
   State<LeaseEdit> createState() => _LeaseEditState();
 }
@@ -43,7 +43,13 @@ class _LeaseEditState extends State<LeaseEdit> {
       f.m0 = (sch.isNotEmpty && f.rent > 0) ? (n0(sch[0]['a']) / f.rent * 100).round() / 100 : 1;
     } else {
       f..start = Act.td()..cmo = 6..firstPaid = true..chqOn = true..dk = '';
+      final R = widget.renew;
+      if (R != null) { // نفس rnRenew: نفس المستأجر والإيجار ويبدأ من نهاية العقد القديم
+        final mo = truthy(R['orig']) ? n(R['orig']) : (truthy(R['months']) ? n(R['months']) : 12);
+        f..tenant = str(R['tenant'])..phone = str(R['phone'])..start = iso(Engine.lend(R))..rent = n0(R['rent'])..day = truthy(R['day']) ? str(R['day']) : ''..cmo = mo.toDouble();
+      }
       f.m0 = LeaseB.sugM(pd(f.start), LeaseB.payDay(f.start, f.day));
+      if (R != null) _rebuild();
     }
     c = {
       'tenant': TextEditingController(text: f.tenant), 'phone': TextEditingController(text: f.phone), 'tid': TextEditingController(text: f.tid), 'nat': TextEditingController(text: f.nat),

@@ -7,6 +7,7 @@ import 'shell.dart';
 import '../core/actions.dart';
 import 'dialogs.dart';
 import 'lease_edit.dart';
+import 'cheques.dart';
 import 'unit_edit.dart';
 
 class UnitsPage extends StatelessWidget {
@@ -132,6 +133,9 @@ class _UnitDetailState extends State<UnitDetail> {
           if (!truthy(L['exit'])) const PopupMenuItem(value: 'stop', child: Text('⛔ وقف العقد (خروج المستأجر)')),
           if (truthy(L['exit'])) const PopupMenuItem(value: 'resume', child: Text('▶️ استئناف العقد')),
           if (truthy(L['exit']) && n0(L['pen']) > 0) PopupMenuItem(value: 'pen', child: Text(truthy(L['penp']) ? '↩️ لغي استلام الشرط الجزائي' : '💰 استلمت الشرط الجزائي')),
+          const PopupMenuItem(value: 'renew', child: Text('🔄 تجديد العقد (عقد جديد بعده)')),
+          const PopupMenuItem(value: 'chq', child: Text('📑 شيك جديد')),
+          if (_depOf(L) != null && !truthy(_depOf(L)!['r'])) PopupMenuItem(value: 'refund', child: Text('🔐 رد التأمين (${money(n0(_depOf(L)!['a']))})')),
           const PopupMenuItem(value: 'del', child: Text('🗑 حذف العقد', style: TextStyle(color: kRed))),
         ], onSelected: (v) => _leaseMenu(k, v)),
         IconButton(tooltip: 'تعديل العقد', icon: const Icon(Icons.edit_outlined), onPressed: () async {
@@ -145,6 +149,9 @@ class _UnitDetailState extends State<UnitDetail> {
       if (truthy(L['phone'])) Text(str(L['phone']), style: const TextStyle(color: kMuted)),
       _kv('من', '${str(L['start'])} لـ ${iso(Engine.lend(L))}'),
       _kv('الإيجار', money(n0(L['rent']))),
+      if (_depOf(L) != null) _kv('🔐 التأمين', '${money(n0(_depOf(L)!['a']))} ${str(_depOf(L)!['mode']) == 'chq' ? '(شيك ضمان)' : 'كاش'}${truthy(_depOf(L)!['r']) ? ' • اترد ${_depOf(L)!['r']}' : ''}'),
+      for (final (q, c) in Chq.list(L).indexed) InkWell(onTap: () async { await Chq.edit(context, L, q); if (mounted) setState(() {}); }, onLongPress: () async { await Chq.del(context, L, q); if (mounted) setState(() {}); },
+        child: Padding(padding: const EdgeInsets.symmetric(vertical: 2), child: Text('📑 ${str(c['no']).isEmpty ? 'شيك' : 'شيك ${c['no']}'} • ${c['d']} • ${money(n0(c['a']))}', style: const TextStyle(fontSize: 12, color: kMuted)))),
       const Divider(),
       const Text('دوس على الشهر علشان تسجّل إنه اتدفع', style: TextStyle(color: kMuted, fontSize: 12)),
       for (var i = 0; i < Engine.months(L); i++) Builder(builder: (_) {
@@ -159,8 +166,21 @@ class _UnitDetailState extends State<UnitDetail> {
     ])));
   }
 
+  Obj? _depOf(Obj L) { final D = objs(Store.I.S['dep']); return D.where((x) => x['lid'] == L['id'] && !truthy(x['r'])).firstOrNull ?? D.where((x) => x['lid'] == L['id']).firstOrNull; }
+
   Future<void> _leaseMenu(int k, String v) async {
     final L = objs(u['leases'])[k];
+    if (v == 'renew') { Navigator.of(context).push(MaterialPageRoute(builder: (_) => LeaseEdit(u, null, renew: L))); return; }
+    if (v == 'chq') { await Chq.edit(context, L, null); if (mounted) setState(() {}); return; }
+    if (v == 'refund') {
+      final d = _depOf(L)!;
+      final o = await formDlg(context, 'رد التأمين — ${str(L['tenant'])}', [FieldSpec('r', 'تاريخ الرد', type: 'd', v: Act.td())]);
+      if (o == null) return;
+      d['r'] = truthy(o['r']) ? o['r'] : Act.td(); d['rat'] = str(d['mode']) == 'chq' ? 0 : Act.now();
+      await Store.I.save(log: '🔐 رديت التأمين ${money(n0(d['a']))} — ${str(L['tenant'])}');
+      if (mounted) { setState(() {}); toast(context, '✅ اتسجل رد التأمين'); }
+      return;
+    }
     final ds = [str(L['start']), for (final i in Engine.rcv(L)) iso(Engine.payD(L, i))];
     if (!await lockOk(context, ds) || !mounted) return;
     if (v == 'stop') {
