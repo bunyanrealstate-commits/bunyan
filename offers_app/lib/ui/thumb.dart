@@ -4,9 +4,9 @@ import '../core/media.dart';
 import 'theme.dart';
 
 /// صورة مصغّرة لفيديو من الألبوم
-class Thumb extends StatelessWidget {
+class VThumb extends StatelessWidget {
   final String? id; final double w, h; final Widget? badge;
-  const Thumb(this.id, {super.key, this.w = 86, this.h = 86, this.badge});
+  const VThumb(this.id, {super.key, this.w = 86, this.h = 86, this.badge});
   @override
   Widget build(BuildContext context) {
     final box = ClipRRect(borderRadius: BorderRadius.circular(12), child: SizedBox(width: w, height: h, child: id == null

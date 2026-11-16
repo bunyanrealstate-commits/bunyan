@@ -38,7 +38,7 @@ class _VillasState extends State<VillasPage> {
     final us = objs(v['units']); final av = us.where((u) => u['avail'] != false).length;
     final first = us.expand((u) => ((u['videos'] as List?) ?? []).map(str)).firstOrNull;
     return Card(child: InkWell(borderRadius: BorderRadius.circular(16), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => VillaPage(str(v['id'])))), child: Padding(padding: const EdgeInsets.all(10), child: Row(children: [
-      Thumb(first, w: 64, h: 64), const SizedBox(width: 10),
+      VThumb(first, w: 64, h: 64), const SizedBox(width: 10),
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('${str(v['name'])} ${str(v['no'])}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15.5)),
         Text([str(v['company']), str(v['area'])].where((x) => x.isNotEmpty).join(' • '), style: const TextStyle(color: kMuted, fontSize: 12.5)),
@@ -90,7 +90,7 @@ class VillaPage extends StatelessWidget {
             Row(children: [Text('الشقق (${us.length})', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)), const Spacer(), TextButton.icon(onPressed: () => editUnit(context, v, null), icon: const Icon(Icons.add), label: const Text('شقة'))]),
             for (final u in us) Card(child: ListTile(
               contentPadding: const EdgeInsets.fromLTRB(10, 4, 4, 4),
-              leading: Thumb(((u['videos'] as List?) ?? []).map(str).firstOrNull, w: 54, h: 54),
+              leading: VThumb(((u['videos'] as List?) ?? []).map(str).firstOrNull, w: 54, h: 54),
               title: Text('${typeName(u['type'])}${str(u['no']).isNotEmpty ? ' • ${u['no']}' : ''}${floorName(u['floor']).isNotEmpty ? ' • ${floorName(u['floor'])}' : ''}', style: TextStyle(fontWeight: FontWeight.w800, decoration: u['avail'] == false ? TextDecoration.lineThrough : null)),
               subtitle: Text('${Price.text(u)}${str(u['note']).isNotEmpty ? '\n📝 ${u['note']}' : ''}', style: const TextStyle(fontSize: 12.5)),
               trailing: Switch(value: u['avail'] != false, activeColor: kOk, onChanged: (b) { u['avail'] = b; Store.I.save(); }),

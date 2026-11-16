@@ -48,7 +48,7 @@ class _SearchState extends State<SearchPage> {
     final v = x['v'] as Obj, u = x['u'] as Obj; final key = '${v['id']}/${u['id']}'; final on = picked.contains(key);
     final vids = (u['videos'] as List?)?.map(str).toList() ?? [];
     return Card(color: on ? const Color(0xFFE3F4F5) : null, child: InkWell(borderRadius: BorderRadius.circular(16), onTap: () => setState(() => on ? picked.remove(key) : picked.add(key)), child: Padding(padding: const EdgeInsets.all(10), child: Row(children: [
-      Thumb(vids.isEmpty ? null : vids.first, badge: vids.length > 1 ? Container(padding: const EdgeInsets.symmetric(horizontal: 6), decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)), child: Text('${vids.length}', style: const TextStyle(color: Colors.white, fontSize: 12))) : null),
+      VThumb(vids.isEmpty ? null : vids.first, badge: vids.length > 1 ? Container(padding: const EdgeInsets.symmetric(horizontal: 6), decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)), child: Text('${vids.length}', style: const TextStyle(color: Colors.white, fontSize: 12))) : null),
       const SizedBox(width: 10),
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('${typeName(u['type'])}${str(u['no']).isNotEmpty ? ' • شقة ${u['no']}' : ''}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15.5)),

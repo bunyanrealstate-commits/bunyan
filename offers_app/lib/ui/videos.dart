@@ -102,7 +102,7 @@ class _VideosState extends State<VideosPage> {
               return GestureDetector(onTap: () => _toggle(a.id), child: Container(
                 decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), border: Border.all(color: mine ? kAc : (o != null ? kOk : Colors.transparent), width: 3)),
                 child: Stack(fit: StackFit.expand, children: [
-                  Thumb(a.id, w: double.infinity, h: double.infinity),
+                  VThumb(a.id, w: double.infinity, h: double.infinity),
                   Positioned(bottom: 4, right: 4, child: Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1), decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)), child: Text(Media.dur(a.duration), style: const TextStyle(color: Colors.white, fontSize: 11)))),
                   if (o != null) Positioned(top: 4, left: 4, child: Container(padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1), decoration: BoxDecoration(color: mine ? kAc : kOk, borderRadius: BorderRadius.circular(8)), child: Text(str(o['no']).isEmpty ? typeName(o['type']) : str(o['no']), style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)))),
                 ]),
