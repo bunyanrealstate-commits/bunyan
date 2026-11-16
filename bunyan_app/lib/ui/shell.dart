@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'i18n.dart';
 import '../core/store.dart';
 import '../core/js.dart';
 import 'theme.dart';
@@ -52,7 +53,7 @@ class _ShellState extends State<Shell> {
     if (!st.linked && lst(st.S['units']).isEmpty) return const LinkScreen();
     final pages = [const HomePage(), const UnitsPage(), const ExpensesPage(), const MorePage()];
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: L.dir,
       child: Scaffold(
         appBar: AppBar(
           title: Row(children: [
@@ -62,7 +63,7 @@ class _ShellState extends State<Shell> {
           ]),
           actions: [
             IconButton(
-              tooltip: 'مزامنة',
+              tooltip: L.t('مزامنة'),
               onPressed: st.syncing ? null : () async { final m = await st.sync(); if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m))); },
               icon: st.syncing ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(Icons.sync, color: st.cfg['dirty'] == true ? kTerra : kGreen),
             ),
@@ -72,11 +73,11 @@ class _ShellState extends State<Shell> {
         bottomNavigationBar: NavigationBar(
           selectedIndex: tab,
           onDestinationSelected: (i) => setState(() => tab = i),
-          destinations: const [
-            NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'الداشبورد'),
-            NavigationDestination(icon: Icon(Icons.apartment_outlined), selectedIcon: Icon(Icons.apartment), label: 'الوحدات'),
-            NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: 'المصاريف'),
-            NavigationDestination(icon: Icon(Icons.more_horiz), label: 'المزيد'),
+          destinations: [
+            NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: L.t('الداشبورد')),
+            NavigationDestination(icon: Icon(Icons.apartment_outlined), selectedIcon: Icon(Icons.apartment), label: L.t('الوحدات')),
+            NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: L.t('المصاريف')),
+            NavigationDestination(icon: Icon(Icons.more_horiz), label: L.t('المزيد')),
           ],
         ),
       ),

@@ -49,6 +49,7 @@ class Store extends ChangeNotifier {
     }
   }
   Future<void> saveCfg() => _saveCfg();
+  void notify() => notifyListeners();
   Future<void> _saveCfg() async => _p.setString('bny_sync', jsonOut(cfg));
 
   /// أي تعديل: نحفظ ونعلّم إن فيه حاجة لازم تترفع

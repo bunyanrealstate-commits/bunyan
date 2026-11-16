@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'i18n.dart';
 import '../core/store.dart';
 import '../core/engine.dart';
 import '../core/actions.dart';
@@ -17,30 +18,30 @@ class ExpensesPage extends StatelessWidget {
     final total = l.fold(0.0, (s, x) => s + n0(x['a']) * (truthy(x['n']) ? n(x['n']) : 1));
     return Stack(children: [
       ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 90), children: [
-        Card(child: ListTile(title: const Text('إجمالي المصاريف'), trailing: Text(money(total), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: kRed)))),
-        if (l.isEmpty) const Padding(padding: EdgeInsets.all(30), child: Text('مفيش مصاريف', textAlign: TextAlign.center)),
+        Card(child: ListTile(title: Text(L.t('إجمالي المصاريف')), trailing: Text(money(total), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: kRed)))),
+        if (l.isEmpty) Padding(padding: EdgeInsets.all(30), child: Text(L.t('مفيش مصاريف'), textAlign: TextAlign.center)),
         for (final x in l) Card(child: ListTile(
-          title: Text(str(x['w']).isEmpty ? 'مصروف' : str(x['w']), style: const TextStyle(fontWeight: FontWeight.bold)),
+          title: Text(str(x['w']).isEmpty ? L.t('مصروف') : str(x['w']), style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text('${str(x['d'])}${truthy(x['u']) ? '  •  ${str(e.U(x['u'])?['name'])}' : ''}${n0(x['n']) > 1 ? '  •  يتكرر ${str(x['n'])} شهور' : ''}'),
           trailing: Text(money(n0(x['a'])), style: const TextStyle(fontWeight: FontWeight.bold)),
           onTap: () => edit(context, x),
           onLongPress: () async {
             if (!await lockOk(context, [str(x['d'])]) || !context.mounted) return;
-            if (await confirmDlg(context, 'مسح مصروف «${str(x['w'])}»؟ (هيروح لسلة المحذوفات 30 يوم)', ok: 'مسح')) await Act.delExp(x, ws);
+            if (await confirmDlg(context, 'مسح مصروف «${str(x['w'])}»؟ (هيروح لسلة المحذوفات 30 يوم)', ok: L.t('مسح'))) await Act.delExp(x, ws);
           },
         )),
-        if (l.isNotEmpty) const Padding(padding: EdgeInsets.all(8), child: Text('دوس على المصروف تعدّله — ودوس مطوّل تمسحه', textAlign: TextAlign.center, style: TextStyle(color: kMuted, fontSize: 12))),
+        if (l.isNotEmpty) Padding(padding: EdgeInsets.all(8), child: Text(L.t('دوس على المصروف تعدّله — ودوس مطوّل تمسحه'), textAlign: TextAlign.center, style: TextStyle(color: kMuted, fontSize: 12))),
       ]),
-      Positioned(left: 16, bottom: 16, child: FloatingActionButton.extended(onPressed: () => edit(context, null), icon: const Icon(Icons.add), label: const Text('مصروف'))),
+      Positioned(left: 16, bottom: 16, child: FloatingActionButton.extended(onPressed: () => edit(context, null), icon: const Icon(Icons.add), label: Text(L.t('مصروف')))),
     ]);
   }
 
   static Future<void> edit(BuildContext c, Obj? x, {String unitId = ''}) async {
-    final o = await formDlg(c, x == null ? (unitId.isNotEmpty ? 'مصروف على الاستديو' : 'مصروف') : 'تعديل مصروف', [
-      FieldSpec('w', 'البيان (صيانة، كهرباء، عمولة...)', v: x?['w'] ?? ''),
-      FieldSpec('a', 'المبلغ', type: 'n', v: x == null ? '' : str(x['a'])),
-      FieldSpec('d', 'التاريخ', type: 'd', v: x?['d'] ?? Act.td()),
-      FieldSpec('n', 'عدد مرات التكرار شهرياً (1 = مرة واحدة)', type: 'n', v: x == null ? '1' : str(x['n'] ?? 1)),
+    final o = await formDlg(c, x == null ? (unitId.isNotEmpty ? L.t('مصروف على الاستديو') : L.t('مصروف')) : L.t('تعديل مصروف'), [
+      FieldSpec('w', L.t('البيان (صيانة، كهرباء، عمولة...)'), v: x?['w'] ?? ''),
+      FieldSpec('a', L.t('المبلغ'), type: 'n', v: x == null ? '' : str(x['a'])),
+      FieldSpec('d', L.t('التاريخ'), type: 'd', v: x?['d'] ?? Act.td()),
+      FieldSpec('n', L.t('عدد مرات التكرار شهرياً (1 = مرة واحدة)'), type: 'n', v: x == null ? '1' : str(x['n'] ?? 1)),
     ]);
     if (o == null) return;
     final a = double.tryParse(o['a'] ?? '') ?? 0; final nn = int.tryParse(o['n'] ?? '') ?? 1;

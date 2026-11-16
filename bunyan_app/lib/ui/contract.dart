@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'i18n.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import '../core/store.dart';
@@ -45,17 +46,17 @@ class _CtState extends State<ContractPage> {
   }
 
   Future<void> _pdf() async {
-    if (!Ct.hasPaper(S)) { toast(context, 'مفيش نموذج عقد محفوظ — اعمل النموذج مرة واحدة من بنيان القديم'); return; }
+    if (!Ct.hasPaper(S)) { toast(context, L.t('مفيش نموذج عقد محفوظ — اعمل النموذج مرة واحدة من بنيان القديم')); return; }
     late final List<int> bytes;
-    try { bytes = await Printing.convertHtml(format: PdfPageFormat.a4, html: _doc()); } catch (e) { if (mounted) toast(context, 'الـ PDF مش متاح هنا — طلّعه من تطبيق الموبايل'); return; }
+    try { bytes = await Printing.convertHtml(format: PdfPageFormat.a4, html: _doc()); } catch (e) { if (mounted) toast(context, L.t('الـ PDF مش متاح هنا — طلّعه من تطبيق الموبايل')); return; }
     final nm = str(Ct.F(S)['tn']).trim().replaceAll(RegExp(r'\s+'), '-');
     await Printing.sharePdf(bytes: Uint8List.fromList(bytes), filename: 'contract-${nm.isEmpty ? 'contract' : nm}.pdf');
   }
 
   Future<void> _fill() async {
     final e = Engine(S, WS: Ws.I.resolve()); final ls = Ct.leases(S, e);
-    if (ls.isEmpty) { toast(context, 'مفيش عقود مستأجرين'); return; }
-    final p = await pickDlg(context, 'تعبئة من عقد مستأجر', [for (var i = 0; i < ls.length; i++) ['$i', '${str((ls[i]['u'] as Obj)['name'])} — ${str((ls[i]['L'] as Obj)['tenant']).isEmpty ? 'مستأجر' : str((ls[i]['L'] as Obj)['tenant'])}']], '0');
+    if (ls.isEmpty) { toast(context, L.t('مفيش عقود مستأجرين')); return; }
+    final p = await pickDlg(context, L.t('تعبئة من عقد مستأجر'), [for (var i = 0; i < ls.length; i++) ['$i', '${str((ls[i]['u'] as Obj)['name'])} — ${str((ls[i]['L'] as Obj)['tenant']).isEmpty ? 'مستأجر' : str((ls[i]['L'] as Obj)['tenant'])}']], '0');
     if (p == null) return;
     final x = ls[int.parse(p)]; Ct.fill(S, x['u'] as Obj, x['L'] as Obj);
     await Store.I.save(log: '📝 عقد العميل: ${str((x['L'] as Obj)['tenant'])}');
@@ -65,18 +66,18 @@ class _CtState extends State<ContractPage> {
   @override
   Widget build(BuildContext context) {
     final has = Ct.hasPaper(S);
-    return Directionality(textDirection: TextDirection.rtl, child: Scaffold(
-      appBar: AppBar(title: const Text('📝 عقد العميل'), actions: [IconButton(tooltip: 'PDF', icon: const Icon(Icons.picture_as_pdf), onPressed: _pdf)]),
+    return Directionality(textDirection: L.dir, child: Scaffold(
+      appBar: AppBar(title: Text(L.t('📝 عقد العميل')), actions: [IconButton(tooltip: 'PDF', icon: const Icon(Icons.picture_as_pdf), onPressed: _pdf)]),
       body: ListView(padding: const EdgeInsets.all(12), children: [
-        if (!has) const Card(color: Color(0xFFFFF7E6), child: Padding(padding: EdgeInsets.all(12), child: Text('⚠️ نموذج العقد لسه ما اتعملش. اعمله مرة واحدة من بنيان القديم (تبويب عقد العميل) وبعدها تقدر تملاه هنا وتطلّعه PDF.'))),
-        OutlinedButton.icon(onPressed: _fill, icon: const Icon(Icons.person_search), label: const Text('تعبئة من عقد مستأجر قائم')),
+        if (!has) Card(color: Color(0xFFFFF7E6), child: Padding(padding: EdgeInsets.all(12), child: Text(L.t('⚠️ نموذج العقد لسه ما اتعملش. اعمله مرة واحدة من بنيان القديم (تبويب عقد العميل) وبعدها تقدر تملاه هنا وتطلّعه PDF.')))),
+        OutlinedButton.icon(onPressed: _fill, icon: const Icon(Icons.person_search), label: Text(L.t('تعبئة من عقد مستأجر قائم'))),
         const SizedBox(height: 8),
         for (final k in Ct.keys) Padding(padding: const EdgeInsets.only(bottom: 8), child: (k == 'st' || k == 'en')
             ? InkWell(onTap: () async { final d = await showDatePicker(context: context, initialDate: DateTime.tryParse(c[k]!.text) ?? DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime(2040)); if (d != null) { c[k]!.text = iso(d); _set(k, iso(d)); } },
                 child: InputDecorator(decoration: InputDecoration(labelText: Ct.lb[k], border: const OutlineInputBorder(), isDense: true), child: Text(c[k]!.text.isEmpty ? '—' : c[k]!.text)))
             : TextField(controller: c[k], keyboardType: ['mo', 'due', 'rent', 'cx', 'tot'].contains(k) ? TextInputType.number : TextInputType.text, decoration: InputDecoration(labelText: Ct.lb[k], border: const OutlineInputBorder(), isDense: true), onSubmitted: (x) => _set(k, x), onTapOutside: (_) { if (str(Ct.F(S)[k]) != c[k]!.text) _set(k, c[k]!.text); })),
         const SizedBox(height: 8),
-        FilledButton.icon(onPressed: _pdf, icon: const Icon(Icons.share), label: const Text('📄 طلّع PDF وابعته'), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50))),
+        FilledButton.icon(onPressed: _pdf, icon: const Icon(Icons.share), label: Text(L.t('📄 طلّع PDF وابعته')), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50))),
         const SizedBox(height: 12),
         if (has) SizedBox(height: 520, child: PdfPreview(key: ValueKey(v), build: (fmt) => Printing.convertHtml(format: PdfPageFormat.a4, html: _doc()), canChangePageFormat: false, canChangeOrientation: false, canDebug: false, allowPrinting: true, allowSharing: true)),
       ]),

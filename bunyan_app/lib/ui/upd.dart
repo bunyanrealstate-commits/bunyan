@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'i18n.dart';
 import 'package:flutter/rendering.dart';
 import 'package:share_plus/share_plus.dart';
 import '../core/upd.dart';
@@ -20,27 +21,27 @@ class _UpdState extends State<UpdPage> {
   @override
   void initState() { super.initState(); _load(); }
   Future<void> _load() async { setState(() => busy = true); final x = await Upd.pull(mode); if (!mounted) return; setState(() { d = x; busy = false; }); }
-  Future<void> _save() async { final ok = await Upd.save(mode, d!); if (mounted) setState(() => msg = ok ? '☁️ اتحفظ واتزامن مع القديم' : '💾 اتحفظ على الموبايل بس — يا مفيش نت، يا فيه نسخة أحدث من القديم (افتح الصفحة تاني)'); }
+  Future<void> _save() async { final ok = await Upd.save(mode, d!); if (mounted) setState(() => msg = ok ? L.t('☁️ اتحفظ واتزامن مع القديم') : L.t('💾 اتحفظ على الموبايل بس — يا مفيش نت، يا فيه نسخة أحدث من القديم (افتح الصفحة تاني)')); }
 
   @override
   Widget build(BuildContext context) {
     final D = d;
-    return Directionality(textDirection: TextDirection.rtl, child: Scaffold(
-      appBar: AppBar(title: const Text('📢 الأبديت'), actions: [IconButton(tooltip: 'إعدادات', icon: const Icon(Icons.tune), onPressed: D == null ? null : _settings)]),
-      floatingActionButton: D == null ? null : FloatingActionButton.extended(onPressed: _addVilla, icon: const Icon(Icons.add_home), label: const Text('فيلا')),
+    return Directionality(textDirection: L.dir, child: Scaffold(
+      appBar: AppBar(title: Text(L.t('📢 الأبديت')), actions: [IconButton(tooltip: L.t('إعدادات'), icon: const Icon(Icons.tune), onPressed: D == null ? null : _settings)]),
+      floatingActionButton: D == null ? null : FloatingActionButton.extended(onPressed: _addVilla, icon: const Icon(Icons.add_home), label: Text(L.t('فيلا'))),
       body: busy || D == null ? const Center(child: CircularProgressIndicator()) : ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 90), children: [
-        SegmentedButton<String>(segments: const [ButtonSegment(value: 'u', label: Text('🏠 الأبديت')), ButtonSegment(value: 'f', label: Text('🛋 المفروش'))], selected: {mode}, onSelectionChanged: (s) { mode = s.first; _load(); }),
+        SegmentedButton<String>(segments: [ButtonSegment(value: 'u', label: Text(L.t('🏠 الأبديت'))), ButtonSegment(value: 'f', label: Text(L.t('🛋 المفروش')))], selected: {mode}, onSelectionChanged: (s) { mode = s.first; _load(); }),
         if (msg.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Text(msg, style: const TextStyle(color: kMuted, fontSize: 12))),
         const SizedBox(height: 8),
         Row(children: [
-          Expanded(child: FilledButton.icon(onPressed: _shareImg, icon: const Icon(Icons.image), label: const Text('ابعت الصورة'))),
+          Expanded(child: FilledButton.icon(onPressed: _shareImg, icon: const Icon(Icons.image), label: Text(L.t('ابعت الصورة')))),
           const SizedBox(width: 8),
-          Expanded(child: OutlinedButton.icon(onPressed: () => Share.share(Upd.txt(D)), icon: const Icon(Icons.chat), label: const Text('ابعت كنص'))),
+          Expanded(child: OutlinedButton.icon(onPressed: () => Share.share(Upd.txt(D)), icon: const Icon(Icons.chat), label: Text(L.t('ابعت كنص')))),
         ]),
         const SizedBox(height: 10),
         for (final v in objs(D['villas'])) _villa(v),
         const SizedBox(height: 12),
-        const Text('معاينة الصورة', style: TextStyle(fontWeight: FontWeight.w900)),
+        Text(L.t('معاينة الصورة'), style: TextStyle(fontWeight: FontWeight.w900)),
         const SizedBox(height: 6),
         FittedBox(child: RepaintBoundary(key: key, child: Poster(D, mode))),
       ]),
@@ -51,18 +52,18 @@ class _UpdState extends State<UpdPage> {
         Row(children: [
           Expanded(child: Text('🏡 ${str(v['name'])}${truthy(v['area']) ? ' — ${v['area']}' : ''}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15))),
           IconButton(icon: const Icon(Icons.edit, size: 20), onPressed: () => _editVilla(v)),
-          IconButton(icon: const Icon(Icons.add, size: 22), tooltip: 'شقة', onPressed: () => _editUnit(v, null)),
+          IconButton(icon: const Icon(Icons.add, size: 22), tooltip: L.t('شقة'), onPressed: () => _editUnit(v, null)),
         ]),
         for (final a in objs(v['units'])) ListTile(dense: true, contentPadding: EdgeInsets.zero,
           title: Text('${Upd.lab(Upd.FL, a['floor'], 1)} ${truthy(a['no']) ? '• شقة ${a['no']}' : ''} • ${Upd.typeAr(a)}${truthy(a['furn']) ? ' مفروش' : ''}', style: TextStyle(decoration: truthy(a['booked']) ? TextDecoration.lineThrough : null)),
           subtitle: Text([if (truthy(a['price'])) 'السعر ${Upd.nf(a['price'])}', if (truthy(a['mo'])) 'شهري ${Upd.nf(a['mo'])}', if (truthy(a['note'])) str(a['note'])].join(' • ')),
-          trailing: FilterChip(label: Text(truthy(a['booked']) ? 'BOOKED' : 'متاح'), selected: truthy(a['booked']), onSelected: (b) { a['booked'] = b; setState(() {}); _save(); }),
+          trailing: FilterChip(label: Text(truthy(a['booked']) ? 'BOOKED' : L.t('متاح')), selected: truthy(a['booked']), onSelected: (b) { a['booked'] = b; setState(() {}); _save(); }),
           onTap: () => _editUnit(v, a)),
       ])));
 
   Future<void> _editVilla(Obj? v) async {
     final x = v ?? {};
-    final o = await formDlg(context, v == null ? 'فيلا جديدة' : 'تعديل الفيلا', [FieldSpec('name', 'اسم الفيلا', v: str(x['name'])), FieldSpec('area', 'المنطقة', v: str(x['area'])), FieldSpec('loc', 'لينك اللوكيشن', v: str(x['loc'])), FieldSpec('note', 'ملاحظة', v: str(x['note']))]);
+    final o = await formDlg(context, v == null ? L.t('فيلا جديدة') : L.t('تعديل الفيلا'), [FieldSpec('name', L.t('اسم الفيلا'), v: str(x['name'])), FieldSpec('area', L.t('المنطقة'), v: str(x['area'])), FieldSpec('loc', L.t('لينك اللوكيشن'), v: str(x['loc'])), FieldSpec('note', L.t('ملاحظة'), v: str(x['note']))]);
     if (o == null) return;
     final t = v ?? <String, dynamic>{'id': Upd.uid(), 'units': <dynamic>[]};
     for (final k in ['name', 'area', 'loc', 'note']) { t[k] = o[k] ?? ''; }
@@ -73,16 +74,16 @@ class _UpdState extends State<UpdPage> {
 
   Future<void> _editUnit(Obj v, Obj? a) async {
     final x = a ?? {'floor': 'G', 'type': 'st', 'furn': mode == 'f'};
-    final fl = await pickDlg(context, 'الدور', [for (final f in Upd.FL) [f[0], f[1]]], str(x['floor']).isEmpty ? 'G' : str(x['floor']));
+    final fl = await pickDlg(context, L.t('الدور'), [for (final f in Upd.FL) [f[0], f[1]]], str(x['floor']).isEmpty ? 'G' : str(x['floor']));
     if (fl == null || !mounted) return;
-    final ty = await pickDlg(context, 'النوع', [for (final t in Upd.TY) [t[0], t[1]]], str(x['type']).isEmpty ? 'st' : str(x['type']));
+    final ty = await pickDlg(context, L.t('النوع'), [for (final t in Upd.TY) [t[0], t[1]]], str(x['type']).isEmpty ? 'st' : str(x['type']));
     if (ty == null || !mounted) return;
-    final o = await formDlg(context, a == null ? 'شقة جديدة' : 'تعديل الشقة', [
-      FieldSpec('no', 'رقم الشقة', v: str(x['no'])), if (ty == 'x') FieldSpec('tx', 'اكتب النوع', v: str(x['tx'])),
-      FieldSpec('price', 'السعر (الدفعات)', type: 'n', v: str(x['price'])), FieldSpec('mo', 'الشهري', type: 'n', v: str(x['mo'])), FieldSpec('note', 'ملاحظة', v: str(x['note'])),
+    final o = await formDlg(context, a == null ? L.t('شقة جديدة') : L.t('تعديل الشقة'), [
+      FieldSpec('no', L.t('رقم الشقة'), v: str(x['no'])), if (ty == 'x') FieldSpec('tx', L.t('اكتب النوع'), v: str(x['tx'])),
+      FieldSpec('price', L.t('السعر (الدفعات)'), type: 'n', v: str(x['price'])), FieldSpec('mo', L.t('الشهري'), type: 'n', v: str(x['mo'])), FieldSpec('note', L.t('ملاحظة'), v: str(x['note'])),
     ]);
     if (o == null || !mounted) return;
-    final furn = await pickDlg(context, 'مفروش؟', [['1', 'مفروش'], ['0', 'مش مفروش']], truthy(x['furn']) ? '1' : '0');
+    final furn = await pickDlg(context, L.t('مفروش؟'), [['1', L.t('مفروش')], ['0', L.t('مش مفروش')]], truthy(x['furn']) ? '1' : '0');
     final t = a ?? <String, dynamic>{'id': Upd.uid(), 'at': DateTime.now().millisecondsSinceEpoch, 'booked': false};
     t['floor'] = fl; t['type'] = ty; t['no'] = o['no'] ?? ''; if (ty == 'x') t['tx'] = o['tx'] ?? '';
     final p = double.tryParse(o['price'] ?? '') ?? 0; t['price'] = p == p.roundToDouble() ? p.toInt() : p; t['mo'] = o['mo'] ?? ''; t['note'] = o['note'] ?? ''; t['furn'] = furn == '1';
@@ -92,7 +93,7 @@ class _UpdState extends State<UpdPage> {
 
   Future<void> _settings() async {
     final D = d!;
-    final o = await formDlg(context, '⚙️ إعدادات الأبديت', [FieldSpec('title', 'العنوان', v: str(D['title'])), FieldSpec('phone', 'رقم التواصل', v: str(D['phone'])), FieldSpec('fee', 'رسوم العقد', type: 'n', v: str(D['fee'])), FieldSpec('dep', 'التأمين', v: str(D['dep'])), FieldSpec('notes', 'ملاحظات تحت', v: str(D['notes']))]);
+    final o = await formDlg(context, L.t('⚙️ إعدادات الأبديت'), [FieldSpec('title', L.t('العنوان'), v: str(D['title'])), FieldSpec('phone', L.t('رقم التواصل'), v: str(D['phone'])), FieldSpec('fee', L.t('رسوم العقد'), type: 'n', v: str(D['fee'])), FieldSpec('dep', L.t('التأمين'), v: str(D['dep'])), FieldSpec('notes', L.t('ملاحظات تحت'), v: str(D['notes']))]);
     if (o == null) return;
     for (final k in ['title', 'phone', 'dep', 'notes']) { D[k] = o[k] ?? ''; }
     final f = double.tryParse(o['fee'] ?? '') ?? 0; D['fee'] = f == f.roundToDouble() ? f.toInt() : f;

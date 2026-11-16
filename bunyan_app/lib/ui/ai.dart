@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'i18n.dart';
 import '../core/ai.dart';
 import 'theme.dart';
 import 'shell.dart';
@@ -21,20 +22,20 @@ class _AiState extends State<AiPage> {
     await Future.delayed(const Duration(milliseconds: 50)); if (sc.hasClients) sc.jumpTo(sc.position.maxScrollExtent);
   }
   @override
-  Widget build(BuildContext context) => Directionality(textDirection: TextDirection.rtl, child: Scaffold(
-        appBar: AppBar(title: const Text('🤖 اسأل بنيان')),
+  Widget build(BuildContext context) => Directionality(textDirection: L.dir, child: Scaffold(
+        appBar: AppBar(title: Text(L.t('🤖 اسأل بنيان'))),
         body: Column(children: [
-          if (!Ai.on) const Card(color: Color(0xFFFFF7E6), child: Padding(padding: EdgeInsets.all(12), child: Text('مفتاح Gemini المجاني مش متنقل لسه. افتح بنيان القديم مرة وهيتنقل لوحده مع الربط.'))),
+          if (!Ai.on) Card(color: Color(0xFFFFF7E6), child: Padding(padding: EdgeInsets.all(12), child: Text(L.t('مفتاح Gemini المجاني مش متنقل لسه. افتح بنيان القديم مرة وهيتنقل لوحده مع الربط.')))),
           Expanded(child: ListView(controller: sc, padding: const EdgeInsets.all(12), children: [
             if (h.isEmpty) Wrap(spacing: 6, runSpacing: 6, children: [for (final s in sug) ActionChip(label: Text(s), onPressed: () => _send(s))]),
             for (final m in h) Align(alignment: m['r'] == 'u' ? Alignment.centerRight : Alignment.centerLeft, child: Container(
               margin: const EdgeInsets.symmetric(vertical: 4), padding: const EdgeInsets.all(12), constraints: const BoxConstraints(maxWidth: 520),
               decoration: BoxDecoration(color: m['r'] == 'u' ? kGreen : Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: kSand)),
               child: SelectableText(m['t']!.replaceAll('**', ''), style: TextStyle(color: m['r'] == 'u' ? Colors.white : kInk, height: 1.5)))),
-            if (busy) const Padding(padding: EdgeInsets.all(12), child: Text('⏳ بيفكر…', style: TextStyle(color: kMuted))),
+            if (busy) Padding(padding: EdgeInsets.all(12), child: Text(L.t('⏳ بيفكر…'), style: TextStyle(color: kMuted))),
           ])),
           SafeArea(top: false, child: Padding(padding: const EdgeInsets.all(8), child: Row(children: [
-            Expanded(child: TextField(controller: c, minLines: 1, maxLines: 4, textInputAction: TextInputAction.send, onSubmitted: (_) => _send(), decoration: const InputDecoration(hintText: 'اسأل عن أي حاجة في أرقامك…', border: OutlineInputBorder(), isDense: true))),
+            Expanded(child: TextField(controller: c, minLines: 1, maxLines: 4, textInputAction: TextInputAction.send, onSubmitted: (_) => _send(), decoration: InputDecoration(hintText: L.t('اسأل عن أي حاجة في أرقامك…'), border: OutlineInputBorder(), isDense: true))),
             const SizedBox(width: 6),
             IconButton.filled(onPressed: busy ? null : _send, icon: const Icon(Icons.send)),
           ]))),

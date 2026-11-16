@@ -4,6 +4,7 @@ import 'core/store.dart';
 import 'ui/theme.dart';
 import 'ui/shell.dart';
 import 'ui/lock.dart';
+import 'ui/i18n.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,13 +15,13 @@ Future<void> main() async {
 class BunyanApp extends StatelessWidget {
   const BunyanApp({super.key});
   @override
-  Widget build(BuildContext context) => MaterialApp(
+  Widget build(BuildContext context) => ListenableBuilder(listenable: Store.I, builder: (_, __) => MaterialApp(
         title: 'بنيان',
         debugShowCheckedModeBanner: false,
         theme: bunyanTheme(),
-        locale: const Locale('ar'),
+        locale: Locale(L.lang),
         supportedLocales: const [Locale('ar'), Locale('en')],
         localizationsDelegates: const [GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
         home: const LockGate(child: Shell()),
-      );
+      ));
 }
