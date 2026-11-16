@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
@@ -45,9 +46,10 @@ class _CtState extends State<ContractPage> {
 
   Future<void> _pdf() async {
     if (!Ct.hasPaper(S)) { toast(context, 'مفيش نموذج عقد محفوظ — اعمل النموذج مرة واحدة من بنيان القديم'); return; }
-    final bytes = await Printing.convertHtml(format: PdfPageFormat.a4, html: _doc());
+    late final List<int> bytes;
+    try { bytes = await Printing.convertHtml(format: PdfPageFormat.a4, html: _doc()); } catch (e) { if (mounted) toast(context, 'الـ PDF مش متاح هنا — طلّعه من تطبيق الموبايل'); return; }
     final nm = str(Ct.F(S)['tn']).trim().replaceAll(RegExp(r'\s+'), '-');
-    await Printing.sharePdf(bytes: bytes, filename: 'contract-${nm.isEmpty ? 'contract' : nm}.pdf');
+    await Printing.sharePdf(bytes: Uint8List.fromList(bytes), filename: 'contract-${nm.isEmpty ? 'contract' : nm}.pdf');
   }
 
   Future<void> _fill() async {

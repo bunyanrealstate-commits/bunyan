@@ -80,3 +80,13 @@ jobs:
           cp /tmp/an.log /tmp/out/analyze.log || true
           cd /tmp/out && git init -q -b apk-flutter && git config user.name gh && git config user.email gh@github.com
           git add . && git commit -q -m "Bunyan Flutter APK" && git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git apk-flutter
+      - name: Build web (للآيفون والكمبيوتر)
+        continue-on-error: true
+        working-directory: bunyan_app
+        run: |
+          flutter build web --release --base-href /bunyan/app/ 2>&1 | tail -5
+          cd /tmp && rm -rf pub && git clone -q --depth 1 https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git pub && cd pub
+          git config user.name gh && git config user.email gh@github.com
+          rm -rf docs/app && mkdir -p docs/app && cp -r $GITHUB_WORKSPACE/bunyan_app/build/web/. docs/app/
+          git add docs/app && git commit -q -m "Bunyan Flutter web build ${{ github.run_number }}" || exit 0
+          for i in 1 2 3; do git pull -q --rebase && git push -q && break; sleep 5; done
