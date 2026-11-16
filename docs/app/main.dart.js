@@ -32923,7 +32923,7 @@ A.aK1.prototype={
 $1(a){var s=A.f_().b
 if(s==null)s=null
 else{s=s.canvasKitBaseUrl
-if(s==null)s=null}return(s==null?"https://www.gstatic.com/flutter-canvaskit/a18df97ca57a249df5d8d68cd0820600223ce262/":s)+a},
+if(s==null)s=null}return(s==null?"canvaskit/":s)+a},
 $S:34}
 A.a9G.prototype={
 e5(){B.b.u(this.a.a.save())},
