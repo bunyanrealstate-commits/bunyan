@@ -6,6 +6,7 @@ import 'home.dart';
 import 'units.dart';
 import 'link.dart';
 import 'more.dart';
+import 'expenses.dart';
 import '../core/native.dart';
 
 /// المجموعة المختارة (زي WS في بنيان القديم)
@@ -45,7 +46,7 @@ class _ShellState extends State<Shell> {
     final st = Store.I;
     if (!st.loaded) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     if (!st.linked && lst(st.S['units']).isEmpty) return const LinkScreen();
-    final pages = [const HomePage(), const UnitsPage(), const MorePage()];
+    final pages = [const HomePage(), const UnitsPage(), const ExpensesPage(), const MorePage()];
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -70,6 +71,7 @@ class _ShellState extends State<Shell> {
           destinations: const [
             NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'الداشبورد'),
             NavigationDestination(icon: Icon(Icons.apartment_outlined), selectedIcon: Icon(Icons.apartment), label: 'الوحدات'),
+            NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: 'المصاريف'),
             NavigationDestination(icon: Icon(Icons.more_horiz), label: 'المزيد'),
           ],
         ),
