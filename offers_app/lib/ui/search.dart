@@ -28,10 +28,10 @@ class _SearchState extends State<SearchPage> {
               for (final t in kTypes.where((t) => t[0] != 'x')) FilterChip(label: Text(t[1], style: TextStyle(color: types.contains(t[0]) ? Colors.white : kInk)), selected: types.contains(t[0]), showCheckmark: false, onSelected: (b) => setState(() { b ? types.add(t[0]) : types.remove(t[0]); })),
             ]),
             const SizedBox(height: 10),
-            SegmentedButton<String>(segments: const [ButtonSegment(value: 'mo', label: Text('شهري')), ButtonSegment(value: '3', label: Text('3 دفعات')), ButtonSegment(value: 'any', label: Text('أي حاجة'))], selected: {pay}, onSelectionChanged: (s) => setState(() => pay = s.first)),
+            SegmentedButton<String>(segments: const [ButtonSegment(value: 'mo', label: Text('شهري')), ButtonSegment(value: '1', label: Text('دفعة واحدة')), ButtonSegment(value: '3', label: Text('3 دفعات')), ButtonSegment(value: 'any', label: Text('الكل'))], selected: {pay}, onSelectionChanged: (s) => setState(() => pay = s.first)),
             const SizedBox(height: 10),
             Row(children: [
-              Expanded(child: TextField(controller: bc, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ميزانية العميل في الشهر', prefixIcon: Icon(Icons.payments_outlined), suffixText: 'درهم'), onChanged: (_) => setState(() {}))),
+              Expanded(child: TextField(controller: bc, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'ميزانية العميل (شهري أو سنوي)', helperText: _bHint(), prefixIcon: const Icon(Icons.payments_outlined), suffixText: 'درهم'), onChanged: (_) => setState(() {}))),
               const SizedBox(width: 8),
               DropdownButton<double>(value: tol, items: [for (final t in [0.0, 5.0, 10.0, 20.0]) DropdownMenuItem(value: t, child: Text(t == 0 ? 'بالظبط' : '± ${t.round()}%'))], onChanged: (v) => setState(() => tol = v ?? 10)),
             ]),
@@ -43,6 +43,12 @@ class _SearchState extends State<SearchPage> {
           floatingActionButton: sel.isEmpty ? null : FloatingActionButton.extended(onPressed: () => _send(sel), backgroundColor: const Color(0xFF25D366), icon: const Icon(Icons.send, color: Colors.white), label: Text('ابعت ${sel.length} للعميل', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700))),
         );
       });
+
+  String? _bHint() {
+    final b = numOf(bc.text);
+    if (b <= 0) return null;
+    return b > 20000 ? 'سنوي = ${money(b)} • يعني ≈ ${money(b / 12)} في الشهر' : 'شهري = ${money(b)} • يعني ≈ ${money(b * 12)} في السنة';
+  }
 
   Widget _row(Map<String, dynamic> x) {
     final v = x['v'] as Obj, u = x['u'] as Obj; final key = '${v['id']}/${u['id']}'; final on = picked.contains(key);

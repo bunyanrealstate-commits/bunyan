@@ -31,7 +31,7 @@ class _ImportState extends State<ImportPage> {
       final r = await Ai.readUpdate(b);
       final first = r.isNotEmpty ? r.first : <String, dynamic>{};
       vname = str(first['villa']); vcomp = str(first['company']);
-      rows = r.where((x) => str(x['no']).isNotEmpty || numOf(x['p3']) > 0 || numOf(x['mo']) > 0).map((x) => {...x, '_on': true}).toList();
+      rows = r.where((x) => str(x['no']).isNotEmpty || numOf(x['p1']) > 0 || numOf(x['p3']) > 0 || numOf(x['mo']) > 0).map((x) => {...x, '_on': true}).toList();
       if (rows.isEmpty) err = 'مالقيتش شقق في الصورة دي — جرب صورة أوضح';
     } catch (e) { err = '$e'; }
     if (mounted) setState(() => busy = false);
@@ -68,6 +68,7 @@ class _ImportState extends State<ImportPage> {
     String tag;
     if (m == null) { tag = '🆕 جديدة'; } else {
       final ch = <String>[];
+      if (numOf(m['p1']) != numOf(r['p1']) && numOf(r['p1']) > 0) ch.add('دفعة واحدة ${money(numOf(m['p1']))}→${money(numOf(r['p1']))}');
       if (numOf(m['p3']) != numOf(r['p3']) && numOf(r['p3']) > 0) ch.add('3 دفعات ${money(numOf(m['p3']))}→${money(numOf(r['p3']))}');
       if (numOf(m['mo']) != numOf(r['mo']) && numOf(r['mo']) > 0) ch.add('شهري ${money(numOf(m['mo']))}→${money(numOf(r['mo']))}');
       if ((m['avail'] != false) == (r['booked'] == true)) ch.add(r['booked'] == true ? 'اتحجزت' : 'رجعت متاحة');
@@ -79,8 +80,8 @@ class _ImportState extends State<ImportPage> {
       title: Text('${str(r['no']).isEmpty ? '—' : r['no']} • ${typeName(r['type'])}${floorName(r['floor']).isNotEmpty ? ' • ${floorName(r['floor'])}' : ''}${r['booked'] == true ? ' • ❌ محجوزة' : ''}', style: const TextStyle(fontWeight: FontWeight.w800)),
       subtitle: Text('${Price.text(r)}\n$tag', style: const TextStyle(fontSize: 12.5)),
       secondary: IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () async {
-        final o = await formDlg(context, 'تعديل ${str(r['no'])}', [FS('no', 'رقم الشقة', v: r['no']), FS('p3', 'سعر 3 دفعات', v: numOf(r['p3']) > 0 ? numOf(r['p3']).round() : '', num: true), FS('mo', 'الشهري', v: numOf(r['mo']) > 0 ? numOf(r['mo']).round() : '', num: true)]);
-        if (o != null) setState(() { r['no'] = o['no']; r['p3'] = numOf(o['p3']); r['mo'] = numOf(o['mo']); });
+        final o = await formDlg(context, 'تعديل ${str(r['no'])}', [FS('no', 'رقم الشقة', v: r['no']), FS('p1', 'سعر دفعة واحدة', v: numOf(r['p1']) > 0 ? numOf(r['p1']).round() : '', num: true), FS('p3', 'سعر 3 دفعات', v: numOf(r['p3']) > 0 ? numOf(r['p3']).round() : '', num: true), FS('mo', 'الشهري', v: numOf(r['mo']) > 0 ? numOf(r['mo']).round() : '', num: true)]);
+        if (o != null) setState(() { r['no'] = o['no']; r['p1'] = numOf(o['p1']); r['p3'] = numOf(o['p3']); r['mo'] = numOf(o['mo']); });
       }),
     ));
   }
@@ -93,6 +94,7 @@ class _ImportState extends State<ImportPage> {
       final t = m ?? <String, dynamic>{'id': uid(), 'videos': <dynamic>[]};
       t['no'] = str(r['no']); if (str(r['floor']).isNotEmpty) t['floor'] = str(r['floor']);
       if (kTypes.any((k) => k[0] == r['type'])) t['type'] = r['type']; if (str(r['tx']).isNotEmpty) t['tx'] = r['tx'];
+      if (numOf(r['p1']) > 0) t['p1'] = numOf(r['p1']);
       if (numOf(r['p3']) > 0) t['p3'] = numOf(r['p3']); if (numOf(r['mo']) > 0) t['mo'] = numOf(r['mo']);
       if (str(r['note']).isNotEmpty) t['note'] = r['note'];
       t['avail'] = r['booked'] != true;

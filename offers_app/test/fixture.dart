@@ -10,5 +10,10 @@ const fixture = {
       {'id': 'u5', 'no': 'A', 'floor': '', 'type': '1bk', 'p3': 0, 'mo': 3300, 'avail': true, 'videos': []},
       {'id': 'u6', 'no': 'B', 'floor': '', 'type': '1bk', 'p3': 0, 'mo': 3900, 'avail': true, 'videos': []},
     ]},
+    {'id': 'v3', 'name': 'الغانم', 'no': '25', 'company': 'Alghanim', 'area': 'الشامخة', 'loc': '', 'units': [
+      {'id': 'g2', 'no': '2', 'floor': 'G', 'type': '2bk2b', 'p1': 70000, 'avail': true, 'videos': []},
+      {'id': 'g7', 'no': '7', 'floor': '1', 'type': '2bk2b', 'p1': 75000, 'avail': true, 'videos': []},
+      {'id': 'g10', 'no': '10', 'floor': '2', 'type': '3bk', 'p1': 90000, 'avail': true, 'videos': []},
+    ]},
   ]
 };

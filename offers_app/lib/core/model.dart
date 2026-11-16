@@ -27,18 +27,25 @@ List<Obj> objs(dynamic v) => v is List ? v.whereType<Map>().map((m) => m.cast<St
 String uid() { final r = math.Random(); const a = 'abcdefghijklmnopqrstuvwxyz0123456789'; return List.generate(8, (_) => a[r.nextInt(a.length)]).join(); }
 String money(num v) { final r = v.round(); return r.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ','); }
 
-/// سعر الشقة: p3 = إجمالي السنة على 3 دفعات، mo = شهري
+/// سعر الشقة: p1 = السنة دفعة واحدة، p3 = السنة على 3 دفعات، mo = شهري
 class Price {
+  static double p1(Obj u) => numOf(u['p1']);
   static double p3(Obj u) => numOf(u['p3']);
   static double mo(Obj u) => numOf(u['mo']);
   /// الشهري التقريبي للمقارنة بميزانية العميل
   static double monthlyEq(Obj u, String pay) {
     if (pay == 'mo') return mo(u);
+    if (pay == '1') return p1(u) / 12;
     if (pay == '3') return p3(u) / 12;
-    return mo(u) > 0 ? mo(u) : p3(u) / 12;
+    if (mo(u) > 0) return mo(u);
+    final y = [p1(u), p3(u)].where((x) => x > 0);
+    return y.isEmpty ? 0 : y.reduce(math.min) / 12;
   }
+  /// الميزانية: لو أكبر من 20 ألف يبقى العميل قال رقم السنة → نحوّله لشهري
+  static double budgetMonthly(double b) => b > 20000 ? b / 12 : b;
   static String text(Obj u) {
     final o = <String>[];
+    if (p1(u) > 0) o.add('${money(p1(u))} درهم في السنة دفعة واحدة');
     if (p3(u) > 0) o.add('${money(p3(u))} درهم على 3 دفعات (≈ ${money(p3(u) / 12)} شهرياً)');
     if (mo(u) > 0) o.add('${money(mo(u))} درهم شهري');
     return o.isEmpty ? 'السعر عند الطلب' : o.join(' • ');
@@ -50,11 +57,13 @@ class Search {
   static List<Map<String, dynamic>> run(List<Obj> villas, {Set<String> types = const {}, String pay = 'any', double budget = 0, double tol = 10, String q = '', bool onlyAvail = true}) {
     final r = <Map<String, dynamic>>[];
     final qq = q.trim().toLowerCase();
+    budget = Price.budgetMonthly(budget);
     for (final v in villas) {
       for (final u in objs(v['units'])) {
         if (onlyAvail && u['avail'] == false) continue;
         if (types.isNotEmpty && !types.contains(str(u['type']))) continue;
         if (pay == 'mo' && Price.mo(u) <= 0) continue;
+        if (pay == '1' && Price.p1(u) <= 0) continue;
         if (pay == '3' && Price.p3(u) <= 0) continue;
         final m = Price.monthlyEq(u, pay);
         if (budget > 0) { if (m <= 0) continue; if (m > budget * (1 + tol / 100)) continue; }
