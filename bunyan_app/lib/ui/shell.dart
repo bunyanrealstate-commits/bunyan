@@ -73,7 +73,7 @@ class _ShellState extends State<Shell> {
           titleSpacing: 12,
           title: Row(children: [
             Column(mainAxisSize: MainAxisSize.min, children: [SvgPicture.asset('assets/logo.svg', height: 24), const Text('Furnished', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF1D4B66), letterSpacing: 1.6, height: 1.2))]),
-            const EyeBtn(),
+            EyeBtn(key: ValueKey('eye${Priv.on}')),
             const SizedBox(width: 12),
             Expanded(child: _groupPicker()),
           ]),
@@ -105,7 +105,7 @@ class _ShellState extends State<Shell> {
         body: RefreshIndicator(onRefresh: () async { await st.sync(); }, child: ListenableBuilder(listenable: Listenable.merge([Store.I, Ws.I]), builder: (_, __) {
           final w = Ws.I.resolve();
           final page = [const HomePage(), const UnitsPage(), const AccountsPage(inTab: true), const ExpensesPage(), const GroupsPage(inTab: true), const MorePage()][tab];
-          return KeyedSubtree(key: ValueKey('$tab|$w|${Tr.lang}'), child: page);
+          return KeyedSubtree(key: ValueKey('$tab|$w|${Tr.lang}|${Priv.on}'), child: page);
         })),
       ),
     );
