@@ -21,6 +21,14 @@ jobs:
           M=android/app/src/main/AndroidManifest.xml
           grep -q 'android.permission.INTERNET' $M || sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET" />\n    <application#' $M
           sed -i 's#android:label="bunyan"#android:label="بنيان"#' $M
+          cp android_overrides/MainActivity.kt android/app/src/main/kotlin/com/bunyan/bunyan/MainActivity.kt
+          python3 - <<'PY'
+          p='android/app/src/main/AndroidManifest.xml';s=open(p).read()
+          f='<intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="bnyapp"/></intent-filter>'
+          if 'bnyapp' not in s: s=s.replace('</activity>',f+'</activity>',1)
+          if 'com.bunyan.furnished' not in s: s=s.replace('<queries>','<queries><package android:name="com.bunyan.furnished"/>',1) if '<queries>' in s else s.replace('</manifest>','<queries><package android:name="com.bunyan.furnished"/></queries></manifest>',1)
+          open(p,'w').write(s)
+          PY
           mkdir -p ~/.android && cp ../keystore/debug.keystore ~/.android/debug.keystore
           flutter pub get
       - name: Analyze

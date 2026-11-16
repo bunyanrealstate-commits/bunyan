@@ -9347,5 +9347,13 @@ setTimeout(function(){bkAppPull(1)},6000);document.addEventListener('visibilityc
 var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(typeof AUTH!=='undefined'&&AUTH&&S.tab==='books'){bkAppPull();var a=document.getElementById('lib2');if(a&&!a.querySelector('.lappb')){var ac=a.querySelector('.lhero')||a.querySelector('.lacts');if(ac)ac.insertAdjacentHTML('afterend',"<button type='button' class='lappb' onclick='bkOpenApp()'>📱 افتح في تطبيق مكتبتي (وانقل كتبك عليه)</button>")}}}catch(e){}return o};
 })();</script>
 <style id="libappcss">#lib2 .lappb{width:100%;margin:10px 0 0!important;padding:11px!important;border-radius:16px!important;background:#e8f3ee!important;color:#1f7a55!important;border:1.5px dashed #1f7a55!important;font-weight:800;font-size:14px!important}</style>
+<script id="flutlink">
+/* بنيان الجديد (Flutter): لو متسطّب على الموبايل ولسه متربطش، نبعتله كود الربط لوحده — من غير ما أسامه يعمل حاجة */
+(function(){if(window.HBUILD)return;
+function go(){try{if(typeof AUTH==='undefined'||!AUTH||!S||S.flutLinked)return;var C=window.Capacitor;if(!(C&&C.isNativePlatform&&C.isNativePlatform()))return;
+ var c=window.bnyLinkMake&&bnyLinkMake();if(!c)return;var k='bny_flut_try',l=+(localStorage.getItem(k)||0);if(Date.now()-l<6*3600000)return;localStorage.setItem(k,String(Date.now()));
+ location.href='bnyapp://link?c='+encodeURIComponent(c)}catch(e){}}
+setTimeout(go,9000);
+})();</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>

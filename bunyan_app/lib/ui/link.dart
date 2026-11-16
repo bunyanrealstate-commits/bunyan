@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/store.dart';
+import '../core/native.dart';
 import 'theme.dart';
 
 /// الربط ببنيان القديم: كود واحد بينقل المفتاح، وكل البيانات بتنزل
@@ -33,9 +34,13 @@ class _LinkScreenState extends State<LinkScreen> {
           const Text('BUNYAN', textAlign: TextAlign.center, style: TextStyle(fontSize: 34, fontWeight: FontWeight.w900, color: kGreen, letterSpacing: 4)),
           const Text('Furnished', textAlign: TextAlign.center, style: TextStyle(color: kMuted)),
           const SizedBox(height: 30),
-          const Text('انقل بياناتك من بنيان القديم', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+          const Text('بياناتك هتنزل لوحدها', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
           const SizedBox(height: 8),
-          const Text('1) افتح بنيان القديم ← القايمة ← «💻 اربط جهاز تاني» ← انسخ الكود\n2) ارجع هنا — هيتلصق لوحده وكل الوحدات والعقود والحسابات هتنزل', style: TextStyle(height: 1.8)),
+          const Text('افتح بنيان القديم مرة واحدة بس — هو هيفتح التطبيق ده لوحده ويبعتله كل بياناتك.', style: TextStyle(height: 1.8, fontSize: 15)),
+          const SizedBox(height: 12),
+          FilledButton.icon(onPressed: () async { if (!await Native.openOld()) setState(() => msg = 'بنيان القديم مش متسطّب على الموبايل ده'); }, icon: const Icon(Icons.open_in_new), label: const Text('افتح بنيان القديم', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52))),
+          const SizedBox(height: 24),
+          const Text('أو لو معاك كود ربط (BNYLINK-…) الصقه هنا:', style: TextStyle(color: kMuted)),
           const SizedBox(height: 14),
           TextField(controller: c, maxLines: 4, textDirection: TextDirection.ltr, decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'BNYLINK-…')),
           const SizedBox(height: 12),

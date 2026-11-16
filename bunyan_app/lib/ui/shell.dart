@@ -6,6 +6,7 @@ import 'home.dart';
 import 'units.dart';
 import 'link.dart';
 import 'more.dart';
+import '../core/native.dart';
 
 /// المجموعة المختارة (زي WS في بنيان القديم)
 class Ws extends ValueNotifier<String> {
@@ -30,11 +31,14 @@ class _ShellState extends State<Shell> {
   void initState() {
     super.initState();
     Store.I.addListener(_r); Ws.I.addListener(_r);
-    if (Store.I.linked) Store.I.sync();
+    Native.init();
+    Native.takeLink().then((ok) { if (!ok && Store.I.linked) Store.I.sync(); });
+    WidgetsBinding.instance.addObserver(_life);
   }
+  late final _life = _Life(() { Native.takeLink().then((ok) { if (!ok && Store.I.linked) Store.I.sync(); }); });
   void _r() { if (mounted) setState(() {}); }
   @override
-  void dispose() { Store.I.removeListener(_r); Ws.I.removeListener(_r); super.dispose(); }
+  void dispose() { Store.I.removeListener(_r); Ws.I.removeListener(_r); WidgetsBinding.instance.removeObserver(_life); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
@@ -87,5 +91,15 @@ class _ShellState extends State<Shell> {
           ),
       ]),
     );
+  }
+}
+
+class _Life extends WidgetsBindingObserver {
+  final VoidCallback onResume;
+  DateTime _last = DateTime(2000);
+  _Life(this.onResume);
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState s) {
+    if (s == AppLifecycleState.resumed && DateTime.now().difference(_last).inSeconds > 20) { _last = DateTime.now(); onResume(); }
   }
 }
