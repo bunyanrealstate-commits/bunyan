@@ -96,8 +96,14 @@ class _UnitDetailState extends State<UnitDetail> {
           _kv('مدة العقد', '${str(u['cm'])} شهر'),
           _kv('إجمالي الإيجار', money(truthy(u['total']) ? n(u['total']) : Engine.isumOf(u))),
           _kv('الأثاث', money(n0(u['furn']))),
-          Builder(builder: (_) { final e = Engine(Store.I.S, WS: 'all'); final p = e.projU(u); final a = e.ua(u);
+          Builder(builder: (_) { final e = Engine(Store.I.S, WS: 'all'); final p = e.projU(u); final a = e.ua(u); final o = e.occ(u);
             return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              _kv('📉 سعر اليوم عند الشركة', money(o['c'] as double)),
+              _kv('أيام فاضية', '${o['vac']} يوم'),
+              if ((o['lossPast'] as double) > 0) _kv('اتخسر في أيام فاتت', money(o['lossPast'] as double)),
+              if ((o['lossFut'] as double) > 0) _kv('هيتخسر لو فضل فاضي', money(o['lossFut'] as double)),
+              if ((o['free'] as int) > 0) _kv('🎁 أيام إيجار قبل بداية الشركة', '${o['free']} يوم = ${money(o['freeVal'] as double)}'),
+              for (final g in (o['gaps'] as List).take(6)) Text('   • فاضي من ${g['a']} لـ ${g['b']} (${g['dys']} يوم)', style: const TextStyle(fontSize: 12, color: kMuted)),
               if (p != null) _kv('🎯 الربح المتوقع', money(p['p'] as double)),
               _kv('🏠 شهور مأجّرة', '${((a['occ']! * 10).round() / 10)} من ${str(u['cm'])}'),
               if (a['vac']! > 0 && a['need']! > 0) _kv('أقل إيجار للشهور الفاضية', '${money(a['need']!)} / شهر'),

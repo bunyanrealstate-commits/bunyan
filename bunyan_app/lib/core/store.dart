@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'js.dart';
+import 'hist.dart';
 import 'merge3.dart';
 
 class Store extends ChangeNotifier {
@@ -31,6 +32,7 @@ class Store extends ChangeNotifier {
       else { final f = await _file(); if (await f.exists()) raw = await f.readAsString(); }
     } catch (_) {}
     if (raw != null && raw.isNotEmpty) { try { S = jsonDecode(raw); } catch (_) {} }
+    resetPrev();
     loaded = true; notifyListeners();
   }
 
@@ -49,7 +51,30 @@ class Store extends ChangeNotifier {
   Future<void> _saveCfg() async => _p.setString('bny_sync', jsonOut(cfg));
 
   /// أي تعديل: نحفظ ونعلّم إن فيه حاجة لازم تترفع
+  /* ───── السجل والتراجع (نفس locLog/diff/applyUndo في القديم — القديم يقدر يتراجع عن تعديلات الجديد والعكس) ───── */
+  String? _prev;
+  String _snap() { final o = Map<String, dynamic>.from(S)..remove('hist')..remove('aiMem')..remove('tab'); return jsonOut(o); }
+  void resetPrev() => _prev = _snap();
+  bool canUndo(Map e) => e['rev'] != true && str(e['ch']) != '[]';
+  Future<void> undo(Map e) async {
+    if (!canUndo(e)) return;
+    Hist.applyUndo(jsonDecode(str(e['ch'])) as List, S); e['rev'] = true;
+    logEv('↩ إلغاء: ${str(e['d'])}'); resetPrev();
+    cfg['dirty'] = true; await _saveCfg(); await _persist(); notifyListeners();
+  }
+
   Future<void> save({String? log}) async {
+    final cur = _snap();
+    if (_prev != null && cur != _prev) {
+      final ch = Hist.diff(jsonDecode(_prev!) as Map, jsonDecode(cur) as Map);
+      if (ch.isNotEmpty) {
+        final cj = jsonOut(ch); final big = ch.length > 40 || cj.length > 150000;
+        final h = lst(S['hist']).toList();
+        h.insert(0, {'id': uid(), 't': DateTime.now().millisecondsSinceEpoch, 'by': str(cfg['u']).isEmpty ? 'osama' : cfg['u'], 'd': log ?? 'تعديل', 'ch': big ? '[]' : cj, 'rev': big, 'ev': big});
+        S['hist'] = h.take(400).toList(); log = null;
+      }
+    }
+    _prev = cur;
     if (log != null) logEv(log);
     cfg['dirty'] = true; await _saveCfg();
     await _persist(); notifyListeners();
@@ -88,7 +113,7 @@ class Store extends ChangeNotifier {
   Future<void> _adopt(Map<String, dynamic> rem, String sha) async {
     // نسخة احتياطية قبل ما نستبدل
     try { await _p.setString('bny_pre_sync', jsonOut({'t': DateTime.now().millisecondsSinceEpoch, 's': strip(S)})); } catch (_) {}
-    await _saveBase(rem); S = rem; await _persist();
+    await _saveBase(rem); S = rem; resetPrev(); await _persist();
     cfg['sha'] = sha; cfg['dirty'] = false; await _saveCfg();
   }
 
@@ -121,7 +146,7 @@ class Store extends ChangeNotifier {
       final mg = merge3(mine, rem, _lastT(mine) > _lastT(rem), _base);
       if (mg != null && mg.l > 0 && mg.r > 0) {
         try { await _p.setString('bny_pre_sync', jsonOut({'t': DateTime.now().millisecondsSinceEpoch, 's': mine})); } catch (_) {}
-        await _saveBase(rem); S = mg.s; await _persist(); cfg['sha'] = sha; cfg['dirty'] = true;
+        await _saveBase(rem); S = mg.s; resetPrev(); await _persist(); cfg['sha'] = sha; cfg['dirty'] = true;
         await _push(); return syncMsg = '🔀 دمجت تعديلاتك مع السحابة';
       }
       if (mg != null && mg.l == 0 && mg.r > 0) { await _adopt(rem, sha); return syncMsg = '✓ نزلت آخر بيانات'; }

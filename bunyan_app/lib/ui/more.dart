@@ -7,6 +7,7 @@ import 'groups.dart';
 import 'reminders.dart';
 import 'trash.dart';
 import 'accounts.dart';
+import 'dialogs.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
@@ -32,6 +33,9 @@ class MorePage extends StatelessWidget {
         dense: true,
         title: Text(str(e['d']).split('\n').first, maxLines: 2, overflow: TextOverflow.ellipsis),
         subtitle: Text('${str(e['by'])} • ${DateTime.fromMillisecondsSinceEpoch(n0(e['t']).toInt())}'.split('.').first),
+        trailing: st.canUndo(e) ? TextButton(child: const Text('↩ تراجع'), onPressed: () async {
+          if (await confirmDlg(context, 'تلغي التعديل ده؟\n${str(e['d']).split('\n').first}', ok: 'ألغيه')) { await st.undo(e); if (context.mounted) toast(context, '↩ اتلغى التعديل'); }
+        }) : null,
       )),
     ]);
   }

@@ -442,4 +442,25 @@ class Engine {
     r.sort((a, b) { final c = str(b['d']).compareTo(str(a['d'])); return c != 0 ? c : idx0[a]!.compareTo(idx0[b]!); });
     return r;
   }
+
+  /* ───── الإشغال والأيام الشاغرة (occ) ───── */
+  Map<String, dynamic> occ(Obj u) {
+    final cs = pd(u['start']), ce = addM(cs, n0(u['cm'])), t = today();
+    final D = math.max(1, dy(cs, ce)); final tot = truthy(u['total']) ? n(u['total']) : isumOf(u); final c = tot / D;
+    final g = n0(u['grace']); final lo = g > 0 ? DateTime.fromMillisecondsSinceEpoch(ms(cs) - (g * 864e5).round()) : DateTime.fromMillisecondsSinceEpoch(0);
+    DateTime le(Obj L) => truthy(L['exit']) ? pd(L['exit']) : lend(L);
+    final iv = [for (final L in objs(u['leases'])) [pd(L['start']), le(L)]].where((x) => x[1].isAfter(x[0])).toList()..sort((a, b) => a[0].compareTo(b[0]));
+    final m = <List<DateTime>>[];
+    for (final x in iv) { if (m.isNotEmpty && !x[0].isAfter(m.last[1])) { if (x[1].isAfter(m.last[1])) m.last[1] = x[1]; } else { m.add([x[0], x[1]]); } }
+    DateTime mx(DateTime a, DateTime b) => a.isAfter(b) ? a : b; DateTime mn(DateTime a, DateTime b) => a.isBefore(b) ? a : b;
+    var free = 0; for (final x in m) { final a = mx(x[0], lo), b = mn(x[1], cs); if (b.isAfter(a)) free += dy(a, b); }
+    var preVal = 0.0;
+    for (final L in objs(u['leases'])) { final a = mx(pd(L['start']), lo), b = mn(le(L), cs); for (var d = a; d.isBefore(b); d = DateTime(d.year, d.month, d.day + 1)) { preVal += n0(L['rent']) / DateTime(d.year, d.month + 1, 0).day; } }
+    final gaps = <List<DateTime>>[]; var cur = truthy(u['onb']) && m.isNotEmpty ? mx(cs, m[0][0]) : cs;
+    for (final x in m) { final a = mx(x[0], cs), b = mn(x[1], ce); if (!b.isAfter(a)) continue; if (a.isAfter(cur)) gaps.add([cur, a]); cur = mx(cur, b); }
+    if (cur.isBefore(ce)) gaps.add([cur, ce]);
+    final G = [for (final x in gaps) () { final dys = dy(x[0], x[1]); final past = math.max(0, math.min(dys, dy(x[0], mn(x[1], t)))); return {'a': iso(x[0]), 'b': iso(x[1]), 'dys': dys, 'past': past, 'fut': dys - past, 'loss': dys * c, 'lossPast': past * c, 'lossFut': (dys - past) * c}; }()];
+    final f = sh(u);
+    return {'D': D, 'c': c * f, 'free': free, 'freeVal': preVal * f, 'gaps': G, 'vac': G.fold<int>(0, (s, x) => s + (x['dys'] as int)), 'lossPast': G.fold<double>(0, (s, x) => s + (x['lossPast'] as double)) * f, 'lossFut': G.fold<double>(0, (s, x) => s + (x['lossFut'] as double)) * f};
+  }
 }
