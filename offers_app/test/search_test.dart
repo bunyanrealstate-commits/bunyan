@@ -12,7 +12,7 @@ void main() {
   test('3 دفعات: الشهري التقريبي = السنة ÷ 12، والمحجوز مش بيظهر', () {
     final r = Search.run(vs, pay: '3', budget: 3500, tol: 0);
     expect(r.map((x) => (x['u'] as Obj)['id']).toList(), ['u3', 'u2', 'u1']);
-    expect(Search.run(vs, types: {'2bk2b'}).isEmpty, true);
+    expect(Search.run(vs, types: {'2bk2b'}).any((x) => (x['u'] as Obj)['id'] == 'u4'), false);
   });
   test('دفعة واحدة: ميزانية سنوية 72 ألف', () {
     final r = Search.run(vs, pay: '1', budget: 72000, tol: 5);

@@ -59,7 +59,7 @@ jobs:
         run: flutter analyze --no-fatal-infos --no-fatal-warnings lib 2>&1 | tee /tmp/an.log || true
       - name: Test
         working-directory: offers_app
-        run: flutter test test/search_test.dart test/pages_test.dart > /tmp/test.log 2>&1; R=$?; tail -40 /tmp/test.log; test $R -eq 0
+        run: set +e; flutter test test/search_test.dart test/pages_test.dart > /tmp/test.log 2>&1; R=$?; tail -40 /tmp/test.log; test $R -eq 0
       - name: Build APK
         working-directory: offers_app
         run: flutter build apk --release --build-number=${{ github.run_number }} 2>&1 | tee /tmp/build.log; test ${PIPESTATUS[0]} -eq 0
