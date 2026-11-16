@@ -27,6 +27,12 @@ import java.net.URL
  * صور الجروبات اللي مش مختارة والشاتات العادية مبتتبعتش لأي حتة.
  */
 class WaListener : NotificationListenerService() {
+    /** أول ما يتوصل: يقرا الإشعارات اللي موجودة دلوقتي علشان الجروبات تظهر علطول */
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        try { activeNotifications?.forEach { onNotificationPosted(it) } } catch (_: Exception) {}
+    }
+
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         if (sbn.packageName != "com.whatsapp" && sbn.packageName != "com.whatsapp.w4b") return
         val n = sbn.notification ?: return
@@ -56,7 +62,7 @@ object Auto {
     fun arr(c: Context, k: String) = try { JSONArray(prefs(c).getString(k, "[]")!!) } catch (_: Exception) { JSONArray() }
     fun put(c: Context, k: String, v: Any) = prefs(c).edit().putString(k, v.toString()).apply()
     fun cfg(c: Context) = obj(c, "cfg")
-    fun groups(c: Context): Set<String> { val a = cfg(c).optJSONArray("groups") ?: return setOf(); return (0 until a.length()).map { a.getString(it) }.toSet() }
+    fun groups(c: Context): Set<String> { val a = cfg(c).optJSONArray("groups") ?: return setOf(); return (0 until a.length()).map { a.getString(it).trim().lowercase() }.toSet() }
 
     @Synchronized fun seen(c: Context, g: String, msgs: List<Pair<String, Long>>) {
         val seen = obj(c, "seen"); val last = obj(c, "last")
@@ -71,9 +77,9 @@ object Auto {
         }
         last.put(g, lt); seen.put(g, s)
         put(c, "seen", seen); put(c, "last", last)
-        if (got && groups(c).contains(g)) {
+        if (got && groups(c).contains(g.lowercase())) {
             val keep = JSONArray(); val old = System.currentTimeMillis() - 86400000L
-            for (i in 0 until ev.length()) { val e = ev.getJSONObject(i); if (e.getLong("t") > old && groups(c).contains(e.getString("g"))) keep.put(e) }
+            for (i in 0 until ev.length()) { val e = ev.getJSONObject(i); if (e.getLong("t") > old && groups(c).contains(e.getString("g").lowercase())) keep.put(e) }
             put(c, "ev", keep)
             val app = c.applicationContext
             h.postDelayed({ Thread { run(app) }.start() }, 60000)

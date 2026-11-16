@@ -80,7 +80,9 @@ class _GroupsState extends State<GroupsPage> with WidgetsBindingObserver {
         const SizedBox(height: 6),
         TextField(decoration: const InputDecoration(labelText: 'دوّر على جروب', prefixIcon: Icon(Icons.search)), onChanged: (v) => setState(() => q = v)),
         if (loading) const Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator())),
-        if (!loading && names.isEmpty) const Padding(padding: EdgeInsets.all(14), child: Text('لسه مفيش جروبات — أول ما يجيلك رسالة من جروب هيظهر هنا', style: TextStyle(color: kMuted))),
+        if (q.trim().isNotEmpty && !names.any((g) => g.toLowerCase() == q.trim().toLowerCase()))
+          Card(color: const Color(0xFFE3F4F5), child: ListTile(leading: const Icon(Icons.add_circle, color: kAc), title: Text('تابع جروب «${q.trim()}»', style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('اكتب اسم الجروب زي ما هو مكتوب في الواتساب بالظبط'), onTap: () => _toggle(q.trim(), true))),
+        if (!loading && names.isEmpty) const Padding(padding: EdgeInsets.all(14), child: Text('الجروبات بتظهر هنا أول ما يجيلك منها رسالة جديدة (بعد ما شغّلت الإذن). أو اكتب اسم الجروب فوق ودوس «تابع».', style: TextStyle(color: kMuted))),
         for (final g in names)
           Card(child: SwitchListTile(
             value: sel.containsKey(g), onChanged: (b) => _toggle(g, b),
