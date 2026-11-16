@@ -30,6 +30,24 @@ jobs:
           open(p,'w').write(s)
           PY
           mkdir -p ~/.android && cp ../keystore/debug.keystore ~/.android/debug.keystore
+          # توقيع ثابت لكل النسخ (علشان التحديث يتسطّب فوق القديم)
+          python3 - <<'PY'
+          import os,re
+          ks=os.path.abspath('../keystore/debug.keystore')
+          for p in ['android/app/build.gradle','android/app/build.gradle.kts']:
+              if not os.path.exists(p): continue
+              s=open(p).read()
+              if p.endswith('.kts'):
+                  cfg='signingConfigs {\n        create("fixed") {\n            storeFile = file("%s")\n            storePassword = "android"\n            keyAlias = "androiddebugkey"\n            keyPassword = "android"\n        }\n    }\n    buildTypes {'%ks
+                  s=s.replace('buildTypes {',cfg,1)
+                  s=re.sub(r'signingConfig\s*=\s*signingConfigs\.getByName\("debug"\)','signingConfig = signingConfigs.getByName("fixed")',s)
+              else:
+                  cfg="signingConfigs {\n        fixed {\n            storeFile file('%s')\n            storePassword 'android'\n            keyAlias 'androiddebugkey'\n            keyPassword 'android'\n        }\n    }\n    buildTypes {"%ks
+                  s=s.replace('buildTypes {',cfg,1)
+                  s=re.sub(r'signingConfig\s*=?\s*signingConfigs\.debug','signingConfig signingConfigs.fixed',s)
+              open(p,'w').write(s); print('patched',p)
+          PY
+          grep -n "signingConfig" android/app/build.gradle* || true
           flutter pub get
       - name: Analyze
         working-directory: bunyan_app
@@ -45,7 +63,8 @@ jobs:
           git add . && git commit -q -m log && git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git apk-flutter-log
       - name: Publish APK to branch apk-flutter
         run: |
-          mkdir /tmp/out && cp bunyan_app/build/app/outputs/flutter-apk/app-release.apk /tmp/out/Bunyan.apk && echo "{\"code\":${{ github.run_number }}}" > /tmp/out/version.json
+          mkdir /tmp/out && cp bunyan_app/build/app/outputs/flutter-apk/app-release.apk /tmp/out/Bunyan.apk
+          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1); $BT/apksigner verify --print-certs /tmp/out/Bunyan.apk | head -5 > /tmp/out/cert.txt || true; $BT/aapt dump badging /tmp/out/Bunyan.apk | head -2 >> /tmp/out/cert.txt || true && echo "{\"code\":${{ github.run_number }}}" > /tmp/out/version.json
           cp /tmp/an.log /tmp/out/analyze.log || true
           cd /tmp/out && git init -q -b apk-flutter && git config user.name gh && git config user.email gh@github.com
           git add . && git commit -q -m "Bunyan Flutter APK" && git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git apk-flutter
