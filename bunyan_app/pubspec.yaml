@@ -22,3 +22,11 @@ dev_dependencies:
     sdk: flutter
 flutter:
   uses-material-design: true
+  fonts:
+    - family: Plex
+      fonts:
+        - asset: fonts/PlexArabic-500.ttf
+        - asset: fonts/PlexArabic-600.ttf
+          weight: 600
+        - asset: fonts/PlexArabic-700.ttf
+          weight: 700

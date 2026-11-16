@@ -5,6 +5,7 @@ const kGreen = Color(0xFF1F7A55), kInk = Color(0xFF1D2733), kMuted = Color(0xFF7
 
 ThemeData bunyanTheme() => ThemeData(
       useMaterial3: true,
+      fontFamily: 'Plex',
       colorScheme: ColorScheme.fromSeed(seedColor: kGreen, primary: kGreen, surface: Colors.white),
       scaffoldBackgroundColor: kPaper,
       appBarTheme: const AppBarTheme(backgroundColor: kPaper, foregroundColor: kInk, elevation: 0, centerTitle: false),
