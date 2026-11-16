@@ -329,4 +329,92 @@ class Engine {
     final earned = rentE + pen, cost = coC + fuC + isC + exC;
     return {'earned': earned, 'cost': cost, 'profit': earned - cost, 'rentE': rentE, 'pen': pen, 'coC': coC, 'fuC': fuC, 'isC': isC, 'exC': exC};
   }
+
+  /* ───── الربح المتوقع للاستديو والسنة (ua / projU / winU / annW / occ) ───── */
+  static int dy(DateTime a, DateTime b) => ((ms(b) - ms(a)) / 864e5).round();
+  static double mBtw(DateTime a, DateTime b) {
+    if (!b.isAfter(a)) return 0;
+    var k = 0; while (k < 600 && !addM(a, k + 1).isAfter(b)) { k++; }
+    final x = addM(a, k), y = addM(a, k + 1); final r = (ms(b) - ms(x)) / 864e5; final dmv = ((ms(y) - ms(x)) / 864e5).round(); final dm = dmv == 0 ? 30 : dmv;
+    return k + (r > 0.5 ? r.round() / dm : 0);
+  }
+  Map<String, dynamic> onbPre(Obj u) {
+    try {
+      final ls = objs(u['leases']);
+      if (!truthy(u['onb']) || ls.isEmpty) return {'m': 0.0, 'a': 0.0, 'to': null};
+      final L = ([...ls]..sort((a, b) => str(a['start']).compareTo(str(b['start'])))).first;
+      final s0 = pd(u['start']), fs = pd(L['start']);
+      if (!fs.isAfter(s0)) return {'m': 0.0, 'a': 0.0, 'to': null};
+      final m = math.min(mBtw(s0, fs), truthy(u['cm']) ? n(u['cm']) : 12.0);
+      return {'m': m, 'a': n0(L['rent']) * m, 'to': L['start'], 'L': L};
+    } catch (_) { return {'m': 0.0, 'a': 0.0, 'to': null}; }
+  }
+  Map<String, double> ua(Obj u) {
+    final f = sh(u);
+    final ue = objs(S['exp']).where((x) => x['u'] == u['id']).fold(0.0, (s, x) => s + n(x['a']) * (truthy(x['n']) ? n(x['n']) : 1));
+    final full = (truthy(u['total']) ? n(u['total']) : isumOf(u)) + n0(u['furn']) + ue; final pre = onbPre(u);
+    final ls = objs(u['leases']);
+    final occN = ls.fold(0.0, (s, L) => s + lm(L)) + (pre['m'] as double);
+    var incL = 0.0;
+    for (final L in ls) {
+      var a = 0.0; for (var i = 0; i < months(L); i++) { a += la(L, i); }
+      (obj(L['rav']) ?? {}).forEach((q, v) { a += n(v) - la(L, int.tryParse(q) ?? 0); });
+      a += (truthy(L['penp']) ? n0(L['pen']) : 0) + n0(L['adv']) + ppT(L);
+      incL += a;
+    }
+    final inc = (pre['a'] as double) * f + incL * f;
+    final ic = ls.fold(0.0, (s, L) => s + n0(L['icost']) * lm(L) + (truthy(L['rme']) ? n0(L['router']) : 0)) * f;
+    final salv = n0(u['salv']); final cost = (full - salv) * f + ic; final cm = n0(u['cm']);
+    final vac = math.max(0.0, cm - occN); final tg = (S['tp'] == null ? 25 : n(S['tp'])) / 100;
+    final tr = cm != 0 ? (full - salv) * (1 + tg) / cm : 0.0;
+    return {'cost': cost, 'inc': inc, 'occ': occN, 'vac': vac, 'tr': tr, 'tg': tg, 'full': full - salv, 'profit': inc - cost, 'need': vac != 0 ? math.max(0.0, (cost * (1 + tg) - inc) / f / vac) : 0.0};
+  }
+  Map<String, dynamic>? winU(Obj u) {
+    final s0 = pd(u['start']); final ce = addM(s0, truthy(u['cm']) ? n(u['cm']) : 12); DateTime? le;
+    for (final L in objs(u['leases'])) { var e = lend(L); if (truthy(L['exit']) && pd(L['exit']).isBefore(e)) e = pd(L['exit']); if (le == null || e.isAfter(le)) le = e; }
+    if (le == null || !le.isAfter(s0)) return null;
+    final e = le.isBefore(ce) ? le : ce; final mW = mBtw(s0, e); var oc = 0.0;
+    for (final L in objs(u['leases'])) { var a = pd(L['start']), b = lend(L); if (truthy(L['exit']) && pd(L['exit']).isBefore(b)) b = pd(L['exit']); if (a.isBefore(s0)) a = s0; if (b.isAfter(e)) b = e; if (b.isAfter(a)) oc += mBtw(a, b); }
+    return {'s': s0, 'e': e, 'mW': mW, 'oc': math.min(oc, mW), 'occ': mW != 0 ? math.min(1.0, oc / mW) : 0.0};
+  }
+  Map<String, dynamic>? projU(Obj u) {
+    final f = sh(u); final s0 = pd(u['start']); final cm = truthy(u['cm']) ? n(u['cm']) : 12.0; final ce = addM(s0, cm);
+    final mc = ((truthy(u['total']) ? n(u['total']) : isumOf(u)) + n0(u['furn'])) / cm; final dc = mc / 30; const D = 864e5;
+    var mo = 0.0, F = 0.0; DateTime? le; final iv = <List<int>>[];
+    for (final L in objs(u['leases'])) {
+      final a = pd(L['start']); var b = lend(L); if (truthy(L['exit']) && pd(L['exit']).isBefore(b)) b = pd(L['exit']);
+      if (!b.isAfter(a)) continue;
+      mo += truthy(L['exit']) ? mBtw(a, b) : lm(L);
+      if (a.isBefore(s0)) F += ((math.min(ms(s0), ms(b)) - ms(a)) / D).round();
+      if (le == null || b.isAfter(le)) le = b;
+      final x = a.isBefore(s0) ? s0 : a, y = b.isAfter(ce) ? ce : b; if (y.isAfter(x)) iv.add([ms(x), ms(y)]);
+    }
+    if (le == null) return null;
+    final e = le.isBefore(ce) ? le : ce; iv.sort((p, q) => p[0].compareTo(q[0]));
+    var cov = 0; List<int>? cur;
+    for (final v in iv) { if (cur == null || v[0] > cur[1]) { if (cur != null) cov += cur[1] - cur[0]; cur = [v[0], v[1]]; } else if (v[1] > cur[1]) { cur[1] = v[1]; } }
+    if (cur != null) cov += cur[1] - cur[0];
+    final gap = math.max(0, ((ms(e) - ms(s0)) / D - cov / D).round()); final net = F - gap; final end = !le.isBefore(ce);
+    var cost = mc * mo; var adj = 0.0; if (net < 0) { adj = -net * dc; } else if (end) { adj = -net * dc; } cost += adj;
+    final sv = end ? n0(u['salv']) : 0.0; cost -= sv;
+    final inc = ua(u)['inc']! / (f == 0 ? 1 : f);
+    return {'mc': mc, 'months': mo, 'F': F, 'gap': gap, 'adj': adj, 'sv': sv, 'inc': inc * f, 'cost': cost * f, 'p': (inc - cost) * f, 's': s0, 'e': e, 'end': end};
+  }
+  Map<String, dynamic> annW() {
+    final t = today(); var mo = 0.0, p = 0.0, mW = 0.0, oc = 0.0; DateTime? e0, s0;
+    for (final u in SU()) {
+      if (!addM(pd(u['start']), n(u['cm'])).isAfter(t)) continue;
+      final w = winU(u); if (w == null) continue;
+      final P = projU(u); p += P != null ? P['p'] as double : 0; if (P != null) mo += P['months'] as double;
+      mW += w['mW'] as double; oc += w['oc'] as double;
+      final we = w['e'] as DateTime, ws = w['s'] as DateTime;
+      if (e0 == null || we.isAfter(e0)) e0 = we; if (s0 == null || ws.isBefore(s0)) s0 = ws;
+    }
+    var gx = 0.0;
+    if (e0 != null) {
+      for (final x in SE()) { if (truthy(x['u'])) continue; final f = shg(x['g']); final cnt = truthy(x['n']) ? n(x['n']).toInt() : 1;
+        for (var i = 0; i < cnt; i++) { final d = addM(pd(x['d']), i); if (!d.isBefore(t) && d.isBefore(e0)) gx += n0(x['a']) * f; } }
+    }
+    return {'p': p - gx, 'gx': gx, 'occ': mW != 0 ? oc / mW : 0.0, 'mW': mW, 's': s0, 'e': e0, 'mo': mo};
+  }
 }

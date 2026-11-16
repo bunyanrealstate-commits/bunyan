@@ -96,6 +96,12 @@ class _UnitDetailState extends State<UnitDetail> {
           _kv('مدة العقد', '${str(u['cm'])} شهر'),
           _kv('إجمالي الإيجار', money(truthy(u['total']) ? n(u['total']) : Engine.isumOf(u))),
           _kv('الأثاث', money(n0(u['furn']))),
+          Builder(builder: (_) { final e = Engine(Store.I.S, WS: 'all'); final p = e.projU(u); final a = e.ua(u);
+            return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              if (p != null) _kv('🎯 الربح المتوقع', money(p['p'] as double)),
+              _kv('🏠 شهور مأجّرة', '${((a['occ']! * 10).round() / 10)} من ${str(u['cm'])}'),
+              if (a['vac']! > 0 && a['need']! > 0) _kv('أقل إيجار للشهور الفاضية', '${money(a['need']!)} / شهر'),
+            ]); }),
           const Divider(),
           const Text('💳 دفعات الشركة — دوس على الدفعة علشان تسجّلها', style: TextStyle(fontWeight: FontWeight.bold)),
           for (var k = 0; k < insts.length; k++) InkWell(

@@ -27,6 +27,17 @@ class HomePage extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(child: _Stat('🧾 الإيجار المقبوض', rp['rev']!)),
       ]),
+      const SizedBox(height: 10),
+      Builder(builder: (_) { final an = e.annW(); return Row(children: [
+        Expanded(child: _Stat('🎯 الربح المتوقع على مدة العقود', an['p'] as double, sub: 'بعد كل التكاليف والمصاريف')),
+        const SizedBox(width: 10),
+        Expanded(child: Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('🏠 نسبة الإشغال', style: TextStyle(color: kMuted, fontSize: 12, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
+          Text('${((an['occ'] as double) * 100).round()}%', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: kGreen)),
+          LinearProgressIndicator(value: (an['occ'] as double).clamp(0, 1), color: kGreen, backgroundColor: kSand),
+        ])))),
+      ]); }),
       const SizedBox(height: 14),
       _Upcoming(e),
       const SizedBox(height: 10),
