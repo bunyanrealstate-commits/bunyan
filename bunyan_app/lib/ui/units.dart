@@ -6,6 +6,7 @@ import 'theme.dart';
 import 'shell.dart';
 import '../core/actions.dart';
 import 'dialogs.dart';
+import 'lease_edit.dart';
 
 class UnitsPage extends StatelessWidget {
   const UnitsPage({super.key});
@@ -76,7 +77,8 @@ class _UnitDetailState extends State<UnitDetail> {
     final insts = objs(u['inst']);
     return Directionality(textDirection: TextDirection.rtl, child: Scaffold(
       appBar: AppBar(title: Text(str(u['name']))),
-      body: ListView(padding: const EdgeInsets.all(14), children: [
+      floatingActionButton: FloatingActionButton.extended(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => LeaseEdit(u, null))), icon: const Icon(Icons.person_add), label: const Text('عقد مستأجر جديد')),
+      body: ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 90), children: [
         Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           _kv('الشركة', str(u['company'])),
           _kv('بداية العقد', str(u['start'])),
@@ -101,7 +103,16 @@ class _UnitDetailState extends State<UnitDetail> {
   Widget _lease(int k, DateTime t) {
     final L = objs(u['leases'])[k];
     return Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('👤 ${str(L['tenant'])}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+      Row(children: [
+        Expanded(child: Text('👤 ${str(L['tenant'])}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16))),
+        IconButton(tooltip: 'تعديل العقد', icon: const Icon(Icons.edit_outlined), onPressed: () async {
+          if (truthy(L['exit'])) { toast(context, 'العقد موقوف — استأنفه الأول'); return; }
+          if (!truthy(L['sch'])) { toast(context, 'العقد ده معمول بالطريقة القديمة — عدّله من بنيان القديم'); return; }
+          final ds = [str(L['start']), for (final i in Engine.rcv(L)) iso(Engine.payD(L, i))];
+          if (!await lockOk(context, ds) || !context.mounted) return;
+          Navigator.of(context).push(MaterialPageRoute(builder: (_) => LeaseEdit(u, k)));
+        }),
+      ]),
       if (truthy(L['phone'])) Text(str(L['phone']), style: const TextStyle(color: kMuted)),
       _kv('من', '${str(L['start'])} لـ ${iso(Engine.lend(L))}'),
       _kv('الإيجار', money(n0(L['rent']))),
