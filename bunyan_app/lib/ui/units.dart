@@ -8,6 +8,7 @@ import '../core/actions.dart';
 import 'dialogs.dart';
 import 'lease_edit.dart';
 import 'cheques.dart';
+import 'unit_boxes.dart';
 import 'unit_edit.dart';
 
 class UnitsPage extends StatelessWidget {
@@ -91,6 +92,8 @@ class _UnitDetailState extends State<UnitDetail> {
       })]),
       floatingActionButton: FloatingActionButton.extended(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => LeaseEdit(u, null))), icon: const Icon(Icons.person_add), label: const Text('عقد مستأجر جديد')),
       body: ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 90), children: [
+        RenBox(u, () { if (mounted) setState(() {}); }),
+        GraceBox(u),
         Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           _kv('الشركة', str(u['company'])),
           _kv('بداية العقد', str(u['start'])),

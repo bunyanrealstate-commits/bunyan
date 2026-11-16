@@ -254,7 +254,50 @@ class Engine {
       final x = se[k]; final cnt = truthy(x['n']) ? n(x['n']).toInt() : 1;
       for (var i = 0; i < cnt; i++) { final d = iso(addM(pd(x['d']), i)); if (!pd(d).isBefore(t)) P('exp', 'x${k}_$i', d, 'مصروف: ${str(x['w'])}', n0(x['a']), [0]); }
     }
+    // «رد التأمين» على انتهاء العقد (depOf)
+    for (var j = 0; j < r.length; j++) {
+      final x = r[j]; if (x['ty'] != 'end') continue;
+      final mm = RegExp(r'^(.*)e(\d+)$').firstMatch(str(x['id'])); final u = mm == null ? null : U(mm[1]); final ls = u == null ? null : objs(u['leases']);
+      final L = (ls != null && int.parse(mm![2]!) < ls.length) ? ls[int.parse(mm[2]!)] : null; final d = L == null ? null : depOf(L);
+      if (d != null && !truthy(d['r'])) r[j] = {...x, 'label': '${x['label']} • رد التأمين ${d['mode'] == 'chq' ? '(شيك ضمان)' : _fmt(n0(d['a']))}'};
+    }
+    // 🔁 تجديد عقد الشركة (renewjs)
+    for (final u in SU()) {
+      if (u['ren'] == 'no') continue;
+      final ce = addM(pd(u['start']), n0(u['cm'])); final nd = ((ms(ce) - ms(t)) / 864e5).round();
+      if (nd > 120 || nd < -45) continue;
+      final a = renEst(u); final d = truthy(u['renD']) ? str(u['renD']) : iso(ce); final set = u['renA'] != null && u['renA'] != '';
+      r.add({'ty': 'inst', 'id': '${u['id']}rn', 'd': d, 'label': '🔁 تجديد عقد الشركة - ${str(u['name'])}${a != 0 ? ' (دفعة أولى${set ? '' : ' متوقعة'})' : ' (اكتب مبلغ التجديد)'}', 'amt': a, 'offs': [60, 45, 30, 21, 14, 7, 3, 1, 0], 'rn': 1});
+    }
+    // ⏳ أيام السماح بتخلص والاستديو فاضي
+    for (final u in SU()) {
+      final o = gi(u); if (o['now'] != true || o['nextIn'] != null || !((o['c'] as double) > 0)) continue;
+      final B = o['B'] as int; final d = DateTime.fromMillisecondsSinceEpoch(ms(t) + math.max(0, B) * 86400000);
+      r.add({'ty': 'grace', 'id': '${u['id']}gr', 'd': iso(d), 'label': B > 0 ? '⏳ أيام السماح بتاعة «${str(u['name'])}» بتخلص — بعدها كل يوم فاضي خسارة ${_fmt((o['c'] as double).roundToDouble())}' : '🔴 «${str(u['name'])}» فاضي وخلصت أيام السماح — كل يوم خسارة ${_fmt((o['c'] as double).roundToDouble())}', 'amt': 0, 'offs': [3, 2, 1, 0]});
+    }
     return r;
+  }
+
+  Obj? depOf(Obj L) { final D = objs(S['dep']); return D.where((x) => x['lid'] == L['id'] && !truthy(x['r'])).firstOrNull ?? D.where((x) => x['lid'] == L['id']).firstOrNull; }
+  static double renEst(Obj u) { if (u['renA'] != null && u['renA'] != '') return n0(u['renA']); final nr = objs(u['inst']).where((i) => !truthy(i['rn'])).toList(); return nr.isNotEmpty ? n0(nr[0]['a']) : 0; }
+  static String _fmt(num v) { final r = v.round(); final s = r.abs().toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ','); return r < 0 ? '-$s' : s; }
+
+  /// أيام السماح (graceInfo / gi)
+  Map<String, dynamic> gi(Obj u) {
+    final g = n0(u['grace']).toInt(); final cs = pd(u['start']), ce = addM(cs, n0(u['cm'])); var H = DateTime.fromMillisecondsSinceEpoch(ms(cs) - g * 86400000); final t = today();
+    final D = math.max(1, dy(cs, ce)); final tot = truthy(u['total']) ? n(u['total']) : isumOf(u); final c = tot / D * sh(u);
+    final iv = [for (final L in objs(u['leases'])) [pd(L['start']), truthy(L['exit']) ? pd(L['exit']) : lend(L)]].where((x) => x[1].isAfter(x[0])).toList()..sort((a, b) => a[0].compareTo(b[0]));
+    final m = <List<DateTime>>[];
+    for (final x in iv) { if (m.isNotEmpty && !x[0].isAfter(m.last[1])) { if (x[1].isAfter(m.last[1])) m.last[1] = x[1]; } else { m.add([x[0], x[1]]); } }
+    DateTime mx(DateTime a, DateTime b) => a.isAfter(b) ? a : b; DateTime mn(DateTime a, DateTime b) => a.isBefore(b) ? a : b;
+    int oc(DateTime a, DateTime b) { var k = 0; for (final x in m) { final p = mx(x[0], a), q = mn(x[1], b); if (q.isAfter(p)) k += dy(p, q); } return k; }
+    if (truthy(u['onb'])) { if (m.isNotEmpty && m[0][0].isAfter(H)) { H = m[0][0]; } else if (m.isEmpty) { H = mx(t, H); } }
+    final tc = mn(mx(t, H), ce); final vp = math.max(0, dy(H, tc) - oc(H, tc)), vf = math.max(0, dy(tc, ce) - oc(tc, ce));
+    final now = !t.isBefore(H) && t.isBefore(ce) && !m.any((x) => !x[0].isAfter(t) && t.isBefore(x[1]));
+    DateTime? since; if (now) { final prev = m.where((x) => !x[1].isAfter(t)).toList(); since = prev.isNotEmpty ? prev.last[1] : H; }
+    final nx = m.where((x) => x[0].isAfter(t)).toList(); var rent = 0.0; for (final L in objs(u['leases'])) { if (n0(L['rent']) != 0) rent = n0(L['rent']); }
+    final B = g - vp;
+    return {'g': g, 'H': H, 'cs': cs, 'ce': ce, 'c': c, 'vp': vp, 'vf': vf, 'B': B, 'Bend': B - vf, 'now': now, 'since': since, 'nextIn': nx.isNotEmpty ? nx[0][0] : null, 'lastOut': m.isNotEmpty ? m.last[1] : null, 'dr': rent != 0 ? rent * 12 / 365 * sh(u) : 0.0};
   }
 
   /* ───── حركات الفلوس الجاية (events) والتوقع (project) ───── */
