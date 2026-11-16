@@ -22,15 +22,20 @@ class CtPdf {
   static pw.Widget _txt(String s, {double size = 9.5, bool bold = false, pw.TextAlign? align, PdfColor color = ink}) =>
       pw.Text(s, textDirection: _dir(s), textAlign: align ?? (_dir(s) == pw.TextDirection.rtl ? pw.TextAlign.right : pw.TextAlign.left), style: pw.TextStyle(font: bold ? _b : _f, fontSize: size, color: color));
 
-  static pw.Widget _cell(dom.Element? td, double flex, {bool head = false}) {
+  static pw.Widget _c(dom.Element? td) {
     final s = td == null ? '' : _t(td); final cls = td?.classes ?? const <String>{};
-    final h = head || cls.contains('en') || cls.contains('ar');
-    return pw.Expanded(flex: (flex * 10).round(), child: pw.Container(
+    final h = cls.contains('en') || cls.contains('ar');
+    return pw.Container(
+      color: h ? shade : null,
       padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 4),
-      decoration: pw.BoxDecoration(color: h ? shade : null, border: pw.Border.all(color: line, width: .6)),
       child: _txt(s, bold: h, size: h ? 9 : 10, align: cls.contains('ar') ? pw.TextAlign.right : (cls.contains('en') ? pw.TextAlign.left : pw.TextAlign.center)),
-    ));
+    );
   }
+  static pw.Widget _row(List<dom.Element> tds, List<double> w) => pw.Table(
+        border: pw.TableBorder.all(color: line, width: .6),
+        columnWidths: {for (var j = 0; j < w.length; j++) j: pw.FlexColumnWidth(w[j])},
+        defaultVerticalAlignment: pw.TableCellVerticalAlignment.full,
+        children: [pw.TableRow(children: [for (final c in tds) _c(c)])]);
 
   /// جدول البيانات (فيه colspan و rowspan)
   static pw.Widget _infoTable(dom.Element table) {
@@ -41,15 +46,22 @@ class CtPdf {
       if (rs > 1 && tds.length >= 2) {
         final left = tds.first, right = tds.last; final mids = <List<dom.Element>>[tds.sublist(1, tds.length - 1)];
         for (var k = 1; k < rs && i + k < rows.length; k++) { mids.add(rows[i + k].children.where((c) => c.localName == 'td').toList()); }
-        out.add(pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.stretch, children: [
-          _cell(left, 2.4),
-          pw.Expanded(flex: 52, child: pw.Column(children: [for (final m in mids) pw.Row(children: [for (final (j, c) in m.indexed) _cell(c, m.length == 3 ? [1.3, 2.4, 1.5][j] : 5.2 / m.length)])])),
-          _cell(right, 2.4),
-        ]));
+        out.add(pw.Table(
+          border: pw.TableBorder.all(color: line, width: .6),
+          columnWidths: const {0: pw.FlexColumnWidth(2.4), 1: pw.FlexColumnWidth(5.2), 2: pw.FlexColumnWidth(2.4)},
+          defaultVerticalAlignment: pw.TableCellVerticalAlignment.full,
+          children: [pw.TableRow(children: [
+            pw.Container(alignment: pw.Alignment.centerLeft, child: _c(left)),
+            pw.Column(children: [for (final m in mids) pw.Table(
+              border: const pw.TableBorder(verticalInside: pw.BorderSide(color: line, width: .6), bottom: pw.BorderSide(color: line, width: .3)),
+              columnWidths: {for (var j = 0; j < m.length; j++) j: pw.FlexColumnWidth(m.length == 3 ? [1.3, 2.4, 1.5][j] : 1)},
+              children: [pw.TableRow(children: [for (final c in m) _c(c)])])]),
+            pw.Container(alignment: pw.Alignment.centerRight, child: _c(right)),
+          ])],
+        ));
         i += rs; continue;
       }
-      if (tds.length == 3) { out.add(pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.stretch, children: [_cell(tds[0], 2.4), _cell(tds[1], 5.2), _cell(tds[2], 2.4)])); }
-      else { out.add(pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.stretch, children: [for (final c in tds) _cell(c, 10 / tds.length)])); }
+      out.add(tds.length == 3 ? _row(tds, [2.4, 5.2, 2.4]) : _row(tds, [for (final _ in tds) 1.0]));
       i++;
     }
     return pw.Column(children: out);
@@ -99,7 +111,7 @@ class CtPdf {
       }
     }
     final pdf = pw.Document();
-    pdf.addPage(pw.Page(pageFormat: PdfPageFormat.a4, margin: const pw.EdgeInsets.all(26), build: (_) => pw.FittedBox(fit: pw.BoxFit.scaleDown, alignment: pw.Alignment.topCenter, child: pw.SizedBox(width: PdfPageFormat.a4.width - 52, child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.stretch, children: ws)))));
+    pdf.addPage(pw.MultiPage(pageFormat: PdfPageFormat.a4, margin: const pw.EdgeInsets.all(26), build: (_) => ws));
     return pdf.save();
   }
 }
