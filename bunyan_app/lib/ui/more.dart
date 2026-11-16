@@ -9,6 +9,7 @@ import 'reminders.dart';
 import 'trash.dart';
 import 'accounts.dart';
 import 'dialogs.dart';
+import '../core/updater.dart';
 import 'cheques.dart';
 import 'lock.dart';
 import 'sim.dart';
@@ -42,6 +43,7 @@ class MorePage extends StatelessWidget {
       Card(child: ListTile(leading: const Text('🛡', style: TextStyle(fontSize: 22)), title: Text(Tr.t('المراقب والشكاوى')), subtitle: Text(Tr.t('فحص البيانات + «مش عاجبني»')), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MonitorPage())))),
       Card(child: ListTile(leading: const Text('🗑', style: TextStyle(fontSize: 22)), title: Text(Tr.t('سلة المحذوفات')), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TrashPage())))),
       Card(child: ListTile(leading: const Text('🔒', style: TextStyle(fontSize: 22)), title: Text(Tr.t('قفل التطبيق برقم سري')), subtitle: Text(AppLock.on ? Tr.t('مفعّل') : Tr.t('مش مفعّل')), trailing: const Icon(Icons.chevron_left), onTap: () => lockSettings(context))),
+      Card(child: ListTile(leading: const Text('⬆️', style: TextStyle(fontSize: 22)), title: Text(Tr.t('تحديث التطبيق')), subtitle: Text('${Tr.t('النسخة')} ${Updater.mine}${Updater.latest > Updater.mine ? ' • ${Tr.t('فيه')} ${Updater.latest}' : ''}'), trailing: const Icon(Icons.chevron_left), onTap: () async { final m = await Updater.check(force: true); if (context.mounted) toast(context, m ?? (Updater.needPerm ? Tr.t('وافق على «السماح من هذا المصدر» من الشريط اللي فوق') : Tr.t('⏳ بيتحقق…'))); })),
       Card(child: ListTile(leading: const Text('🌐', style: TextStyle(fontSize: 22)), title: Text(Tr.t('اللغة / Language')), trailing: SegmentedButton<String>(segments: [ButtonSegment(value: 'ar', label: Text(Tr.t('عربي'))), ButtonSegment(value: 'en', label: Text('EN'))], selected: {Tr.lang}, onSelectionChanged: (x) => Tr.set(x.first)))),
       const SizedBox(height: 8),
       Text(Tr.t('🕘 سجل النشاط'), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),

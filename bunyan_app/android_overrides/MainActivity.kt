@@ -25,6 +25,9 @@ class MainActivity : FlutterFragmentActivity() {
                 "openOld" -> { val i = packageManager.getLaunchIntentForPackage("com.bunyan.furnished"); if (i != null) { startActivity(i); res.success(true) } else res.success(false) }
                 "hasOld" -> res.success(packageManager.getLaunchIntentForPackage("com.bunyan.furnished") != null)
                 "version" -> res.success(try { val pi = packageManager.getPackageInfo(packageName, 0); if (Build.VERSION.SDK_INT >= 28) pi.longVersionCode else @Suppress("DEPRECATION") pi.versionCode.toLong() } catch (e: Exception) { 0L })
+                "canInstall" -> res.success(if (Build.VERSION.SDK_INT >= 26) packageManager.canRequestPackageInstalls() else true)
+                "installPerm" -> { try { startActivity(Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, android.net.Uri.parse("package:$packageName"))); res.success(true) } catch (e: Exception) { res.success(false) } }
+                "updStatus" -> { val sp = getSharedPreferences("bny_upd", MODE_PRIVATE); res.success(sp.getString("st", "")) }
                 "install" -> { try { install(File(call.argument<String>("path")!!)); res.success(true) } catch (e: Exception) { res.success(false) } }
                 else -> res.notImplemented()
             }
@@ -54,7 +57,9 @@ class MainActivity : FlutterFragmentActivity() {
 
 class UpdRx : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
-        if (intent.getIntExtra(PackageInstaller.EXTRA_STATUS, -999) == PackageInstaller.STATUS_PENDING_USER_ACTION) {
+        val st = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, -999)
+        ctx.getSharedPreferences("bny_upd", Context.MODE_PRIVATE).edit().putString("st", "$st ${intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) ?: ""}").apply()
+        if (st == PackageInstaller.STATUS_PENDING_USER_ACTION) {
             @Suppress("DEPRECATION") val c = intent.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)
             if (c != null) { c.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); try { ctx.startActivity(c) } catch (_: Exception) {} }
         }

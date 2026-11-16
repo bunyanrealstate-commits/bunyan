@@ -50,7 +50,7 @@ class _ShellState extends State<Shell> {
     Future.delayed(const Duration(seconds: 3), () => Rem.schedule());
     WidgetsBinding.instance.addObserver(_life);
   }
-  late final _life = _Life(() { Native.takeLink().then((ok) { if (!ok && Store.I.linked) Store.I.sync(); }); Updater.check().then((m) { if (m != null && mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m))); }); });
+  late final _life = _Life(() { Native.takeLink().then((ok) { if (!ok && Store.I.linked) Store.I.sync(); }); Updater.check(force: Updater.needPerm || Updater.state.value != null).then((m) { if (m != null && mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m))); }); });
   void _r() { if (mounted) setState(() {}); }
   @override
   void dispose() { Store.I.removeListener(_r); Ws.I.removeListener(_r); WidgetsBinding.instance.removeObserver(_life); super.dispose(); }
@@ -105,7 +105,10 @@ class _ShellState extends State<Shell> {
         body: RefreshIndicator(onRefresh: () async { await st.sync(); }, child: ListenableBuilder(listenable: Listenable.merge([Store.I, Ws.I]), builder: (_, __) {
           final w = Ws.I.resolve();
           final page = [const HomePage(), const UnitsPage(), const AccountsPage(inTab: true), const ExpensesPage(), const GroupsPage(inTab: true), const MorePage()][tab];
-          return KeyedSubtree(key: ValueKey('$tab|$w|${Tr.lang}|${Priv.on}'), child: page);
+          return Column(children: [
+            const _UpdBar(),
+            Expanded(child: KeyedSubtree(key: ValueKey('$tab|$w|${Tr.lang}|${Priv.on}'), child: page)),
+          ]);
         })),
       ),
     );
@@ -145,4 +148,21 @@ class _Life extends WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState s) {
     if (s == AppLifecycleState.resumed && DateTime.now().difference(_last).inSeconds > 20) { _last = DateTime.now(); onResume(); }
   }
+}
+
+/// شريط التحديث: بيظهر لو فيه نسخة جديدة (ومحتاجة إذن مرة واحدة أو بتتنزّل)
+class _UpdBar extends StatelessWidget {
+  const _UpdBar();
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<String?>(valueListenable: Updater.state, builder: (_, v, __) {
+        if (v == null) return const SizedBox.shrink();
+        final t = {'perm': Tr.t('⬆️ فيه نسخة جديدة — دوس هنا ووافق مرة واحدة على «السماح من هذا المصدر» وارجع'), 'dl': Tr.t('⏳ بنزّل النسخة الجديدة…'), 'inst': Tr.t('⬆️ وافق على التحديث لو طلب منك'), 'new': Tr.t('⬆️ فيه نسخة جديدة — دوس هنا تتحدث')}[v] ?? '';
+        return Material(color: v == 'perm' ? kTerra : kAc, child: InkWell(
+          onTap: () async { if (v == 'perm') { await Updater.askPerm(); } else if (v == 'new') { await Updater.check(force: true); } },
+          child: Padding(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), child: Row(children: [
+            Expanded(child: Text(t, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800))),
+            if (v == 'perm' || v == 'new') const Icon(Icons.chevron_left, color: Colors.white),
+          ])),
+        ));
+      });
 }
