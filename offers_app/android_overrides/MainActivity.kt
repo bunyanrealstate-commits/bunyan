@@ -1,0 +1,78 @@
+package com.bunyan.offers
+
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageInstaller
+import android.net.Uri
+import android.os.Build
+import java.io.File
+import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodChannel
+
+class MainActivity : FlutterActivity() {
+    private var link: String? = null
+    override fun configureFlutterEngine(engine: FlutterEngine) {
+        super.configureFlutterEngine(engine)
+        link = intent?.dataString
+        MethodChannel(engine.dartExecutor.binaryMessenger, "offers/native").setMethodCallHandler { call, res ->
+            when (call.method) {
+                "take" -> { val l = link; link = null; res.success(l) }
+                "version" -> res.success(try { val pi = packageManager.getPackageInfo(packageName, 0); if (Build.VERSION.SDK_INT >= 28) pi.longVersionCode else @Suppress("DEPRECATION") pi.versionCode.toLong() } catch (e: Exception) { 0L })
+                "canInstall" -> res.success(if (Build.VERSION.SDK_INT >= 26) packageManager.canRequestPackageInstalls() else true)
+                "installPerm" -> { try { startActivity(Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))); res.success(true) } catch (e: Exception) { res.success(false) } }
+                "install" -> { try { install(File(call.argument<String>("path")!!)); res.success(true) } catch (e: Exception) { res.success(false) } }
+                "wa" -> res.success(wa(call.argument<String>("phone") ?: "", call.argument<String>("text") ?: "", call.argument<List<String>>("uris") ?: listOf()))
+                else -> res.notImplemented()
+            }
+        }
+    }
+    override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); if (intent.dataString != null) link = intent.dataString }
+
+    private fun has(p: String) = try { packageManager.getPackageInfo(p, 0); true } catch (e: Exception) { false }
+
+    /** واتساب بيزنس أو العادي: يفتح شات الرقم ومعاه الفيديوهات + الرسالة */
+    private fun wa(phone: String, text: String, uris: List<String>): String {
+        val pkg = if (has("com.whatsapp.w4b")) "com.whatsapp.w4b" else if (has("com.whatsapp")) "com.whatsapp" else null
+        val list = ArrayList(uris.map { Uri.parse(it) })
+        val i: Intent
+        if (list.isEmpty()) {
+            i = Intent(Intent.ACTION_SEND).apply { type = "text/plain" }
+        } else if (list.size == 1) {
+            i = Intent(Intent.ACTION_SEND).apply { type = "video/*"; putExtra(Intent.EXTRA_STREAM, list[0]) }
+        } else {
+            i = Intent(Intent.ACTION_SEND_MULTIPLE).apply { type = "video/*"; putParcelableArrayListExtra(Intent.EXTRA_STREAM, list) }
+        }
+        i.putExtra(Intent.EXTRA_TEXT, text)
+        if (phone.isNotEmpty()) i.putExtra("jid", "$phone@s.whatsapp.net")
+        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+        return try {
+            if (pkg != null) { i.setPackage(pkg); startActivity(i); "wa" } else { startActivity(Intent.createChooser(i, "ابعت للعميل")); "share" }
+        } catch (e: Exception) { try { i.setPackage(null); startActivity(Intent.createChooser(i, "ابعت للعميل")); "share" } catch (e2: Exception) { "fail" } }
+    }
+
+    private fun install(f: File) {
+        val pi = packageManager.packageInstaller
+        val p = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
+        p.setAppPackageName(packageName)
+        if (Build.VERSION.SDK_INT >= 31) p.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
+        val id = pi.createSession(p)
+        pi.openSession(id).use { s ->
+            s.openWrite("app.apk", 0, f.length()).use { out -> f.inputStream().use { it.copyTo(out) }; s.fsync(out) }
+            val i = Intent(this, UpdRx::class.java)
+            val pend = PendingIntent.getBroadcast(this, 77, i, PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0))
+            s.commit(pend.intentSender)
+        }
+    }
+}
+
+class UpdRx : BroadcastReceiver() {
+    override fun onReceive(ctx: Context, intent: Intent) {
+        if (intent.getIntExtra(PackageInstaller.EXTRA_STATUS, -999) == PackageInstaller.STATUS_PENDING_USER_ACTION) {
+            @Suppress("DEPRECATION") val c = intent.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)
+            if (c != null) { c.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); try { ctx.startActivity(c) } catch (_: Exception) {} }
+        }
+    }
+}

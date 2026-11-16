@@ -1,0 +1,78 @@
+name: Build Offers app (عروض الشقق)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['offers_app/**','.github/workflows/offers.yml']
+permissions: { contents: write }
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, flutter-version: 3.24.5, cache: true }
+      - name: Create platform folders + settings
+        working-directory: offers_app
+        run: |
+          pip install -q fonttools brotli && python3 tool/fonts.py ../rental-tracker.html fonts
+          flutter create --org com.bunyan --project-name offers --platforms android,web . >/dev/null
+          cp android_overrides/MainActivity.kt android/app/src/main/kotlin/com/bunyan/offers/MainActivity.kt
+          python3 - <<'PY'
+          p='android/app/src/main/AndroidManifest.xml';s=open(p).read()
+          s=s.replace('android:label="offers"','android:label="عروض الشقق"')
+          perms=['INTERNET','READ_MEDIA_VIDEO','READ_MEDIA_IMAGES','READ_MEDIA_VISUAL_USER_SELECTED','REQUEST_INSTALL_PACKAGES','UPDATE_PACKAGES_WITHOUT_USER_ACTION']
+          for x in perms:
+              if 'android.permission.'+x not in s: s=s.replace('<application','<uses-permission android:name="android.permission.'+x+'"/>\n    <application',1)
+          if 'READ_EXTERNAL_STORAGE' not in s: s=s.replace('<application','<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>\n    <application',1)
+          f='<intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="bnyoffers"/></intent-filter>'
+          if 'bnyoffers' not in s: s=s.replace('</activity>',f+'</activity>',1)
+          if 'UpdRx' not in s: s=s.replace('</application>','<receiver android:name=".UpdRx" android:exported="false"/></application>',1)
+          q='<package android:name="com.whatsapp"/><package android:name="com.whatsapp.w4b"/>'
+          s=s.replace('<queries>','<queries>'+q,1) if '<queries>' in s else s.replace('</manifest>','<queries>'+q+'</queries></manifest>',1)
+          if 'requestLegacyExternalStorage' not in s: s=s.replace('<application','<application android:requestLegacyExternalStorage="true"',1)
+          open(p,'w').write(s)
+          PY
+          mkdir -p ~/.android && cp ../keystore/debug.keystore ~/.android/debug.keystore
+          python3 - <<'PY'
+          import os,re
+          ks=os.path.abspath('../keystore/debug.keystore')
+          for p in ['android/app/build.gradle','android/app/build.gradle.kts']:
+              if not os.path.exists(p): continue
+              s=open(p).read()
+              if p.endswith('.kts'):
+                  s=s.replace('buildTypes {','signingConfigs {\n        create("fixed") {\n            storeFile = file("%s")\n            storePassword = "android"\n            keyAlias = "androiddebugkey"\n            keyPassword = "android"\n        }\n    }\n    buildTypes {'%ks,1)
+                  s=re.sub(r'signingConfig\s*=\s*signingConfigs\.getByName\("debug"\)','signingConfig = signingConfigs.getByName("fixed")',s)
+                  s=re.sub(r'minSdk\s*=\s*flutter\.minSdkVersion','minSdk = 23',s)
+              else:
+                  s=s.replace('buildTypes {',"signingConfigs {\n        fixed {\n            storeFile file('%s')\n            storePassword 'android'\n            keyAlias 'androiddebugkey'\n            keyPassword 'android'\n        }\n    }\n    buildTypes {"%ks,1)
+                  s=re.sub(r'signingConfig\s*=?\s*signingConfigs\.debug','signingConfig signingConfigs.fixed',s)
+                  s=re.sub(r'minSdkVersion\s+flutter\.minSdkVersion','minSdkVersion 23',s)
+                  s=re.sub(r'minSdk\s*=\s*flutter\.minSdkVersion','minSdk = 23',s)
+              open(p,'w').write(s); print('patched',p)
+          PY
+          flutter pub get
+      - name: Analyze
+        working-directory: offers_app
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings lib 2>&1 | tee /tmp/an.log || true
+      - name: Test
+        working-directory: offers_app
+        run: flutter test test/search_test.dart test/pages_test.dart > /tmp/test.log 2>&1; R=$?; tail -40 /tmp/test.log; test $R -eq 0
+      - name: Build APK
+        working-directory: offers_app
+        run: flutter build apk --release --build-number=${{ github.run_number }} 2>&1 | tee /tmp/build.log; test ${PIPESTATUS[0]} -eq 0
+      - name: Save logs on failure
+        if: failure()
+        run: |
+          mkdir -p /tmp/log && cp /tmp/build.log /tmp/an.log /tmp/test.log /tmp/log/ 2>/dev/null || true
+          cd /tmp/log && git init -q -b apk-offers-log && git config user.name gh && git config user.email gh@github.com
+          git add . && git commit -q -m log && git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git apk-offers-log
+      - name: Publish APK to branch apk-offers
+        run: |
+          mkdir /tmp/out && cp offers_app/build/app/outputs/flutter-apk/app-release.apk /tmp/out/Offers.apk
+          echo "{\"code\":${{ github.run_number }}}" > /tmp/out/version.json
+          cp /tmp/an.log /tmp/test.log /tmp/out/ || true
+          cd /tmp/out && git init -q -b apk-offers && git config user.name gh && git config user.email gh@github.com
+          git add . && git commit -q -m "Offers APK" && git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git apk-offers
