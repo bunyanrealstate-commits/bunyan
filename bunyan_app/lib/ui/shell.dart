@@ -9,6 +9,7 @@ import 'more.dart';
 import 'expenses.dart';
 import '../core/native.dart';
 import '../core/updater.dart';
+import '../core/reminders.dart';
 
 /// المجموعة المختارة (زي WS في بنيان القديم)
 class Ws extends ValueNotifier<String> {
@@ -36,6 +37,7 @@ class _ShellState extends State<Shell> {
     Native.init();
     Native.takeLink().then((ok) { if (!ok && Store.I.linked) Store.I.sync(); });
     Future.delayed(const Duration(seconds: 5), () => Updater.check());
+    Future.delayed(const Duration(seconds: 3), () => Rem.schedule());
     WidgetsBinding.instance.addObserver(_life);
   }
   late final _life = _Life(() { Native.takeLink().then((ok) { if (!ok && Store.I.linked) Store.I.sync(); }); Updater.check().then((m) { if (m != null && mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m))); }); });

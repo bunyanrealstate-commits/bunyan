@@ -28,6 +28,9 @@ jobs:
           if 'bnyapp' not in s: s=s.replace('</activity>',f+'</activity>',1)
           if 'REQUEST_INSTALL_PACKAGES' not in s: s=s.replace('<application','<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>\n    <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION"/>\n    <application',1)
           if 'UpdRx' not in s: s=s.replace('</application>','<receiver android:name=".UpdRx" android:exported="false"/></application>',1)
+          for perm in ['POST_NOTIFICATIONS','SCHEDULE_EXACT_ALARM','USE_EXACT_ALARM','RECEIVE_BOOT_COMPLETED','VIBRATE','WAKE_LOCK']:
+              if 'android.permission.'+perm not in s: s=s.replace('<application','<uses-permission android:name="android.permission.'+perm+'"/>\n    <application',1)
+          if 'ScheduledNotificationReceiver' not in s: s=s.replace('</application>','<receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"/><receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"><intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/><action android:name="android.intent.action.MY_PACKAGE_REPLACED"/><action android:name="android.intent.action.QUICKBOOT_POWERON"/><action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/></intent-filter></receiver></application>',1)
           if 'com.bunyan.furnished' not in s: s=s.replace('<queries>','<queries><package android:name="com.bunyan.furnished"/>',1) if '<queries>' in s else s.replace('</manifest>','<queries><package android:name="com.bunyan.furnished"/></queries></manifest>',1)
           open(p,'w').write(s)
           PY
@@ -47,6 +50,13 @@ jobs:
                   cfg="signingConfigs {\n        fixed {\n            storeFile file('%s')\n            storePassword 'android'\n            keyAlias 'androiddebugkey'\n            keyPassword 'android'\n        }\n    }\n    buildTypes {"%ks
                   s=s.replace('buildTypes {',cfg,1)
                   s=re.sub(r'signingConfig\s*=?\s*signingConfigs\.debug','signingConfig signingConfigs.fixed',s)
+              if 'coreLibraryDesugaringEnabled' not in s:
+                  if p.endswith('.kts'):
+                      s=s.replace('compileOptions {','compileOptions {\n        isCoreLibraryDesugaringEnabled = true',1)
+                      s+='\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")\n}\n'
+                  else:
+                      s=s.replace('compileOptions {','compileOptions {\n        coreLibraryDesugaringEnabled true',1)
+                      s+="\ndependencies {\n    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'\n}\n"
               open(p,'w').write(s); print('patched',p)
           PY
           grep -n "signingConfig" android/app/build.gradle* || true
