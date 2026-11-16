@@ -12,18 +12,18 @@ import 'cheques.dart';
 import 'unit_boxes.dart';
 import 'unit_edit.dart';
 
-/// حالة الاستديو (زي فلاتر القديم: مؤجر / شاغر / متأخر / ينتهي قريب)
+/// حالة الاستديو — نفس unitRow في القديم
 class _St {
-  final bool rented, late, ending;
-  final Obj? L;
-  _St(this.rented, this.late, this.ending, this.L);
+  final String st; final bool soon; final Obj? L; final int od; final DateTime e;
+  _St(this.st, this.soon, this.L, this.od, this.e);
+  bool get rented => st == 'rent'; bool get late => st == 'late'; bool get ending => soon;
   static _St of(Obj u) {
-    final t = today(); final act = objs(u['leases']).where((L) => !truthy(L['exit']) && !Engine.lend(L).isBefore(t) && !pd(L['start']).isAfter(t)).toList();
-    var late = false;
-    for (final L in objs(u['leases'])) { final rc = Engine.rcv(L); for (var i = 0; i < Engine.months(L); i++) { if (!Engine.payD(L, i).isAfter(t) && !rc.contains(i)) late = true; } }
-    final L = act.isNotEmpty ? act.first : (objs(u['leases']).isNotEmpty ? objs(u['leases']).last : null);
-    final ending = act.isNotEmpty && Engine.lend(act.first).difference(t).inDays <= 30;
-    return _St(act.isNotEmpty, late, ending, L);
+    final t = today(); final ls = objs(u['leases']);
+    Obj? L = ls.where((L) => !pd(L['start']).isAfter(t) && Engine.lend(L).isAfter(t)).firstOrNull;
+    if (L == null && truthy(u['onb']) && ls.isNotEmpty) { final f = ([...ls]..sort((a, b) => str(a['start']).compareTo(str(b['start'])))).first; final st = pd(f['start']); if (st.isAfter(t) && st.difference(t).inDays <= 75) L = f; }
+    var od = 0; for (final x in ls) { final rc = Engine.rcv(x); for (var i = 0; i < Engine.months(x); i++) { if (!rc.contains(i) && !Engine.payD(x, i).isAfter(t)) od++; } }
+    final e = addM(pd(u['start']), n0(u['cm']));
+    return _St(od > 0 ? 'late' : (L != null ? 'rent' : 'vac'), !e.isBefore(t) && !e.isAfter(addM(t, 2)), L, od, e);
   }
 }
 
@@ -39,7 +39,7 @@ class _UnitsState extends State<UnitsPage> {
   Widget build(BuildContext context) {
     final e = Engine(Store.I.S, WS: Ws.I.resolve());
     final all = e.SU(); final st = {for (final u in all) u['id']: _St.of(u)};
-    bool ok(Obj u) { final s = st[u['id']]!; return f == 'all' || (f == 'r' && s.rented) || (f == 'v' && !s.rented) || (f == 'l' && s.late) || (f == 'e' && s.ending); }
+    bool ok(Obj u) { final s = st[u['id']]!; return f == 'all' || (f == 'r' && s.rented) || (f == 'v' && s.st == 'vac') || (f == 'l' && s.late) || (f == 'e' && s.ending); }
     final us = all.where((u) => ok(u) && (q.isEmpty || '${u['name']} ${u['company']} ${objs(u['leases']).map((L) => L['tenant']).join(' ')}'.toLowerCase().contains(q.toLowerCase()))).toList();
     Widget chip(String k, String l, int n, Color c) => Padding(padding: const EdgeInsetsDirectional.only(end: 6, bottom: 6), child: ChoiceChip(
           label: Text('$l $n', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: f == k ? Colors.white : kInk)), selected: f == k, showCheckmark: false,
@@ -51,7 +51,7 @@ class _UnitsState extends State<UnitsPage> {
         Wrap(children: [
           chip('all', Tr.t('الكل'), all.length, kAc),
           chip('r', Tr.t('مؤجر'), all.where((u) => st[u['id']]!.rented).length, kOk),
-          chip('v', Tr.t('شاغر'), all.where((u) => !st[u['id']]!.rented).length, Colors.grey),
+          chip('v', Tr.t('شاغر'), all.where((u) => st[u['id']]!.st == 'vac').length, Colors.grey),
           chip('l', Tr.t('متأخر'), all.where((u) => st[u['id']]!.late).length, kRed),
           chip('e', Tr.t('ينتهي قريب'), all.where((u) => st[u['id']]!.ending).length, Colors.orange),
         ]),
@@ -85,10 +85,10 @@ class _UnitCard extends StatelessWidget {
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(str(u['name']), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: kNavy)),
           Text([if (L != null && truthy(L['tenant'])) str(L['tenant']), str(u['company'])].where((x) => x.isNotEmpty).join(' • '), style: const TextStyle(color: kMuted, fontSize: 12.5, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
-          if (L != null) Text('${s.rented ? Tr.t('حتى') : Tr.t('انتهى')} ${iso(Engine.lend(L))}${s.late ? ' • ${Tr.t('متأخر')}' : ''}', style: TextStyle(color: s.late ? kRed : kMuted, fontSize: 11.5)),
+          Text('${s.soon ? '⏳ ' : ''}${Tr.t('عقد الشركة لحد')} ${iso(s.e)}${s.late ? ' • ${s.od} ${Tr.t('متأخر')}' : ''}', style: TextStyle(color: s.late ? kRed : (s.soon ? kTerra : kMuted), fontSize: 11.5)),
           if (L == null) Text(Tr.t('فاضية — مفيش مستأجر'), style: const TextStyle(color: kTerra, fontSize: 12, fontWeight: FontWeight.w700)),
         ])),
-        if (L != null && s.rented) Text(money(n0(L['rent'])), style: const TextStyle(color: kGreen, fontWeight: FontWeight.w800, fontSize: 16)),
+        if (L != null) Text(money(n0(L['rent'])), style: const TextStyle(color: kGreen, fontWeight: FontWeight.w800, fontSize: 16)),
       ])),
     );
   }

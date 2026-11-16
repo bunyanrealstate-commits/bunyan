@@ -71,7 +71,7 @@ class _ShellState extends State<Shell> {
           toolbarHeight: 62,
           titleSpacing: 12,
           title: Row(children: [
-            SvgPicture.asset('assets/logo.svg', height: 34),
+            Column(mainAxisSize: MainAxisSize.min, children: [SvgPicture.asset('assets/logo.svg', height: 24), const Text('Furnished', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF1D4B66), letterSpacing: 1.6, height: 1.2))]),
             const SizedBox(width: 12),
             Expanded(child: _groupPicker()),
           ]),
