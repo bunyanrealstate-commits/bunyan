@@ -8661,6 +8661,17 @@ function go(){try{if(typeof AUTH==='undefined'||!AUTH||!S||S.flutLinked)return;v
  location.href='bnyapp://link?c='+encodeURIComponent(c)}catch(e){}}
 setTimeout(go,9000);
 })();</script>
+<script id="offlink">
+/* تطبيق «عروض الشقق»: لو متسطّب، نبعتله كود الربط لوحده (مفتاح Gemini + الباك أب) — لحد ما يعمل باك أب offers.json */
+(function(){if(window.HBUILD)return;
+async function go(){try{if(typeof AUTH==='undefined'||!AUTH||!S)return;var C=window.Capacitor;if(!(C&&C.isNativePlatform&&C.isNativePlatform()))return;
+ if(localStorage.getItem('bny_off_ok'))return;var c=window.bnyLinkMake&&bnyLinkMake();if(!c)return;
+ var k='bny_off_try',l=+(localStorage.getItem(k)||0);if(Date.now()-l<6*3600000)return;
+ try{var b=c.replace(/^BNYLINK-/,'').replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';var o=JSON.parse(decodeURIComponent(escape(atob(b))));
+  var r=await fetch('https://api.github.com/repos/'+o.r+'/contents/offers.json',{headers:{Authorization:'Bearer '+o.t}});if(r.status===200){localStorage.setItem('bny_off_ok','1');return}}catch(e){}
+ localStorage.setItem(k,String(Date.now()));location.href='bnyoffers://link?c='+encodeURIComponent(c)}catch(e){}}
+setTimeout(go,20000);
+})();</script>
 <script id="rcpt">/* 🧾 سند قبض الإيجار — من كارت العقد: بيتملا من بيانات المستأجر + توقيع المستلم + PDF وواتساب */
 (function(){
 var CSS=`#rcov{position:fixed;inset:0;z-index:9000;background:rgba(10,20,35,.55);overflow:auto;padding:max(12px,env(safe-area-inset-top)) 10px 40px}
