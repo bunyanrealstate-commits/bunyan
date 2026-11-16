@@ -1,0 +1,43 @@
+name: Build Bunyan (Flutter)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['bunyan_app/**','.github/workflows/flutter.yml']
+permissions: { contents: write }
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, flutter-version: 3.24.5, cache: true }
+      - name: Create platform folders + settings
+        working-directory: bunyan_app
+        run: |
+          flutter create --org com.bunyan --project-name bunyan --platforms android,ios,web . >/dev/null
+          M=android/app/src/main/AndroidManifest.xml
+          grep -q 'android.permission.INTERNET' $M || sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET" />\n    <application#' $M
+          sed -i 's#android:label="bunyan"#android:label="بنيان"#' $M
+          mkdir -p ~/.android && cp ../keystore/debug.keystore ~/.android/debug.keystore
+          flutter pub get
+      - name: Analyze
+        working-directory: bunyan_app
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings lib 2>&1 | tee /tmp/an.log || true
+      - name: Build APK
+        working-directory: bunyan_app
+        run: flutter build apk --release --build-number=${{ github.run_number }} 2>&1 | tee /tmp/build.log; test ${PIPESTATUS[0]} -eq 0
+      - name: Save logs on failure
+        if: failure()
+        run: |
+          mkdir -p /tmp/log && cp /tmp/build.log /tmp/an.log /tmp/log/ 2>/dev/null || true
+          cd /tmp/log && git init -q -b apk-flutter-log && git config user.name gh && git config user.email gh@github.com
+          git add . && git commit -q -m log && git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git apk-flutter-log
+      - name: Publish APK to branch apk-flutter
+        run: |
+          mkdir /tmp/out && cp bunyan_app/build/app/outputs/flutter-apk/app-release.apk /tmp/out/Bunyan.apk && echo "{\"code\":${{ github.run_number }}}" > /tmp/out/version.json
+          cp /tmp/an.log /tmp/out/analyze.log || true
+          cd /tmp/out && git init -q -b apk-flutter && git config user.name gh && git config user.email gh@github.com
+          git add . && git commit -q -m "Bunyan Flutter APK" && git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git apk-flutter

@@ -1,0 +1,25 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'core/store.dart';
+import 'ui/theme.dart';
+import 'ui/shell.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Store.I.init();
+  runApp(const BunyanApp());
+}
+
+class BunyanApp extends StatelessWidget {
+  const BunyanApp({super.key});
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+        title: 'بنيان',
+        debugShowCheckedModeBanner: false,
+        theme: bunyanTheme(),
+        locale: const Locale('ar'),
+        supportedLocales: const [Locale('ar'), Locale('en')],
+        localizationsDelegates: const [GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
+        home: const Shell(),
+      );
+}

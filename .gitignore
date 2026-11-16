@@ -1,2 +1,4 @@
 node_modules
 android
+bunyan_app/.dart_tool/
+bunyan_app/build/
