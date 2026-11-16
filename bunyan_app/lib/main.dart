@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/store.dart';
 import 'ui/theme.dart';
 import 'ui/shell.dart';
+import 'ui/lock.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,6 @@ class BunyanApp extends StatelessWidget {
         locale: const Locale('ar'),
         supportedLocales: const [Locale('ar'), Locale('en')],
         localizationsDelegates: const [GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
-        home: const Shell(),
+        home: const LockGate(child: Shell()),
       );
 }

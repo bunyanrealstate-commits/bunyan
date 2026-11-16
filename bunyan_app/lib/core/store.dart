@@ -48,6 +48,7 @@ class Store extends ChangeNotifier {
       await tmp.writeAsString(t, flush: true); await tmp.rename(f.path);
     }
   }
+  Future<void> saveCfg() => _saveCfg();
   Future<void> _saveCfg() async => _p.setString('bny_sync', jsonOut(cfg));
 
   /// أي تعديل: نحفظ ونعلّم إن فيه حاجة لازم تترفع

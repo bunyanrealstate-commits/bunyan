@@ -9,6 +9,7 @@ import 'trash.dart';
 import 'accounts.dart';
 import 'dialogs.dart';
 import 'cheques.dart';
+import 'lock.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
@@ -29,6 +30,7 @@ class MorePage extends StatelessWidget {
       Card(child: ListTile(leading: const Text('📂', style: TextStyle(fontSize: 22)), title: const Text('المجموعات والشراكة'), subtitle: const Text('فلوس الشراكة، الشركاء، طريقة الحساب'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GroupsPage())))),
       Card(child: ListTile(leading: const Text('🔮', style: TextStyle(fontSize: 22)), title: const Text('التوقعات — الرصيد سنة قدام'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ForecastPage())))),
       Card(child: ListTile(leading: const Text('🗑', style: TextStyle(fontSize: 22)), title: const Text('سلة المحذوفات'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TrashPage())))),
+      Card(child: ListTile(leading: const Text('🔒', style: TextStyle(fontSize: 22)), title: const Text('قفل التطبيق برقم سري'), subtitle: Text(AppLock.on ? 'مفعّل' : 'مش مفعّل'), trailing: const Icon(Icons.chevron_left), onTap: () => lockSettings(context))),
       const SizedBox(height: 8),
       const Text('🕘 سجل النشاط', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
       for (final e in h) Card(child: ListTile(
