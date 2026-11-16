@@ -139,7 +139,7 @@ class Poster extends StatelessWidget {
         if (truthy(v['loc'])) Text('📍 ${v['loc']}', style: w(11, c: Colors.white60)),
         const SizedBox(height: 14),
       ],
-      Text('Contract fee: ${Upd.nf(d['fee'])} AED   •   Security deposit: ${str(d['dep'])}', textAlign: TextAlign.center, style: w(14)),
+      Text([if (Upd.nf(d['fee']).isNotEmpty) 'Contract fee: ${Upd.nf(d['fee'])} AED', if (str(d['dep']).isNotEmpty) 'Security deposit: ${str(d['dep'])}'].join('   •   '), textAlign: TextAlign.center, style: w(14)),
       if (truthy(d['notes'])) Text(str(d['notes']), textAlign: TextAlign.center, style: w(13, c: Colors.white70)),
       const SizedBox(height: 8),
       Text('📞 ${Upd.phl(d).map((x) => '${x['n']!.isNotEmpty ? '${x['n']}: ' : ''}${x['p']}').join('  /  ')}', textAlign: TextAlign.center, style: w(20, fw: FontWeight.w900, c: gold)),
