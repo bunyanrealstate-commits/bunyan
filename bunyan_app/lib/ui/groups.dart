@@ -63,7 +63,7 @@ class _GroupsPageState extends State<GroupsPage> {
     return Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
         Expanded(child: Text(str(g['name']), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17))),
-        TextButton(onPressed: () { Ws.I.value = id; Navigator.pop(context); }, child: Text(Tr.t('فتح'))),
+        TextButton(onPressed: () { Ws.I.pick(id); Navigator.pop(context); }, child: Text(Tr.t('فتح'))),
         IconButton(onPressed: () => _edit(g), icon: const Icon(Icons.edit_outlined)),
         IconButton(onPressed: () => _del(g), icon: const Icon(Icons.delete_outline, color: kRed)),
       ]),

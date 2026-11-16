@@ -3,6 +3,7 @@ import 'i18n.dart';
 import '../core/store.dart';
 import '../core/js.dart';
 import 'theme.dart';
+import 'groups.dart';
 import 'home.dart';
 import 'units.dart';
 import 'link.dart';
@@ -16,11 +17,16 @@ import '../core/reminders.dart';
 class Ws extends ValueNotifier<String> {
   static final Ws I = Ws._();
   Ws._() : super('');
+  /// نفس wsBar في القديم: لو مفيش اختيار، المجموعة اللي فيها أكتر استديوهات — والاختيار بيتحفظ
   String resolve() {
-    final gs = objs(Store.I.S['groups']).map((g) => str(g['id'])).toList();
-    if (value.isNotEmpty && (value == 'all' || value == '-' || gs.contains(value))) return value;
-    return gs.isNotEmpty ? gs.first : 'all';
+    final S = Store.I.S; final gs = objs(S['groups']).map((g) => str(g['id'])).toList();
+    final v = value.isNotEmpty ? value : str(Store.I.cfg['ws']);
+    if (v.isNotEmpty && (v == '-' || gs.contains(v))) return v;
+    if (gs.isEmpty) return objs(S['units']).isEmpty ? 'all' : '-';
+    final us = objs(S['units']); final srt = [...gs]..sort((a, b) => us.where((u) => u['g'] == b).length.compareTo(us.where((u) => u['g'] == a).length));
+    return srt.first;
   }
+  void pick(String id) { value = id; Store.I.cfg['ws'] = id; Store.I.saveCfg(); }
 }
 
 class Shell extends StatefulWidget {
@@ -52,8 +58,6 @@ class _ShellState extends State<Shell> {
     if (!st.loaded) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     if (!st.linked && lst(st.S['units']).isEmpty) return const LinkScreen();
     // مش const: لازم الصفحة تتبني من جديد لما المجموعة أو البيانات تتغير
-    debugPrint('BNYDBG shell ws=${Ws.I.resolve()} v=${Ws.I.value}');
-    final pages = <Widget>[HomePage(key: ValueKey('h${Ws.I.resolve()}')), UnitsPage(key: ValueKey('u${Ws.I.resolve()}')), ExpensesPage(key: ValueKey('e${Ws.I.resolve()}')), MorePage(key: ValueKey('m${Ws.I.resolve()}'))];
     return Directionality(
       textDirection: Tr.dir,
       child: Scaffold(
@@ -71,7 +75,7 @@ class _ShellState extends State<Shell> {
             ),
           ],
         ),
-        body: RefreshIndicator(onRefresh: () async { await st.sync(); }, child: pages[tab]),
+        body: RefreshIndicator(onRefresh: () async { await st.sync(); }, child: ListenableBuilder(listenable: Listenable.merge([Store.I, Ws.I]), builder: (_, __) { final w = Ws.I.resolve(); return KeyedSubtree(key: ValueKey('$tab|$w|${Tr.lang}'), child: [const HomePage(), const UnitsPage(), const ExpensesPage(), const MorePage()][tab]); })),
         bottomNavigationBar: NavigationBar(
           selectedIndex: tab,
           onDestinationSelected: (i) => setState(() => tab = i),
@@ -87,18 +91,26 @@ class _ShellState extends State<Shell> {
   }
 
   Widget _groupPicker() {
-    final gs = objs(Store.I.S['groups']);
-    if (gs.length < 2) return const SizedBox();
+    final S = Store.I.S; final gs = objs(S['groups']);
+    final noG = objs(S['units']).any((u) => !truthy(u['g']));
+    if (gs.isEmpty && !noG) return const SizedBox();
     final cur = Ws.I.resolve();
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(children: [
-        for (final g in gs)
-          Padding(
-            padding: const EdgeInsetsDirectional.only(end: 6),
-            child: ChoiceChip(label: Text(str(g['name']), style: const TextStyle(fontSize: 12)), selected: cur == g['id'], onSelected: (_) { debugPrint('BNYDBG tap ${g['id']}'); Ws.I.value = str(g['id']); }),
-          ),
-      ]),
+    final items = <DropdownMenuItem<String>>[
+      for (final g in gs) DropdownMenuItem(value: str(g['id']), child: Text('📂 ${str(g['name'])}', overflow: TextOverflow.ellipsis)),
+      if (noG) DropdownMenuItem(value: '-', child: Text(Tr.t('📂 بدون مجموعة'))),
+      DropdownMenuItem(value: '__m', child: Text(Tr.t('⚙ إدارة المجموعات'))),
+    ];
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10), decoration: BoxDecoration(color: kSand, borderRadius: BorderRadius.circular(12)),
+      child: DropdownButtonHideUnderline(child: DropdownButton<String>(
+        value: items.any((x) => x.value == cur) ? cur : null, isExpanded: true, style: const TextStyle(fontSize: 14, color: kInk, fontWeight: FontWeight.w700, fontFamily: 'Plex'),
+        items: items,
+        onChanged: (v) {
+          if (v == null) return;
+          if (v == '__m') { Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GroupsPage())); return; }
+          Ws.I.pick(v);
+        },
+      )),
     );
   }
 }
