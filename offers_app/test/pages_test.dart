@@ -84,7 +84,7 @@ void main() {
     expect(Store.I.villas.any((v) => ['26', '13', '92', '49'].contains(v['no'])), false);
     expect(AutoUpd.log.first['m'], contains('اتجاهلت 4 شقة'));
     // إعلان سعر جديد لشقة واحدة: الأرقام بالألف، وباقي الفيلا يفضل متاح
-    (Store.I.D['villas'] as List).add({'id': 'b22', 'name': 'Al-Buraiki Villa 22', 'no': '22', 'company': 'Platinum Team', 'area': 'Riyadh City', 'units': [{'id': 'b5', 'no': '5', 'type': '1bk', 'p1': 45000, 'avail': true}]});
+    (Store.I.D['villas'] as List).add({'id': 'b22', 'name': 'Al-Buraiki Villa 22', 'no': '22', 'company': 'Platinum Team', 'area': 'Riyadh City', 'units': <dynamic>[<String, dynamic>{'id': 'b5', 'no': '5', 'type': '1bk', 'p1': 45000, 'avail': true}]});
     AutoUpd.applyRows('Platinum Team Real Estate', [{'company': 'Platinum Team', 'kind': 'price', 'no': '6', 'villa': 'Al-Buraiki Villa 22', 'area': 'Riyadh City', 'type': '2bk', 'floor': 'G', 'p1': 58, 'p2': 60, 'p3': 62, 'inArea': true, 'note': 'with yard'}]);
     final b22 = Store.I.villas.firstWhere((v) => v['id'] == 'b22');
     expect(objs(b22['units']).firstWhere((u) => u['no'] == '6')['p1'], 58000.0);
