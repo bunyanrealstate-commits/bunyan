@@ -68,10 +68,13 @@ Obj? findVilla(String company, Obj meta, {bool create = true}) {
   if (no.isEmpty) return null;
   final comp = company.isNotEmpty ? company : str(meta['company']);
   final c = Store.I.villas.where((v) => nkey(v['no']) == nkey(no) || nkey(villaNoOf('${v['name']} ${v['no']}')) == nkey(no)).toList();
-  final hit = c.where((v) => comp.isEmpty || _same(str(v['company']), comp) || _same(str(v['name']), comp) || str(v['company']).isEmpty).toList();
+  final area = str(meta['area']);
+  final hit = c.where((v) => (comp.isEmpty || _same(str(v['company']), comp) || _same(str(v['name']), comp) || str(v['company']).isEmpty) && (area.isEmpty || str(v['area']).isEmpty || _same(str(v['area']), area) || _same(str(v['name']), area))).toList();
   if (hit.isNotEmpty) { if (str(hit.first['company']).isEmpty && comp.isNotEmpty) hit.first['company'] = comp; return hit.first; }
   if (!create) return null;
-  final v = <String, dynamic>{'id': uid(), 'name': comp.isEmpty ? 'فيلا' : comp, 'no': no, 'company': comp, 'area': str(meta['area']), 'loc': '', 'units': <dynamic>[], 'auto': true};
+  final vn = str(meta['villa']).trim();
+  final named = RegExp(r'[A-Za-z\u0600-\u06FF]{3,}').allMatches(vn).any((m) => !RegExp(r'^(villa|فيلا|no|rd|road)$', caseSensitive: false).hasMatch(m.group(0)!));
+  final v = <String, dynamic>{'id': uid(), 'name': named ? vn : (comp.isEmpty ? 'فيلا' : comp), 'no': no, 'company': comp, 'area': area, 'loc': '', 'units': <dynamic>[], 'auto': true};
   ((Store.I.D['villas'] as List?) ?? (Store.I.D['villas'] = <dynamic>[])).add(v);
   return v;
 }
@@ -118,6 +121,46 @@ class AutoUpd {
   static List<Obj> get log => objs(Store.I.D['log']);
 
   /// يقرا اللي اتجمع ويطبقه — بيرجع رسايل قصيرة باللي اتغير
+  /// صفوف الأبديت → مجموعات حسب الفيلا (صورة واحدة ممكن يبقى فيها شقق من كذا فيلا)
+  static List<MapEntry<Obj, List<Obj>>> groupRows(List<Obj> rows) {
+    final meta = rows.isEmpty ? <String, dynamic>{} : rows.first;
+    final good = rows.where((x) => str(x['no']).isNotEmpty || numOf(x['p1']) > 0 || numOf(x['p3']) > 0 || numOf(x['mo']) > 0).toList();
+    final m = <String, MapEntry<Obj, List<Obj>>>{};
+    for (final r in good) {
+      final vn = str(r['villa']).isNotEmpty ? str(r['villa']) : str(meta['villa']);
+      final ar = str(r['area']).isNotEmpty && str(r['villa']).isNotEmpty ? str(r['area']) : str(meta['area']);
+      final k = '${nkey(vn).toLowerCase()}|${nkey(ar).toLowerCase()}';
+      m.putIfAbsent(k, () => MapEntry({'villa': vn, 'area': ar, 'company': meta['company'], 'terms': meta['terms']}, <Obj>[])).value.add(r);
+    }
+    return m.values.toList();
+  }
+
+  /// يطبق صورة أبديت (كل فيلا لوحدها) ويسجلها — بيرجع الرسايل اللي فيها تغيير
+  static List<String> applyRows(String g, List<Obj> rows, {String img = '', bool same = false}) {
+    final out = <String>[];
+    final l = (Store.I.D['log'] as List?) ?? (Store.I.D['log'] = <dynamic>[]);
+    for (final grp in groupRows(rows)) {
+      final meta = grp.key, good = grp.value;
+      final v = findVilla(companyOf(g), meta);
+      if (v != null && str(meta['terms']).isNotEmpty) v['terms'] = str(meta['terms']);
+      final String msg;
+      var quiet = same;
+      if (quiet) {
+        msg = '✓ ${v == null ? g : '${str(v['name'])} ${str(v['no'])}'}: نفس الأبديت — مفيش جديد';
+      } else if (v == null) {
+        msg = '⚠️ $g: جالي أبديت بس مش عارف رقم الفيلا — ضيفه بإيدك من «من صورة الأبديت»';
+      } else {
+        final ch = applyUpdate(v, good, auto: true);
+        quiet = ch == 'مفيش تغيير';
+        msg = quiet ? '✓ ${str(v['name'])} ${str(v['no'])}: نفس الأبديت — مفيش جديد' : '${v['auto'] == true && objs(v['units']).length == good.length ? '🆕' : '📥'} ${str(v['name'])} ${str(v['no'])}: $ch${str(v['loc']).isEmpty ? ' • ⚠️ ضيف اللوكيشن' : ''}';
+      }
+      if (!quiet) out.add(msg);
+      l.insert(0, {'at': DateTime.now().toIso8601String(), 'g': g, 'm': msg, 'vid': v?['id'], 'img': img, 'same': quiet, 'n': good.length});
+    }
+    while (l.length > 200) { l.removeLast(); }
+    return out;
+  }
+
   static Future<List<String>> pull() async {
     if (kIsWeb || Store.I.testMode || (!allOn && groups.isEmpty)) return [];
     await sync();
@@ -126,30 +169,10 @@ class AutoUpd {
     final out = <String>[];
     var logged = false;
     for (final it in items.whereType<Map>()) {
-      final g = str(it['g']);
       List<Obj> rows;
       try { rows = Ai.parseRows(str(it['txt'])); } catch (_) { continue; }
       if (rows.isEmpty) continue;
-      final meta = rows.first;
-      final good = rows.where((x) => str(x['no']).isNotEmpty || numOf(x['p1']) > 0 || numOf(x['p3']) > 0 || numOf(x['mo']) > 0).toList();
-      if (good.isEmpty) continue;
-      final v = findVilla(companyOf(g), meta);
-      if (v != null && str(meta['terms']).isNotEmpty) v['terms'] = str(meta['terms']);
-      final String msg;
-      var quiet = it['same'] == true;
-      if (quiet) {
-        msg = '✓ ${v == null ? g : '${str(v['name'])} ${str(v['no'])}'}: نفس الأبديت — مفيش جديد';
-      } else if (v == null) {
-        msg = '⚠️ $g: جالي أبديت بس مش عارف رقم الفيلا — ضيفه بإيدك من «من صورة الأبديت»';
-      } else {
-        final ch = applyUpdate(v, good, auto: true);
-        quiet = ch == 'مفيش تغيير'; // نفس الأبديت اتبعت تاني — منزعجكش، بس الصورة بتتسجل
-        msg = quiet ? '✓ ${str(v['name'])} ${str(v['no'])}: نفس الأبديت — مفيش جديد' : '${v['auto'] == true && objs(v['units']).length == good.length ? '🆕' : '📥'} ${str(v['name'])} ${str(v['no'])}: $ch${str(v['loc']).isEmpty ? ' • ⚠️ ضيف اللوكيشن' : ''}';
-      }
-      if (!quiet) out.add(msg);
-      final l = (Store.I.D['log'] as List?) ?? (Store.I.D['log'] = <dynamic>[]);
-      l.insert(0, {'at': DateTime.now().toIso8601String(), 'g': g, 'm': msg, 'vid': v?['id'], 'img': str(it['id']), 'same': quiet, 'n': good.length});
-      while (l.length > 150) { l.removeLast(); }
+      out.addAll(applyRows(str(it['g']), rows, img: str(it['id']), same: it['same'] == true));
       logged = true;
     }
     if (logged) await Store.I.save();

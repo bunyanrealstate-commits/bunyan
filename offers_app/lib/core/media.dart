@@ -16,6 +16,7 @@ class Media {
     return p.isAuth || p.hasAccess;
   }
   /// الصورة بحجم كبير للعرض
+  static Future<Uint8List?> orig(String id) async { final a = await byId(id); return a?.originBytes; }
   static Future<Uint8List?> big(String id) async { final a = await byId(id); return a?.thumbnailDataWithSize(const ThumbnailSize(1600, 1600), quality: 90); }
   static Future<List<AssetPathEntity>> albums() async {
     if (!await perm()) return [];

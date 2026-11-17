@@ -82,9 +82,20 @@ void main() {
     final few = applyUpdate(v, [{'no': '12', 'type': 'st', 'p1': 30000}], auto: true);
     expect(few, contains('معلّمتهمش'));
     expect(objs(v['units']).where((u) => u['avail'] != false).length, 3);
+    final multi = [
+      {'company': 'Yellow Line', 'no': '2', 'type': '1bk', 'p1': 54000, 'villa': 'Shakhbot Villa 4', 'area': 'Shakhbot'},
+      {'no': '2', 'type': 'st', 'p1': 37000, 'villa': 'Shakhbot Villa 37', 'area': 'Shakhbot'},
+      {'no': '8', 'type': '1bk', 'p1': 52000, 'villa': 'MBZ Villa 119 Zone 34', 'area': 'MBZ'},
+    ];
+    expect(AutoUpd.groupRows(multi).length, 3);
+    AutoUpd.applyRows('Yellow Line Real Estate', multi);
+    final yl = Store.I.villas.where((v) => str(v['company']).contains('Yellow')).toList();
+    expect(yl.length, 3);
+    expect(yl.map((v) => v['no']).toSet(), {'4', '37', '119'});
+    expect(yl.firstWhere((v) => v['no'] == '4')['name'], 'Shakhbot Villa 4');
     final nv = findVilla('Apex', {'villa': 'Villa 40'})!;
     expect(nv['no'], '40');
-    expect(Store.I.villas.length, 4);
+    expect(Store.I.villas.length, 7);
     expect(villaNoOf('فيلا رقم 7'), '7');
     expect(AutoUpd.cleanGroup('MARASI PROPERTIES  GROUP (رسالتان)'), 'MARASI PROPERTIES GROUP');
     expect(AutoUpd.cleanGroup('\u200fModren Look Real Estate 🏡 (3 رسائل)'), 'Modren Look Real Estate 🏡');

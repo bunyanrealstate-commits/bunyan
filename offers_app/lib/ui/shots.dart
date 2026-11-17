@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../core/auto.dart';
+import '../core/ai.dart';
 import '../core/media.dart';
 import '../core/model.dart';
 import '../core/store.dart';
@@ -91,9 +92,39 @@ class _Full extends StatelessWidget {
         Container(width: double.infinity, color: Colors.white, padding: const EdgeInsets.all(14), child: SafeArea(top: false, child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
           Text(str(x['m']), style: const TextStyle(fontWeight: FontWeight.w800)),
           Text(_when(str(x['at'])), style: const TextStyle(color: kMuted, fontSize: 12)),
-          if (Store.I.villa(vid) != null) Padding(padding: const EdgeInsets.only(top: 8), child: FilledButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => VillaPage(vid))), icon: const Icon(Icons.villa_outlined), label: const Text('افتح الفيلا'))),
+          Padding(padding: const EdgeInsets.only(top: 8), child: Wrap(spacing: 8, runSpacing: 8, children: [
+            if (Store.I.villa(vid) != null) FilledButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => VillaPage(vid))), icon: const Icon(Icons.villa_outlined), label: const Text('افتح الفيلا')),
+            OutlinedButton.icon(onPressed: () => reread(context, x), icon: const Icon(Icons.refresh), label: const Text('اقرا الصورة تاني')),
+          ])),
         ]))),
       ]),
     );
+  }
+}
+
+/// 🔁 يقرا صورة الأبديت تاني ويوزع الشقق على فللها صح — ولو كانت عملت فيلا غلط لوحدها يمسحها (بعد موافقتك)
+Future<void> reread(BuildContext context, Obj x) async {
+  final img = str(x['img']), g = str(x['g']);
+  final bad = AutoUpd.log.where((l) => str(l['img']) == img).map((l) => Store.I.villa(str(l['vid']))).whereType<Obj>().where((v) => v['auto'] == true).toSet().toList();
+  final ok = await confirmDlg(context, 'هيقرا الصورة دي تاني بـ Gemini ويحط كل شقة في فيلتها.${bad.isEmpty ? '' : '\n\nوهيمسح الفيلا اللي اتعملت غلط منها: ${bad.map((v) => '${str(v['name'])} ${str(v['no'])}').join('، ')} (${bad.fold<int>(0, (a, v) => a + objs(v['units']).length)} شقة)'}', ok: 'اقرا تاني');
+  if (!ok || !context.mounted) return;
+  showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+  try {
+    final b = await Media.orig(img);
+    if (b == null) throw 'الصورة اتمسحت من الموبايل';
+    final rows = await Ai.readUpdate(b);
+    if (rows.isEmpty) throw 'Gemini مالقاش شقق في الصورة';
+    for (final v in bad) { (Store.I.D['villas'] as List).remove(v); }
+    (Store.I.D['log'] as List).removeWhere((l) => str((l as Map)['img']) == img);
+    final r = AutoUpd.applyRows(g, rows, img: img);
+    await Store.I.save();
+    if (!context.mounted) return;
+    Navigator.pop(context);
+    await showDialog(context: context, builder: (ctx) => Directionality(textDirection: TextDirection.rtl, child: AlertDialog(title: const Text('✅ اتقرت تاني'), content: SingleChildScrollView(child: Text(r.isEmpty ? 'مفيش تغيير' : r.join('\n\n'))), actions: [FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('تمام'))])));
+    if (context.mounted) Navigator.pop(context);
+  } catch (e) {
+    if (!context.mounted) return;
+    Navigator.pop(context);
+    toast(context, '⚠️ $e');
   }
 }
