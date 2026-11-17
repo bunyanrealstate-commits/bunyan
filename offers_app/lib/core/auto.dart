@@ -73,7 +73,15 @@ Obj? findVilla(String company, Obj meta, {bool create = true}) {
 
 class AutoUpd {
   static final last = ValueNotifier<List<String>>([]);
-  static Map<String, String> get groups => ((Store.I.cfg['groups'] as Map?) ?? {}).map((k, v) => MapEntry('$k', '$v'));
+  static Map<String, String> get groups => ((Store.I.cfg['groups'] as Map?) ?? {}).map((k, v) => MapEntry(cleanGroup('$k'), '$v'));
+
+  /// نفس تنضيف أندرويد: يشيل «(رسالتان)» و«(3 messages)» وعلامات الاتجاه والمسافات الزيادة
+  static String cleanGroup(String s) {
+    var t = s.replaceAll(RegExp('[\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]'), '');
+    final r = RegExp(r'\s*[(（][^()（）]*(\d|[٠-٩]|رسال|message|new|جديد)[^()（）]*[)）]\s*$', caseSensitive: false);
+    while (r.hasMatch(t)) { t = t.replaceAll(r, ''); }
+    return t.replaceAll(RegExp(r'\s+'), ' ').trim();
+  }
 
   static Future<void> sync() async {
     if (kIsWeb || Store.I.testMode) return;
@@ -85,7 +93,14 @@ class AutoUpd {
   /// الجروبات اللي الواتساب بعت منها إشعارات: {اسم: {at, img}}
   static Future<Map<String, Map>> seen() async {
     if (kIsWeb) return {};
-    try { return (jsonDecode(await Native.ch.invokeMethod<String>('autoSeen') ?? '{}') as Map).map((k, v) => MapEntry('$k', v as Map)); } catch (_) { return {}; }
+    try {
+      final m = <String, Map>{};
+      (jsonDecode(await Native.ch.invokeMethod<String>('autoSeen') ?? '{}') as Map).forEach((k, v) {
+        final c = cleanGroup('$k'), o = m[c];
+        m[c] = o == null ? Map.from(v as Map) : {'at': [o['at'] ?? 0, (v as Map)['at'] ?? 0].reduce((a, b) => (a as num) > (b as num) ? a : b), 'img': ((o['img'] ?? 0) as num) + ((v['img'] ?? 0) as num)};
+      });
+      return m;
+    } catch (_) { return {}; }
   }
 
   static List<Obj> get log => objs(Store.I.D['log']);

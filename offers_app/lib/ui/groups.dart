@@ -26,6 +26,8 @@ class _GroupsState extends State<GroupsPage> with WidgetsBindingObserver {
 
   Future<void> _load() async {
     final o = await AutoUpd.on(), s = await AutoUpd.seen();
+    final raw = (Store.I.cfg['groups'] as Map?) ?? {};
+    if (raw.keys.any((k) => AutoUpd.cleanGroup('$k') != '$k')) { Store.I.cfg['groups'] = AutoUpd.groups; await Store.I.saveCfg(); await AutoUpd.sync(); }
     if (mounted) setState(() { on = o; seen = s; loading = false; });
   }
 

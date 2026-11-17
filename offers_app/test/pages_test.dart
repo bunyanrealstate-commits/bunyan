@@ -45,5 +45,9 @@ void main() {
     expect(nv['no'], '40');
     expect(Store.I.villas.length, 4);
     expect(villaNoOf('فيلا رقم 7'), '7');
+    expect(AutoUpd.cleanGroup('MARASI PROPERTIES  GROUP (رسالتان)'), 'MARASI PROPERTIES GROUP');
+    expect(AutoUpd.cleanGroup('\u200fModren Look Real Estate 🏡 (3 رسائل)'), 'Modren Look Real Estate 🏡');
+    expect(AutoUpd.cleanGroup('Master Leader (5 messages)'), 'Master Leader');
+    expect(AutoUpd.cleanGroup('Global Egyptian  3m'), 'Global Egyptian 3m');
   });
 }

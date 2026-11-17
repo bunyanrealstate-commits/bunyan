@@ -57,7 +57,27 @@ object Auto {
     private val h = Handler(Looper.getMainLooper())
     private var busy = false
     fun prefs(c: Context) = c.getSharedPreferences("auto", Context.MODE_PRIVATE)
-    fun clean(s: String) = s.replace(Regex("\\s*\\(\\d+[^)]*\\)\\s*$"), "").replace(Regex("^\\s*\\d+\\s+"), "").trim()
+    /** اسم الجروب من غير «(رسالتان)» / «(3 messages)» وعلامات الاتجاه والمسافات الزيادة — علشان الجروب ميتكررش */
+    private val cnt = Regex("\\s*[(（][^()（）]*(\\d|[٠-٩]|رسال|message|new|جديد)[^()（）]*[)）]\\s*$", RegexOption.IGNORE_CASE)
+    fun clean(s: String): String {
+        var t = s.replace(Regex("[\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]"), "")
+        while (cnt.containsMatchIn(t)) t = t.replace(cnt, "")
+        return t.replace(Regex("\\s+"), " ").trim()
+    }
+    /** يدمج الأسماء المكررة اللي اتسجلت قبل التصليح */
+    fun mergeSeen(c: Context): JSONObject {
+        val old = obj(c, "seen"); val out = JSONObject()
+        for (k in old.keys()) {
+            val ck = clean(k); val a = old.getJSONObject(k); val b = out.optJSONObject(ck)
+            if (b == null) out.put(ck, JSONObject().put("at", a.optLong("at")).put("img", a.optInt("img")))
+            else { b.put("at", maxOf(b.optLong("at"), a.optLong("at"))); b.put("img", b.optInt("img") + a.optInt("img")) }
+        }
+        put(c, "seen", out)
+        val last = obj(c, "last"); val l2 = JSONObject()
+        for (k in last.keys()) { val ck = clean(k); l2.put(ck, maxOf(l2.optLong(ck, 0L), last.optLong(k))) }
+        put(c, "last", l2)
+        return out
+    }
     fun obj(c: Context, k: String) = try { JSONObject(prefs(c).getString(k, "{}")!!) } catch (_: Exception) { JSONObject() }
     fun arr(c: Context, k: String) = try { JSONArray(prefs(c).getString(k, "[]")!!) } catch (_: Exception) { JSONArray() }
     fun put(c: Context, k: String, v: Any) = prefs(c).edit().putString(k, v.toString()).apply()
