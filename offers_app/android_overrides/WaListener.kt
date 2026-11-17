@@ -41,7 +41,7 @@ class WaListener : NotificationListenerService() {
         val ex = n.extras ?: return
         val isGroup = ex.getBoolean("android.isGroupConversation", false)
         var g = ex.getCharSequence("android.conversationTitle")?.toString()
-        if (g == null && !isGroup) return
+        if (g == null && !isGroup) { Auto.dm(this, sbn, ex); Auto.updSoon(applicationContext); return }
         if (g == null) g = ex.getCharSequence("android.title")?.toString() ?: return
         g = Auto.clean(g)
         if (g.isEmpty()) return
@@ -168,6 +168,80 @@ object Auto {
         } catch (_: Exception) {
         } finally { synchronized(this) { busy = false } }
         return n
+    }
+
+    // ===== طلبات العملاء من الشات الخاص =====
+    private val reqRx = Regex("studio|ستو?ديو|استو?ديو|bhk|b/r|bed ?room|\\broom\\b|flat|apartment|غرف[ةه]|اوض[ةه]|أوض[ةه]|غرفتين|اوضتين|شق[ةه]|سكن|ايجار|إيجار|rent|budget|ميزاني[ةه]", RegexOption.IGNORE_CASE)
+    /** رسالة خاصة من عميل: نحفظها، ولو شكلها طلب شقة نبلّغك (من غير ما نرد على حد) */
+    @Synchronized fun dm(c: Context, sbn: StatusBarNotification, ex: android.os.Bundle) {
+        if (!cfg(c).optBoolean("dm")) return
+        val name = ex.getCharSequence("android.title")?.toString()?.let { clean(it) } ?: return
+        var phone = (sbn.notification.shortcutId ?: "").substringBefore("@").filter { it.isDigit() }
+        if (phone.length < 8) {
+            try { @Suppress("DEPRECATION") ex.getParcelableArrayList<android.os.Parcelable>("android.people.list")?.forEach { p ->
+                if (Build.VERSION.SDK_INT >= 28 && p is android.app.Person) { val u = p.uri ?: ""; if (u.startsWith("tel:")) phone = u.removePrefix("tel:").filter { it.isDigit() } } } } catch (_: Exception) {}
+        }
+        val key = if (phone.length >= 8) phone else name
+        val msgs = ArrayList<Pair<String, Long>>()
+        try { ex.getParcelableArray("android.messages")?.forEach { b -> if (b is android.os.Bundle) msgs.add(Pair(b.getCharSequence("text")?.toString() ?: "", b.getLong("time"))) } } catch (_: Exception) {}
+        if (msgs.isEmpty()) msgs.add(Pair(ex.getCharSequence("android.text")?.toString() ?: "", sbn.postTime))
+        val last = obj(c, "dmLast"); var lt = last.optLong(key, 0L)
+        val dms = arr(c, "dm"); var hit = false
+        for ((t, time) in msgs) {
+            if (time <= lt || t.isBlank()) continue
+            lt = maxOf(lt, time)
+            dms.put(JSONObject().put("n", name).put("p", phone).put("txt", t.take(500)).put("t", time))
+            if (reqRx.containsMatchIn(t)) hit = true
+        }
+        last.put(key, lt); trim(last, 800); put(c, "dmLast", last)
+        while (dms.length() > 400) dms.remove(0)
+        put(c, "dm", dms)
+        if (hit) note(c, key.hashCode(), "req", "📩 $name بيدوّر على شقة", "دوس تشوف الشقق المناسبة وتبعتله", "reqs")
+    }
+
+    /** إشعار يفتح التطبيق على صفحة معينة */
+    fun note(c: Context, id: Int, ch: String, title: String, text: String, go: String) {
+        try {
+            val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel(ch, mapOf("req" to "طلبات العملاء", "view" to "المعاينات", "sum" to "ملخص الصبح").getOrElse(ch) { "تنبيهات" }, NotificationManager.IMPORTANCE_HIGH))
+            val open = c.packageManager.getLaunchIntentForPackage(c.packageName)?.apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP); putExtra("go", go) }
+            val pi = PendingIntent.getActivity(c, id, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            val b = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(c, ch) else @Suppress("DEPRECATION") Notification.Builder(c)
+            nm.notify(id, b.setSmallIcon(android.R.drawable.ic_dialog_info).setContentTitle(title).setContentText(text).setStyle(Notification.BigTextStyle().bigText(text)).setContentIntent(pi).setAutoCancel(true).build())
+        } catch (_: Exception) {}
+    }
+
+    /** تذكير في ميعاد (معاينة / ملخص الصبح) */
+    fun alarm(c: Context, id: Int, at: Long, title: String, text: String, ch: String) {
+        try {
+            val am = c.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
+            val i = Intent(c, AlarmRx::class.java).putExtra("id", id).putExtra("title", title).putExtra("text", text).putExtra("ch", ch)
+            val pi = PendingIntent.getBroadcast(c, id, i, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            if (at <= 0) { am.cancel(pi); return }
+            if (Build.VERSION.SDK_INT >= 23) am.setAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, at, pi) else am.set(android.app.AlarmManager.RTC_WAKEUP, at, pi)
+        } catch (_: Exception) {}
+    }
+
+    /** ملخص الصبح: الأبديت اللي وصل بالليل + المتابعات والمعاينات النهارده (من آخر مرة التطبيق اتفتح) */
+    fun morning(c: Context): String {
+        val res = arr(c, "res"); var nw = 0; val gs = HashSet<String>()
+        for (i in 0 until res.length()) { val o = res.getJSONObject(i); if (!o.optBoolean("same")) { nw++; gs.add(o.optString("g")) } }
+        val sum = obj(c, "sum"); val o = ArrayList<String>()
+        if (nw > 0) o.add("📥 $nw أبديت جديد من ${gs.size} جروب")
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
+        val fl = sum.optJSONArray("follow") ?: JSONArray(); var f = 0
+        for (i in 0 until fl.length()) if (fl.getJSONObject(i).optString("at") <= today + "T99") f++
+        if (f > 0) o.add("🔔 $f عميل محتاج متابعة")
+        val vs = sum.optJSONArray("views") ?: JSONArray(); val vt = ArrayList<String>()
+        for (i in 0 until vs.length()) { val v = vs.getJSONObject(i); if (v.optString("at").startsWith(today)) vt.add(v.optString("at").substring(11, 16) + " " + v.optString("n")) }
+        if (vt.isNotEmpty()) o.add("📅 معاينات النهارده: " + vt.joinToString("، "))
+        val nr = sum.optInt("newReq"); if (nr > 0) o.add("📩 $nr طلب عميل لسه مردتش عليه")
+        return o.joinToString("\n")
+    }
+    fun scheduleMorning(c: Context) {
+        val cal = java.util.Calendar.getInstance(); cal.set(java.util.Calendar.HOUR_OF_DAY, 9); cal.set(java.util.Calendar.MINUTE, 0); cal.set(java.util.Calendar.SECOND, 0)
+        if (cal.timeInMillis <= System.currentTimeMillis() + 60000) cal.add(java.util.Calendar.DAY_OF_YEAR, 1)
+        alarm(c, 900, cal.timeInMillis, "☀️ ملخص الصبح", "", "sum")
     }
 
     // ===== التحديث التلقائي للتطبيق في الخلفية (من غير ما تفتحه) =====
@@ -297,5 +371,17 @@ object Auto {
             val b = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(c, "upd") else @Suppress("DEPRECATION") Notification.Builder(c)
             nm.notify(g.hashCode(), b.setSmallIcon(android.R.drawable.stat_sys_download_done).setContentTitle("📥 أبديت جديد: $g").setContentText("$units شقة — افتح التطبيق يتحدث").setContentIntent(pi).setAutoCancel(true).build())
         } catch (_: Exception) {}
+    }
+}
+
+/** المنبه: معاينة أو ملخص الصبح */
+class AlarmRx : android.content.BroadcastReceiver() {
+    override fun onReceive(c: Context, i: Intent) {
+        val id = i.getIntExtra("id", 0); val ch = i.getStringExtra("ch") ?: "view"
+        if (ch == "sum") {
+            val t = Auto.morning(c)
+            if (t.isNotEmpty()) Auto.note(c, 900, "sum", "☀️ ملخص الصبح", t, "reqs")
+            Auto.scheduleMorning(c)
+        } else Auto.note(c, id, ch, i.getStringExtra("title") ?: "", i.getStringExtra("text") ?: "", "reqs")
     }
 }

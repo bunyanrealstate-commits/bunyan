@@ -97,7 +97,7 @@ class AutoUpd {
 
   static Future<void> sync() async {
     if (kIsWeb || Store.I.testMode) return;
-    try { await Native.ch.invokeMethod('autoCfg', {'key': Store.I.gemKey, 'prompt': Ai.autoPrompt, 'groups': groups.keys.toList(), 'all': allOn, 'off': off}); } catch (_) {}
+    try { await Native.ch.invokeMethod('autoCfg', {'key': Store.I.gemKey, 'prompt': Ai.autoPrompt, 'groups': groups.keys.toList(), 'all': allOn, 'off': off, 'dm': Store.I.cfg['dm'] == true}); } catch (_) {}
   }
 
   static Future<bool> on() async { if (kIsWeb) return false; try { return await Native.ch.invokeMethod<bool>('notifOn') ?? false; } catch (_) { return false; } }
@@ -134,6 +134,7 @@ class AutoUpd {
       final good = rows.where((x) => str(x['no']).isNotEmpty || numOf(x['p1']) > 0 || numOf(x['p3']) > 0 || numOf(x['mo']) > 0).toList();
       if (good.isEmpty) continue;
       final v = findVilla(companyOf(g), meta);
+      if (v != null && str(meta['terms']).isNotEmpty) v['terms'] = str(meta['terms']);
       final String msg;
       var quiet = it['same'] == true;
       if (quiet) {

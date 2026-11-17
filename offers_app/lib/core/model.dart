@@ -94,7 +94,7 @@ String clientMsg(List<Map<String, dynamic>> picks) {
 }
 
 /// رسالة قصيرة تحت فيديو كل شقة: السعر حسب طريقة الدفع اللي العميل عايزها + اللوكيشن (عربي أو إنجليزي)
-String unitCaption(Obj v, Obj u, String pay, {bool en = false}) {
+String unitCaption(Obj v, Obj u, String pay, {bool en = false, bool terms = false}) {
   final o = <String>[];
   final p1 = Price.p1(u), p3 = Price.p3(u), mo = Price.mo(u);
   final hasVid = ((u['videos'] as List?) ?? const []).isNotEmpty;
@@ -103,6 +103,7 @@ String unitCaption(Obj v, Obj u, String pay, {bool en = false}) {
   void a3() { if (p3 > 0) o.add(en ? '💰 AED ${money(p3)} / year — 3 payments' : '💰 ${money(p3)} درهم — 3 دفعات'); }
   void am() { if (mo > 0) o.add(en ? '💰 AED ${money(mo)} / month' : '💰 ${money(mo)} درهم شهري'); }
   if (pay == '1') { a1(); } else if (pay == '3') { a3(); } else if (pay == 'mo') { am(); } else { a1(); am(); if (p1 <= 0 && mo <= 0) a3(); }
+  if (terms && str(v['terms']).isNotEmpty) o.add('📄 ${v['terms']}');
   if (str(v['loc']).isNotEmpty) o.add('📍 ${v['loc']}');
   return o.join('\n');
 }

@@ -30,6 +30,7 @@ jobs:
           f='<intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="bnyoffers"/></intent-filter>'
           if 'bnyoffers' not in s: s=s.replace('</activity>',f+'</activity>',1)
           if 'WaListener' not in s: s=s.replace('</application>','<service android:name=".WaListener" android:label="عروض الشقق — أبديت الجروبات" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="true"><intent-filter><action android:name="android.service.notification.NotificationListenerService"/></intent-filter></service></application>',1)
+          if 'AlarmRx' not in s: s=s.replace('</application>','<receiver android:name=".AlarmRx" android:exported="false"/></application>',1)
           if 'UpdRx' not in s: s=s.replace('</application>','<receiver android:name=".UpdRx" android:exported="false"/></application>',1)
           q='<package android:name="com.whatsapp"/><package android:name="com.whatsapp.w4b"/>'
           s=s.replace('<queries>','<queries>'+q,1) if '<queries>' in s else s.replace('</manifest>','<queries>'+q+'</queries></manifest>',1)

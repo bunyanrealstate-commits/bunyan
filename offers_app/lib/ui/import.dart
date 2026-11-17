@@ -18,7 +18,7 @@ class ImportPage extends StatefulWidget {
 }
 
 class _ImportState extends State<ImportPage> {
-  Uint8List? img; bool busy = false; String err = ''; List<Obj> rows = []; bool missingBooked = true; String vname = '', vcomp = '';
+  Uint8List? img; bool busy = false; String err = ''; List<Obj> rows = []; bool missingBooked = true; String vname = '', vcomp = '', vterms = '';
 
   Obj get v => Store.I.villa(widget.id)!;
   Obj? match(Obj r) => objs(v['units']).where((u) => _n(u['no']).isNotEmpty && _n(u['no']) == _n(r['no'])).firstOrNull;
@@ -31,7 +31,7 @@ class _ImportState extends State<ImportPage> {
     try {
       final r = await Ai.readUpdate(b);
       final first = r.isNotEmpty ? r.first : <String, dynamic>{};
-      vname = str(first['villa']); vcomp = str(first['company']);
+      vname = str(first['villa']); vcomp = str(first['company']); vterms = str(first['terms']);
       rows = r.where((x) => str(x['no']).isNotEmpty || numOf(x['p1']) > 0 || numOf(x['p3']) > 0 || numOf(x['mo']) > 0).map((x) => {...x, '_on': true}).toList();
       if (rows.isEmpty) err = 'مالقيتش شقق في الصورة دي — جرب صورة أوضح';
     } catch (e) { err = '$e'; }
@@ -90,6 +90,7 @@ class _ImportState extends State<ImportPage> {
   Future<void> _apply(List<Obj> missing) async {
     final r = applyUpdate(v, rows.where((r) => r['_on'] == true).map((r) => Map<String, dynamic>.from(r)..remove('_on')).toList(), missingBooked: missingBooked);
     if (str(v['company']).isEmpty && vcomp.isNotEmpty) v['company'] = vcomp;
+    if (vterms.isNotEmpty) v['terms'] = vterms;
     await Store.I.save();
     if (!mounted) return;
     toast(context, '✅ $r');

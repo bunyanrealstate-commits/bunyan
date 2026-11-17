@@ -35,6 +35,7 @@ class Store extends ChangeNotifier {
   Future<void> initTest(Obj d) async { _p = await SharedPreferences.getInstance(); D = d; cfg = {}; loaded = true; testMode = true; }
 
   Future<File> _file() async => File('${(await getApplicationDocumentsDirectory()).path}/offers.json');
+  void notify() => notifyListeners();
   Future<void> saveCfg() async => _p?.setString('of_cfg', jsonEncode(cfg));
 
   Future<void> save() async {

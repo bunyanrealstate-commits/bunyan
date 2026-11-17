@@ -83,7 +83,7 @@ class Ai {
 - 2 Bed Room 2/3 Bathroom = 2bk2b • 3 Bed Room = 3bk • 1 Bed Room + 2 Bathroom = 1bk2b.
 - اسم الفيلا زي "VILLA 25" ورقم الشارع "RD 66" والمنطقة.
 - الأرقام من غير فواصل. ومتخترعش شقق مش في الصورة.
-وكمان لو اسم الفيلا أو رقمها أو الشركة مكتوب، رجّعهم في أول عنصر كـ "villa":"...","company":"...","area":"..."''';
+وكمان لو اسم الفيلا أو رقمها أو الشركة مكتوب، رجّعهم في أول عنصر كـ "villa":"...","company":"...","area":"...","terms":"الشروط باختصار بالإنجليزي زي: Security 5% or 2000 • Contract fee 200 AED • Parking" (لو مكتوبة)''';
 
   /// أول صورة من الفيديو → رقم الشقة (لو باين رقم الباب)
   static Future<String> readUnitNo(Uint8List thumb) async {

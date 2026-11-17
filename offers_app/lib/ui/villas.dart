@@ -51,12 +51,12 @@ class _VillasState extends State<VillasPage> {
 
 Future<Obj?> editVilla(BuildContext context, Obj? v) async {
   final o = await formDlg(context, v == null ? '🏡 فيلا جديدة' : 'تعديل الفيلا', [
-    FS('name', 'اسم الفيلا (زي ما في الجروب)', v: v?['name']), FS('no', 'رقمها', v: v?['no']), FS('company', 'الشركة', v: v?['company']), FS('area', 'المنطقة', v: v?['area']), FS('loc', 'لينك اللوكيشن (جوجل ماب)', v: v?['loc']), FS('note', 'ملاحظة (كهربا/مياه/شروط…)', v: v?['note'], multi: true),
+    FS('name', 'اسم الفيلا (زي ما في الجروب)', v: v?['name']), FS('no', 'رقمها', v: v?['no']), FS('company', 'الشركة', v: v?['company']), FS('area', 'المنطقة', v: v?['area']), FS('loc', 'لينك اللوكيشن (جوجل ماب)', v: v?['loc']), FS('terms', 'الشروط اللي تتبعت للعميل (تأمين/رسوم/موقف)', v: v?['terms'], multi: true), FS('note', 'ملاحظة ليك (مش بتتبعت)', v: v?['note'], multi: true),
   ]);
   if (o == null) return null;
   if ((o['name'] ?? '').isEmpty && (o['no'] ?? '').isEmpty) { if (context.mounted) toast(context, 'اكتب اسم الفيلا أو رقمها'); return null; }
   final t = v ?? <String, dynamic>{'id': uid(), 'units': <dynamic>[]};
-  for (final k in ['name', 'no', 'company', 'area', 'loc', 'note']) { t[k] = o[k] ?? ''; }
+  for (final k in ['name', 'no', 'company', 'area', 'loc', 'terms', 'note']) { t[k] = o[k] ?? ''; }
   if (v == null) (Store.I.D['villas'] as List).add(t);
   await Store.I.save();
   return t;

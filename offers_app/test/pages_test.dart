@@ -11,6 +11,8 @@ import 'package:offers/ui/import.dart';
 import 'package:offers/ui/settings.dart';
 import 'package:offers/ui/groups.dart';
 import 'package:offers/ui/shots.dart';
+import 'package:offers/ui/reqs.dart';
+import 'package:offers/core/reqs.dart';
 import 'package:offers/core/auto.dart';
 import 'package:offers/core/model.dart';
 import 'fixture.dart';
@@ -35,6 +37,24 @@ void main() {
     await show(t, const GroupsPage(), 'groups');
     Store.I.D['log'] = [{'at': DateTime.now().toIso8601String(), 'g': 'MARASI', 'm': '📥 الغانم 25: اتحجزت: 7', 'img': '123', 'vid': 'v3'}];
     await show(t, const ShotsPage(), 'shots');
+    await show(t, const ReqsPage(), 'reqs-empty');
+    final r = Reqs.add(name: 'Ahmed', phone: '971501234567', text: 'need 1bhk monthly 3500');
+    Reqs.add(name: 'محمد', phone: '971551112222', text: 'عايز غرفتين وصالة دفعة واحدة 75 الف');
+    await show(t, const ReqsPage(), 'reqs');
+    expect(find.textContaining('Ahmed'), findsOneWidget);
+    await show(t, ReqPage(str(r['id'])), 'req');
+    expect(find.textContaining('شقة تناسبه'), findsOneWidget);
+  });
+  test('فهم طلب العميل', () {
+    var p = parseRequest('السلام عليكم عايز غرفة وصالة شهري ميزانيتي 3500 في الشامخة', areas: ['الشامخة', 'مدينة الرياض']);
+    expect(p['types'], containsAll(['1bk', '1bk2b']));
+    expect(p['pay'], 'mo'); expect(p['budget'], 3500.0); expect(p['area'], 'الشامخة'); expect(p['isReq'], true);
+    p = parseRequest('Hi, looking for 2 BHK 2 bath, 1 cheque, budget 75k');
+    expect(p['types'], ['2bk2b']); expect(p['pay'], '1'); expect(p['budget'], 75000.0); expect(p['lang'], 'en');
+    p = parseRequest('استديو ٢٥٠٠ في الشهر');
+    expect(p['types'], ['st']); expect(p['budget'], 2500.0);
+    p = parseRequest('call me 0501234567');
+    expect(p['isReq'], false);
   });
   test('أبديت الجروب: يلاقي فيلا الغانم 25 ويحدثها', () {
     final meta = {'villa': 'RD 66 , VILLA 25', 'company': 'ALGHANIM REAL ESTATE', 'no': '2', 'type': '2bk2b', 'p1': 72000};

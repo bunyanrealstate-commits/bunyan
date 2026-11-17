@@ -14,19 +14,28 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private var link: String? = null
+    private var go: String? = null
     override fun configureFlutterEngine(engine: FlutterEngine) {
         super.configureFlutterEngine(engine)
         link = intent?.dataString
+        go = intent?.getStringExtra("go")
         MethodChannel(engine.dartExecutor.binaryMessenger, "offers/native").setMethodCallHandler { call, res ->
             when (call.method) {
                 "take" -> { val l = link; link = null; res.success(l) }
+                "go" -> { val g = go; go = null; res.success(g) }
+                "dmTake" -> { val r = Auto.arr(this, "dm").toString(); Auto.put(this, "dm", "[]"); res.success(r) }
+                "dmOn" -> { val cf = Auto.cfg(this); cf.put("dm", call.argument<Boolean>("on") ?: false); Auto.put(this, "cfg", cf); res.success(true) }
+                "sum" -> { Auto.put(this, "sum", call.argument<String>("json") ?: "{}"); Auto.scheduleMorning(applicationContext); res.success(true) }
+                "alarm" -> { Auto.alarm(applicationContext, call.argument<Int>("id") ?: 0, (call.argument<Number>("at") ?: 0).toLong(), call.argument<String>("title") ?: "", call.argument<String>("text") ?: "", "view"); res.success(true) }
+                "note" -> { Auto.note(applicationContext, call.argument<Int>("id") ?: 1, "req", call.argument<String>("title") ?: "", call.argument<String>("text") ?: "", call.argument<String>("go") ?: "reqs"); res.success(true) }
+                "openChat" -> res.success(wa(call.argument<String>("phone") ?: "", call.argument<String>("text") ?: "", listOf()))
                 "version" -> res.success(try { val pi = packageManager.getPackageInfo(packageName, 0); if (Build.VERSION.SDK_INT >= 28) pi.longVersionCode else @Suppress("DEPRECATION") pi.versionCode.toLong() } catch (e: Exception) { 0L })
                 "canInstall" -> res.success(if (Build.VERSION.SDK_INT >= 26) packageManager.canRequestPackageInstalls() else true)
                 "installPerm" -> { try { startActivity(Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))); res.success(true) } catch (e: Exception) { res.success(false) } }
                 "install" -> { try { Auto.install(this, File(call.argument<String>("path")!!)); res.success(true) } catch (e: Exception) { res.success(false) } }
                 "upd" -> Thread { val r = Auto.upd(applicationContext); runOnUiThread { res.success(r) } }.start()
                 "contacts" -> contacts(res)
-                "autoCfg" -> { Auto.put(this, "cfg", org.json.JSONObject().put("key", call.argument<String>("key") ?: "").put("prompt", call.argument<String>("prompt") ?: "").put("groups", org.json.JSONArray(call.argument<List<String>>("groups") ?: listOf<String>())).put("all", call.argument<Boolean>("all") ?: false).put("off", org.json.JSONArray(call.argument<List<String>>("off") ?: listOf<String>()))); res.success(true) }
+                "autoCfg" -> { Auto.put(this, "cfg", org.json.JSONObject().put("dm", call.argument<Boolean>("dm") ?: false).put("key", call.argument<String>("key") ?: "").put("prompt", call.argument<String>("prompt") ?: "").put("groups", org.json.JSONArray(call.argument<List<String>>("groups") ?: listOf<String>())).put("all", call.argument<Boolean>("all") ?: false).put("off", org.json.JSONArray(call.argument<List<String>>("off") ?: listOf<String>()))); res.success(true) }
                 "autoRun" -> Thread { val n = Auto.run(applicationContext); runOnUiThread { res.success(n) } }.start()
                 "autoTake" -> { val r = Auto.arr(this, "res").toString(); Auto.put(this, "res", "[]"); res.success(r) }
                 "autoSeen" -> res.success(Auto.mergeSeen(this).toString())
@@ -85,7 +94,7 @@ class MainActivity : FlutterActivity() {
         return out
     }
 
-    override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); if (intent.dataString != null) link = intent.dataString }
+    override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); if (intent.dataString != null) link = intent.dataString; intent.getStringExtra("go")?.let { go = it } }
 
     private fun has(p: String) = try { packageManager.getPackageInfo(p, 0); true } catch (e: Exception) { false }
 
