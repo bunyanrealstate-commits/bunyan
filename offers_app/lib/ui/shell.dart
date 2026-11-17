@@ -5,9 +5,8 @@ import '../core/auto.dart';
 import 'theme.dart';
 import 'search.dart';
 import 'villas.dart';
-import 'settings.dart';
+import 'home.dart';
 import 'reqs.dart';
-import 'shots.dart';
 import 'send.dart';
 import '../core/reqs.dart';
 import '../core/suggest.dart';
@@ -33,7 +32,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
     Native.check();
     String? go;
     try { go = await Native.ch.invokeMethod<String>('go'); } catch (_) {}
-    if (go == 'reqs' && mounted) setState(() => tab = 1);
+    if (go == 'reqs' && mounted) setState(() => tab = 2);
     var nr = await Reqs.pullDms();
     if (Store.I.cfg['ctImport'] == true) {
       try {
@@ -49,12 +48,12 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
     final fresh = r.isEmpty ? <Obj>[] : Reqs.newFor();
     await Reqs.pushSummary();
     if (!mounted) return;
-    if (nr > 0) toast(context, '📩 $nr طلب عميل جديد — شوف تبويب «العملاء»');
+    if (nr > 0) toast(context, '📩 $nr عميل جديد اتضاف');
     if (r.isNotEmpty) {
       showDialog(context: context, builder: (ctx) => Directionality(textDirection: TextDirection.rtl, child: AlertDialog(
             title: Text('📥 ${r.length} أبديت جديد من الجروبات'),
             content: SingleChildScrollView(child: Text([...r, if (Sug.posts().isNotEmpty) '\n📣 ${Sug.posts().length} شقة جديدة جاهزة بوست انستجرام (الفلل ← 💡 اقتراحات)', if (fresh.isNotEmpty) '\n🔔 فيه شقق جديدة تناسب ${fresh.length} عميل: ${fresh.map((x) => str(x['n'])).take(5).join('، ')}'].join('\n\n'))),
-            actions: [if (fresh.isNotEmpty) TextButton(onPressed: () { Navigator.pop(ctx); setState(() => tab = 1); }, child: const Text('شوف العملاء')), FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('تمام'))])));
+            actions: [if (fresh.isNotEmpty) TextButton(onPressed: () { Navigator.pop(ctx); setState(() => tab = 0); }, child: const Text('شوف مين تبعتله')), FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('تمام'))])));
     }
   }
   @override
@@ -64,7 +63,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final pages = [const SearchPage(), const ReqsPage(), const ShotsPage(), const VillasPage(), const SettingsPage()];
+    final pages = [HomePage(go: (i) => setState(() => tab = i)), const SearchPage(), const ReqsPage(), const VillasPage()];
     return Scaffold(
       body: SafeArea(child: Column(children: [
         ValueListenableBuilder<String?>(valueListenable: Native.upd, builder: (_, v, __) {
@@ -76,11 +75,10 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
         const SendBar(),
       ])),
       bottomNavigationBar: NavigationBar(selectedIndex: tab, onDestinationSelected: (i) => setState(() => tab = i), destinations: const [
-        NavigationDestination(icon: Icon(Icons.manage_search), label: 'دوّر للعميل'),
+        NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'الرئيسية'),
+        NavigationDestination(icon: Icon(Icons.manage_search), label: 'دوّر لعميل'),
         NavigationDestination(icon: Icon(Icons.people_alt_outlined), label: 'العملاء'),
-        NavigationDestination(icon: Icon(Icons.download_for_offline_outlined), label: 'الأبديت'),
         NavigationDestination(icon: Icon(Icons.villa_outlined), label: 'الفلل'),
-        NavigationDestination(icon: Icon(Icons.settings_outlined), label: 'الإعدادات'),
       ]),
     );
   }

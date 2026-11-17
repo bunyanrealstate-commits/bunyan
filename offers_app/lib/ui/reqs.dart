@@ -39,59 +39,83 @@ String reqSummary(Obj r) {
   return [if (ts.isNotEmpty) ts, if (fur.isNotEmpty) fur, if (w != null) '📅 من ${w.day}/${w.month}', if (pay.isNotEmpty) pay, if (numOf(r['budget']) > 0) '${money(numOf(r['budget']))} درهم', if (str(r['area']).isNotEmpty) str(r['area'])].join(' • ');
 }
 
-/// 👥 العملاء: الطلبات الجديدة، اللي محتاجين متابعة، المعاينات، واللي نزلتلهم شقق جديدة
-class ReqsPage extends StatelessWidget {
+/// 👥 العملاء: بحث + فلتر بسيط، ودوس على أي عميل تبعتله
+class ReqsPage extends StatefulWidget {
   const ReqsPage({super.key});
+  @override
+  State<ReqsPage> createState() => _ReqsState();
+}
+
+class _ReqsState extends State<ReqsPage> {
+  String q = '', f = 'all';
   @override
   Widget build(BuildContext context) => ListenableBuilder(listenable: Store.I, builder: (context, _) {
         final all = Reqs.all;
-        final nw = all.where((r) => r['st'] == 'new').toList();
-        final due = all.where(Reqs.dueFollow).toList();
-        final fresh = Reqs.newFor();
         final now = DateTime.now();
+        final fid = Reqs.newFor().map((r) => str(r['id'])).toSet();
+        bool soon(Obj r) { final w = DateTime.tryParse(str(r['when'])); return Reqs.open(r) && w != null && w.difference(now).inDays <= 7 && w.difference(now).inDays >= -3; }
         final views = Reqs.views.where((v) => (DateTime.tryParse(str(v['at'])) ?? DateTime(2000)).isAfter(now.subtract(const Duration(hours: 2)))).toList()..sort((a, b) => str(a['at']).compareTo(str(b['at'])));
-        final fid = fresh.map((r) => r['id']).toSet(), did = due.map((r) => r['id']).toSet();
-        final rest = all.where((r) => Reqs.open(r) && r['st'] != 'new' && r['st'] != 'wait' && !did.contains(r['id']) && !fid.contains(r['id'])).toList();
-        final soon = all.where((r) { final w = DateTime.tryParse(str(r['when'])); return Reqs.open(r) && w != null && w.difference(DateTime.now()).inDays <= 7 && w.difference(DateTime.now()).inDays >= -3; }).toList();
-        final sid = soon.map((r) => r['id']).toSet();
-        final waiting = all.where((r) => Reqs.open(r) && r['st'] == 'wait' && !fid.contains(r['id']) && !sid.contains(r['id'])).toList();
-        final done = all.where((r) => !Reqs.open(r)).toList();
-        final dmOn = Store.I.cfg['dm'] == true;
+        final cnt = {
+          'all': all.where(Reqs.open).length,
+          'fresh': fid.length,
+          'soon': all.where(soon).length,
+          'due': all.where(Reqs.dueFollow).length,
+          'done': all.where((r) => !Reqs.open(r)).length,
+        };
+        final ql = q.trim().toLowerCase();
+        var l = all.where((r) {
+          switch (f) {
+            case 'fresh': if (!fid.contains(str(r['id']))) return false; break;
+            case 'soon': if (!soon(r)) return false; break;
+            case 'due': if (!Reqs.dueFollow(r)) return false; break;
+            case 'done': if (Reqs.open(r)) return false; break;
+            default: if (!Reqs.open(r)) return false;
+          }
+          if (ql.isEmpty) return true;
+          return '${reqName(r)} ${str(r['cn'])} ${str(r['p'])} ${reqSummary(r)}'.toLowerCase().contains(ql);
+        }).toList();
+        // اللي ليهم شقق جديدة فوق، وبعدين الأحدث
+        l.sort((a, b) { final x = fid.contains(str(a['id'])) ? 0 : 1, y = fid.contains(str(b['id'])) ? 0 : 1; return x != y ? x - y : str(b['at']).compareTo(str(a['at'])); });
+        String sub(Obj r) {
+          if (fid.contains(str(r['id']))) return '🆕 ${Reqs.fresh(r).length} شقة جديدة تناسبه';
+          if (Reqs.dueFollow(r)) return '↩️ بعتله ${_ago(str(r['sentAt']))} — تابع معاه';
+          if (!Reqs.open(r)) return '✅ ${str(r['res'])}';
+          if (r['st'] == 'sent') return '📤 بعتله ${((r['sent'] as List?) ?? []).length} شقة ${_ago(str(r['sentAt']))}';
+          return '${Reqs.matches(r).length} شقة تناسبه دلوقتي';
+        }
+        const labels = {'all': 'الكل', 'fresh': '🆕 ليهم جديد', 'soon': '📅 قريب', 'due': '↩️ متابعة', 'done': '✅ خلصت'};
         return Scaffold(
           appBar: AppBar(title: const Text('👥 العملاء')),
-          body: ListView(padding: const EdgeInsets.fromLTRB(14, 8, 14, 100), children: [
-            Card(child: ListTile(leading: const Icon(Icons.contacts_outlined, color: kAc), title: Text(Store.I.cfg['ctImport'] == true ? '📇 العملاء من جهات الاتصال (${all.where((r) => r['src'] == 'contact').length})' : '📇 هات العملاء من أسامي جهات الاتصال', style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('أي اسم زي «Studio Fur 3500 Suzanne» أو «1bhk empty 4000 Ali» بيتحول لطلب، ولما ينزل أبديت يناسبه تتنبّه'), onTap: () => _import(context))),
-            _Today(nw: nw.length, due: due.length, views: views.where((v) => _dt(str(v['at'])).startsWith('النهارده')).length, fresh: fresh.length),
-            Builder(builder: (context) {
-              final n = DateTime.now();
-              final ds = objs(Store.I.D['deals']).where((d) { final t = DateTime.tryParse(str(d['at'])); return t != null && t.year == n.year && t.month == n.month; }).toList();
-              if (objs(Store.I.D['deals']).isEmpty) return const SizedBox.shrink();
-              return Card(color: const Color(0xFFE6F6EC), child: ExpansionTile(title: Text('💰 الشهر ده: ${ds.length} صفقة • ${money(ds.fold<double>(0, (a, d) => a + numOf(d['comm'])))} درهم عمولة', style: const TextStyle(fontWeight: FontWeight.w800)), children: [
-                for (final d in objs(Store.I.D['deals']).take(30)) ListTile(dense: true, title: Text('${str(d['n'])}${str(d['unit']).isNotEmpty ? ' — ${d['unit']}' : ''}'), subtitle: Text('${_dt(str(d['at']))}${numOf(d['comm']) > 0 ? ' • ${money(numOf(d['comm']))} درهم' : ''}')),
-              ]));
-            }),
-            if (fresh.isNotEmpty) ..._sec(context, '🆕 نزلتلهم شقق جديدة تناسبهم', fresh, (r) => '${Reqs.fresh(r).length} شقة جديدة'),
-            if (soon.isNotEmpty) ..._sec(context, '📅 هيسكنوا قريب — ابعتلهم المتاح', soon, (r) => '${Reqs.matches(r).length} شقة تناسبه دلوقتي'),
-            if (nw.isNotEmpty) ..._sec(context, '📩 طلبات جديدة', nw, (r) => '${Reqs.matches(r).length} شقة تناسبه • ${_ago(str(r['at']))}'),
-            if (due.isNotEmpty) ..._sec(context, '🔔 محتاجين متابعة', due, (r) => 'بعتله ${((r['sent'] as List?) ?? []).length} شقة ${_ago(str(r['sentAt']))}'),
-            if (views.isNotEmpty) ...[
-              const _H('📅 المعاينات'),
-              for (final v in views) Card(child: ListTile(leading: const Icon(Icons.event, color: kAc), title: Text('${_dt(str(v['at']))} • ${str(v['n'])}', style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: Text(str(v['what'])), onTap: () { final r = Reqs.byId(str(v['rid'])); if (r != null) Navigator.push(context, MaterialPageRoute(builder: (_) => ReqPage(str(r['id'])))); },
-                trailing: IconButton(icon: const Icon(Icons.close, size: 18), onPressed: () async { (Store.I.D['views'] as List).remove(v); await Store.I.save(); await Reqs.pushSummary(); }))),
-            ],
-            if (waiting.isNotEmpty) ExpansionTile(title: Text('📇 مستنيين شقة (${waiting.length})', style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('هيتنقلوا فوق لما ينزل أبديت يناسبهم'), children: [for (final r in waiting.take(200)) _tile(context, r, '${Reqs.matches(r).length} شقة تناسبه دلوقتي')]),
-            if (rest.isNotEmpty) ..._sec(context, '📤 شغالين', rest, (r) => r['st'] == 'view' ? 'عنده معاينة' : 'بعتله ${((r['sent'] as List?) ?? []).length} شقة ${_ago(str(r['sentAt']))}'),
-            if (done.isNotEmpty) ExpansionTile(title: Text('✅ خلصت (${done.length})', style: const TextStyle(fontWeight: FontWeight.w800)), children: [for (final r in done.take(40)) _tile(context, r, str(r['res']))]),
-            if (all.isEmpty) const Padding(padding: EdgeInsets.all(20), child: Text('لسه مفيش طلبات. أول ما عميل يكتبلك على الواتساب إنه بيدوّر على شقة هيظهر هنا — أو دوس «＋ طلب».', style: TextStyle(color: kMuted))),
+          body: Column(children: [
+            Padding(padding: const EdgeInsets.fromLTRB(14, 6, 14, 4), child: TextField(decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'دوّر باسم العميل أو رقمه', isDense: true), onChanged: (v) => setState(() => q = v))),
+            SizedBox(height: 44, child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 10), children: [
+              for (final k in labels.keys) Padding(padding: const EdgeInsets.symmetric(horizontal: 3), child: ChoiceChip(label: Text('${labels[k]} ${cnt[k]}'), selected: f == k, onSelected: (_) => setState(() => f = k))),
+            ])),
+            Expanded(child: ListView.builder(
+              padding: const EdgeInsets.fromLTRB(14, 4, 14, 100),
+              itemCount: l.length + 2,
+              itemBuilder: (context, i) {
+                if (i == 0) {
+                  return Column(children: [
+                    if (Store.I.cfg['ctImport'] != true) Card(child: ListTile(leading: const Icon(Icons.contacts_outlined, color: kAc), title: const Text('📇 هات العملاء من أسامي جهات الاتصال', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('أي اسم زي «Studio Fur 3500 Suzanne» بيتحول لعميل لوحده'), onTap: () => _import(context))),
+                    for (final v in views) Card(color: const Color(0xFFE3F4F5), child: ListTile(leading: const Icon(Icons.event, color: kAc), title: Text('معاينة ${_dt(str(v['at']))} • ${str(v['n'])}', style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: Text(str(v['what'])), onTap: () { final r = Reqs.byId(str(v['rid'])); if (r != null) Navigator.push(context, MaterialPageRoute(builder: (_) => ReqPage(str(r['id'])))); },
+                        trailing: IconButton(icon: const Icon(Icons.close, size: 18), onPressed: () async { (Store.I.D['views'] as List).remove(v); await Store.I.save(); await Reqs.pushSummary(); }))),
+                  ]);
+                }
+                if (i == l.length + 1) {
+                  if (l.isNotEmpty) return const SizedBox.shrink();
+                  return Padding(padding: const EdgeInsets.all(20), child: Text(all.isEmpty ? 'لسه مفيش عملاء. سجّل العميل في الموبايل باسم زي «Studio Fur 3500 Suzanne» وهيظهر هنا لوحده — أو دوس «＋ عميل».' : 'مفيش حد هنا', style: const TextStyle(color: kMuted)));
+                }
+                return _tile(context, l[i - 1], sub(l[i - 1]));
+              },
+            )),
           ]),
-          floatingActionButton: SendQ.I.active ? null : FloatingActionButton.extended(onPressed: () => _new(context), icon: const Icon(Icons.person_add_alt_1), label: const Text('طلب')),
+          floatingActionButton: SendQ.I.active ? null : FloatingActionButton.extended(onPressed: () => _new(context), icon: const Icon(Icons.person_add_alt_1), label: const Text('عميل')),
         );
       });
 
-  List<Widget> _sec(BuildContext context, String t, List<Obj> l, String Function(Obj) sub) => [_H(t), for (final r in l) _tile(context, r, sub(r))];
-
   Widget _tile(BuildContext context, Obj r, String sub) => Card(child: ListTile(
-        leading: CircleAvatar(backgroundColor: const Color(0xFFD5EEF0), child: Text(str(r['n']).isEmpty ? '#' : str(r['n']).characters.first, style: const TextStyle(fontWeight: FontWeight.w800, color: kInk))),
+        leading: CircleAvatar(backgroundColor: const Color(0xFFD5EEF0), child: Text(reqName(r).characters.first, style: const TextStyle(fontWeight: FontWeight.w800, color: kInk))),
         title: Text(reqName(r), style: const TextStyle(fontWeight: FontWeight.w800)),
         subtitle: Text('${reqSummary(r)}\n$sub', style: const TextStyle(fontSize: 12.5)),
         isThreeLine: true,
@@ -111,14 +135,6 @@ class ReqsPage extends StatelessWidget {
     if (context.mounted) toast(context, '✅ اتضاف $n عميل');
   }
 
-  Future<void> _dm(BuildContext context, bool b) async {
-    if (b && !await confirmDlg(context, 'التطبيق هيقرا رسايل الشات الخاص اللي بتوصل في الإشعارات علشان يلاقي طلبات الشقق.\nالرسايل بتفضل على موبايلك ومبتتبعتش لأي حتة، ومفيش رد بيتبعت لوحده.', ok: 'شغّل')) return;
-    Store.I.cfg['dm'] = b;
-    await Store.I.saveCfg();
-    try { await Native.ch.invokeMethod('dmOn', {'on': b}); await Native.ch.invokeMethod('perms'); } catch (_) {}
-    Store.I.notify();
-  }
-
   Future<void> _new(BuildContext context) async {
     final c = await pickClient(context);
     if (c == null || !context.mounted) return;
@@ -130,24 +146,7 @@ class ReqsPage extends StatelessWidget {
   }
 }
 
-class _H extends StatelessWidget {
-  final String t;
-  const _H(this.t);
-  @override
-  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.fromLTRB(2, 14, 2, 4), child: Text(t, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15.5)));
-}
 
-class _Today extends StatelessWidget {
-  final int nw, due, views, fresh;
-  const _Today({required this.nw, required this.due, required this.views, required this.fresh});
-  @override
-  Widget build(BuildContext context) {
-    Widget b(String n, String l, Color c) => Expanded(child: Column(children: [Text(n, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: c)), Text(l, style: const TextStyle(fontSize: 11.5, color: kMuted), textAlign: TextAlign.center)]));
-    return Card(child: Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Row(children: [
-      b('$nw', 'طلب جديد', kAc2), b('$due', 'متابعة', kGold), b('$views', 'معاينة النهارده', kAc), b('$fresh', 'نزلتلهم شقق', kOk),
-    ])));
-  }
-}
 
 /// صفحة طلب عميل: الطلب ← الشقق المناسبة ← ابعت / معاينة / متابعة / خلص
 class ReqPage extends StatefulWidget {

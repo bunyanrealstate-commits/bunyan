@@ -30,24 +30,32 @@ class _SearchState extends State<SearchPage> {
               for (final t in kTypes.where((t) => t[0] != 'x')) FilterChip(label: Text(t[1], style: TextStyle(color: types.contains(t[0]) ? Colors.white : kInk)), selected: types.contains(t[0]), showCheckmark: false, onSelected: (b) => setState(() { b ? types.add(t[0]) : types.remove(t[0]); })),
             ]),
             const SizedBox(height: 10),
-            SegmentedButton<String>(segments: const [ButtonSegment(value: 'f', label: Text('🛋️ مفروش')), ButtonSegment(value: 'e', label: Text('فاضي')), ButtonSegment(value: 'x', label: Text('مش مهم'))], selected: {fur == true ? 'f' : (fur == false ? 'e' : 'x')}, onSelectionChanged: (s) => setState(() => fur = s.first == 'f' ? true : (s.first == 'e' ? false : null))),
-            const SizedBox(height: 8),
-            SegmentedButton<String>(showSelectedIcon: false, segments: const [ButtonSegment(value: 'mo', label: Text('شهري')), ButtonSegment(value: '1', label: Text('دفعة')), ButtonSegment(value: '2', label: Text('دفعتين')), ButtonSegment(value: '3', label: Text('3 دفعات')), ButtonSegment(value: 'any', label: Text('الكل'))], selected: {pay}, onSelectionChanged: (s) => setState(() => pay = s.first)),
-            const SizedBox(height: 10),
             Row(children: [
-              Expanded(child: TextField(controller: bc, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'ميزانية العميل (شهري أو سنوي)', helperText: _bHint(), prefixIcon: const Icon(Icons.payments_outlined), suffixText: 'درهم'), onChanged: (_) => setState(() {}))),
+              Expanded(child: _dd<String>('مفروش؟', fur == true ? 'f' : (fur == false ? 'e' : 'x'), const {'f': '🛋️ مفروش', 'e': 'فاضي', 'x': 'مش مهم'}, (v) => fur = v == 'f' ? true : (v == 'e' ? false : null))),
               const SizedBox(width: 8),
-              DropdownButton<double>(value: tol, items: [for (final t in [0.0, 5.0, 10.0, 20.0]) DropdownMenuItem(value: t, child: Text(t == 0 ? 'بالظبط' : '± ${t.round()}%'))], onChanged: (v) => setState(() => tol = v ?? 10)),
+              Expanded(child: _dd<String>('الدفع', pay, const {'3': '3 دفعات', '2': 'دفعتين', '1': 'دفعة واحدة', 'mo': 'شهري', 'any': 'الكل'}, (v) => pay = v)),
             ]),
-            const SizedBox(height: 8),
-            TextField(controller: qc, decoration: const InputDecoration(labelText: 'منطقة / فيلا / شركة (اختياري)', prefixIcon: Icon(Icons.search)), onChanged: (_) => setState(() {})),
-            Align(alignment: AlignmentDirectional.centerStart, child: FilterChip(label: Text('📄 ضيف الشروط (تأمين/رسوم) في الرسالة', style: TextStyle(color: terms ? Colors.white : kInk, fontSize: 12.5)), selected: terms, showCheckmark: false, onSelected: (b) => setState(() => terms = b))),
-            Padding(padding: const EdgeInsets.symmetric(vertical: 10), child: Text(res.isEmpty ? (Store.I.villas.isEmpty ? 'لسه مفيش فلل — ضيفها من تبويب «الفلل»' : 'مفيش حاجة متاحة بالمواصفات دي — جرّب «± 20%» أو «أي حاجة»') : '${res.length} شقة متاحة — علّم اللي عايز تبعته', style: const TextStyle(fontWeight: FontWeight.w700, color: kMuted))),
+            const SizedBox(height: 10),
+            TextField(controller: bc, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'ميزانية العميل (شهري أو سنوي)', helperText: _bHint(), prefixIcon: const Icon(Icons.payments_outlined), suffixText: 'درهم'), onChanged: (_) => setState(() {})),
+            ExpansionTile(tilePadding: EdgeInsets.zero, title: const Text('خيارات أكتر', style: TextStyle(fontSize: 13.5, color: kMuted)), children: [
+              Row(children: [
+                const Text('السماح في السعر: '),
+                DropdownButton<double>(value: tol, items: [for (final t in [0.0, 5.0, 10.0, 20.0]) DropdownMenuItem(value: t, child: Text(t == 0 ? 'بالظبط' : '± ${t.round()}%'))], onChanged: (v) => setState(() => tol = v ?? 10)),
+              ]),
+              TextField(controller: qc, decoration: const InputDecoration(labelText: 'منطقة / فيلا / شركة', prefixIcon: Icon(Icons.search)), onChanged: (_) => setState(() {})),
+              Align(alignment: AlignmentDirectional.centerStart, child: FilterChip(label: Text('📄 ضيف الشروط (تأمين/رسوم) في الرسالة', style: TextStyle(color: terms ? Colors.white : kInk, fontSize: 12.5)), selected: terms, showCheckmark: false, onSelected: (b) => setState(() => terms = b))),
+            ]),
+            Padding(padding: const EdgeInsets.symmetric(vertical: 10), child: Text(res.isEmpty ? (Store.I.villas.isEmpty ? 'لسه مفيش فلل — ضيفها من تبويب «الفلل»' : 'مفيش حاجة متاحة بالمواصفات دي — جرّب «الدفع: الكل» أو كبّر «السماح في السعر»') : '${res.length} شقة متاحة — علّم اللي عايز تبعته', style: const TextStyle(fontWeight: FontWeight.w700, color: kMuted))),
             for (final x in res) _row(x),
           ]),
           floatingActionButton: sel.isEmpty || SendQ.I.active ? null : Row(mainAxisSize: MainAxisSize.min, children: [FloatingActionButton.small(heroTag: 'lnk', tooltip: 'لينك عرض', onPressed: () => _link(sel), child: const Icon(Icons.link)), const SizedBox(width: 8), FloatingActionButton.extended(heroTag: 'snd', onPressed: () => _send(sel), backgroundColor: const Color(0xFF25D366), icon: const Icon(Icons.send, color: Colors.white), label: Text('ابعت ${sel.length} للعميل', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)))]),
         );
       });
+
+  Widget _dd<T>(String label, T v, Map<T, String> items, void Function(T) on) => InputDecorator(
+        decoration: InputDecoration(labelText: label, isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4)),
+        child: DropdownButtonHideUnderline(child: DropdownButton<T>(isExpanded: true, value: v, items: [for (final e in items.entries) DropdownMenuItem(value: e.key, child: Text(e.value))], onChanged: (x) { if (x != null) setState(() => on(x)); })),
+      );
 
   String? _bHint() {
     final b = numOf(bc.text);

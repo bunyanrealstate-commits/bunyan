@@ -12,6 +12,7 @@ import 'package:offers/ui/settings.dart';
 import 'package:offers/ui/groups.dart';
 import 'package:offers/ui/shots.dart';
 import 'package:offers/ui/reqs.dart';
+import 'package:offers/ui/home.dart';
 import 'package:offers/ui/suggest.dart';
 import 'package:offers/core/suggest.dart';
 import 'package:offers/core/offerpage.dart';
@@ -40,6 +41,7 @@ void main() {
     await show(t, const GroupsPage(), 'groups');
     Store.I.D['log'] = <dynamic>[<String, dynamic>{'at': DateTime.now().toIso8601String(), 'g': 'MARASI', 'm': '📥 الغانم 25: اتحجزت: 7', 'img': '123', 'vid': 'v3'}];
     await show(t, const ShotsPage(), 'shots');
+    await show(t, HomePage(go: (_) {}), 'home-empty');
     await show(t, const ReqsPage(), 'reqs-empty');
     final r = Reqs.add(name: 'Ahmed', phone: '971501234567', text: 'need 1bhk monthly 3500');
     Reqs.add(name: 'محمد', phone: '971551112222', text: 'عايز غرفتين وصالة دفعة واحدة 75 الف');
@@ -57,6 +59,8 @@ void main() {
     expect(Reqs.newFor().any((r) => r['id'] == om2['id']), true);
     await show(t, const ReqsPage(), 'reqs');
     expect(find.textContaining('Ahmed'), findsOneWidget);
+    await show(t, HomePage(go: (_) {}), 'home');
+    expect(find.textContaining('Omar'), findsOneWidget);
     await show(t, ReqPage(str(r['id'])), 'req');
     expect(find.textContaining('شقة تناسبه'), findsOneWidget);
     final g2 = objs(Store.I.villa('v3')!['units']).first..['newAt'] = DateTime.now().toIso8601String()..['videos'] = ['42'];
@@ -73,7 +77,7 @@ void main() {
     expect(h, contains('AED 70,000 / year — 1 payment'));
     expect(h, contains('https://wa.me/971523501023?text='));
     Store.I.D['deals'] = [{'at': DateTime.now().toIso8601String(), 'n': 'Ahmed', 'unit': 'x', 'comm': 2500}];
-    await show(t, const ReqsPage(), 'reqs-deals');
+    await show(t, HomePage(go: (_) {}), 'home-deals');
     expect(find.textContaining('2,500 درهم عمولة'), findsOneWidget);
     await show(t, const SuggestPage(tab: 1), 'sug-loc');
     await show(t, const SuggestPage(tab: 2), 'sug-post');
