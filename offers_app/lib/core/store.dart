@@ -95,6 +95,12 @@ class Store extends ChangeNotifier {
     }
     // مرة واحدة: الشركات اللي أسامه مفعّلها بس — «تابع كل الجروبات» اتلغى
     if (cfg['mig_all0'] != true) { cfg['allGroups'] = false; cfg['mig_all0'] = true; await saveCfg(); }
+    // مرة واحدة: امسح كل العملاء اللي التطبيق ضافهم من جهات الاتصال (تاريخ التعديل بيتجدد لوحده فرجعوا كلهم) — يفضل اللي سجلتهم بإيدك
+    if (cfg['wipe6'] != true) {
+      ((D['reqs'] as List?) ?? []).removeWhere((r) => r is Map && r['src'] != 'manual' && r['src'] != 'pick');
+      cfg['ctImport'] = false; cfg['wipe6'] = true; await saveCfg();
+      await save();
+    }
     loaded = true; notifyListeners();
     if (villas.isEmpty && linked) await restore();
   }

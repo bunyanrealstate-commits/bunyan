@@ -144,19 +144,19 @@ class Reqs {
 
   /// 📇 العملاء المتسجلين في جهات الاتصال بأسماء فيها طلبهم (زي «Studio Fur 3500 Suzanne»)
   /// الجديد بس بيتضاف — والشقق المناسبة دلوقتي بتتحسب «اتشافت»، علشان تتنبه بس للي ينزل بعد كده
-  static Future<int> importContacts(List<Map<String, String>> contacts) async {
+  static Future<int> importContacts(List<Map<String, String>> contacts, {bool all = false}) async {
     var n = 0;
     final have = all.map((r) => str(r['p'])).where((p) => p.isNotEmpty).toSet();
     for (final c in contacts) {
       final ph = c['p'] ?? '';
       if (ph.isEmpty || have.contains(ph)) continue;
-      if (!recentContact(c)) continue; // الأسامي اللي اتسجلت من 12/11 وجديد بس
+      if (!all && !recentContact(c)) continue; // الأسامي اللي اتسجلت من 12/11 وجديد بس
       final q = parseContactName(c['n'] ?? '');
       if (q == null) continue;
       final r = add(name: str(q['name']), phone: ph, text: c['n'] ?? '');
       for (final k in ['types', 'budget', 'pay', 'fur', 'when']) { r[k] = q[k]; }
       r['cn'] = c['n'] ?? '';
-      r['st'] = 'wait'; r['src'] = 'contact';
+      r['st'] = 'wait'; r['src'] = all ? 'pick' : 'contact';
       r['seen'] = [for (final x in matches(r)) key(x['v'] as Obj, x['u'] as Obj)];
       have.add(ph); n++;
     }

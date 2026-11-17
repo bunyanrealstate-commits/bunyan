@@ -97,7 +97,7 @@ class _ReqsState extends State<ReqsPage> {
               itemBuilder: (context, i) {
                 if (i == 0) {
                   return Column(children: [
-                    if (Store.I.cfg['ctImport'] != true) Card(child: ListTile(leading: const Icon(Icons.contacts_outlined, color: kAc), title: const Text('📇 هات العملاء من أسامي جهات الاتصال', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('أي اسم زي «Studio Fur 3500 Suzanne» بيتحول لعميل لوحده'), onTap: () => _import(context))),
+                    Card(child: ListTile(dense: true, leading: const Icon(Icons.contacts_outlined, color: kAc), title: const Text('📇 ضيف عملاء من جهات الاتصال', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('الأحدث فوق — علّم اللي عايزهم بس'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PickContactsPage())))),
                     for (final v in views) Card(color: const Color(0xFFE3F4F5), child: ListTile(leading: const Icon(Icons.event, color: kAc), title: Text('معاينة ${_dt(str(v['at']))} • ${str(v['n'])}', style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: Text(str(v['what'])), onTap: () { final r = Reqs.byId(str(v['rid'])); if (r != null) Navigator.push(context, MaterialPageRoute(builder: (_) => ReqPage(str(r['id'])))); },
                         trailing: IconButton(icon: const Icon(Icons.close, size: 18), onPressed: () async { (Store.I.D['views'] as List).remove(v); await Store.I.save(); await Reqs.pushSummary(); }))),
                   ]);
@@ -123,21 +123,56 @@ class _ReqsState extends State<ReqsPage> {
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReqPage(str(r['id'])))),
       ));
 
-  Future<void> _import(BuildContext context) async {
-    final cs = await Native.contacts();
-    final found = cs.where((c) => parseContactName(c['n'] ?? '') != null && Reqs.recentContact(c)).toList();
-    if (!context.mounted) return;
-    if (found.isEmpty) { toast(context, cs.isEmpty ? '⚠️ مقدرتش أقرا جهات الاتصال — وافق على الإذن' : 'مالقيتش أسامي فيها طلب (زي Studio Fur 3500 Suzanne)'); return; }
-    final ex = found.take(4).map((c) { final q = parseContactName(c['n']!)!; return '• ${c['n']} ← ${reqSummary(q)}${str(q['name']).isEmpty ? '' : ' (${q['name']})'}'; }).join('\n');
-    if (!await confirmDlg(context, 'لقيت ${found.length} عميل:\n$ex\n…\n\nأضيفهم؟ وأي اسم جديد تسجله بعد كده هيتضاف لوحده.', ok: 'أضيفهم')) return;
-    final n = await Reqs.importContacts(found);
-    Store.I.cfg['ctImport'] = true; await Store.I.saveCfg();
-    if (context.mounted) toast(context, '✅ اتضاف $n عميل');
-  }
-
   Future<void> _new(BuildContext context) async {
     final id = await Navigator.push<String>(context, MaterialPageRoute(builder: (_) => const NewClientPage()));
     if (id != null && context.mounted) Navigator.push(context, MaterialPageRoute(builder: (_) => ReqPage(id)));
+  }
+}
+
+/// 📇 اختار العملاء من جهات الاتصال: أسامي زي «Studio Fur 3500 Suzanne»، الأحدث فوق
+class PickContactsPage extends StatefulWidget {
+  const PickContactsPage({super.key});
+  @override
+  State<PickContactsPage> createState() => _PickContactsState();
+}
+
+class _PickContactsState extends State<PickContactsPage> {
+  List<Map<String, String>> cs = [];
+  final sel = <String>{};
+  bool loading = true;
+  String q = '';
+  @override
+  void initState() { super.initState(); _load(); }
+  Future<void> _load() async {
+    final all = await Native.contacts();
+    final l = all.where((c) => parseContactName(c['n'] ?? '') != null).toList()
+      ..sort((a, b) => (int.tryParse(b['id'] ?? '') ?? 0).compareTo(int.tryParse(a['id'] ?? '') ?? 0));
+    if (mounted) setState(() { cs = l; loading = false; });
+  }
+
+  Future<void> _add() async {
+    final n = await Reqs.importContacts(cs.where((c) => sel.contains(c['p'])).toList(), all: true);
+    if (mounted) { toast(context, '✅ اتضاف $n عميل'); Navigator.pop(context); }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final have = Reqs.all.map((r) => str(r['p'])).toSet();
+    final l = cs.where((c) => q.isEmpty || (c['n'] ?? '').toLowerCase().contains(q.toLowerCase())).toList();
+    return Scaffold(
+      appBar: AppBar(title: const Text('📇 اختار العملاء')),
+      body: Column(children: [
+        Padding(padding: const EdgeInsets.fromLTRB(14, 6, 14, 4), child: TextField(decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'دوّر', isDense: true), onChanged: (v) => setState(() => q = v))),
+        if (loading) const Padding(padding: EdgeInsets.all(30), child: CircularProgressIndicator()),
+        if (!loading && cs.isEmpty) const Padding(padding: EdgeInsets.all(20), child: Text('مالقيتش أسامي فيها طلب (زي Studio Fur 3500 Suzanne) — أو وافق على إذن جهات الاتصال', style: TextStyle(color: kMuted))),
+        Expanded(child: ListView.builder(padding: const EdgeInsets.fromLTRB(8, 0, 8, 100), itemCount: l.length, itemBuilder: (context, i) {
+          final c = l[i], p = c['p'] ?? '', added = have.contains(p);
+          return CheckboxListTile(dense: true, value: added || sel.contains(p), onChanged: added ? null : (b) => setState(() => b == true ? sel.add(p) : sel.remove(p)),
+              title: Text(c['n'] ?? '', style: const TextStyle(fontWeight: FontWeight.w700)), subtitle: Text(added ? '✅ متضاف' : '+$p'));
+        })),
+      ]),
+      floatingActionButton: sel.isEmpty ? null : FloatingActionButton.extended(onPressed: _add, icon: const Icon(Icons.check), label: Text('ضيف ${sel.length}')),
+    );
   }
 }
 

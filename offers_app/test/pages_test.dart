@@ -59,6 +59,7 @@ void main() {
     final om2 = Reqs.all.firstWhere((r) => r['p'] == '971509998877');
     expect(Reqs.newFor().any((r) => r['id'] == om2['id']), true);
     await show(t, const NewClientPage(), 'new-client');
+    await show(t, const PickContactsPage(), 'pick-contacts');
     await show(t, const ReqsPage(), 'reqs');
     expect(find.textContaining('Ahmed'), findsOneWidget);
     await show(t, HomePage(go: (_) {}), 'home');

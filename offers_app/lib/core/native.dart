@@ -34,7 +34,7 @@ class Native {
       for (final m in r.whereType<Map>()) {
         final p = phone('${m['p'] ?? ''}');
         if (p.length < 8 || !seen.add(p)) continue;
-        out.add({'n': '${m['n'] ?? ''}', 'p': p, 'wa': '${m['wa'] ?? ''}', 'u': '${m['u'] ?? ''}'});
+        out.add({'n': '${m['n'] ?? ''}', 'p': p, 'wa': '${m['wa'] ?? ''}', 'u': '${m['u'] ?? ''}', 'id': '${m['id'] ?? ''}'});
       }
       out.sort((a, b) => a['n']!.compareTo(b['n']!));
       return _contacts = out;
