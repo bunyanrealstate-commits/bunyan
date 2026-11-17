@@ -1,4 +1,6 @@
 import 'dart:io' show File;
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../core/auto.dart';
@@ -37,6 +39,7 @@ class _ShotsState extends State<ShotsPage> {
     final l = AutoUpd.log.where((x) => shotKey(x).isNotEmpty && (!onlyNew || x['same'] != true)).toList();
     return Scaffold(
       appBar: AppBar(title: const Text('📷 صور الأبديت')),
+      floatingActionButton: FloatingActionButton.extended(onPressed: () => readPicked(context), icon: const Icon(Icons.add_photo_alternate_outlined), label: const Text('اقرا صورة')),
       body: ListView(padding: const EdgeInsets.fromLTRB(14, 8, 14, 40), children: [
         Row(children: [
           Expanded(child: Text('${l.length} صورة اتقرت', style: const TextStyle(fontWeight: FontWeight.w800))),
@@ -130,6 +133,31 @@ Future<void> reread(BuildContext context, Obj x) async {
     Navigator.pop(context);
     await showDialog(context: context, builder: (ctx) => Directionality(textDirection: TextDirection.rtl, child: AlertDialog(title: const Text('✅ اتقرت تاني'), content: SingleChildScrollView(child: Text(r.isEmpty ? 'مفيش تغيير' : r.join('\n\n'))), actions: [FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('تمام'))])));
     if (context.mounted) Navigator.pop(context);
+  } catch (e) {
+    if (!context.mounted) return;
+    Navigator.pop(context);
+    toast(context, '⚠️ $e');
+  }
+}
+
+/// ➕ صورة أبديت من الموبايل (حتى لو جت من جروب مش متابَع) — بيعرف الشركة والفيلا لوحده
+Future<void> readPicked(BuildContext context) async {
+  final f = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 2200, imageQuality: 90);
+  if (f == null || !context.mounted) return;
+  showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+  try {
+    final b = await f.readAsBytes();
+    final rows = await Ai.readUpdatePages([b], auto: true);
+    if (rows.isEmpty) throw 'مالقيتش شقق في الصورة دي';
+    final comp = str(rows.first['company']).isEmpty ? 'أبديت' : str(rows.first['company']);
+    final dir = await getApplicationDocumentsDirectory();
+    final out = File('${dir.path}/shot-${DateTime.now().millisecondsSinceEpoch}.jpg');
+    await out.writeAsBytes(b);
+    final r = AutoUpd.applyRows(comp, rows, files: [out.path]);
+    await Store.I.save();
+    if (!context.mounted) return;
+    Navigator.pop(context);
+    await showDialog(context: context, builder: (ctx) => Directionality(textDirection: TextDirection.rtl, child: AlertDialog(title: Text('📥 $comp'), content: SingleChildScrollView(child: Text(r.isEmpty ? (AutoUpd.log.isNotEmpty ? str(AutoUpd.log.first['m']) : 'مفيش تغيير') : r.join('\n\n'))), actions: [FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('تمام'))])));
   } catch (e) {
     if (!context.mounted) return;
     Navigator.pop(context);

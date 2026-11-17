@@ -65,7 +65,9 @@ class Search {
     for (final v in villas) {
       for (final u in objs(v['units'])) {
         if (onlyAvail && u['avail'] == false) continue;
-        if (types.isNotEmpty && !types.contains(str(u['type']))) continue;
+        // «غرفة وصالة» تشمل كمان اللي بحمامين (وكذلك الغرفتين)
+        final ty = str(u['type']), base = ty.endsWith('2b') ? ty.substring(0, ty.length - 2) : ty;
+        if (types.isNotEmpty && !types.contains(ty) && !types.contains(base)) continue;
         if (fur == true && u['fur'] != true) continue; // مفروش
         if (fur == false && u['fur'] == true) continue; // فاضي
         if (pay == 'mo' && Price.mo(u) <= 0) continue;

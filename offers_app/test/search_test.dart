@@ -26,6 +26,9 @@ void main() {
     final v1 = vs[0], u2 = objs(v1['units'])[1]..['videos'] = ['x'];
     expect(unitCaption(v1, u2, 'mo'), '💰 3,500 درهم شهري\n📍 https://maps.google.com/?q=24.3,54.6');
   });
+  test('غرفتين وصالة بتشمل اللي بحمامين', () {
+    expect(Search.run(vs, types: {'2bk'}).any((x) => (x['u'] as Obj)['id'] == 'g2'), true);
+  });
   test('رسالة العميل', () {
     final r = Search.run(vs, types: {'1bk'}, pay: 'mo', budget: 3500);
     final m = clientMsg(r.take(1).toList());
