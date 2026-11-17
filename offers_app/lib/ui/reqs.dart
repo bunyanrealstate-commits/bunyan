@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:image_picker/image_picker.dart';
-import '../core/labels.dart';
 import '../core/model.dart';
 import '../core/native.dart';
 import '../core/reqs.dart';
@@ -100,7 +97,6 @@ class _ReqsState extends State<ReqsPage> {
               itemBuilder: (context, i) {
                 if (i == 0) {
                   return Column(children: [
-                    Card(color: const Color(0xFFF3EAFB), child: ListTile(leading: const Icon(Icons.label_outline, color: Color(0xFF8E44AD)), title: const Text('🏷️ هات العملاء من ليبلات واتساب الأعمال', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('سكرين من كل ليبل (Studio empty / 1bhk …) وأنا أسجلهم'), onTap: () => _labels(context))),
                     if (Store.I.cfg['ctImport'] != true) Card(child: ListTile(leading: const Icon(Icons.contacts_outlined, color: kAc), title: const Text('📇 هات العملاء من أسامي جهات الاتصال', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('أي اسم زي «Studio Fur 3500 Suzanne» بيتحول لعميل لوحده'), onTap: () => _import(context))),
                     for (final v in views) Card(color: const Color(0xFFE3F4F5), child: ListTile(leading: const Icon(Icons.event, color: kAc), title: Text('معاينة ${_dt(str(v['at']))} • ${str(v['n'])}', style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: Text(str(v['what'])), onTap: () { final r = Reqs.byId(str(v['rid'])); if (r != null) Navigator.push(context, MaterialPageRoute(builder: (_) => ReqPage(str(r['id'])))); },
                         trailing: IconButton(icon: const Icon(Icons.close, size: 18), onPressed: () async { (Store.I.D['views'] as List).remove(v); await Store.I.save(); await Reqs.pushSummary(); }))),
@@ -114,7 +110,7 @@ class _ReqsState extends State<ReqsPage> {
               },
             )),
           ]),
-          floatingActionButton: SendQ.I.active ? null : FloatingActionButton.extended(onPressed: () => _new(context), icon: const Icon(Icons.person_add_alt_1), label: const Text('عميل')),
+          floatingActionButton: SendQ.I.active ? null : FloatingActionButton.extended(onPressed: () => _new(context), icon: const Icon(Icons.person_add_alt_1), label: const Text('عميل جديد')),
         );
       });
 
@@ -126,26 +122,6 @@ class _ReqsState extends State<ReqsPage> {
         trailing: const Icon(Icons.chevron_left),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReqPage(str(r['id'])))),
       ));
-
-  Future<void> _labels(BuildContext context) async {
-    if (!await confirmDlg(context, '1) افتح واتساب الأعمال ← اختار ليبل فوق (زي Studio empty)\n2) خد سكرين، وانزل وخد سكرين تاني لحد آخر القايمة\n3) اعمل كده لكل ليبل\n4) ارجع هنا ودوس «اختار السكرينات» وعلّمهم كلهم\n\nأي عميل متسجل باسم هدوّر عليه في جهات الاتصال، واللي متسجل برقم هاخد الرقم على طول.', ok: 'اختار السكرينات')) return;
-    final fs = await ImagePicker().pickMultiImage(imageQuality: 95);
-    if (fs.isEmpty || !context.mounted) return;
-    showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
-    final items = <Map<String, String>>[];
-    final seen = <String>{};
-    for (final f in fs) {
-      try {
-        final r = await Native.ch.invokeMethod<String>('ocr', {'bytes': await f.readAsBytes()});
-        if (r == null) continue;
-        for (final it in LabelShots.parse(jsonDecode(r) as List)) { if (seen.add(it['title']!.toLowerCase())) items.add(it); }
-      } catch (_) {}
-    }
-    final res = await LabelShots.importAll(items, await Native.contacts());
-    if (!context.mounted) return;
-    Navigator.pop(context);
-    await confirmDlg(context, items.isEmpty ? '⚠️ مالقيتش شاتات عليها ليبل في السكرينات دي' : '✅ لقيت ${res.found} شات • اتضاف ${res.added} عميل جديد${res.missed.isEmpty ? '' : '\n\nمالقيتش دول في جهات الاتصال:\n${res.missed.take(10).map((m) => '• $m').join('\n')}'}', ok: 'تمام');
-  }
 
   Future<void> _import(BuildContext context) async {
     final cs = await Native.contacts();
@@ -160,17 +136,73 @@ class _ReqsState extends State<ReqsPage> {
   }
 
   Future<void> _new(BuildContext context) async {
-    final c = await pickClient(context);
-    if (c == null || !context.mounted) return;
-    final o = await formDlg(context, 'العميل عايز إيه؟', [const FS('t', 'اكتب أو الصق رسالته (زي: غرفة وصالة شهري 3500)', multi: true)], ok: 'دوّر');
-    if (o == null || !context.mounted) return;
-    final r = Reqs.add(name: c['n'] ?? '', phone: c['p'] ?? '', text: o['t'] ?? '', lang: c['lang'] ?? '');
-    await Store.I.save();
-    if (context.mounted) Navigator.push(context, MaterialPageRoute(builder: (_) => ReqPage(str(r['id']))));
+    final id = await Navigator.push<String>(context, MaterialPageRoute(builder: (_) => const NewClientPage()));
+    if (id != null && context.mounted) Navigator.push(context, MaterialPageRoute(builder: (_) => ReqPage(id)));
   }
 }
 
+/// ➕ عميل جديد: الاسم + الموبايل + طلبه — صفحة واحدة
+class NewClientPage extends StatefulWidget {
+  const NewClientPage({super.key});
+  @override
+  State<NewClientPage> createState() => _NewClientState();
+}
 
+class _NewClientState extends State<NewClientPage> {
+  final n = TextEditingController(), p = TextEditingController(), b = TextEditingController(), note = TextEditingController();
+  final types = <String>{};
+  bool? fur;
+  String lang = 'ar';
+  static const _t = [['st', 'استديو'], ['1bk', 'غرفة وصالة'], ['2bk', 'غرفتين وصالة'], ['3bk', '3 غرف']];
+
+  Future<void> _contact() async {
+    final c = await pickClient(context);
+    if (c == null || !mounted) return;
+    setState(() { n.text = c['n'] ?? ''; p.text = c['p'] ?? ''; lang = c['lang'] ?? lang; });
+  }
+
+  Future<void> _save() async {
+    final ph = Native.phone(p.text);
+    if (ph.length < 9) { toast(context, '⚠️ اكتب رقم الموبايل'); return; }
+    if (types.isEmpty) { toast(context, '⚠️ اختار نوع الشقة'); return; }
+    final old = Reqs.all.where((r) => str(r['p']) == ph && Reqs.open(r)).firstOrNull;
+    final r = old ?? Reqs.add(name: n.text.trim(), phone: ph, text: note.text.trim(), lang: lang);
+    if (old != null) { r['n'] = n.text.trim(); r['txt'] = note.text.trim(); r['lang'] = lang; }
+    r['types'] = [for (final t in types) ...(t == '1bk' ? ['1bk', '1bk2b'] : t == '2bk' ? ['2bk', '2bk2b'] : [t])];
+    r['fur'] = fur;
+    final bud = numOf(b.text);
+    if (bud > 0) r['budget'] = Price.budgetMonthly(bud < 1000 ? bud * 1000 : bud);
+    if (str(r['pay']).isEmpty) r['pay'] = 'any';
+    r['st'] = 'wait'; r['src'] = 'manual';
+    r['seen'] = <dynamic>[];
+    await Store.I.save();
+    if (mounted) Navigator.pop(context, str(r['id']));
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('➕ عميل جديد')),
+        body: ListView(padding: const EdgeInsets.fromLTRB(16, 10, 16, 120), children: [
+          TextField(controller: n, decoration: const InputDecoration(labelText: 'اسم العميل', prefixIcon: Icon(Icons.person_outline))),
+          const SizedBox(height: 12),
+          TextField(controller: p, keyboardType: TextInputType.phone, decoration: InputDecoration(labelText: 'رقم الموبايل', hintText: '05xxxxxxxx', prefixIcon: const Icon(Icons.phone_outlined), suffixIcon: IconButton(tooltip: 'من جهات الاتصال', icon: const Icon(Icons.contacts_outlined), onPressed: _contact))),
+          const SizedBox(height: 18),
+          const Text('عايز إيه؟', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15.5)),
+          const SizedBox(height: 6),
+          Wrap(spacing: 8, runSpacing: 6, children: [for (final t in _t) FilterChip(label: Text(t[1], style: TextStyle(color: types.contains(t[0]) ? Colors.white : kInk)), selected: types.contains(t[0]), showCheckmark: false, onSelected: (x) => setState(() => x ? types.add(t[0]) : types.remove(t[0])))]),
+          const SizedBox(height: 12),
+          SegmentedButton<String>(segments: const [ButtonSegment(value: 'f', label: Text('🛋️ مفروش')), ButtonSegment(value: 'e', label: Text('فاضي')), ButtonSegment(value: 'x', label: Text('مش مهم'))],
+              selected: {fur == true ? 'f' : fur == false ? 'e' : 'x'}, onSelectionChanged: (v) => setState(() => fur = v.first == 'f' ? true : v.first == 'e' ? false : null)),
+          const SizedBox(height: 14),
+          TextField(controller: b, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'الميزانية (شهري أو سنوي)', hintText: 'زي 3500 أو 40000', prefixIcon: Icon(Icons.payments_outlined), suffixText: 'درهم')),
+          const SizedBox(height: 12),
+          TextField(controller: note, maxLines: 2, decoration: const InputDecoration(labelText: 'ملاحظة (اختياري)', hintText: 'زي: يسكن أول ديسمبر • يفضل حمامين')),
+          const SizedBox(height: 12),
+          SegmentedButton<String>(segments: const [ButtonSegment(value: 'ar', label: Text('🇦🇪 رسالة عربي')), ButtonSegment(value: 'en', label: Text('🇬🇧 English'))], selected: {lang}, onSelectionChanged: (v) => setState(() => lang = v.first)),
+        ]),
+        floatingActionButton: FloatingActionButton.extended(onPressed: _save, icon: const Icon(Icons.check), label: const Text('حفظ ودوّر له')),
+      );
+}
 
 /// صفحة طلب عميل: الطلب ← الشقق المناسبة ← ابعت / معاينة / متابعة / خلص
 class ReqPage extends StatefulWidget {
