@@ -38,7 +38,7 @@ void main() {
     await show(t, const ImportPage('v1'), 'import');
     await show(t, const SettingsPage(), 'settings');
     await show(t, const GroupsPage(), 'groups');
-    Store.I.D['log'] = [{'at': DateTime.now().toIso8601String(), 'g': 'MARASI', 'm': '📥 الغانم 25: اتحجزت: 7', 'img': '123', 'vid': 'v3'}];
+    Store.I.D['log'] = <dynamic>[<String, dynamic>{'at': DateTime.now().toIso8601String(), 'g': 'MARASI', 'm': '📥 الغانم 25: اتحجزت: 7', 'img': '123', 'vid': 'v3'}];
     await show(t, const ShotsPage(), 'shots');
     await show(t, const ReqsPage(), 'reqs-empty');
     final r = Reqs.add(name: 'Ahmed', phone: '971501234567', text: 'need 1bhk monthly 3500');
@@ -57,7 +57,7 @@ void main() {
     final g2 = objs(Store.I.villa('v3')!['units']).first..['newAt'] = DateTime.now().toIso8601String()..['videos'] = ['42'];
     expect(Sug.posts().length, 1);
     expect(Sug.caption(Store.I.villa('v3')!, g2), contains('AED 70,000 / year'));
-    Store.I.D['locSug'] = [{'id': 'l1', 'g': 'Alghanim', 'url': 'https://maps.app.goo.gl/abc', 'txt': 'Villa 25 location https://maps.app.goo.gl/abc'}];
+    Store.I.D['locSug'] = <dynamic>[<String, dynamic>{'id': 'l1', 'g': 'Alghanim', 'url': 'https://maps.app.goo.gl/abc', 'txt': 'Villa 25 location https://maps.app.goo.gl/abc'}];
     expect(Sug.villaFor(Sug.locs.first)?['id'], 'v3');
     Store.I.villa('v3')!['loc'] = '';
     final al = await t.runAsync(() => Sug.autoLocs());

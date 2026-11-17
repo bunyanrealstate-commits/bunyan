@@ -119,7 +119,7 @@ class Sug {
       final l = (Store.I.D['log'] as List?) ?? (Store.I.D['log'] = <dynamic>[]);
       for (final m in out) { l.insert(0, {'at': DateTime.now().toIso8601String(), 'g': '', 'm': m, 'same': true}); }
       await Store.I.save();
-      Geo.fillVillas();
+      if (!Store.I.testMode) Geo.fillVillas();
     }
     return out;
   }
