@@ -73,7 +73,7 @@ class _SugState extends State<SuggestPage> {
       const SizedBox(width: 10),
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('${a.createDateTime.day}/${a.createDateTime.month} • ${Media.dur(a.duration)}${x['no'] != null && str(x['no']).isNotEmpty ? ' • 🚪 ${x['no']}' : ''}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-        if (v != null) Text('📍 على بعد ${(x['d'] as double).round()} متر', style: const TextStyle(color: kMuted, fontSize: 12)),
+        if (v != null && (x['d'] as double) < 100000) Text('📍 على بعد ${(x['d'] as double).round()} متر', style: const TextStyle(color: kMuted, fontSize: 12)),
         TextButton(style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: AlignmentDirectional.centerStart), onPressed: () => _pick(x), child: Text(u == null ? '➕ اختار الشقة' : '✓ ${typeName(u['type'])} ${str(u['no'])}${v == null ? '' : ' — ${str(v['name'])} ${str(v['no'])}'}')),
       ])),
       Column(children: [

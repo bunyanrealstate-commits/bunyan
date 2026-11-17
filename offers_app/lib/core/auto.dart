@@ -74,7 +74,16 @@ String villaNoOf(String s) {
 /// يلاقي الفيلا من الشركة (بتاعة الجروب) ورقم الفيلا المكتوب في الأبديت — ولو مش موجودة يعملها
 Obj? findVilla(String company, Obj meta, {bool create = true}) {
   final no = villaNoOf(str(meta['villa']));
-  if (no.isEmpty) return null;
+  if (no.isEmpty) {
+    // فيلا مكتوب اسمها من غير رقم (زي «Villa Madinat Al Riyad»): نعرفها بالاسم + الشركة
+    final vn = str(meta['villa']).trim();
+    if (vn.length < 5 || company.isEmpty) return null;
+    final hit = Store.I.villas.where((v) => str(v['no']).isEmpty && nkey(v['name']).toLowerCase() == nkey(vn).toLowerCase() && _same(str(v['company']), company)).firstOrNull;
+    if (hit != null || !create) return hit;
+    final v = <String, dynamic>{'id': uid(), 'name': vn, 'no': '', 'company': company, 'area': str(meta['area']), 'loc': '', 'units': <dynamic>[], 'auto': true};
+    ((Store.I.D['villas'] as List?) ?? (Store.I.D['villas'] = <dynamic>[])).add(v);
+    return v;
+  }
   final comp = company.isNotEmpty ? company : str(meta['company']);
   final c = Store.I.villas.where((v) => nkey(v['no']) == nkey(no) || nkey(villaNoOf('${v['name']} ${v['no']}')) == nkey(no)).toList();
   final area = str(meta['area']);
@@ -148,7 +157,24 @@ class AutoUpd {
 
   /// يطبق صورة أبديت (كل فيلا لوحدها) ويسجلها — بيرجع الرسايل اللي فيها تغيير
   static bool get onlyArea => Store.I.cfg['onlyArea'] != false;
-  static List<String> applyRows(String g, List<Obj> rows, {String img = '', List files = const [], bool same = false, String how = ''}) {
+  static const _generic = {'real', 'estate', 'properties', 'property', 'llc', 'l.l.c', 'l.l.c.', 'management', 'group', 'team', 'co', 'company', 'and', 'the', 'realestate', 'real-estate', 'برو', 'للعقارات', 'العقارية', 'عقارات'};
+  static List<String> _sig(String s) => s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9\u0600-\u06FF ]'), ' ').split(RegExp(r'\s+')).where((w) => w.length >= 3 && !_generic.contains(w)).toList();
+
+  /// الشركة من الكلام المكتوب في الصورة نفسها (اللوجو/الاسم) — علشان صورة شركة متتحطش باسم جروب تاني
+  static String companyFromText(String text, String g) {
+    final t = ' ${text.toLowerCase().replaceAll(RegExp(r'[^a-z0-9\u0600-\u06FF ]'), ' ')} ';
+    bool has(String c) { final w = _sig(c); return w.isNotEmpty && w.every((x) => t.contains(' $x ') || t.contains(x)); }
+    final mine = companyOf(g);
+    if (mine.isNotEmpty && has(mine)) return mine;
+    final known = {for (final v in Store.I.villas) str(v['company']), ...groups.values, ...groups.keys.map(cleanGroup)}.where((c) => _sig(c).isNotEmpty).toList()
+      ..sort((a, b) => _sig(b).length.compareTo(_sig(a).length));
+    for (final c in known) { if (has(c)) return c; }
+    final m = RegExp(r'([A-Z][A-Z&\. ]{2,40}?)\s+(REAL\s*ESTATE|PROPERTIES|PROPERTY|HOLDING|REALTY)', caseSensitive: true).firstMatch(text);
+    if (m != null) return '${m.group(1)!.trim()} ${m.group(2)!.replaceAll(RegExp(r'\s+'), ' ')}'.split(' ').map((w) => w.isEmpty ? w : w[0] + w.substring(1).toLowerCase()).join(' ');
+    return '';
+  }
+
+  static List<String> applyRows(String g, List<Obj> rows, {String img = '', List files = const [], bool same = false, String how = '', String company = ''}) {
     final out = <String>[];
     final l = (Store.I.D['log'] as List?) ?? (Store.I.D['log'] = <dynamic>[]);
     final skipped = <String>[];
@@ -156,7 +182,10 @@ class AutoUpd {
     for (final grp in groupRows(rows)) {
       final meta = grp.key, good = grp.value;
       if (onlyArea && meta['out'] == true) { skipped.add([str(meta['villa']), str(meta['area'])].where((x) => x.isNotEmpty).join(' — ')); skipN += good.length; continue; }
-      final v = findVilla(companyOf(g), meta);
+      final gc = companyOf(g), mc = str(meta['company']);
+      // الشركة المكتوبة في الصورة لو مختلفة عن الجروب (صورة شركة اتعملها فوروارد في جروب تاني)
+      final cmp = company.isNotEmpty ? company : (mc.isNotEmpty && (gc.isEmpty || !_sig(mc).any((w) => _sig(gc).contains(w))) ? mc : gc);
+      final v = findVilla(cmp, meta);
       if (v != null && str(meta['terms']).isNotEmpty) v['terms'] = str(meta['terms']);
       final String msg;
       var quiet = same;
@@ -202,7 +231,9 @@ class AutoUpd {
   }
 
   /// 🔍 قراية صفحات (صور) أبديت: على الموبايل الأول (OCR + فهم الجدول)، ولو مش واضح Gemini
+  static String lastText = '';
   static Future<({List<Obj> rows, String how})> smartRead(List<Uint8List> pages, {bool auto = true}) async {
+    lastText = '';
     if (!kIsWeb) {
       try {
         final all = <dynamic>[];
@@ -215,6 +246,7 @@ class AutoUpd {
           for (final m in e.whereType<Map>()) { all.add({...m, 'y': numOf(m['y']) + off}); mh = [mh, numOf(m['y']) + numOf(m['h'])].reduce((a, b) => a > b ? a : b); }
           off += (mh < 1000 ? 1000 : mh) + 200;
         }
+        lastText = all.whereType<Map>().map((m) => '${m['s']}').join(' ');
         final r = all.isEmpty ? null : OcrParse.parse(all);
         if (r != null) return (rows: r, how: 'ocr');
       } catch (_) {}
@@ -236,11 +268,12 @@ class AutoUpd {
     Store.I.D['pend'] = <dynamic>[];
     for (final it in [...pend, ...items.whereType<Map>()]) {
       List<Obj> rows;
-      var how = 'ai';
+      var how = 'ai', comp = '';
       if (it['ocr'] != null || it['retry'] == true) {
         // 🔍 القراءة على الموبايل نفسه — ولو الجدول مش واضح نسأل Gemini
         final o = it['ocr'] is List ? it['ocr'] as List : (it['ocr'] is String ? (jsonDecode(it['ocr'] as String) as List) : null);
         final local = o == null ? null : OcrParse.parse(o);
+        if (o != null) comp = companyFromText(o.whereType<Map>().map((m) => '${m['s']}').join(' '), str(it['g']));
         if (local != null) { rows = local; how = 'ocr'; } else {
           try {
             final pages = await _pagesOf(it);
@@ -256,7 +289,7 @@ class AutoUpd {
         try { rows = Ai.parseRows(str(it['txt'])); } catch (_) { continue; }
       }
       if (rows.isEmpty) continue;
-      out.addAll(applyRows(str(it['g']), rows, img: it['files'] == null ? str(it['id']) : '', files: (it['files'] as List?) ?? const [], same: it['same'] == true, how: how));
+      out.addAll(applyRows(str(it['g']), rows, img: it['files'] == null ? str(it['id']) : '', files: (it['files'] as List?) ?? const [], same: it['same'] == true, how: how, company: comp.isNotEmpty ? comp : str(rows.first['company']).isNotEmpty && companyOf(str(it['g'])).isEmpty ? str(rows.first['company']) : ''));
       logged = true;
     }
     if (logged) await Store.I.save();

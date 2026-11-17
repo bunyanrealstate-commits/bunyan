@@ -92,7 +92,7 @@ class OcrParse {
     final bath = RegExp(r'([2-4])\s*(bath|bathroom|toilet|حمام)').firstMatch(t);
     final two = bath != null || RegExp(r'two bath|حمامين').hasMatch(t);
     if (RegExp(r'studio|ستو?ديو').hasMatch(t)) return 'st';
-    final m = RegExp(r'([1-4])\s*[-–]?\s*(bhk|b/?r|bed\s*room|bedroom|bed\b|br\b)').firstMatch(t);
+    final m = RegExp(r'([1-4])\s*[-–]?\s*(bhk|b/?r|bed\s*room|bedroom|bed\b|br\b|b\b)').firstMatch(t);
     if (m == null) return '';
     final n = m.group(1)!;
     if (n == '1') return two ? '1bk2b' : '1bk';
@@ -183,7 +183,8 @@ class OcrParse {
       final good = <El>[];
       for (final a in anchors) { if (good.isNotEmpty && a.cy - good.last.cy > h * 9) break; if (good.isEmpty || a.cy - good.last.cy > h * .6) good.add(a); }
       if (good.isEmpty) continue;
-      final villaT = near(hd.top, prevBot, (t) => _villaRx.hasMatch(t));
+      var villaT = near(hd.top, prevBot, (t) => _villaRx.hasMatch(t));
+      if (villaT.isEmpty) villaT = near(hd.top, prevBot, (t) => RegExp(r'\bvilla\b|compound|building').hasMatch(t)); // «Villa Madinat Al Riyad» من غير رقم
       final villa = villaT.isNotEmpty ? villaT : globalVilla;
       final areaT = near(hd.top, -1, (t) => _cityRx.hasMatch(t));
       final at = '$villa $areaT'.toLowerCase();

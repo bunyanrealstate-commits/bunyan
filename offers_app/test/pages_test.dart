@@ -108,6 +108,15 @@ void main() {
     for (final n in ['163', '138', '85', '7']) { expect(Store.I.villas.where((v) => v['no'] == n && str(v['area']) == 'Madinat Al Riyad').length, 1, reason: n); }
     expect(Search.run(Store.I.villas, types: {'1bk'}, pay: 'mo', budget: 4000).any((x) => (x['u'] as Obj)['no'] == '5'), true);
   });
+  test('الشركة من الكلام اللي في الصورة', () {
+    expect(AutoUpd.companyFromText('KIEV REAL ESTATE كييف العقارية Villa Madinat AL Riyad TYPE NO', 'Kiev Real Estate L.L.C'), 'Kiev Real Estate L.L.C');
+    final other = AutoUpd.companyFromText('GOOD REAL ESTATE MANAGEMENT Mirror Near To Bangladesh Embassy Villa No 30', 'Kiev Real Estate L.L.C');
+    expect(other.toLowerCase(), contains('good'));
+    expect(AutoUpd.companyFromText('NA Holding Real Estate Lease Villa Al Hammadi', 'Some Group'), 'NA Holding');
+    final v = findVilla('Kiev Real Estate L.L.C', {'villa': 'Villa Madinat AL Riyad', 'area': 'Riyad'})!;
+    expect(v['no'], '');
+    expect(findVilla('Kiev Real Estate L.L.C', {'villa': 'Villa Madinat AL Riyad'})!['id'], v['id']);
+  });
   test('إحداثيات من لينك الخريطة', () {
     expect(Geo.parse('https://www.google.com/maps/place/x/@24.3511,54.6012,17z'), [24.3511, 54.6012]);
     expect(Geo.parse('https://maps.google.com/?q=24.30,54.60'), [24.30, 54.60]);

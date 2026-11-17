@@ -175,7 +175,7 @@ Future<void> reread(BuildContext context, Obj x) async {
     if (rows.isEmpty) throw 'Gemini مالقاش شقق في الصورة';
     for (final v in bad) { (Store.I.D['villas'] as List).remove(v); }
     (Store.I.D['log'] as List).removeWhere((l) => shotKey((l as Map).cast<String, dynamic>()) == key);
-    final r = AutoUpd.applyRows(g, rows, img: img, files: files, how: rd.how);
+    final r = AutoUpd.applyRows(g, rows, img: img, files: files, how: rd.how, company: AutoUpd.companyFromText(AutoUpd.lastText, g));
     await Store.I.save();
     if (!context.mounted) return;
     Navigator.pop(context);
@@ -198,7 +198,8 @@ Future<void> readPicked(BuildContext context) async {
     final rd = await AutoUpd.smartRead([b]);
     final rows = rd.rows;
     if (rows.isEmpty) throw 'مالقيتش شقق في الصورة دي';
-    var comp = str(rows.first['company']);
+    var comp = AutoUpd.companyFromText(AutoUpd.lastText, '');
+    if (comp.isEmpty) comp = str(rows.first['company']);
     if (comp.isEmpty) {
       // القراية على الموبايل مش بتعرف الشركة من اللوجو — اختارها
       if (!context.mounted) return;

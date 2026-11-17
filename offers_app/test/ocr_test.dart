@@ -66,6 +66,17 @@ void main() {
     expect(r[1]['floor'], '1');
   });
 
+  test('Kiev (فيلا من غير رقم + F/2B)', () {
+    els = [];
+    w('KIEV REAL ESTATE', 40, 40, h: 40); w('Villa Madinat AL Riyad', 220, 150, h: 26, cw: 12);
+    w('TYPE', 40, 200, h: 26); w('NO', 150, 200, h: 26); w('1 PAYMENT', 230, 200, h: 26); w('2 PAYMENTS', 420, 200, h: 26); w('3 PAYMENTS', 620, 200, h: 26); w('NOTES', 980, 200, h: 26);
+    w('F/2B', 40, 245, h: 26); w('02', 160, 245, h: 26); w('68,000', 280, 245, h: 26); w('70,000', 470, 245, h: 26); w('71,000', 670, 245, h: 26); w('Ground Floor', 950, 245, h: 20, cw: 10);
+    w('(4,000 SECURITY DEPOSIT- 600 CONTRACT FEES)', 300, 300, h: 26, cw: 12);
+    final r = OcrParse.parse(els)!;
+    expect(r.length, 1);
+    expect(r[0]['no'], '2'); expect(r[0]['type'], '2bk'); expect(r[0]['p3'], 71000.0); expect(r[0]['villa'], 'Villa Madinat AL Riyad'); expect(r[0]['inArea'], true);
+  });
+
   test('صورة عادية → null', () {
     els = [];
     w('Happy birthday Ahmed', 100, 100); w('see you at 8', 100, 200);

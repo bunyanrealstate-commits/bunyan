@@ -180,8 +180,15 @@ class Sug {
     final lk = linked, sk = skipped;
     final vs = Store.I.villas.where((v) => Geo.of(v) != null).toList();
     final out = <Map<String, dynamic>>[];
+    final seenK = <String>{};
     for (final a in list) {
       if (lk.contains(a.id) || sk.contains(a.id)) continue;
+      // فيديوهات الكاميرا بس (اللي إنت صورتها) — مش اللي جالك أو بعته على الواتساب
+      final rp = (a.relativePath ?? '').toLowerCase();
+      if (rp.contains('whatsapp') || rp.contains('telegram') || rp.contains('sent') || rp.contains('download')) continue;
+      // نفس الفيديو متخزن مرتين (نسخة) → مرة واحدة
+      final k = '${a.duration}|${a.width}x${a.height}|${a.createDateTime.millisecondsSinceEpoch ~/ 60000}';
+      if (!seenK.add(k)) continue;
       Obj? best; var bd = 1e12;
       try {
         final ll = await a.latlngAsync();
