@@ -77,6 +77,29 @@ void main() {
     expect(r[0]['no'], '2'); expect(r[0]['type'], '2bk'); expect(r[0]['p3'], 71000.0); expect(r[0]['villa'], 'Villa Madinat AL Riyad'); expect(r[0]['inArea'], true);
   });
 
+  test('Grand Aroma (Room No حروف + Unit Type + Yearly + خليفة/الخالدية برا)', () {
+    els = [];
+    w('Grand Aroma', 480, 80, h: 60, cw: 26); w('Crafting Grand Living Experiences', 480, 140, h: 18, cw: 9);
+    var y = 200.0;
+    for (final sec in [
+      ['Riyad City - Abu Dhabi (Brand new Villa - 84)', [['F06', 'STUDIO', '2400 AED', '27000 AED'], ['EX02', '1 BHK', '3300 AED', '37000 AED']]],
+      ['Riyad City - Abu Dhabi (Villa - 13, Near Lulu Express)', [['G01', '1 BHK', '3500 AED', '40000 AED'], ['G05', 'STUDIO (Small)', '1600 AED', '18000 AED']]],
+      ['Khalidiyah - Abu Dhabi (Villa - 300)', [['HC01', 'STUDIO (without kitchen)', '1700 AED', '20000 AED']]],
+    ]) {
+      w(sec[0] as String, 300, y, h: 26, cw: 12);
+      w('Room No', 110, y + 60, h: 24, cw: 12); w('Unit Type', 320, y + 60, h: 24, cw: 12); w('Monthly', 540, y + 60, h: 24, cw: 12); w('Yearly', 750, y + 60, h: 24, cw: 12); w('Status', 960, y + 60, h: 24, cw: 12);
+      var ry = y + 115;
+      for (final r in sec[1] as List) { w(r[0], 145, ry, h: 22, cw: 12); w(r[1], 310, ry, h: 22, cw: 12); w(r[2], 540, ry, h: 22, cw: 12); w(r[3], 745, ry, h: 22, cw: 12); w('VACANT', 965, ry, h: 22, cw: 12); ry += 48; }
+      y = ry + 40;
+    }
+    final r = OcrParse.parse(els)!;
+    expect(r.map((x) => x['no']), ['F06', 'EX02', 'G01', 'G05', 'HC01']);
+    expect(r.map((x) => x['type']), ['st', '1bk', '1bk', 'st', 'st']);
+    expect(r[0]['mo'], 2400.0); expect(r[0]['p1'], 27000.0);
+    expect(r[4]['inArea'], false); expect(r[0]['inArea'], true);
+    expect(OcrParse.titleText(els), 'Grand Aroma');
+  });
+
   test('صورة عادية → null', () {
     els = [];
     w('Happy birthday Ahmed', 100, 100); w('see you at 8', 100, 200);

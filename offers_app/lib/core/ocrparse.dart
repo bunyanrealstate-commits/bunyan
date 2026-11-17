@@ -25,12 +25,30 @@ class _Col {
 }
 
 class OcrParse {
+  /// اسم الشركة من اللوجو: أكبر كلام فوق في الصورة (زي «Grand Aroma»)
+  static String titleText(List els0) {
+    final els = els0.whereType<Map>().map(El.of).where((e) => e.s.trim().isNotEmpty && e.h > 0).toList();
+    if (els.isEmpty) return '';
+    final top = els.map((e) => e.y).reduce(math.min), bot = els.map((e) => e.y + e.h).reduce(math.max);
+    final hs = els.map((e) => e.h).toList()..sort();
+    final lines = _lines(els.where((e) => e.y < top + (bot - top) * .3).toList(), hs[hs.length ~/ 2]);
+    String best = ''; var bh = 0.0;
+    for (final l in lines) {
+      final t = _txt(l);
+      final avg = l.map((e) => e.h).reduce((a, b) => a + b) / l.length;
+      if (avg <= bh || RegExp(r'\d').hasMatch(t) || t.split(' ').length > 5 || !RegExp(r'[A-Za-z]{3}').hasMatch(t)) continue;
+      if (RegExp(r'villa|city|zone|abu dhabi|availab|vacant|rent|update|price|apartment|studio|bhk|payment|for |list', caseSensitive: false).hasMatch(t)) continue;
+      best = t; bh = avg;
+    }
+    return best;
+  }
+
   static final _kNo = RegExp(r'^(no\.?|unit|flat|apt\.?|apartment#?|#)$');
   static final _kType = RegExp(r'^(type|taype|tayp|description|details|apartment)$');
   static final _kFloor = RegExp(r'^floors?$');
   static final _kPay = RegExp(r'^(\d?payments?|cheques?|chq|monthly|yearly|annual|annually|month|year)$');
   static final _kRem = RegExp(r'^(remarks?|notes?)$');
-  static final _cityRx = RegExp(r'riyad|riyadh|reyad|shamkha|shakhb|mbz|khalifa|bani|yas|mussafah|mohammed bin zayed|city');
+  static final _cityRx = RegExp(r'riyad|riyadh|reyad|shamkha|shakhb|mbz|khalifa|khalidiy|bani|yas|mussafah|mohammed bin zayed|muroor|mushrif|reem|corniche|shahama|al ain|abu dhabi|city');
   static final _villaRx = RegExp(r'villa\s*(no\.?|#)?\s*-?\s*\d|\bno\.?\s*-?\s*\d|zone\s*\d|compound|فيلا');
 
   static String _kind(String t) {
@@ -130,7 +148,9 @@ class OcrParse {
       if (kinds.length < 3 || !kinds.contains('pay') || !(kinds.contains('no') || kinds.contains('type'))) continue;
       final cols = <_Col>[];
       for (final e in hl) {
-        final k = _kind(e.t);
+        var k = _kind(e.t);
+        // «Unit Type» = عمود النوع (مش رقم الشقة)
+        if (k == 'no' && e.t.startsWith('unit') && hl.any((o) => (o.cy - e.cy).abs() < h * .6 && o.x > e.x && o.x - (e.x + e.w) < h * 1.5 && o.t.startsWith('type'))) k = '';
         if (k.isEmpty) continue;
         var pay = '';
         if (k == 'pay') {
@@ -178,7 +198,7 @@ class OcrParse {
       final noCol = cols.firstWhere((c) => c.kind == 'no');
       final region = els.where((e) => e.y > hd.bot - h * .2 && e.cy < end && !hd.els.contains(e)).toList();
       // كل رقم شقة في عمود NO = صف
-      final anchors = region.where((e) => colOf(e) == noCol && RegExp(r'^#?0*\d{1,3}[a-z]?$').hasMatch(e.t.replaceAll(RegExp(r'[^a-z0-9#]'), ''))).toList()..sort((a, b) => a.cy.compareTo(b.cy));
+      final anchors = region.where((e) => colOf(e) == noCol && RegExp(r'^#?([a-z]{1,3})?0*\d{1,3}[a-z]?$').hasMatch(e.t.replaceAll(RegExp(r'[^a-z0-9#]'), ''))).toList()..sort((a, b) => a.cy.compareTo(b.cy));
       // نسيب الأرقام اللي بعيد أوي عن الجدول (تحت آخر صف بكتير)
       final good = <El>[];
       for (final a in anchors) { if (good.isNotEmpty && a.cy - good.last.cy > h * 9) break; if (good.isEmpty || a.cy - good.last.cy > h * .6) good.add(a); }
@@ -188,7 +208,7 @@ class OcrParse {
       final villa = villaT.isNotEmpty ? villaT : globalVilla;
       final areaT = near(hd.top, -1, (t) => _cityRx.hasMatch(t));
       final at = '$villa $areaT'.toLowerCase();
-      final bool? inArea = RegExp(r'riyad|riyadh|reyad|madinat al riy').hasMatch(at) ? true : (RegExp(r'shamkha|shakhb|mbz|khalifa|bani|yas|mussafah|mohammed bin zayed').hasMatch(at) ? false : null);
+      final bool? inArea = RegExp(r'riyad|riyadh|reyad|madinat al riy').hasMatch(at) ? true : (RegExp(r'shamkha|shakhb|mbz|khalifa|khalidiy|bani|yas|mussafah|mohammed bin zayed|muroor|mushrif|reem|corniche|zayed city|al ain|shahama|rahba|baniyas|abu dhabi|city').hasMatch(at) ? false : null);
       final area = areaT.isEmpty ? '' : (RegExp(r'(madinat al riy\w*|riy\w* city|riyadh|shamkha \w*|shakhb\w* city|mbz city|khalifa city|bani yas)', caseSensitive: false).firstMatch(areaT)?.group(0) ?? areaT);
       for (var i = 0; i < good.length; i++) {
         final a = good[i];

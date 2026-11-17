@@ -113,6 +113,11 @@ void main() {
     final other = AutoUpd.companyFromText('GOOD REAL ESTATE MANAGEMENT Mirror Near To Bangladesh Embassy Villa No 30', 'Kiev Real Estate L.L.C');
     expect(other.toLowerCase(), contains('good'));
     expect(AutoUpd.companyFromText('NA Holding Real Estate Lease Villa Al Hammadi', 'Some Group'), 'NA Holding');
+    expect(AutoUpd.companyFromText('Grand Aroma Crafting Grand Living Riyad City Villa 84 Room No', 'Kiev Real Estate L.L.C', [
+      {'s': 'Grand', 'x': 480, 'y': 80, 'w': 120, 'h': 60}, {'s': 'Aroma', 'x': 620, 'y': 80, 'w': 120, 'h': 60},
+      {'s': 'Riyad', 'x': 300, 'y': 200, 'w': 60, 'h': 26}, {'s': 'City', 'x': 370, 'y': 200, 'w': 50, 'h': 26},
+      {'s': 'Room', 'x': 110, 'y': 400, 'w': 50, 'h': 24}, {'s': 'No', 'x': 170, 'y': 400, 'w': 30, 'h': 24}, {'s': 'F06', 'x': 140, 'y': 900, 'w': 30, 'h': 22},
+    ]), 'Grand Aroma');
     final v = findVilla('Kiev Real Estate L.L.C', {'villa': 'Villa Madinat AL Riyad', 'area': 'Riyad'})!;
     expect(v['no'], '');
     expect(findVilla('Kiev Real Estate L.L.C', {'villa': 'Villa Madinat AL Riyad'})!['id'], v['id']);

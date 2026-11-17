@@ -161,7 +161,7 @@ class AutoUpd {
   static List<String> _sig(String s) => s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9\u0600-\u06FF ]'), ' ').split(RegExp(r'\s+')).where((w) => w.length >= 3 && !_generic.contains(w)).toList();
 
   /// الشركة من الكلام المكتوب في الصورة نفسها (اللوجو/الاسم) — علشان صورة شركة متتحطش باسم جروب تاني
-  static String companyFromText(String text, String g) {
+  static String companyFromText(String text, String g, [List? els]) {
     final t = ' ${text.toLowerCase().replaceAll(RegExp(r'[^a-z0-9\u0600-\u06FF ]'), ' ')} ';
     bool has(String c) { final w = _sig(c); return w.isNotEmpty && w.every((x) => t.contains(' $x ') || t.contains(x)); }
     final mine = companyOf(g);
@@ -171,6 +171,8 @@ class AutoUpd {
     for (final c in known) { if (has(c)) return c; }
     final m = RegExp(r'([A-Z][A-Z&\. ]{2,40}?)\s+(REAL\s*ESTATE|PROPERTIES|PROPERTY|HOLDING|REALTY)', caseSensitive: true).firstMatch(text);
     if (m != null) return '${m.group(1)!.trim()} ${m.group(2)!.replaceAll(RegExp(r'\s+'), ' ')}'.split(' ').map((w) => w.isEmpty ? w : w[0] + w.substring(1).toLowerCase()).join(' ');
+    // اسم الشركة مش مكتوب جنبه Real Estate (زي «Grand Aroma») → أكبر كلام فوق في الصورة
+    if (els != null) { final tt = OcrParse.titleText(els); if (tt.isNotEmpty) return tt; }
     return '';
   }
 
@@ -232,7 +234,7 @@ class AutoUpd {
   /// 🛠️ تصليح لوحده: أبديت اتحط باسم شركة غلط (أو فلل برا الرياض) — بيتقري تاني على الموبايل ويتحط صح من غير ما تعمل حاجة
   static Future<int> autoFix() async {
     if (kIsWeb || Store.I.testMode) return 0;
-    final done = ((Store.I.cfg['fixed'] as List?) ?? const []).map(str).toSet();
+    final done = ((Store.I.cfg['fixed2'] as List?) ?? const []).map(str).toSet();
     final keys = <String, Obj>{};
     for (final l in log) {
       final k = str(l['img']).isNotEmpty ? str(l['img']) : (((l['files'] as List?) ?? const []).map(str).firstOrNull ?? '');
@@ -258,7 +260,7 @@ class AutoUpd {
         }
         final rows = all.isEmpty ? null : OcrParse.parse(all);
         if (rows == null) continue;
-        final comp = companyFromText(all.whereType<Map>().map((m) => '${m['s']}').join(' '), g);
+        final comp = companyFromText(all.whereType<Map>().map((m) => '${m['s']}').join(' '), g, all);
         final shotVillas = log.where((l) => (str(l['img']).isNotEmpty ? str(l['img']) : (((l['files'] as List?) ?? const []).map(str).firstOrNull ?? '')) == e.key).map((l) => Store.I.villa(str(l['vid']))).whereType<Obj>().where((v) => v['auto'] == true).toList();
         final wrongComp = comp.isNotEmpty && shotVillas.any((v) => !_sig(str(v['company'])).any((w) => _sig(comp).contains(w)));
         final outside = onlyArea && rows.any((r) => r['inArea'] == false);
@@ -269,15 +271,17 @@ class AutoUpd {
         n++;
       } catch (_) {}
     }
-    Store.I.cfg['fixed'] = done.toList().reversed.take(400).toList();
+    Store.I.cfg['fixed2'] = done.toList().reversed.take(400).toList();
     await Store.I.saveCfg();
     if (n > 0) await Store.I.save();
     return n;
   }
 
   static String lastText = '';
+  static List lastEls = const [];
   static Future<({List<Obj> rows, String how})> smartRead(List<Uint8List> pages, {bool auto = true}) async {
     lastText = '';
+    lastEls = const [];
     if (!kIsWeb) {
       try {
         final all = <dynamic>[];
@@ -291,6 +295,7 @@ class AutoUpd {
           off += (mh < 1000 ? 1000 : mh) + 200;
         }
         lastText = all.whereType<Map>().map((m) => '${m['s']}').join(' ');
+        lastEls = all;
         final r = all.isEmpty ? null : OcrParse.parse(all);
         if (r != null) return (rows: r, how: 'ocr');
       } catch (_) {}
@@ -317,7 +322,7 @@ class AutoUpd {
         // 🔍 القراءة على الموبايل نفسه — ولو الجدول مش واضح نسأل Gemini
         final o = it['ocr'] is List ? it['ocr'] as List : (it['ocr'] is String ? (jsonDecode(it['ocr'] as String) as List) : null);
         final local = o == null ? null : OcrParse.parse(o);
-        if (o != null) comp = companyFromText(o.whereType<Map>().map((m) => '${m['s']}').join(' '), str(it['g']));
+        if (o != null) comp = companyFromText(o.whereType<Map>().map((m) => '${m['s']}').join(' '), str(it['g']), o);
         if (local != null) { rows = local; how = 'ocr'; } else {
           try {
             final pages = await _pagesOf(it);
