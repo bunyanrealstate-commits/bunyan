@@ -19,6 +19,7 @@ import 'package:offers/core/offerpage.dart';
 import 'package:offers/core/reqs.dart';
 import 'package:offers/core/auto.dart';
 import 'package:offers/core/model.dart';
+import 'package:offers/core/labels.dart';
 import 'fixture.dart';
 
 void main() {
@@ -219,5 +220,33 @@ void main() {
     Store.I.cfg['allGroups'] = true; Store.I.cfg['offGroups'] = ['Family'];
     expect(AutoUpd.follows('MARASI PROPERTIES  GROUP'), true);
     expect(AutoUpd.follows('Family (3 رسائل)'), false);
+  });
+
+  test('ليبلات واتساب الأعمال من سكرين', () async {
+    Map e(String s, num x, num y, [num h = 40]) => {'s': s, 'x': x, 'y': y, 'w': s.length * 22, 'h': h};
+    List row(String t, num x, num y, [num h = 40]) { var xx = x; return [for (final w in t.split(' ')) () { final m = e(w, xx, y, h); xx += w.length * 22 + 14; return m; }()]; }
+    final els = [
+      ...row('1 Studio empty', 520, 610), ...row('1bhk', 250, 612), ...row('bhk', 0, 612),
+      ...row('8:38', 80, 770), ...row('+971 52 236 4634', 470, 768), ...row('1', 70, 850),
+      ...row('STUDIO EMPTY', 640, 945, 28),
+      ...row('1:56', 80, 1040), ...row('Studio 3000', 600, 1035),
+      ...row('STUDIO EMPTY', 640, 1225, 28),
+      ...row('1:23', 80, 1320), ...row('+971 55 244 7193', 470, 1320), ...row('Plz send more optiona in riyad', 240, 1400),
+      ...row('STUDIO EMPTY', 640, 1480, 28),
+      ...row('11:03', 100, 1590), ...row('Studio 2200', 610, 1585), ...row('https://maps.app.goo.gl/Dusybr...', 80, 1675),
+      ...row('STUDIO EMPTY', 640, 1760, 28),
+      ...row('Studio 3000 Baharath', 380, 2130),
+    ];
+    final it = LabelShots.parse(els);
+    expect(it.map((x) => x['title']).toList(), ['+971 52 236 4634', 'Studio 3000', '+971 55 244 7193', 'Studio 2200']);
+    expect(it.every((x) => x['label'] == 'STUDIO EMPTY'), true);
+    final r = await LabelShots.importAll(it, [{'n': 'عائشه Studio 3000', 'p': '971501111111'}, {'n': 'جهاد Studio 2200', 'p': '971502222222'}]);
+    expect(r.added, 4);
+    final a = Reqs.all.firstWhere((x) => x['p'] == '971522364634');
+    expect(a['types'], contains('st'));
+    expect(a['fur'], false);
+    final b = Reqs.all.firstWhere((x) => x['p'] == '971501111111');
+    expect(numOf(b['budget']), 3000);
+    expect(b['fur'], false);
   });
 }

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
+import '../core/labels.dart';
 import '../core/model.dart';
 import '../core/native.dart';
 import '../core/reqs.dart';
@@ -97,6 +100,7 @@ class _ReqsState extends State<ReqsPage> {
               itemBuilder: (context, i) {
                 if (i == 0) {
                   return Column(children: [
+                    Card(color: const Color(0xFFF3EAFB), child: ListTile(leading: const Icon(Icons.label_outline, color: Color(0xFF8E44AD)), title: const Text('🏷️ هات العملاء من ليبلات واتساب الأعمال', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('سكرين من كل ليبل (Studio empty / 1bhk …) وأنا أسجلهم'), onTap: () => _labels(context))),
                     if (Store.I.cfg['ctImport'] != true) Card(child: ListTile(leading: const Icon(Icons.contacts_outlined, color: kAc), title: const Text('📇 هات العملاء من أسامي جهات الاتصال', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('أي اسم زي «Studio Fur 3500 Suzanne» بيتحول لعميل لوحده'), onTap: () => _import(context))),
                     for (final v in views) Card(color: const Color(0xFFE3F4F5), child: ListTile(leading: const Icon(Icons.event, color: kAc), title: Text('معاينة ${_dt(str(v['at']))} • ${str(v['n'])}', style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: Text(str(v['what'])), onTap: () { final r = Reqs.byId(str(v['rid'])); if (r != null) Navigator.push(context, MaterialPageRoute(builder: (_) => ReqPage(str(r['id'])))); },
                         trailing: IconButton(icon: const Icon(Icons.close, size: 18), onPressed: () async { (Store.I.D['views'] as List).remove(v); await Store.I.save(); await Reqs.pushSummary(); }))),
@@ -122,6 +126,26 @@ class _ReqsState extends State<ReqsPage> {
         trailing: const Icon(Icons.chevron_left),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReqPage(str(r['id'])))),
       ));
+
+  Future<void> _labels(BuildContext context) async {
+    if (!await confirmDlg(context, '1) افتح واتساب الأعمال ← اختار ليبل فوق (زي Studio empty)\n2) خد سكرين، وانزل وخد سكرين تاني لحد آخر القايمة\n3) اعمل كده لكل ليبل\n4) ارجع هنا ودوس «اختار السكرينات» وعلّمهم كلهم\n\nأي عميل متسجل باسم هدوّر عليه في جهات الاتصال، واللي متسجل برقم هاخد الرقم على طول.', ok: 'اختار السكرينات')) return;
+    final fs = await ImagePicker().pickMultiImage(imageQuality: 95);
+    if (fs.isEmpty || !context.mounted) return;
+    showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+    final items = <Map<String, String>>[];
+    final seen = <String>{};
+    for (final f in fs) {
+      try {
+        final r = await Native.ch.invokeMethod<String>('ocr', {'bytes': await f.readAsBytes()});
+        if (r == null) continue;
+        for (final it in LabelShots.parse(jsonDecode(r) as List)) { if (seen.add(it['title']!.toLowerCase())) items.add(it); }
+      } catch (_) {}
+    }
+    final res = await LabelShots.importAll(items, await Native.contacts());
+    if (!context.mounted) return;
+    Navigator.pop(context);
+    await confirmDlg(context, items.isEmpty ? '⚠️ مالقيتش شاتات عليها ليبل في السكرينات دي' : '✅ لقيت ${res.found} شات • اتضاف ${res.added} عميل جديد${res.missed.isEmpty ? '' : '\n\nمالقيتش دول في جهات الاتصال:\n${res.missed.take(10).map((m) => '• $m').join('\n')}'}', ok: 'تمام');
+  }
 
   Future<void> _import(BuildContext context) async {
     final cs = await Native.contacts();
