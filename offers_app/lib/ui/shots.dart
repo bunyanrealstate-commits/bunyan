@@ -10,6 +10,9 @@ import '../core/model.dart';
 import '../core/store.dart';
 import 'theme.dart';
 import 'villas.dart';
+import 'groups.dart';
+import 'suggest.dart';
+import '../core/suggest.dart';
 
 String _when(String iso) {
   final d = DateTime.tryParse(iso);
@@ -30,26 +33,69 @@ class ShotsPage extends StatefulWidget {
 }
 
 class _ShotsState extends State<ShotsPage> {
-  bool onlyNew = false;
+  bool onlyNew = false, reading = false;
+  String prog = '';
   @override
   void initState() { super.initState(); Media.permImg().then((_) { if (mounted) setState(() {}); }); }
 
+  Future<void> _today() async {
+    setState(() { reading = true; prog = ''; });
+    var on = true;
+    () async { while (on && mounted) { await Future.delayed(const Duration(seconds: 2)); final p = await AutoUpd.progress(); if (mounted && on) setState(() => prog = p); } }();
+    final r = await AutoUpd.pullToday();
+    on = false;
+    if (!mounted) return;
+    setState(() { reading = false; prog = ''; });
+    await showDialog(context: context, builder: (ctx) => Directionality(textDirection: TextDirection.rtl, child: AlertDialog(title: Text(r.isEmpty ? '✓ مفيش جديد' : '📥 ${r.length} تغيير'), content: SingleChildScrollView(child: Text(r.isEmpty ? 'قرا أبديتات النهارده ومفيش حاجة اتغيرت عن اللي عندك.' : r.join('\n\n'))), actions: [FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('تمام'))])));
+  }
+
   @override
-  Widget build(BuildContext context) {
-    final l = AutoUpd.log.where((x) => shotKey(x).isNotEmpty && (!onlyNew || x['same'] != true)).toList();
+  Widget build(BuildContext context) => ListenableBuilder(listenable: Store.I, builder: (context, _) {
+    final all = AutoUpd.log;
+    final l = all.where((x) => shotKey(x).isNotEmpty && (!onlyNew || x['same'] != true)).toList();
+    final n = DateTime.now();
+    bool isToday(Obj x) { final d = DateTime.tryParse(str(x['at'])); return d != null && d.year == n.year && d.month == n.month && d.day == n.day; }
+    final td = all.where(isToday).toList();
+    int cnt(String w) => td.fold<int>(0, (a, x) { final m = RegExp('$w: ([^•]+)').firstMatch(str(x['m'])); return a + (m == null ? 0 : m.group(1)!.split('،').where((e) => e.trim().isNotEmpty).length); });
+    // مجمّعين باليوم
+    final days = <String, List<Obj>>{};
+    for (final x in l) { days.putIfAbsent(_when(str(x['at'])).split(' ').first, () => []).add(x); }
     return Scaffold(
-      appBar: AppBar(title: const Text('📷 صور الأبديت')),
-      floatingActionButton: FloatingActionButton.extended(onPressed: () => readPicked(context), icon: const Icon(Icons.add_photo_alternate_outlined), label: const Text('اقرا صورة')),
+      appBar: AppBar(title: const Text('📥 الأبديت'), actions: [
+        IconButton(tooltip: 'الجروبات', icon: const Icon(Icons.groups_outlined), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GroupsPage()))),
+      ]),
       body: ListView(padding: const EdgeInsets.fromLTRB(14, 8, 14, 40), children: [
+        Card(child: Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Row(children: [
+          _stat('${td.where((x) => shotKey(x).isNotEmpty).map(shotKey).toSet().length}', 'أبديت النهارده', kAc2),
+          _stat('${cnt('اتحجزت')}', 'اتحجزت', kRed),
+          _stat('${cnt('جديدة')}', 'جديدة', kOk),
+          _stat('${cnt('السعر')}', 'سعر اتغير', kGold),
+        ]))),
+        const SizedBox(height: 6),
+        FilledButton.icon(onPressed: reading ? null : _today, icon: reading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white)) : const Icon(Icons.download_for_offline_outlined),
+          label: Text(reading ? (prog.isEmpty ? 'بيدوّر على أبديتات النهارده…' : (prog == 'pdf' ? 'بيقرا ملفات الـ PDF…' : 'بيقرا $prog…')) : '📥 اقرا كل أبديتات النهارده')),
+        if (reading) const Padding(padding: EdgeInsets.only(top: 4), child: Text('ممكن ياخد كام دقيقة (Gemini المجاني بيقرا صورة كل كام ثانية) — سيبه شغال', textAlign: TextAlign.center, style: TextStyle(color: kMuted, fontSize: 12))),
+        const SizedBox(height: 6),
         Row(children: [
-          Expanded(child: Text('${l.length} صورة اتقرت', style: const TextStyle(fontWeight: FontWeight.w800))),
-          FilterChip(label: Text('اللي فيها جديد بس', style: TextStyle(color: onlyNew ? Colors.white : kInk)), selected: onlyNew, showCheckmark: false, onSelected: (b) => setState(() => onlyNew = b)),
+          Expanded(child: OutlinedButton.icon(onPressed: () => readPicked(context), icon: const Icon(Icons.add_photo_alternate_outlined), label: const Text('صورة من الموبايل'))),
+          const SizedBox(width: 8),
+          Expanded(child: OutlinedButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SuggestPage())), icon: const Icon(Icons.lightbulb_outline), label: Text('اقتراحات${Sug.count() > 0 ? ' (${Sug.count()})' : ''}'))),
         ]),
-        if (l.isEmpty) const Padding(padding: EdgeInsets.all(20), child: Text('لسه مفيش صور أبديت اتقرت — أول ما شركة تبعت أبديت في جروب متابَع هتظهر هنا', style: TextStyle(color: kMuted))),
-        for (final x in l) _tile(x),
+        const SizedBox(height: 10),
+        Row(children: [
+          Expanded(child: Text('${l.length} أبديت', style: const TextStyle(fontWeight: FontWeight.w800))),
+          FilterChip(label: Text('اللي فيه تغيير بس', style: TextStyle(color: onlyNew ? Colors.white : kInk)), selected: onlyNew, showCheckmark: false, onSelected: (b) => setState(() => onlyNew = b)),
+        ]),
+        if (l.isEmpty) const Padding(padding: EdgeInsets.all(20), child: Text('لسه مفيش أبديت اتقرا — دوس «اقرا كل أبديتات النهارده»', style: TextStyle(color: kMuted))),
+        for (final e in days.entries) ...[
+          Padding(padding: const EdgeInsets.fromLTRB(2, 12, 2, 2), child: Text(e.key, style: const TextStyle(fontWeight: FontWeight.w800, color: kMuted))),
+          for (final x in e.value) _tile(x),
+        ],
       ]),
     );
-  }
+  });
+
+  Widget _stat(String n, String l, Color c) => Expanded(child: Column(children: [Text(n, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: c)), Text(l, style: const TextStyle(fontSize: 11.5, color: kMuted))]));
 
   Widget _tile(Obj x) => Card(child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -58,7 +104,7 @@ class _ShotsState extends State<ShotsPage> {
           _Img(x, w: 96, h: 96),
           const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            if (x['files'] != null) const Text('📄 ملف PDF', style: TextStyle(fontSize: 11.5, color: kAc2, fontWeight: FontWeight.w700)),
+            if (shotFiles(x).any((f) => f.contains('/shots/'))) const Text('📄 ملف PDF', style: TextStyle(fontSize: 11.5, color: kAc2, fontWeight: FontWeight.w700)),
             Text(str(x['m']), style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: x['same'] == true ? kMuted : kInk)),
             const SizedBox(height: 4),
             Text('${str(x['g'])} • ${_when(str(x['at']))}', style: const TextStyle(color: kMuted, fontSize: 12)),

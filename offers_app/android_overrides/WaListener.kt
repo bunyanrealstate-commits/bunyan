@@ -121,13 +121,17 @@ object Auto {
     }
 
     /** يطابق الصور اللي نزلت مع إشعارات الجروبات ويقراها بـ Gemini */
-    fun run(c: Context): Int {
+    /** today = «اقرا أبديتات النهارده»: كل جروبات الواتساب من نص الليل، وكمان صور واتساب الأعمال اللي ملهاش إشعار */
+    @Volatile var prog = ""
+    fun run(c: Context, today: Boolean = false): Int {
         synchronized(this) { if (busy) return 0; busy = true }
         var n = 0
         try {
             val ev0 = arr(c, "ev"); val ev = JSONArray()
-            val lim = System.currentTimeMillis() - 3 * 86400000L
-            for (i in 0 until ev0.length()) { val e = ev0.getJSONObject(i); if (e.getLong("t") > lim && follows(c, e.getString("g"))) ev.put(e) }
+            val mid = java.util.Calendar.getInstance().apply { set(java.util.Calendar.HOUR_OF_DAY, 0); set(java.util.Calendar.MINUTE, 0); set(java.util.Calendar.SECOND, 0) }.timeInMillis
+            val lim = if (today) mid else System.currentTimeMillis() - 3 * 86400000L
+            for (i in 0 until ev0.length()) { val e = ev0.getJSONObject(i); if (e.getLong("t") > lim && (today || follows(c, e.getString("g")))) ev.put(e) }
+            if (today) ev.put(JSONObject().put("g", "").put("t", mid).put("anchor", true))
             if (ev.length() == 0) return 0
             val key = cfg(c).optString("key"); val prompt = cfg(c).optString("prompt")
             if (key.isEmpty() || prompt.isEmpty()) return 0
@@ -144,11 +148,16 @@ object Auto {
                     val id = k.getLong(0); val t = k.getLong(1) * 1000; val b = k.getString(2) ?: ""
                     if (id in doneSet || !b.contains("WhatsApp", true) || b.contains("Sent", true)) continue
                     var best: String? = null; var bd = Long.MAX_VALUE
-                    for (i in 0 until ev.length()) { val e = ev.getJSONObject(i); if (e.has("doc")) continue; val d = t - e.getLong("t"); if (d > -120000 && d < 900000 && Math.abs(d) < bd) { bd = Math.abs(d); best = e.getString("g") } }
+                    for (i in 0 until ev.length()) { val e = ev.getJSONObject(i); if (e.has("doc") || e.has("anchor")) continue; val d = t - e.getLong("t"); if (d > -120000 && d < 900000 && Math.abs(d) < bd) { bd = Math.abs(d); best = e.getString("g") } }
+                    // النهارده: صور واتساب الأعمال اللي ملهاش إشعار (وصلت قبل ما التطبيق يشتغل) — Gemini بيعرف لوحده لو مش أبديت
+                    if (best == null && today && t >= mid && (b.contains("Business", true) || b.contains("أعمال"))) best = ""
                     if (best != null) todo.add(Triple(id, t, best))
                 }
             }
+            var k0 = 0
             for ((id, t, g) in todo) {
+                k0++; prog = "$k0/${todo.size}"
+                if (today && k0 > 1) Thread.sleep(3500) // الحد المجاني لـ Gemini
                 val bytes = try { c.contentResolver.openInputStream(ContentUris.withAppendedId(uri, id))?.use { it.readBytes() } } catch (_: Exception) { null } ?: continue
                 // نفس الصورة اتبعتت تاني (أو في جروب تاني) → منقراهاش تاني ومنستهلكش Gemini
                 val hash = md5(bytes); val hashes = obj(c, "hash")
@@ -168,11 +177,12 @@ object Auto {
 
             }
             // ===== ملفات PDF (أبديت بعض الشركات) =====
+            prog = "pdf"
             n += pdfs(c, ev, key, prompt, res)
             while (done.length() > 600) done.remove(0)
             put(c, "done", done); put(c, "res", res)
         } catch (_: Exception) {
-        } finally { synchronized(this) { busy = false } }
+        } finally { prog = ""; synchronized(this) { busy = false } }
         return n
     }
 

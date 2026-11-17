@@ -7,6 +7,7 @@ import 'search.dart';
 import 'villas.dart';
 import 'settings.dart';
 import 'reqs.dart';
+import 'shots.dart';
 import 'send.dart';
 import '../core/reqs.dart';
 import '../core/suggest.dart';
@@ -56,7 +57,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final pages = [const SearchPage(), const ReqsPage(), const VillasPage(), const SettingsPage()];
+    final pages = [const SearchPage(), const ReqsPage(), const ShotsPage(), const VillasPage(), const SettingsPage()];
     return Scaffold(
       body: SafeArea(child: Column(children: [
         ValueListenableBuilder<String?>(valueListenable: Native.upd, builder: (_, v, __) {
@@ -70,6 +71,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
       bottomNavigationBar: NavigationBar(selectedIndex: tab, onDestinationSelected: (i) => setState(() => tab = i), destinations: const [
         NavigationDestination(icon: Icon(Icons.manage_search), label: 'دوّر للعميل'),
         NavigationDestination(icon: Icon(Icons.people_alt_outlined), label: 'العملاء'),
+        NavigationDestination(icon: Icon(Icons.download_for_offline_outlined), label: 'الأبديت'),
         NavigationDestination(icon: Icon(Icons.villa_outlined), label: 'الفلل'),
         NavigationDestination(icon: Icon(Icons.settings_outlined), label: 'الإعدادات'),
       ]),

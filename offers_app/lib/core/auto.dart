@@ -171,11 +171,21 @@ class AutoUpd {
     return out;
   }
 
-  static Future<List<String>> pull() async {
-    if (kIsWeb || Store.I.testMode || (!allOn && groups.isEmpty)) return [];
+  /// 📥 «اقرا أبديتات النهارده»: كل الجروبات من نص الليل (حتى اللي مش متابَعة) — ممكن ياخد كام دقيقة
+  static Future<List<String>> pullToday() async {
+    if (kIsWeb || Store.I.testMode) return [];
     await sync();
+    try { await Native.ch.invokeMethod('autoToday'); } catch (_) {}
+    return pull(force: true);
+  }
+
+  static Future<String> progress() async { try { return await Native.ch.invokeMethod<String>('autoProg') ?? ''; } catch (_) { return ''; } }
+
+  static Future<List<String>> pull({bool force = false}) async {
+    if (kIsWeb || Store.I.testMode || (!force && !allOn && groups.isEmpty)) return [];
+    if (!force) await sync();
     List items;
-    try { await Native.ch.invokeMethod('autoRun'); items = jsonDecode(await Native.ch.invokeMethod<String>('autoTake') ?? '[]') as List; } catch (_) { return []; }
+    try { if (!force) await Native.ch.invokeMethod('autoRun'); items = jsonDecode(await Native.ch.invokeMethod<String>('autoTake') ?? '[]') as List; } catch (_) { return []; }
     final out = <String>[];
     var logged = false;
     for (final it in items.whereType<Map>()) {

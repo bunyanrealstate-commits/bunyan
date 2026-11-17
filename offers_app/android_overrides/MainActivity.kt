@@ -46,6 +46,8 @@ class MainActivity : FlutterActivity() {
                 "contacts" -> contacts(res)
                 "autoCfg" -> { Auto.put(this, "cfg", org.json.JSONObject().put("dm", call.argument<Boolean>("dm") ?: false).put("key", call.argument<String>("key") ?: "").put("prompt", call.argument<String>("prompt") ?: "").put("groups", org.json.JSONArray(call.argument<List<String>>("groups") ?: listOf<String>())).put("all", call.argument<Boolean>("all") ?: false).put("off", org.json.JSONArray(call.argument<List<String>>("off") ?: listOf<String>()))); res.success(true) }
                 "autoRun" -> Thread { val n = Auto.run(applicationContext); runOnUiThread { res.success(n) } }.start()
+                "autoToday" -> Thread { val n = Auto.run(applicationContext, true); runOnUiThread { res.success(n) } }.start()
+                "autoProg" -> res.success(Auto.prog)
                 "autoTake" -> { val r = Auto.arr(this, "res").toString(); Auto.put(this, "res", "[]"); res.success(r) }
                 "autoSeen" -> res.success(Auto.mergeSeen(this).toString())
                 "notifOn" -> res.success((android.provider.Settings.Secure.getString(contentResolver, "enabled_notification_listeners") ?: "").contains(packageName))

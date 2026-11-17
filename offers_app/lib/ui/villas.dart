@@ -25,17 +25,31 @@ class _VillasState extends State<VillasPage> {
         return Scaffold(
           appBar: AppBar(title: Text('🏡 الفلل (${all.length})')),
           body: ListView(padding: const EdgeInsets.fromLTRB(14, 10, 14, 90), children: [
-            Card(color: const Color(0xFFE3F4F5), child: ListTile(leading: const Icon(Icons.lightbulb_outline, color: kAc), title: Text('💡 اقتراحات${Sug.count() > 0 ? ' (${Sug.count()})' : ''}', style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('فيديوهات جديدة تتربط • لوكيشن من الجروبات • بوستات انستجرام'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SuggestPage())))),
-            Text('${un.where((u) => u['avail'] != false).length} شقة متاحة • ${un.where((u) => u['avail'] == false).length} محجوزة • ${un.where((u) => ((u['videos'] as List?) ?? []).isEmpty).length} من غير فيديو', style: const TextStyle(color: kMuted, fontWeight: FontWeight.w700)),
+            Card(child: Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Row(children: [
+              _stat('${un.where((u) => u['avail'] != false).length}', 'متاحة', kOk),
+              _stat('${un.where((u) => u['avail'] == false).length}', 'محجوزة', kRed),
+              _stat('${un.where((u) => u['avail'] != false && ((u['videos'] as List?) ?? []).isEmpty).length}', 'متاحة من غير فيديو', kGold),
+              _stat('${all.where((v) => str(v['loc']).isEmpty).length}', 'فلل من غير لوكيشن', kAc2),
+            ]))),
+            if (Sug.count() > 0) Card(color: const Color(0xFFE3F4F5), child: ListTile(dense: true, leading: const Icon(Icons.lightbulb_outline, color: kAc), title: Text('💡 ${Sug.count()} اقتراح (فيديوهات / لوكيشن / بوستات)', style: const TextStyle(fontWeight: FontWeight.w800)), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SuggestPage())))),
             const SizedBox(height: 8),
             TextField(decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'دوّر على فيلا / شركة / منطقة'), onChanged: (v) => setState(() => q = v.trim())),
             const SizedBox(height: 8),
             if (all.isEmpty) const Padding(padding: EdgeInsets.all(30), child: Text('ضيف أول فيلا من الزرار تحت ⬇️\nوبعدها «📷 من صورة الأبديت» تملا الشقق والأسعار لوحدها', textAlign: TextAlign.center, style: TextStyle(color: kMuted, height: 1.7))),
-            for (final v in vs) _card(v),
+            for (final c in ({for (final v in vs) str(v['company']).isEmpty ? 'من غير شركة' : str(v['company'])}.toList()..sort())) ...[
+              Padding(padding: const EdgeInsets.fromLTRB(4, 14, 4, 4), child: Builder(builder: (_) {
+                final cv = vs.where((v) => (str(v['company']).isEmpty ? 'من غير شركة' : str(v['company'])) == c).toList();
+                final av = cv.expand((v) => objs(v['units'])).where((u) => u['avail'] != false).length;
+                return Text('🏢 $c • ${cv.length} فيلا • $av متاح', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: kAc));
+              })),
+              for (final v in vs.where((v) => (str(v['company']).isEmpty ? 'من غير شركة' : str(v['company'])) == c)) _card(v),
+            ],
           ]),
           floatingActionButton: FloatingActionButton.extended(onPressed: () async { final v = await editVilla(context, null); if (v != null && context.mounted) Navigator.of(context).push(MaterialPageRoute(builder: (_) => VillaPage(str(v['id'])))); }, icon: const Icon(Icons.add_home_outlined), label: const Text('فيلا')),
         );
       });
+
+  Widget _stat(String n, String l, Color c) => Expanded(child: Column(children: [Text(n, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: c)), Text(l, style: const TextStyle(fontSize: 11, color: kMuted), textAlign: TextAlign.center)]));
 
   Widget _card(Obj v) {
     final us = objs(v['units']); final av = us.where((u) => u['avail'] != false).length;
@@ -46,6 +60,11 @@ class _VillasState extends State<VillasPage> {
         Text('${str(v['name'])} ${str(v['no'])}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15.5)),
         Text([str(v['company']), str(v['area'])].where((x) => x.isNotEmpty).join(' • '), style: const TextStyle(color: kMuted, fontSize: 12.5)),
         Text('$av متاح من ${us.length}${str(v['upd']).isNotEmpty ? ' • أبديت ${v['upd']}' : ''}', style: TextStyle(color: av > 0 ? kOk : kRed, fontWeight: FontWeight.w700, fontSize: 12.5)),
+        Wrap(spacing: 6, children: [
+          if (str(v['loc']).isEmpty) const Text('⚠️ لوكيشن', style: TextStyle(color: kGold, fontSize: 11.5, fontWeight: FontWeight.w700)),
+          if (us.any((u) => u['avail'] != false && ((u['videos'] as List?) ?? []).isEmpty)) Text('🎬 ${us.where((u) => u['avail'] != false && ((u['videos'] as List?) ?? []).isEmpty).length} من غير فيديو', style: const TextStyle(color: kGold, fontSize: 11.5, fontWeight: FontWeight.w700)),
+          if (us.any((u) => u['fur'] == true)) const Text('🛋️ مفروش', style: TextStyle(fontSize: 11.5)),
+        ]),
       ])),
       const Icon(Icons.chevron_left, color: kMuted),
     ]))));
