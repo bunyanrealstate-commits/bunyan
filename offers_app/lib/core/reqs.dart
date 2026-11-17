@@ -129,8 +129,8 @@ class Reqs {
   }
 
   /// من 17/11 أسامه عايز العملاء اللي اتضافوا من آخر 3 أسابيع وأحدث بس
-  static DateTime get since => DateTime.tryParse(str(Store.I.cfg['ctSince'])) ?? DateTime(2026, 10, 27);
-  static bool recentContact(Map<String, String> c) { final u = int.tryParse(c['u'] ?? ''); return u == null || u == 0 || DateTime.fromMillisecondsSinceEpoch(u).isAfter(since); }
+  static DateTime get since => DateTime.tryParse(str(Store.I.cfg['ctSince'])) ?? DateTime(2026, 11, 12);
+  static bool recentContact(Map<String, String> c) { final u = int.tryParse(c['u'] ?? ''); return u != null && u > 0 && DateTime.fromMillisecondsSinceEpoch(u).isAfter(since); }
 
   /// يشيل عملاء جهات الاتصال الأقدم من 3 أسابيع (إلا اللي اشتغلت معاهم: بعتلهم/معاينة/خلص)
   static Future<int> pruneOld(List<Map<String, String>> contacts) async {
@@ -150,7 +150,7 @@ class Reqs {
     for (final c in contacts) {
       final ph = c['p'] ?? '';
       if (ph.isEmpty || have.contains(ph)) continue;
-      if (!recentContact(c)) continue; // العملاء من آخر 3 أسابيع وجديد بس
+      if (!recentContact(c)) continue; // الأسامي اللي اتسجلت من 12/11 وجديد بس
       final q = parseContactName(c['n'] ?? '');
       if (q == null) continue;
       final r = add(name: str(q['name']), phone: ph, text: c['n'] ?? '');

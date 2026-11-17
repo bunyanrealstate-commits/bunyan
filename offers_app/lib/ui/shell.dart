@@ -38,6 +38,12 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
     if (Store.I.cfg['ctImport'] == true) {
       try {
         final cs = await Native.contacts();
+        // مرة واحدة: امسح كل العملاء اللي التطبيق ضافهم — يفضل اللي سجلتهم بإيدك + أسامي آخر 5 أيام بس
+        if (Store.I.cfg['wipe5'] != true && cs.isNotEmpty) {
+          Store.I.cfg['ctSince'] = '2026-11-12'; Store.I.cfg['prune1'] = true;
+          ((Store.I.D['reqs'] as List?) ?? []).removeWhere((r) => (r as Map)['src'] != 'manual');
+          Store.I.cfg['wipe5'] = true; await Store.I.saveCfg(); await Store.I.save();
+        }
         if (Store.I.cfg['prune1'] != true && cs.any((c) => (c['u'] ?? '').isNotEmpty)) { await Reqs.pruneOld(cs); Store.I.cfg['prune1'] = true; await Store.I.saveCfg(); }
         nr += await Reqs.importContacts(cs);
       } catch (_) {}
