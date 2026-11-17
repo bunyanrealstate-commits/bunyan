@@ -127,7 +127,7 @@ void main() {
     expect(vc, 'Vellast Property Management');
     AutoUpd.seenNames = ['Double A property', 'Vellast Property Management* (13 رسالة)'];
     expect(AutoUpd.companyFromText(vel, 'Double A property'), 'Vellast Property Management');
-    expect(AutoUpd.groupFor(vc), 'Vellast Property Management*');
+    expect(AutoUpd.groupFor(vc, any: true), 'Vellast Property Management*');
     final row = [<String, dynamic>{'villa': 'Al-Farsi Villa', 'area': 'Riyadh City', 'no': '8', 'type': 'studio', 'p1': 33000}];
     Store.I.cfg['groups'] = {'Double A property': 'Double A property'};
     expect(AutoUpd.applyRows('Double A property', row, img: 'x0', company: vc), isEmpty); // Vellast مش مفعّلة → متجاهَلة
