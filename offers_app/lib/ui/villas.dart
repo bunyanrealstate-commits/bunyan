@@ -94,7 +94,7 @@ class VillaPage extends StatelessWidget {
             for (final u in us) Card(child: ListTile(
               contentPadding: const EdgeInsets.fromLTRB(10, 4, 4, 4),
               leading: VThumb(((u['videos'] as List?) ?? []).map(str).firstOrNull, w: 54, h: 54),
-              title: Text('${typeName(u['type'])}${str(u['no']).isNotEmpty ? ' • ${u['no']}' : ''}${floorName(u['floor']).isNotEmpty ? ' • ${floorName(u['floor'])}' : ''}', style: TextStyle(fontWeight: FontWeight.w800, decoration: u['avail'] == false ? TextDecoration.lineThrough : null)),
+              title: Text('${u['fur'] == true ? '🛋️ ' : ''}${typeName(u['type'])}${str(u['no']).isNotEmpty ? ' • ${u['no']}' : ''}${floorName(u['floor']).isNotEmpty ? ' • ${floorName(u['floor'])}' : ''}', style: TextStyle(fontWeight: FontWeight.w800, decoration: u['avail'] == false ? TextDecoration.lineThrough : null)),
               subtitle: Text('${Price.text(u)}${str(u['note']).isNotEmpty ? '\n📝 ${u['note']}' : ''}', style: const TextStyle(fontSize: 12.5)),
               trailing: Switch(value: u['avail'] != false, activeColor: kOk, onChanged: (b) { u['avail'] = b; Store.I.save(); }),
               onTap: () => editUnit(context, v, u),
@@ -109,6 +109,8 @@ Future<void> editUnit(BuildContext context, Obj v, Obj? u) async {
   if (ty == null || !context.mounted) return;
   final fl = await pickDlg(context, 'الدور', [...kFloors, ['', 'مش مهم']], str(u?['floor']));
   if (fl == null || !context.mounted) return;
+  final fu = await pickDlg(context, 'مفروشة؟', const [['e', 'فاضية'], ['f', '🛋️ مفروشة']], u?['fur'] == true ? 'f' : 'e');
+  if (fu == null || !context.mounted) return;
   final o = await formDlg(context, u == null ? 'شقة جديدة' : 'تعديل الشقة', [
     FS('no', 'رقم الشقة', v: u?['no']), if (ty == 'x') FS('tx', 'اكتب النوع', v: u?['tx']),
     FS('p1', 'سعر السنة دفعة واحدة (فاضي = مفيش)', v: u?['p1'], num: true),
@@ -116,7 +118,7 @@ Future<void> editUnit(BuildContext context, Obj v, Obj? u) async {
   ]);
   if (o == null) return;
   final t = u ?? <String, dynamic>{'id': uid(), 'avail': true, 'videos': <dynamic>[]};
-  t['type'] = ty; t['floor'] = fl; t['no'] = o['no'] ?? ''; if (ty == 'x') t['tx'] = o['tx'] ?? '';
+  t['type'] = ty; t['floor'] = fl; if (fu == 'f') { t['fur'] = true; } else { t.remove('fur'); } t['no'] = o['no'] ?? ''; if (ty == 'x') t['tx'] = o['tx'] ?? '';
   t['p1'] = numOf(o['p1']); t['p3'] = numOf(o['p3']); t['mo'] = numOf(o['mo']); t['note'] = o['note'] ?? '';
   if (u == null) ((v['units'] as List?) ?? (v['units'] = <dynamic>[])).add(t);
   await Store.I.save();

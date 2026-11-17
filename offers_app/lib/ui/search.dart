@@ -16,12 +16,12 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchState extends State<SearchPage> {
-  final types = <String>{'1bk'}; String pay = 'mo'; bool terms = false; final bc = TextEditingController(), qc = TextEditingController(); double tol = 10;
+  final types = <String>{'1bk'}; String pay = 'mo'; bool terms = false; bool? fur; final bc = TextEditingController(), qc = TextEditingController(); double tol = 10;
   final picked = <String>{};
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(listenable: Store.I, builder: (context, _) {
-        final res = Search.run(Store.I.villas, types: types, pay: pay, budget: numOf(bc.text), tol: tol, q: qc.text);
+        final res = Search.run(Store.I.villas, types: types, pay: pay, budget: numOf(bc.text), tol: tol, q: qc.text, fur: fur);
         final sel = res.where((x) => picked.contains('${(x['v'] as Obj)['id']}/${(x['u'] as Obj)['id']}')).toList();
         return Scaffold(
           appBar: AppBar(title: const Text('🔎 العميل عايز إيه؟')),
@@ -30,6 +30,8 @@ class _SearchState extends State<SearchPage> {
               for (final t in kTypes.where((t) => t[0] != 'x')) FilterChip(label: Text(t[1], style: TextStyle(color: types.contains(t[0]) ? Colors.white : kInk)), selected: types.contains(t[0]), showCheckmark: false, onSelected: (b) => setState(() { b ? types.add(t[0]) : types.remove(t[0]); })),
             ]),
             const SizedBox(height: 10),
+            SegmentedButton<String>(segments: const [ButtonSegment(value: 'f', label: Text('🛋️ مفروش')), ButtonSegment(value: 'e', label: Text('فاضي')), ButtonSegment(value: 'x', label: Text('مش مهم'))], selected: {fur == true ? 'f' : (fur == false ? 'e' : 'x')}, onSelectionChanged: (s) => setState(() => fur = s.first == 'f' ? true : (s.first == 'e' ? false : null))),
+            const SizedBox(height: 8),
             SegmentedButton<String>(segments: const [ButtonSegment(value: 'mo', label: Text('شهري')), ButtonSegment(value: '1', label: Text('دفعة واحدة')), ButtonSegment(value: '3', label: Text('3 دفعات')), ButtonSegment(value: 'any', label: Text('الكل'))], selected: {pay}, onSelectionChanged: (s) => setState(() => pay = s.first)),
             const SizedBox(height: 10),
             Row(children: [

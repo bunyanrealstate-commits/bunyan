@@ -35,7 +35,21 @@ Obj parseRequest(String text, {List<String> areas = const []}) {
   var area = '';
   for (final a in areas) { if (a.trim().length >= 3 && t.contains(a.toLowerCase().trim())) { area = a; break; } }
   final latin = RegExp('[a-z]').allMatches(t).length, ar = RegExp('[؀-ۿ]').allMatches(t).length;
-  return {'types': types.toList(), 'pay': pay, 'budget': budget, 'area': area, 'lang': latin > ar ? 'en' : 'ar', 'isReq': types.isNotEmpty || (budget > 0 && RegExp(r'rent|ايجار|إيجار|سكن|شق[ةه]|flat|apartment|room|غرف').hasMatch(t))};
+  bool? fur;
+  if (RegExp(r'\bfur|furnished|مفروش|مفروشة|مفروشه').hasMatch(t)) fur = true;
+  if (RegExp(r'\bempty|unfur|un-fur|فاضي|فاضى|فاضية|غير مفروش|مش مفروش|بدون فرش').hasMatch(t)) fur = false;
+  return {'fur': fur, 'types': types.toList(), 'pay': pay, 'budget': budget, 'area': area, 'lang': latin > ar ? 'en' : 'ar', 'isReq': types.isNotEmpty || (budget > 0 && RegExp(r'rent|ايجار|إيجار|سكن|شق[ةه]|flat|apartment|room|غرف').hasMatch(t))};
+}
+
+/// اسم جهة الاتصال زي «Studio Fur 3500 Suzanne» → طلب: استديو مفروش لحد 3500، والاسم Suzanne
+Obj? parseContactName(String n) {
+  final p = parseRequest(n);
+  if ((p['types'] as List).isEmpty) return null;
+  final name = n.split(RegExp(r'\s+')).where((w) {
+    final x = _digits(w).toLowerCase();
+    return x.isNotEmpty && !RegExp(r'^(studio|stud|st|ستو?ديو|استو?ديو|\d+\s*bhk|bhk|\d+bk|b/r|fur|furn|furnished|empty|unfur|مفروش[ةه]?|فاض[يى]|room|hall|and|&|غرف[ةه]|غرفتين|و?صال[ةه]|[\d.,]+k?|aed|درهم|monthly|yearly|month|شهري|سنوي|\W+)$').hasMatch(x);
+  }).join(' ').trim();
+  return {...p, 'name': name};
 }
 
 class Reqs {
@@ -44,7 +58,7 @@ class Reqs {
   static List<String> get areas => {for (final v in Store.I.villas) if (str(v['area']).isNotEmpty) str(v['area'])}.toList();
   static String key(Obj v, Obj u) => '${v['id']}/${u['id']}';
 
-  static List<Map<String, dynamic>> matches(Obj r) => Search.run(Store.I.villas, types: ((r['types'] as List?) ?? []).map(str).toSet(), pay: str(r['pay']).isEmpty ? 'any' : str(r['pay']), budget: numOf(r['budget']), tol: 10, q: str(r['area']));
+  static List<Map<String, dynamic>> matches(Obj r) => Search.run(Store.I.villas, types: ((r['types'] as List?) ?? []).map(str).toSet(), pay: str(r['pay']).isEmpty ? 'any' : str(r['pay']), budget: numOf(r['budget']), tol: 10, q: str(r['area']), fur: r['fur'] is bool ? r['fur'] as bool : null);
 
   /// شقق تناسبه ولسه مبعتهاش ولا شافها
   static List<Map<String, dynamic>> fresh(Obj r) {
@@ -57,7 +71,7 @@ class Reqs {
 
   static Obj add({String name = '', String phone = '', String text = '', String lang = ''}) {
     final p = parseRequest(text, areas: areas);
-    final r = <String, dynamic>{'id': uid(), 'n': name, 'p': phone, 'txt': text, 'at': DateTime.now().toIso8601String(), 'st': 'new', 'types': p['types'], 'pay': p['pay'], 'budget': p['budget'], 'area': p['area'], 'lang': lang.isNotEmpty ? lang : p['lang'], 'sent': <dynamic>[], 'seen': <dynamic>[]};
+    final r = <String, dynamic>{'id': uid(), 'n': name, 'p': phone, 'txt': text, 'at': DateTime.now().toIso8601String(), 'st': 'new', 'types': p['types'], 'fur': p['fur'], 'pay': p['pay'], 'budget': p['budget'], 'area': p['area'], 'lang': lang.isNotEmpty ? lang : p['lang'], 'sent': <dynamic>[], 'seen': <dynamic>[]};
     ((Store.I.D['reqs'] as List?) ?? (Store.I.D['reqs'] = <dynamic>[])).insert(0, r);
     return r;
   }
@@ -85,6 +99,25 @@ class Reqs {
       n++;
     }
     if (items.isNotEmpty) await Store.I.save();
+    return n;
+  }
+
+  /// 📇 العملاء المتسجلين في جهات الاتصال بأسماء فيها طلبهم (زي «Studio Fur 3500 Suzanne»)
+  /// الجديد بس بيتضاف — والشقق المناسبة دلوقتي بتتحسب «اتشافت»، علشان تتنبه بس للي ينزل بعد كده
+  static Future<int> importContacts(List<Map<String, String>> contacts) async {
+    var n = 0;
+    final have = all.map((r) => str(r['p'])).where((p) => p.isNotEmpty).toSet();
+    for (final c in contacts) {
+      final ph = c['p'] ?? '';
+      if (ph.isEmpty || have.contains(ph)) continue;
+      final q = parseContactName(c['n'] ?? '');
+      if (q == null) continue;
+      final r = add(name: str(q['name']).isEmpty ? (c['n'] ?? '') : str(q['name']), phone: ph, text: c['n'] ?? '');
+      r['st'] = 'wait'; r['src'] = 'contact';
+      r['seen'] = [for (final x in matches(r)) key(x['v'] as Obj, x['u'] as Obj)];
+      have.add(ph); n++;
+    }
+    if (n > 0) await Store.I.save();
     return n;
   }
 

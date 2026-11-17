@@ -55,7 +55,7 @@ class Price {
 
 /// البحث: النوع + طريقة الدفع + الميزانية الشهرية (± نسبة)
 class Search {
-  static List<Map<String, dynamic>> run(List<Obj> villas, {Set<String> types = const {}, String pay = 'any', double budget = 0, double tol = 10, String q = '', bool onlyAvail = true}) {
+  static List<Map<String, dynamic>> run(List<Obj> villas, {Set<String> types = const {}, String pay = 'any', double budget = 0, double tol = 10, String q = '', bool onlyAvail = true, bool? fur}) {
     final r = <Map<String, dynamic>>[];
     final qq = q.trim().toLowerCase();
     budget = Price.budgetMonthly(budget);
@@ -63,6 +63,8 @@ class Search {
       for (final u in objs(v['units'])) {
         if (onlyAvail && u['avail'] == false) continue;
         if (types.isNotEmpty && !types.contains(str(u['type']))) continue;
+        if (fur == true && u['fur'] != true) continue; // مفروش
+        if (fur == false && u['fur'] == true) continue; // فاضي
         if (pay == 'mo' && Price.mo(u) <= 0) continue;
         if (pay == '1' && Price.p1(u) <= 0) continue;
         if (pay == '3' && Price.p3(u) <= 0) continue;
@@ -99,6 +101,7 @@ String unitCaption(Obj v, Obj u, String pay, {bool en = false, bool terms = fals
   final p1 = Price.p1(u), p3 = Price.p3(u), mo = Price.mo(u);
   final hasVid = ((u['videos'] as List?) ?? const []).isNotEmpty;
   if (!hasVid) o.add('🏠 ${en ? kTypesEn[str(u['type'])] ?? 'Apartment' : typeName(u['type'])}');
+  if (u['fur'] == true) o.add(en ? '🛋️ Furnished' : '🛋️ مفروش');
   void a1() { if (p1 > 0) o.add(en ? '💰 AED ${money(p1)} / year — 1 payment' : '💰 ${money(p1)} درهم — دفعة واحدة'); }
   void a3() { if (p3 > 0) o.add(en ? '💰 AED ${money(p3)} / year — 3 payments' : '💰 ${money(p3)} درهم — 3 دفعات'); }
   void am() { if (mo > 0) o.add(en ? '💰 AED ${money(mo)} / month' : '💰 ${money(mo)} درهم شهري'); }

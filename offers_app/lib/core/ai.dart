@@ -81,7 +81,7 @@ class Ai {
 
   static const updatePrompt = '''دي صورة "أبديت" من شركة عقارات في الإمارات فيها شقق فيلا وأسعارها.
 طلّع كل الشقق في JSON array بالشكل ده بالظبط:
-[{"no":"رقم الشقة/الاستديو (عمود Flat أو Apt أو Studio No)","floor":"G أو 1 أو 2 أو 3 أو R أو فاضي","type":"st|1bk|1bk2b|2bk|2bk2b|3bk|x","tx":"اسم النوع لو x","p1":سعر السنة دفعة واحدة (1 Payment / 1 Cheque) أو 0,"p3":سعر السنة على 3 دفعات (3 Payments / 3 Cheques) أو 0,"mo":رقم الإيجار الشهري أو 0,"booked":true لو مكتوب BOOKED أو Rented أو Occupied أو Not Available أو محجوز أو مشطوب أو ملوّن أحمر,"note":"أي ملاحظة قصيرة"}]
+[{"no":"رقم الشقة/الاستديو (عمود Flat أو Apt أو Studio No)","floor":"G أو 1 أو 2 أو 3 أو R أو فاضي","type":"st|1bk|1bk2b|2bk|2bk2b|3bk|x","tx":"اسم النوع لو x","p1":سعر السنة دفعة واحدة (1 Payment / 1 Cheque) أو 0,"p3":سعر السنة على 3 دفعات (3 Payments / 3 Cheques) أو 0,"mo":رقم الإيجار الشهري أو 0,"fur":true لو الشقة مكتوب إنها Furnished أو مفروشة (غير كده false),"booked":true لو مكتوب BOOKED أو Rented أو Occupied أو Not Available أو محجوز أو مشطوب أو ملوّن أحمر,"note":"أي ملاحظة قصيرة"}]
 - STUDIO = st • 1BHK / 1 B/R hall = 1bk • 1BHK + 2 bath = 1bk2b • 2BHK = 2bk • 2BHK 2 bath = 2bk2b • 3BHK = 3bk
 - 1 Payment / 1 Cheque = p1. و 3 Payments / 3 Cheques = p3. لو العمود مش واضح عدد دفعاته اعتبره p1. لو فيه 2 أو 4 دفعات بس حطه في p3 واكتب عدد الدفعات في note.
 - الدور من عمود Remark/Floor: Ground = G، 1st = 1، 2nd = 2، 3rd = 3، Roof/Penthouse = R. و Balcony وأي ميزة تانية تتكتب في note.

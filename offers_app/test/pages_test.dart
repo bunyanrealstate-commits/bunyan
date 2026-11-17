@@ -43,6 +43,13 @@ void main() {
     await show(t, const ReqsPage(), 'reqs-empty');
     final r = Reqs.add(name: 'Ahmed', phone: '971501234567', text: 'need 1bhk monthly 3500');
     Reqs.add(name: 'محمد', phone: '971551112222', text: 'عايز غرفتين وصالة دفعة واحدة 75 الف');
+    final g10 = objs(Store.I.villa('v3')!['units']).firstWhere((u) => u['no'] == '10');
+    final imp = await t.runAsync(() => Reqs.importContacts([{'n': '2bhk 2bath 80000 Omar', 'p': '971509998877'}, {'n': 'Hkeem Uae', 'p': '971500000001'}]));
+    expect(imp, 1);
+    final om = Reqs.all.firstWhere((r) => r['p'] == '971509998877');
+    expect(om['st'], 'wait'); expect(Reqs.fresh(om), isEmpty);
+    g10['type'] = '2bk2b'; g10['p1'] = 79000;
+    expect(Reqs.newFor().contains(om), true);
     await show(t, const ReqsPage(), 'reqs');
     expect(find.textContaining('Ahmed'), findsOneWidget);
     await show(t, ReqPage(str(r['id'])), 'req');
@@ -75,6 +82,11 @@ void main() {
     expect(p['types'], ['2bk2b']); expect(p['pay'], '1'); expect(p['budget'], 75000.0); expect(p['lang'], 'en');
     p = parseRequest('استديو ٢٥٠٠ في الشهر');
     expect(p['types'], ['st']); expect(p['budget'], 2500.0);
+    var c = parseContactName('Studio Fur 3500 Suzanne')!;
+    expect(c['types'], ['st']); expect(c['fur'], true); expect(c['budget'], 3500.0); expect(c['name'], 'Suzanne');
+    c = parseContactName('1bhk empty 4000 Ali Hassan')!;
+    expect(c['types'], containsAll(['1bk'])); expect(c['fur'], false); expect(c['name'], 'Ali Hassan');
+    expect(parseContactName('Hkeem Uae'), isNull);
     p = parseRequest('call me 0501234567');
     expect(p['isReq'], false);
   });
