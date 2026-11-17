@@ -15,7 +15,7 @@ class GroupsPage extends StatefulWidget {
 }
 
 class _GroupsState extends State<GroupsPage> with WidgetsBindingObserver {
-  bool on = false, loading = true, tried = false, reading = false;
+  bool on = false, loading = true, tried = false, reading = false, files = true;
   Map<String, Map> seen = {};
   String q = '';
 
@@ -28,6 +28,7 @@ class _GroupsState extends State<GroupsPage> with WidgetsBindingObserver {
 
   Future<void> _load() async {
     final o = await AutoUpd.on(), s = await AutoUpd.seen();
+    try { files = await Native.ch.invokeMethod<bool>('allFiles') ?? true; } catch (_) {}
     final raw = (Store.I.cfg['groups'] as Map?) ?? {};
     if (raw.keys.any((k) => AutoUpd.cleanGroup('$k') != '$k')) { Store.I.cfg['groups'] = AutoUpd.groups; await Store.I.saveCfg(); await AutoUpd.sync(); }
     if (mounted) setState(() { on = o; seen = s; loading = false; });
@@ -112,6 +113,14 @@ class _GroupsState extends State<GroupsPage> with WidgetsBindingObserver {
           OutlinedButton.icon(onPressed: () async { try { await Native.ch.invokeMethod('appInfo'); } catch (_) {} }, icon: const Icon(Icons.info_outline), label: const Text('افتح معلومات التطبيق')),
         ]))),
         Card(color: const Color(0xFFE3F4F5), child: ListTile(leading: const Icon(Icons.photo_library_outlined, color: kAc), title: Text('📷 صور الأبديت اللي اتقرت (${AutoUpd.log.where((x) => str(x['img']).isNotEmpty).length})', style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('شوف كل صورة لقطها وإيه اللي اتغير بسببها'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ShotsPage())))),
+        if (on && !files) Card(color: const Color(0xFFFFF4E0), child: ListTile(leading: const Icon(Icons.picture_as_pdf_outlined, color: kRed), title: const Text('📄 علشان يقرا أبديت الـ PDF', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('دوس هنا ← شغّل «السماح بإدارة كل الملفات» لـ «عروض الشقق» ← وارجع. ده علشان يفتح ملفات الـ PDF اللي بتنزل في الواتساب.'), onTap: () async { try { await Native.ch.invokeMethod('allFilesPerm'); } catch (_) {} })),
+        Card(child: SwitchListTile(value: AutoUpd.onlyArea, onChanged: (b) async { Store.I.cfg['onlyArea'] = b; await _save(read: false); },
+          title: Text('🏙️ الفلل اللي في ${str(Store.I.cfg['areas']).isEmpty ? 'مدينة الرياض' : str(Store.I.cfg['areas'])} بس', style: const TextStyle(fontWeight: FontWeight.w800)),
+          subtitle: const Text('أي فيلا مكتوب في الأبديت إنها في منطقة تانية بيتجاهلها'),
+          secondary: IconButton(tooltip: 'غيّر المناطق', icon: const Icon(Icons.edit_location_alt_outlined), onPressed: () async {
+            final o = await formDlg(context, 'المناطق اللي تهمك', [FS('a', 'زي: مدينة الرياض، الشامخة', v: str(Store.I.cfg['areas']).isEmpty ? 'مدينة الرياض' : str(Store.I.cfg['areas']))]);
+            if (o == null) return; Store.I.cfg['areas'] = o['a'] ?? ''; await _save(read: false);
+          }))),
         Card(child: SwitchListTile(value: AutoUpd.allOn, onChanged: _all, title: const Text('تابع كل الجروبات', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('أي جروب يبعت صورة أبديت يتقري — حتى الجروبات الجديدة. اقفل اللي مش عايزه من تحت'))),
         Card(child: ListTile(leading: reading ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)) : const Icon(Icons.refresh, color: kAc), title: Text(reading ? 'بيقرا الصور اللي وصلت…' : 'اقرا صور الأبديت اللي وصلت (آخر 3 أيام)', style: const TextStyle(fontWeight: FontWeight.w700)), onTap: reading ? null : _read)),
         const SizedBox(height: 8),

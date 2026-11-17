@@ -23,7 +23,7 @@ jobs:
           python3 - <<'PY'
           p='android/app/src/main/AndroidManifest.xml';s=open(p).read()
           s=s.replace('android:label="offers"','android:label="عروض الشقق"')
-          perms=['INTERNET','READ_MEDIA_VIDEO','READ_MEDIA_IMAGES','READ_MEDIA_VISUAL_USER_SELECTED','REQUEST_INSTALL_PACKAGES','UPDATE_PACKAGES_WITHOUT_USER_ACTION','READ_CONTACTS','POST_NOTIFICATIONS','ACCESS_MEDIA_LOCATION']
+          perms=['INTERNET','READ_MEDIA_VIDEO','READ_MEDIA_IMAGES','READ_MEDIA_VISUAL_USER_SELECTED','REQUEST_INSTALL_PACKAGES','UPDATE_PACKAGES_WITHOUT_USER_ACTION','READ_CONTACTS','POST_NOTIFICATIONS','ACCESS_MEDIA_LOCATION','MANAGE_EXTERNAL_STORAGE']
           for x in perms:
               if 'android.permission.'+x not in s: s=s.replace('<application','<uses-permission android:name="android.permission.'+x+'"/>\n    <application',1)
           if 'READ_EXTERNAL_STORAGE' not in s: s=s.replace('<application','<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>\n    <application',1)

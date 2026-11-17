@@ -96,6 +96,13 @@ void main() {
       {'no': '8', 'type': '1bk', 'p1': 52000, 'villa': 'MBZ Villa 119 Zone 34', 'area': 'MBZ'},
     ];
     expect(AutoUpd.groupRows(multi).length, 3);
+    final outside = [{'no': '1', 'type': 'st', 'p1': 30000, 'villa': 'Shakhbot Villa 9', 'area': 'Shakhbot', 'inArea': false}, {'no': '3', 'type': 'st', 'p1': 31000, 'villa': 'Kathiri Villa 151', 'area': 'Madinat Riyad', 'inArea': true}];
+    final n0 = Store.I.villas.length;
+    AutoUpd.applyRows('Yellow Line Real Estate', outside);
+    expect(Store.I.villas.length, n0 + 1);
+    expect(Store.I.villas.any((v) => v['no'] == '9'), false);
+    expect(AutoUpd.log.any((l) => str(l['m']).contains('اتجاهلت 1 شقة برا مدينة الرياض')), true);
+    (Store.I.D['villas'] as List).removeWhere((v) => (v as Map)['no'] == '151');
     AutoUpd.applyRows('Yellow Line Real Estate', multi);
     final yl = Store.I.villas.where((v) => str(v['company']).contains('Yellow')).toList();
     expect(yl.length, 3);

@@ -28,6 +28,9 @@ class MainActivity : FlutterActivity() {
                         if (has("com.instagram.android")) { i.setPackage("com.instagram.android"); startActivity(i); res.success("ig") } else { startActivity(Intent.createChooser(i, "انشر")); res.success("share") }
                     } catch (e: Exception) { res.success("fail") } }
                 "findImg" -> { val b = call.argument<ByteArray>("bytes") ?: ByteArray(0); Thread { val r = try { Auto.findImg(applicationContext, b).toString() } catch (e: Exception) { "[]" }; runOnUiThread { res.success(r) } }.start() }
+                "allFiles" -> res.success(Auto.allFiles())
+                "needFiles" -> res.success(Auto.prefs(this).getString("needFiles", "") == "1" && !Auto.allFiles())
+                "allFilesPerm" -> { try { startActivity(Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:$packageName"))) } catch (e: Exception) { try { startActivity(Intent(android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)) } catch (_: Exception) {} }; res.success(true) }
                 "locTake" -> { val r = Auto.arr(this, "locs").toString(); Auto.put(this, "locs", "[]"); res.success(r) }
                 "dmTake" -> { val r = Auto.arr(this, "dm").toString(); Auto.put(this, "dm", "[]"); res.success(r) }
                 "dmOn" -> { val cf = Auto.cfg(this); cf.put("dm", call.argument<Boolean>("on") ?: false); Auto.put(this, "cfg", cf); res.success(true) }

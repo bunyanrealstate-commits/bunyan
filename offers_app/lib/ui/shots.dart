@@ -1,3 +1,4 @@
+import 'dart:io' show File;
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../core/auto.dart';
@@ -33,7 +34,7 @@ class _ShotsState extends State<ShotsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AutoUpd.log.where((x) => str(x['img']).isNotEmpty && (!onlyNew || x['same'] != true)).toList();
+    final l = AutoUpd.log.where((x) => shotKey(x).isNotEmpty && (!onlyNew || x['same'] != true)).toList();
     return Scaffold(
       appBar: AppBar(title: const Text('📷 صور الأبديت')),
       body: ListView(padding: const EdgeInsets.fromLTRB(14, 8, 14, 40), children: [
@@ -51,9 +52,10 @@ class _ShotsState extends State<ShotsPage> {
         borderRadius: BorderRadius.circular(16),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => _Full(x))),
         child: Padding(padding: const EdgeInsets.all(8), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          _Img(str(x['img']), w: 96, h: 96),
+          _Img(x, w: 96, h: 96),
           const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            if (x['files'] != null) const Text('📄 ملف PDF', style: TextStyle(fontSize: 11.5, color: kAc2, fontWeight: FontWeight.w700)),
             Text(str(x['m']), style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: x['same'] == true ? kMuted : kInk)),
             const SizedBox(height: 4),
             Text('${str(x['g'])} • ${_when(str(x['at']))}', style: const TextStyle(color: kMuted, fontSize: 12)),
@@ -62,12 +64,16 @@ class _ShotsState extends State<ShotsPage> {
       ));
 }
 
+List<String> shotFiles(Obj x) => ((x['files'] as List?) ?? []).map(str).toList();
+String shotKey(Obj x) => str(x['img']).isNotEmpty ? str(x['img']) : (shotFiles(x).firstOrNull ?? '');
+Future<Uint8List?> _fileBytes(String p) async { try { final f = File(p); return await f.exists() ? await f.readAsBytes() : null; } catch (_) { return null; } }
+
 class _Img extends StatelessWidget {
-  final String id; final double w, h;
-  const _Img(this.id, {this.w = 96, this.h = 96});
+  final Obj x; final double w, h;
+  const _Img(this.x, {this.w = 96, this.h = 96});
   @override
   Widget build(BuildContext context) => ClipRRect(borderRadius: BorderRadius.circular(10), child: SizedBox(width: w, height: h, child: FutureBuilder<Uint8List?>(
-        future: Media.thumb(id, s: 260),
+        future: str(x['img']).isNotEmpty ? Media.thumb(str(x['img']), s: 260) : _fileBytes(shotKey(x)),
         builder: (_, s) => s.data == null ? Container(color: const Color(0xFFE6ECEF), child: Icon(s.connectionState == ConnectionState.done ? Icons.image_not_supported_outlined : Icons.image_outlined, color: kMuted)) : Image.memory(s.data!, fit: BoxFit.cover),
       )));
 }
@@ -83,7 +89,8 @@ class _Full extends StatelessWidget {
       backgroundColor: Colors.black,
       appBar: AppBar(backgroundColor: Colors.black, foregroundColor: Colors.white, title: Text(str(x['g']), style: const TextStyle(color: Colors.white, fontSize: 16))),
       body: Column(children: [
-        Expanded(child: FutureBuilder<Uint8List?>(
+        if (shotFiles(x).isNotEmpty) Expanded(child: PageView(children: [for (final f in shotFiles(x)) InteractiveViewer(maxScale: 6, child: Center(child: Image.file(File(f), errorBuilder: (_, __, ___) => const Text('الملف اتمسح', style: TextStyle(color: Colors.white70)))))]))
+        else Expanded(child: FutureBuilder<Uint8List?>(
           future: Media.big(str(x['img'])),
           builder: (_, s) => s.data == null
               ? Center(child: s.connectionState == ConnectionState.done ? const Text('الصورة اتمسحت من الموبايل', style: TextStyle(color: Colors.white70)) : const CircularProgressIndicator())
@@ -104,19 +111,20 @@ class _Full extends StatelessWidget {
 
 /// 🔁 يقرا صورة الأبديت تاني ويوزع الشقق على فللها صح — ولو كانت عملت فيلا غلط لوحدها يمسحها (بعد موافقتك)
 Future<void> reread(BuildContext context, Obj x) async {
-  final img = str(x['img']), g = str(x['g']);
-  final bad = AutoUpd.log.where((l) => str(l['img']) == img).map((l) => Store.I.villa(str(l['vid']))).whereType<Obj>().where((v) => v['auto'] == true).toSet().toList();
+  final img = str(x['img']), g = str(x['g']), key = shotKey(x), files = shotFiles(x);
+  final bad = AutoUpd.log.where((l) => shotKey(l) == key).map((l) => Store.I.villa(str(l['vid']))).whereType<Obj>().where((v) => v['auto'] == true).toSet().toList();
   final ok = await confirmDlg(context, 'هيقرا الصورة دي تاني بـ Gemini ويحط كل شقة في فيلتها.${bad.isEmpty ? '' : '\n\nوهيمسح الفيلا اللي اتعملت غلط منها: ${bad.map((v) => '${str(v['name'])} ${str(v['no'])}').join('، ')} (${bad.fold<int>(0, (a, v) => a + objs(v['units']).length)} شقة)'}', ok: 'اقرا تاني');
   if (!ok || !context.mounted) return;
   showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
   try {
-    final b = await Media.orig(img);
-    if (b == null) throw 'الصورة اتمسحت من الموبايل';
-    final rows = await Ai.readUpdate(b);
+    final pages = <Uint8List>[];
+    if (files.isNotEmpty) { for (final f in files) { final b = await _fileBytes(f); if (b != null) pages.add(b); } } else { final b = await Media.orig(img); if (b != null) pages.add(b); }
+    if (pages.isEmpty) throw 'الصورة اتمسحت من الموبايل';
+    final rows = await Ai.readUpdatePages(pages, auto: true);
     if (rows.isEmpty) throw 'Gemini مالقاش شقق في الصورة';
     for (final v in bad) { (Store.I.D['villas'] as List).remove(v); }
-    (Store.I.D['log'] as List).removeWhere((l) => str((l as Map)['img']) == img);
-    final r = AutoUpd.applyRows(g, rows, img: img);
+    (Store.I.D['log'] as List).removeWhere((l) => shotKey((l as Map).cast<String, dynamic>()) == key);
+    final r = AutoUpd.applyRows(g, rows, img: img, files: files);
     await Store.I.save();
     if (!context.mounted) return;
     Navigator.pop(context);

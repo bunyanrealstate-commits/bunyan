@@ -132,15 +132,21 @@ class AutoUpd {
       final k = '${nkey(vn).toLowerCase()}|${nkey(ar).toLowerCase()}';
       m.putIfAbsent(k, () => MapEntry({'villa': vn, 'area': ar, 'company': meta['company'], 'terms': meta['terms']}, <Obj>[])).value.add(r);
     }
+    // فيلا كل شققها مكتوب إنها برا المناطق اللي تهمك (مدينة الرياض)
+    for (final e in m.values) { if (e.value.any((r) => r['inArea'] == false) && !e.value.any((r) => r['inArea'] == true)) e.key['out'] = true; }
     return m.values.toList();
   }
 
   /// يطبق صورة أبديت (كل فيلا لوحدها) ويسجلها — بيرجع الرسايل اللي فيها تغيير
-  static List<String> applyRows(String g, List<Obj> rows, {String img = '', bool same = false}) {
+  static bool get onlyArea => Store.I.cfg['onlyArea'] != false;
+  static List<String> applyRows(String g, List<Obj> rows, {String img = '', List files = const [], bool same = false}) {
     final out = <String>[];
     final l = (Store.I.D['log'] as List?) ?? (Store.I.D['log'] = <dynamic>[]);
+    final skipped = <String>[];
+    var skipN = 0;
     for (final grp in groupRows(rows)) {
       final meta = grp.key, good = grp.value;
+      if (onlyArea && meta['out'] == true) { skipped.add([str(meta['villa']), str(meta['area'])].where((x) => x.isNotEmpty).join(' — ')); skipN += good.length; continue; }
       final v = findVilla(companyOf(g), meta);
       if (v != null && str(meta['terms']).isNotEmpty) v['terms'] = str(meta['terms']);
       final String msg;
@@ -155,8 +161,9 @@ class AutoUpd {
         msg = quiet ? '✓ ${str(v['name'])} ${str(v['no'])}: نفس الأبديت — مفيش جديد' : '${v['auto'] == true && objs(v['units']).length == good.length ? '🆕' : '📥'} ${str(v['name'])} ${str(v['no'])}: $ch${str(v['loc']).isEmpty ? ' • ⚠️ ضيف اللوكيشن' : ''}';
       }
       if (!quiet) out.add(msg);
-      l.insert(0, {'at': DateTime.now().toIso8601String(), 'g': g, 'm': msg, 'vid': v?['id'], 'img': img, 'same': quiet, 'n': good.length});
+      l.insert(0, {'at': DateTime.now().toIso8601String(), 'g': g, 'm': msg, 'vid': v?['id'], 'img': img, if (files.isNotEmpty) 'files': files, 'same': quiet, 'n': good.length});
     }
+    if (skipped.isNotEmpty) l.insert(0, {'at': DateTime.now().toIso8601String(), 'g': g, 'm': '⏭️ اتجاهلت $skipN شقة برا مدينة الرياض: ${skipped.toSet().take(6).join('، ')}', 'img': img, if (files.isNotEmpty) 'files': files, 'same': true, 'n': skipN});
     while (l.length > 200) { l.removeLast(); }
     return out;
   }
@@ -172,7 +179,7 @@ class AutoUpd {
       List<Obj> rows;
       try { rows = Ai.parseRows(str(it['txt'])); } catch (_) { continue; }
       if (rows.isEmpty) continue;
-      out.addAll(applyRows(str(it['g']), rows, img: str(it['id']), same: it['same'] == true));
+      out.addAll(applyRows(str(it['g']), rows, img: it['files'] == null ? str(it['id']) : '', files: (it['files'] as List?) ?? const [], same: it['same'] == true));
       logged = true;
     }
     if (logged) await Store.I.save();

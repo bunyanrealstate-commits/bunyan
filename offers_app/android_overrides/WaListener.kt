@@ -104,6 +104,7 @@ object Auto {
             lt = maxOf(lt, time)
             mapRx.find(t)?.let { m -> val la = arr(c, "locs"); la.put(JSONObject().put("g", g).put("url", m.value).put("txt", t.take(300)).put("t", time)); while (la.length() > 300) la.remove(0); put(c, "locs", la) }
             if (t.contains("📷") || t.contains("🖼")) { s.put("img", s.optInt("img") + 1); ev.put(JSONObject().put("g", g).put("t", time)); got = true }
+            else if (t.contains("📄") && t.contains("pdf", true)) { s.put("img", s.optInt("img") + 1); ev.put(JSONObject().put("g", g).put("t", time).put("doc", t.replace("📄", "").trim())); got = true }
         }
         last.put(g, lt); seen.put(g, s)
         put(c, "seen", seen); put(c, "last", last)
@@ -143,7 +144,7 @@ object Auto {
                     val id = k.getLong(0); val t = k.getLong(1) * 1000; val b = k.getString(2) ?: ""
                     if (id in doneSet || !b.contains("WhatsApp", true) || b.contains("Sent", true)) continue
                     var best: String? = null; var bd = Long.MAX_VALUE
-                    for (i in 0 until ev.length()) { val e = ev.getJSONObject(i); val d = t - e.getLong("t"); if (d > -120000 && d < 900000 && Math.abs(d) < bd) { bd = Math.abs(d); best = e.getString("g") } }
+                    for (i in 0 until ev.length()) { val e = ev.getJSONObject(i); if (e.has("doc")) continue; val d = t - e.getLong("t"); if (d > -120000 && d < 900000 && Math.abs(d) < bd) { bd = Math.abs(d); best = e.getString("g") } }
                     if (best != null) todo.add(Triple(id, t, best))
                 }
             }
@@ -166,6 +167,8 @@ object Auto {
                 notify(c, g, rows.length())
 
             }
+            // ===== ملفات PDF (أبديت بعض الشركات) =====
+            n += pdfs(c, ev, key, prompt, res)
             while (done.length() > 600) done.remove(0)
             put(c, "done", done); put(c, "res", res)
         } catch (_: Exception) {
@@ -360,6 +363,66 @@ object Auto {
     }
     fun trim(o: JSONObject, max: Int) { if (o.length() <= max) return; val ks = o.keys().asSequence().toList(); ks.take(o.length() - max).forEach { o.remove(it) } }
 
+    // ===== 📄 أبديت PDF: نفتح الملف ونصوّر صفحاته ونقراها =====
+    fun allFiles(): Boolean = Build.VERSION.SDK_INT < 30 || android.os.Environment.isExternalStorageManager()
+    private fun docDirs(): List<java.io.File> {
+        val r = android.os.Environment.getExternalStorageDirectory().absolutePath
+        return listOf("$r/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/WhatsApp Business Documents", "$r/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Documents",
+            "$r/WhatsApp Business/Media/WhatsApp Business Documents", "$r/WhatsApp/Media/WhatsApp Documents").map { java.io.File(it) }.filter { it.isDirectory }
+    }
+    /** صفحات الـ PDF صور JPEG (أول 3 صفحات) */
+    fun pdfPages(f: java.io.File, max: Int = 3): List<ByteArray> {
+        val out = ArrayList<ByteArray>()
+        android.os.ParcelFileDescriptor.open(f, android.os.ParcelFileDescriptor.MODE_READ_ONLY).use { fd ->
+            android.graphics.pdf.PdfRenderer(fd).use { r ->
+                for (i in 0 until minOf(max, r.pageCount)) r.openPage(i).use { pg ->
+                    val w = 1400; val hh = (w.toFloat() * pg.height / pg.width).toInt().coerceIn(200, 4000)
+                    val bm = android.graphics.Bitmap.createBitmap(w, hh, android.graphics.Bitmap.Config.ARGB_8888)
+                    android.graphics.Canvas(bm).drawColor(android.graphics.Color.WHITE)
+                    pg.render(bm, null, null, android.graphics.pdf.PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                    val bo = java.io.ByteArrayOutputStream(); bm.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, bo); bm.recycle(); out.add(bo.toByteArray())
+                }
+            }
+        }
+        return out
+    }
+    private fun pdfs(c: Context, ev: JSONArray, key: String, prompt: String, res: JSONArray): Int {
+        val docs = (0 until ev.length()).map { ev.getJSONObject(it) }.filter { it.has("doc") }
+        if (docs.isEmpty()) return 0
+        if (!allFiles()) { put(c, "needFiles", "1"); return 0 }
+        val doneF = arr(c, "doneF"); val ds = (0 until doneF.length()).map { doneF.getString(it) }.toMutableSet()
+        val files = docDirs().flatMap { d -> (d.listFiles() ?: arrayOf()).filter { it.isFile && it.name.endsWith(".pdf", true) } }
+        var n = 0
+        for (e in docs) {
+            val t = e.getLong("t"); val g = e.getString("g"); val nm = e.optString("doc").lowercase()
+            val cand = files.filter { val d = it.lastModified() - t; d > -180000 && d < 3600000 && (it.path + ":" + it.length()) !in ds }
+                .sortedWith(compareBy<java.io.File>({ if (nm.isNotEmpty() && (it.name.lowercase().contains(nm.substringBefore(".pdf").take(20)) || nm.contains(it.name.lowercase().substringBefore(".pdf").take(20)))) 0 else 1 }, { Math.abs(it.lastModified() - t) }))
+            val f = cand.firstOrNull() ?: continue
+            val k = f.path + ":" + f.length()
+            val pages = try { pdfPages(f) } catch (_: Exception) { ds.add(k); doneF.put(k); continue }
+            if (pages.isEmpty()) { ds.add(k); doneF.put(k); continue }
+            val hash = md5(f.readBytes()); val hashes = obj(c, "hash")
+            if (hashes.has(hash)) { ds.add(k); doneF.put(k); continue }
+            val txt = gemini(key, prompt, pages) ?: break
+            ds.add(k); doneF.put(k); hashes.put(hash, t); trim(hashes, 400); put(c, "hash", hashes)
+            // نحفظ صور الصفحات علشان تشوفها في «صور الأبديت»
+            val dir = java.io.File(c.filesDir, "shots").apply { mkdirs() }
+            val saved = JSONArray()
+            pages.forEachIndexed { i, b -> val pf = java.io.File(dir, "$hash-$i.jpg"); pf.writeBytes(b); saved.put(pf.absolutePath) }
+            val rows = try { JSONArray(txt.substring(txt.indexOf('['), txt.lastIndexOf(']') + 1)) } catch (_: Exception) { JSONArray() }
+            if (rows.length() == 0) continue
+            val sig = sig(rows); val vk = g.lowercase() + "|pdf|" + f.name.lowercase()
+            val sigs = obj(c, "sig")
+            if (sigs.optString(vk) == sig) { res.put(JSONObject().put("g", g).put("t", t).put("files", saved).put("txt", txt).put("same", true)); continue }
+            sigs.put(vk, sig); trim(sigs, 600); put(c, "sig", sigs)
+            res.put(JSONObject().put("g", g).put("t", t).put("files", saved).put("pdf", f.name).put("txt", txt)); n++
+            notify(c, g, rows.length())
+        }
+        while (doneF.length() > 600) doneF.remove(0)
+        put(c, "doneF", doneF)
+        return n
+    }
+
     private var models: List<String>? = null
     private fun list(key: String): List<String> {
         models?.let { return it }
@@ -383,11 +446,12 @@ object Auto {
         return fall
     }
 
-    fun gemini(key: String, prompt: String, img: ByteArray): String? {
+    fun gemini(key: String, prompt: String, img: ByteArray): String? = gemini(key, prompt, listOf(img))
+    fun gemini(key: String, prompt: String, imgs: List<ByteArray>): String? {
+        val parts = JSONArray().put(JSONObject().put("text", prompt))
+        for (img in imgs) parts.put(JSONObject().put("inline_data", JSONObject().put("mime_type", "image/jpeg").put("data", Base64.encodeToString(img, Base64.NO_WRAP))))
         val body = JSONObject()
-            .put("contents", JSONArray().put(JSONObject().put("role", "user").put("parts", JSONArray()
-                .put(JSONObject().put("text", prompt))
-                .put(JSONObject().put("inline_data", JSONObject().put("mime_type", "image/jpeg").put("data", Base64.encodeToString(img, Base64.NO_WRAP)))))))
+            .put("contents", JSONArray().put(JSONObject().put("role", "user").put("parts", parts)))
             .put("generationConfig", JSONObject().put("temperature", 0).put("responseMimeType", "application/json")).toString()
         for (m in list(key)) {
             try {
