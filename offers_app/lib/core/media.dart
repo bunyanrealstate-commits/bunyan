@@ -12,8 +12,10 @@ class Media {
   }
   static Future<bool> permImg() async {
     if (kIsWeb) return false;
+    try {
     final p = await PhotoManager.requestPermissionExtend(requestOption: const PermissionRequestOption(androidPermission: AndroidPermission(type: RequestType.common, mediaLocation: false)));
     return p.isAuth || p.hasAccess;
+    } catch (_) { return false; }
   }
   /// الصورة بحجم كبير للعرض
   static Future<Uint8List?> orig(String id) async { final a = await byId(id); return a?.originBytes; }
