@@ -151,7 +151,7 @@ class _PickContactsState extends State<PickContactsPage> {
   }
 
   Future<void> _add() async {
-    final n = await Reqs.importContacts(cs.where((c) => sel.contains(c['p'])).toList(), all: true);
+    final n = await Reqs.importContacts(cs.where((c) => sel.contains(c['p'])).toList(), pick: true);
     if (mounted) { toast(context, '✅ اتضاف $n عميل'); Navigator.pop(context); }
   }
 
