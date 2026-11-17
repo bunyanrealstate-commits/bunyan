@@ -44,6 +44,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
     }
     await Sug.pullLocs();
     final r0 = await AutoUpd.pull();
+    await AutoUpd.autoFix();
     final r = [...r0, ...await Sug.autoLocs()];
     final fresh = r.isEmpty ? <Obj>[] : Reqs.newFor();
     await Reqs.pushSummary();

@@ -177,11 +177,9 @@ class AutoUpd {
   static List<String> applyRows(String g, List<Obj> rows, {String img = '', List files = const [], bool same = false, String how = '', String company = ''}) {
     final out = <String>[];
     final l = (Store.I.D['log'] as List?) ?? (Store.I.D['log'] = <dynamic>[]);
-    final skipped = <String>[];
-    var skipN = 0;
     for (final grp in groupRows(rows)) {
       final meta = grp.key, good = grp.value;
-      if (onlyArea && meta['out'] == true) { skipped.add([str(meta['villa']), str(meta['area'])].where((x) => x.isNotEmpty).join(' — ')); skipN += good.length; continue; }
+      if (onlyArea && meta['out'] == true) continue;
       final gc = companyOf(g), mc = str(meta['company']);
       // الشركة المكتوبة في الصورة لو مختلفة عن الجروب (صورة شركة اتعملها فوروارد في جروب تاني)
       final cmp = company.isNotEmpty ? company : (mc.isNotEmpty && (gc.isEmpty || !_sig(mc).any((w) => _sig(gc).contains(w))) ? mc : gc);
@@ -202,7 +200,7 @@ class AutoUpd {
       if (!quiet) out.add(msg);
       l.insert(0, {'at': DateTime.now().toIso8601String(), 'g': g, 'm': msg, 'vid': v?['id'], 'img': img, if (files.isNotEmpty) 'files': files, 'same': quiet, 'n': good.length, if (how.isNotEmpty) 'how': how});
     }
-    if (skipped.isNotEmpty) l.insert(0, {'at': DateTime.now().toIso8601String(), 'g': g, 'm': '⏭️ اتجاهلت $skipN شقة برا مدينة الرياض: ${skipped.toSet().take(6).join('، ')}', 'img': img, if (files.isNotEmpty) 'files': files, 'same': true, 'n': skipN});
+    // اللي برا مدينة الرياض بيتساب من غير ما نزعجك بيه
     while (l.length > 200) { l.removeLast(); }
     return out;
   }
@@ -231,6 +229,52 @@ class AutoUpd {
   }
 
   /// 🔍 قراية صفحات (صور) أبديت: على الموبايل الأول (OCR + فهم الجدول)، ولو مش واضح Gemini
+  /// 🛠️ تصليح لوحده: أبديت اتحط باسم شركة غلط (أو فلل برا الرياض) — بيتقري تاني على الموبايل ويتحط صح من غير ما تعمل حاجة
+  static Future<int> autoFix() async {
+    if (kIsWeb || Store.I.testMode) return 0;
+    final done = ((Store.I.cfg['fixed'] as List?) ?? const []).map(str).toSet();
+    final keys = <String, Obj>{};
+    for (final l in log) {
+      final k = str(l['img']).isNotEmpty ? str(l['img']) : (((l['files'] as List?) ?? const []).map(str).firstOrNull ?? '');
+      if (k.isEmpty || done.contains(k)) continue;
+      final v = Store.I.villa(str(l['vid']));
+      if (v != null && v['auto'] == true) keys.putIfAbsent(k, () => l);
+    }
+    var n = 0;
+    for (final e in keys.entries.take(15)) {
+      done.add(e.key);
+      final it = e.value, g = str(it['g']), files = (it['files'] as List?) ?? const [];
+      try {
+        final pages = await _pagesOf(it);
+        if (pages.isEmpty) continue;
+        final all = <dynamic>[];
+        var off = 0.0;
+        for (final p in pages) {
+          final s = await Native.ch.invokeMethod<String>('ocr', {'bytes': p});
+          if (s == null) break;
+          var mh = 0.0;
+          for (final m in (jsonDecode(s) as List).whereType<Map>()) { all.add({...m, 'y': numOf(m['y']) + off}); mh = [mh, numOf(m['y']) + numOf(m['h'])].reduce((a, b) => a > b ? a : b); }
+          off += (mh < 1000 ? 1000 : mh) + 200;
+        }
+        final rows = all.isEmpty ? null : OcrParse.parse(all);
+        if (rows == null) continue;
+        final comp = companyFromText(all.whereType<Map>().map((m) => '${m['s']}').join(' '), g);
+        final shotVillas = log.where((l) => (str(l['img']).isNotEmpty ? str(l['img']) : (((l['files'] as List?) ?? const []).map(str).firstOrNull ?? '')) == e.key).map((l) => Store.I.villa(str(l['vid']))).whereType<Obj>().where((v) => v['auto'] == true).toList();
+        final wrongComp = comp.isNotEmpty && shotVillas.any((v) => !_sig(str(v['company'])).any((w) => _sig(comp).contains(w)));
+        final outside = onlyArea && rows.any((r) => r['inArea'] == false);
+        if (!wrongComp && !outside) continue;
+        for (final v in shotVillas) { (Store.I.D['villas'] as List).removeWhere((x) => (x as Map)['id'] == v['id']); }
+        (Store.I.D['log'] as List).removeWhere((l) { final m = (l as Map); return (str(m['img']).isNotEmpty ? str(m['img']) : (((m['files'] as List?) ?? const []).map(str).firstOrNull ?? '')) == e.key; });
+        applyRows(g, rows, img: str(it['img']), files: files, how: 'ocr', company: comp);
+        n++;
+      } catch (_) {}
+    }
+    Store.I.cfg['fixed'] = done.toList().reversed.take(400).toList();
+    await Store.I.saveCfg();
+    if (n > 0) await Store.I.save();
+    return n;
+  }
+
   static String lastText = '';
   static Future<({List<Obj> rows, String how})> smartRead(List<Uint8List> pages, {bool auto = true}) async {
     lastText = '';

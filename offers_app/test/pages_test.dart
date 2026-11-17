@@ -91,7 +91,7 @@ void main() {
     expect(naqib['name'], 'Villa Al Naqib 58');
     expect(Price.text(objs(naqib['units']).first), contains('38,000 درهم على دفعتين'));
     expect(Store.I.villas.any((v) => ['26', '13', '92', '49'].contains(v['no'])), false);
-    expect(AutoUpd.log.first['m'], contains('اتجاهلت 4 شقة'));
+    expect(AutoUpd.log.any((l) => str(l['m']).contains('اتجاهلت')), false);
     // إعلان سعر جديد لشقة واحدة: الأرقام بالألف، وباقي الفيلا يفضل متاح
     (Store.I.D['villas'] as List).add({'id': 'b22', 'name': 'Al-Buraiki Villa 22', 'no': '22', 'company': 'Platinum Team', 'area': 'Riyadh City', 'units': <dynamic>[<String, dynamic>{'id': 'b5', 'no': '5', 'type': '1bk', 'p1': 45000, 'avail': true}]});
     AutoUpd.applyRows('Platinum Team Real Estate', [{'company': 'Platinum Team', 'kind': 'price', 'no': '6', 'villa': 'Al-Buraiki Villa 22', 'area': 'Riyadh City', 'type': '2bk', 'floor': 'G', 'p1': 58, 'p2': 60, 'p3': 62, 'inArea': true, 'note': 'with yard'}]);
@@ -175,7 +175,7 @@ void main() {
     AutoUpd.applyRows('Yellow Line Real Estate', outside);
     expect(Store.I.villas.length, n0 + 1);
     expect(Store.I.villas.any((v) => v['no'] == '9'), false);
-    expect(AutoUpd.log.any((l) => str(l['m']).contains('اتجاهلت 1 شقة برا مدينة الرياض')), true);
+    expect(AutoUpd.log.any((l) => str(l['m']).contains('اتجاهلت')), false);
     (Store.I.D['villas'] as List).removeWhere((v) => (v as Map)['no'] == '151');
     AutoUpd.applyRows('Yellow Line Real Estate', multi);
     final yl = Store.I.villas.where((v) => str(v['company']).contains('Yellow')).toList();

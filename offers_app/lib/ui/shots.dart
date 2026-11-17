@@ -33,7 +33,7 @@ class ShotsPage extends StatefulWidget {
 }
 
 class _ShotsState extends State<ShotsPage> {
-  bool onlyNew = false, reading = false;
+  bool onlyNew = true, reading = false;
   String prog = '';
   @override
   void initState() { super.initState(); Media.permImg().then((_) { if (mounted) setState(() {}); }); }
@@ -52,7 +52,7 @@ class _ShotsState extends State<ShotsPage> {
   @override
   Widget build(BuildContext context) => ListenableBuilder(listenable: Store.I, builder: (context, _) {
     final all = AutoUpd.log;
-    final l = all.where((x) => shotKey(x).isNotEmpty && (!onlyNew || x['same'] != true)).toList();
+    final l = all.where((x) => shotKey(x).isNotEmpty && !str(x['m']).startsWith('⏭️') && (!onlyNew || x['same'] != true)).toList();
     final n = DateTime.now();
     bool isToday(Obj x) { final d = DateTime.tryParse(str(x['at'])); return d != null && d.year == n.year && d.month == n.month && d.day == n.day; }
     final td = all.where(isToday).toList();
