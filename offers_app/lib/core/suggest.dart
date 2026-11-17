@@ -90,8 +90,38 @@ class Sug {
   /// الفيلا اللي اللينك ده غالباً بتاعها (من رقم الفيلا في الرسالة + شركة الجروب)
   static Obj? villaFor(Obj s) {
     final no = villaNoOf(str(s['txt']).replaceAll(str(s['url']), ''));
-    if (no.isEmpty) return null;
-    return findVilla(AutoUpd.companyOf(str(s['g'])), {'villa': 'villa $no'}, create: false);
+    if (no.isNotEmpty) { final v = findVilla(AutoUpd.companyOf(str(s['g'])), {'villa': 'villa $no'}, create: false); if (v != null) return v; }
+    return villaByTime(s);
+  }
+
+  /// لينك اتبعت لوحده في الجروب: غالباً بتاع الأبديت اللي نزل قبله/بعده بشوية من نفس الجروب (لو كان لفيلا واحدة)
+  static Obj? villaByTime(Obj s) {
+    final t = DateTime.tryParse(str(s['at']));
+    if (t == null) return null;
+    final g = AutoUpd.cleanGroup(str(s['g']));
+    final near = AutoUpd.log.where((l) {
+      final lt = DateTime.tryParse(str(l['at']));
+      return AutoUpd.cleanGroup(str(l['g'])) == g && str(l['vid']).isNotEmpty && lt != null && lt.difference(t).inMinutes.abs() <= 20;
+    }).map((l) => str(l['vid'])).toSet();
+    return near.length == 1 ? Store.I.villa(near.first) : null;
+  }
+
+  /// 📍 اللوكيشن اللي في الجروبات بيتحط لوحده للفيلا لو معروفة ومعندهاش لوكيشن — والباقي يفضل اقتراح
+  static Future<List<String>> autoLocs() async {
+    final out = <String>[];
+    for (final s in locs.where((s) => s['st'] == null)) {
+      final v = villaFor(s);
+      if (v == null || str(v['loc']).isNotEmpty) continue;
+      v['loc'] = s['url']; v.remove('ll'); s['st'] = 'auto';
+      out.add('📍 ${str(v['name'])} ${str(v['no'])}: اتحط اللوكيشن من ${str(s['g'])}');
+    }
+    if (out.isNotEmpty) {
+      final l = (Store.I.D['log'] as List?) ?? (Store.I.D['log'] = <dynamic>[]);
+      for (final m in out) { l.insert(0, {'at': DateTime.now().toIso8601String(), 'g': '', 'm': m, 'same': true}); }
+      await Store.I.save();
+      Geo.fillVillas();
+    }
+    return out;
   }
 
   /// اقتراحات اللوكيشن اللي لسه متعملهاش حاجة، ولفيلا ملهاش لوكيشن (أو مش معروفة)

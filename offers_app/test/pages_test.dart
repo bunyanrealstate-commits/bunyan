@@ -59,6 +59,10 @@ void main() {
     expect(Sug.caption(Store.I.villa('v3')!, g2), contains('AED 70,000 / year'));
     Store.I.D['locSug'] = [{'id': 'l1', 'g': 'Alghanim', 'url': 'https://maps.app.goo.gl/abc', 'txt': 'Villa 25 location https://maps.app.goo.gl/abc'}];
     expect(Sug.villaFor(Sug.locs.first)?['id'], 'v3');
+    Store.I.villa('v3')!['loc'] = '';
+    final al = await t.runAsync(() => Sug.autoLocs());
+    expect(al!.length, 1);
+    expect(Store.I.villa('v3')!['loc'], 'https://maps.app.goo.gl/abc');
     Store.I.cfg['myPhone'] = '971523501023';
     final h = await t.runAsync(() => OfferPage.html(Search.run(Store.I.villas, types: {'2bk2b'}, pay: '1').take(2).toList(), pay: '1', en: true, client: 'Ahmed'));
     expect(h, contains('AED 70,000 / year — 1 payment'));
