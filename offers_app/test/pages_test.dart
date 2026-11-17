@@ -124,6 +124,9 @@ void main() {
     c = parseContactName('1bhk empty 4000 Ali Hassan')!;
     expect(c['types'], containsAll(['1bk'])); expect(c['fur'], false); expect(c['name'], 'Ali Hassan');
     expect(parseContactName('Hkeem Uae'), isNull);
+    expect(parseContactName('Studio Fur 4500 Khalifa')!['budget'], 4500.0);
+    expect(parseContactName('Studio Riyad 30, 000')!['budget'], 30000.0);
+    expect(parseContactName('Studio Or 1bhk 42max الاحواض الاولي')!['budget'], 42000.0);
     expect(parseContactName('Ahmed Studio Photography 24'), isNull);
     expect(parseContactName('Studio Ali'), isNull);
     c = parseContactName('Studio Fur 2800 December')!;

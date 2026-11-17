@@ -146,7 +146,7 @@ object Auto {
             cur.use { k ->
                 while (k.moveToNext()) {
                     val id = k.getLong(0); val t = k.getLong(1) * 1000; val b = k.getString(2) ?: ""
-                    if (id in doneSet || !b.contains("WhatsApp", true) || b.contains("Sent", true)) continue
+                    if ((!today && id in doneSet) || !b.contains("WhatsApp", true) || b.contains("Sent", true)) continue
                     var best: String? = null; var bd = Long.MAX_VALUE
                     for (i in 0 until ev.length()) { val e = ev.getJSONObject(i); if (e.has("doc") || e.has("anchor")) continue; val d = t - e.getLong("t"); if (d > -120000 && d < 900000 && Math.abs(d) < bd) { bd = Math.abs(d); best = e.getString("g") } }
                     // النهارده: صور واتساب الأعمال اللي ملهاش إشعار (وصلت قبل ما التطبيق يشتغل) — Gemini بيعرف لوحده لو مش أبديت
@@ -154,6 +154,11 @@ object Auto {
                     if (best != null) todo.add(Triple(id, t, best))
                 }
             }
+            // صورة جت في جروب متابَع ومالقيناش ملفها على الموبايل (التحميل التلقائي مقفول؟)
+            val got = todo.map { it.third to it.second }
+            for (i in 0 until ev.length()) { val e = ev.getJSONObject(i); if (e.has("doc") || e.has("anchor")) continue
+                val et = e.getLong("t"); if (System.currentTimeMillis() - et < 20 * 60000) continue
+                if (got.none { it.first == e.getString("g") && it.second - et > -120000 && it.second - et < 900000 }) dbg(c, e.getString("g"), et, "no_file") }
             var k0 = 0
             for ((id, t, g) in todo) {
                 k0++; prog = "$k0/${todo.size}"
@@ -161,12 +166,13 @@ object Auto {
                 val bytes = try { c.contentResolver.openInputStream(ContentUris.withAppendedId(uri, id))?.use { it.readBytes() } } catch (_: Exception) { null } ?: continue
                 // نفس الصورة اتبعتت تاني (أو في جروب تاني) → منقراهاش تاني ومنستهلكش Gemini
                 val hash = md5(bytes); val hashes = obj(c, "hash")
-                if (hashes.has(hash)) { doneSet.add(id); done.put(id); continue }
-                val txt = gemini(key, prompt, bytes) ?: break  // Gemini مش متاح دلوقتي → نحاول تاني بعدين
+                if (!today && hashes.has(hash)) { doneSet.add(id); done.put(id); dbg(c, g, t, "same_img"); continue }
+                val txt = gemini(key, prompt, bytes) ?: run { dbg(c, g, t, "gemini_fail"); null } ?: break  // Gemini مش متاح دلوقتي → نحاول تاني بعدين
                 doneSet.add(id); done.put(id)
                 hashes.put(hash, t); trim(hashes, 400); put(c, "hash", hashes)
                 val rows = try { JSONArray(txt.substring(txt.indexOf('['), txt.lastIndexOf(']') + 1)) } catch (_: Exception) { JSONArray() }
-                if (rows.length() == 0) continue
+                if (rows.length() == 0) { dbg(c, g, t, "not_update", id); continue }
+                dbg(c, g, t, "read:" + rows.length(), id)
                 // نفس الأبديت بنفس الشقق والأسعار (الشركات بتعيد بعته كذا مرة في اليوم) → متتعاملش كأبديت جديد
                 val sig = sig(rows); val vk = g.lowercase() + "|" + (rows.optJSONObject(0)?.optString("villa") ?: "").uppercase().replace(Regex("[^A-Z0-9]"), "")
                 val sigs = obj(c, "sig")
@@ -368,6 +374,12 @@ object Auto {
         return out
     }
 
+    /** سجل اللي حصل لكل صورة جروب — بيظهر في «أبديت الجروبات» علشان تعرف ليه أبديت ما اتقراش */
+    @Synchronized fun dbg(c: Context, g: String, t: Long, s: String, id: Long = 0) {
+        val a = arr(c, "dbg"); val k = "$g|$t"
+        for (i in a.length() - 1 downTo 0) { val o = a.getJSONObject(i); if (o.optString("k") == k) { if (o.optString("s").startsWith("read") && s == "no_file") return; a.remove(i) } }
+        a.put(JSONObject().put("k", k).put("g", g).put("t", t).put("s", s).put("id", id)); while (a.length() > 80) a.remove(0); put(c, "dbg", a)
+    }
     fun md5(b: ByteArray) = java.security.MessageDigest.getInstance("MD5").digest(b).joinToString("") { "%02x".format(it) }
     /** بصمة الأبديت: رقم كل شقة + أسعارها + محجوزة ولا لأ (مترتبة) */
     fun sig(a: JSONArray): String {

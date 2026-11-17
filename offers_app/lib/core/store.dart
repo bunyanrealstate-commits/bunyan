@@ -53,6 +53,19 @@ class Store extends ChangeNotifier {
       cfg['dm'] = false; cfg['mig_req2'] = true; await saveCfg();
       await save();
     }
+    // مرة واحدة: نعيد فهم أسامي العملاء (40 = 40 ألف، Khalifa مش «k»، ديسمبر = ميعاد السكن)
+    if (cfg['mig_req3'] != true) {
+      for (final r in ((D['reqs'] as List?) ?? []).whereType<Map>()) {
+        if (r['src'] != 'contact') continue;
+        final cn = '${r['cn'] ?? r['txt'] ?? ''}';
+        final q = parseContactName(cn);
+        if (q == null) continue;
+        for (final k in ['types', 'budget', 'pay', 'fur', 'when']) { r[k] = q[k]; }
+        r['n'] = q['name']; r['cn'] = cn;
+      }
+      cfg['mig_req3'] = true; await saveCfg();
+      await save();
+    }
     loaded = true; notifyListeners();
     if (villas.isEmpty && linked) await restore();
   }

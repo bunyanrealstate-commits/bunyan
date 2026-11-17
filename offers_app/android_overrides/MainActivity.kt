@@ -48,6 +48,8 @@ class MainActivity : FlutterActivity() {
                 "autoRun" -> Thread { val n = Auto.run(applicationContext); runOnUiThread { res.success(n) } }.start()
                 "autoToday" -> Thread { val n = Auto.run(applicationContext, true); runOnUiThread { res.success(n) } }.start()
                 "autoProg" -> res.success(Auto.prog)
+                "autoDbg" -> res.success(Auto.arr(this, "dbg").toString())
+                "forget" -> { val h = Auto.obj(this, "hash"); val d = Auto.arr(this, "dbg"); Auto.put(this, "hash", "{}"); Auto.put(this, "done", "[]"); Auto.put(this, "doneF", "[]"); Auto.put(this, "sig", "{}"); res.success(h.length() + d.length()) }
                 "autoTake" -> { val r = Auto.arr(this, "res").toString(); Auto.put(this, "res", "[]"); res.success(r) }
                 "autoSeen" -> res.success(Auto.mergeSeen(this).toString())
                 "notifOn" -> res.success((android.provider.Settings.Secure.getString(contentResolver, "enabled_notification_listeners") ?: "").contains(packageName))

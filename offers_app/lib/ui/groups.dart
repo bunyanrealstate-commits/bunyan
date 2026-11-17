@@ -17,6 +17,7 @@ class GroupsPage extends StatefulWidget {
 class _GroupsState extends State<GroupsPage> with WidgetsBindingObserver {
   bool on = false, loading = true, tried = false, reading = false, files = true;
   Map<String, Map> seen = {};
+  List<Map> dbg = [];
   String q = '';
 
   @override
@@ -28,6 +29,7 @@ class _GroupsState extends State<GroupsPage> with WidgetsBindingObserver {
 
   Future<void> _load() async {
     final o = await AutoUpd.on(), s = await AutoUpd.seen();
+    dbg = await AutoUpd.dbg();
     try { files = await Native.ch.invokeMethod<bool>('allFiles') ?? true; } catch (_) {}
     final raw = (Store.I.cfg['groups'] as Map?) ?? {};
     if (raw.keys.any((k) => AutoUpd.cleanGroup('$k') != '$k')) { Store.I.cfg['groups'] = AutoUpd.groups; await Store.I.saveCfg(); await AutoUpd.sync(); }
@@ -138,6 +140,25 @@ class _GroupsState extends State<GroupsPage> with WidgetsBindingObserver {
             subtitle: Text([if (AutoUpd.follows(g)) '🏢 ${AutoUpd.companyOf(g)} ✏️', if (((seen[g]?['img'] ?? 0) as num) > 0) '📷 ${seen[g]?['img']} صورة'].join(' • ')),
             secondary: AutoUpd.follows(g) ? IconButton(tooltip: 'غيّر الشركة', icon: const Icon(Icons.edit_outlined, size: 20), onPressed: () => _company(g)) : null,
           )),
+        if (dbg.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          const Text('🔎 آخر صور الجروبات حصلها إيه:', style: TextStyle(fontWeight: FontWeight.w800)),
+          for (final d in dbg.take(20)) Builder(builder: (context) {
+            final st = '${d['s']}';
+            final t = DateTime.fromMillisecondsSinceEpoch((d['t'] as num?)?.toInt() ?? 0);
+            final msg = st.startsWith('read') ? '✅ اتقرت (${st.split(':').last} شقة)' : {
+              'not_update': '🤷 Gemini قال دي مش صورة أبديت',
+              'gemini_fail': '⚠️ Gemini مكانش رادد — هيحاول تاني لوحده',
+              'no_file': '📵 الصورة ما اتحملتش على الموبايل — افتح الجروب يتحمل، أو شغّل تحميل الصور التلقائي',
+              'same_img': '♻️ نفس صورة اتقرت قبل كده',
+            }[st] ?? st;
+            final bad = !st.startsWith('read') && st != 'same_img';
+            return Card(color: bad ? const Color(0xFFFFF4E0) : null, child: ListTile(dense: true,
+              title: Text('${'${d['g']}'.isEmpty ? 'واتساب الأعمال' : d['g']} • ${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}', style: const TextStyle(fontWeight: FontWeight.w700)),
+              subtitle: Text(msg),
+              trailing: bad ? TextButton(onPressed: () => readPicked(context), child: const Text('اقراها بإيدك')) : null));
+          }),
+        ],
         if (log.isNotEmpty) ...[
           const SizedBox(height: 14),
           const Text('آخر التحديثات:', style: TextStyle(fontWeight: FontWeight.w800)),

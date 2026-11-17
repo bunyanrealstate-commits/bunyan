@@ -182,6 +182,12 @@ class AutoUpd {
     return pull(force: true);
   }
 
+  /// إيه اللي حصل لآخر صور الجروبات (اتقرت / مش أبديت / ما اتحملتش / Gemini مش رادد)
+  static Future<List<Map>> dbg() async {
+    if (kIsWeb) return [];
+    try { return (jsonDecode(await Native.ch.invokeMethod<String>('autoDbg') ?? '[]') as List).whereType<Map>().toList().reversed.toList(); } catch (_) { return []; }
+  }
+
   static Future<String> progress() async { try { return await Native.ch.invokeMethod<String>('autoProg') ?? ''; } catch (_) { return ''; } }
 
   static Future<List<String>> pull({bool force = false}) async {

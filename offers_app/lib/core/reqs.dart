@@ -27,8 +27,8 @@ Obj parseRequest(String text, {List<String> areas = const []}) {
   if (RegExp(r'3\s*(cheque|chq|payment|دفع)|ثلاث دفعات|تلات دفعات').hasMatch(t)) pay = '3';
   if (RegExp(r'1\s*(cheque|chq|payment)|one (cheque|payment)|دفع[ةه] واحد[ةه]|كاش|cash|سنوي|yearly|annual|per year|بالسنة|في السنة').hasMatch(t)) pay = '1';
   var budget = 0.0;
-  for (final m in RegExp(r'(\d[\d,.]*)\s*(k|الف|ألف|آلاف|الاف)?').allMatches(t)) {
-    final raw = m.group(1)!.replaceAll(',', '');
+  for (final m in RegExp(r'(\d+(?:[,.]\s?\d{3})*(?:\.\d+)?)\s*(k(?![a-z])|الف|ألف|آلاف|الاف)?').allMatches(t)) {
+    final raw = m.group(1)!.replaceAll(RegExp(r'[,\s]'), '');
     if (raw.replaceAll('.', '').length > 7) continue; // رقم تليفون
     var n = double.tryParse(raw) ?? 0;
     if (m.group(2) != null) n *= 1000;
@@ -68,7 +68,7 @@ Obj? parseContactName(String n) {
   if ((p['types'] as List).isEmpty) return null;
   // «1bhk 40 Alvin» = 40 ألف في السنة
   if (numOf(p['budget']) == 0) {
-    final m = RegExp(r'(?:^|\s)(\d{2,3})(?:\s|$)').firstMatch(_digits(n));
+    final m = RegExp(r'(?:^|\s)(\d{2,3})(?:\s|$|,|max|k\b|الف|ألف)', caseSensitive: false).firstMatch(_digits(n));
     if (m != null) { p['budget'] = double.parse(m.group(1)!) * 1000; if (p['pay'] == 'any') p['pay'] = '3'; }
   }
   final name = n.split(RegExp(r'\s+')).where((w) {

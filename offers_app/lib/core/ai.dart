@@ -72,7 +72,7 @@ class Ai {
   }
 
   /// للأبديت التلقائي من الجروبات: أي صورة مش أبديت → []
-  static String get autoPrompt => 'لو الصورة دي مش جدول أو أبديت شقق/استديوهات للإيجار (صورة عادية، شخص، مكان، شات…) رجّع [] بس. ولو فيه أكتر من صورة فهي صفحات من نفس ملف الأبديت.\n\n$updatePrompt\n${areaRule(str(Store.I.cfg['areas']).isEmpty ? kAreas : str(Store.I.cfg['areas']))}';
+  static String get autoPrompt => 'أي صورة فيها أرقام شقق وأسعار إيجار تعتبر أبديت — حتى لو معمولة كإعلان بتصميم وصور فلل ولوجو. بس لو الصورة مفيهاش أسعار شقق خالص (صورة عادية، شخص، شات، صورة شقة من جوه…) رجّع [] بس. ولو فيه أكتر من صورة فهي صفحات من نفس ملف الأبديت.\n\n$updatePrompt\n${areaRule(str(Store.I.cfg['areas']).isEmpty ? kAreas : str(Store.I.cfg['areas']))}';
   static const kAreas = 'مدينة الرياض';
   static String areaRule(String areas) => '- وكمان في كل شقة حط "inArea": true لو فيلتها في المناطق دي: $areas ، و false لو مكتوب إنها في منطقة تانية (زي Shakhbot أو MBZ أو Bani Yas أو Khalifa City)، و null لو المنطقة مش مكتوبة خالص. (مدينة الرياض = Madinat Al Riyadh = Riyad City = Riyadh City = Al Riyadh City في أبوظبي. مدينة الشامخة Shamkha City وشخبوط ومدينة محمد بن زايد MBZ مناطق تانية = false — إلا لو مكتوب Riyadh City جنبها)';
 
