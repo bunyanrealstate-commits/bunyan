@@ -24,6 +24,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
   void initState() {
     super.initState(); WidgetsBinding.instance.addObserver(this);
     Store.I.addListener(_r);
+    Store.I.keep = AutoUpd.keepVilla;
     _wake();
   }
   void _r() { if (mounted) setState(() {}); }

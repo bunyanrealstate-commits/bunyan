@@ -128,8 +128,15 @@ void main() {
     AutoUpd.seenNames = ['Double A property', 'Vellast Property Management* (13 رسالة)'];
     expect(AutoUpd.companyFromText(vel, 'Double A property'), 'Vellast Property Management');
     expect(AutoUpd.groupFor(vc), 'Vellast Property Management*');
-    AutoUpd.applyRows('Double A property', [<String, dynamic>{'villa': 'Al-Farsi Villa', 'area': 'Riyadh City', 'no': '8', 'type': 'studio', 'p1': 33000}], img: 'x1', company: vc);
+    final row = [<String, dynamic>{'villa': 'Al-Farsi Villa', 'area': 'Riyadh City', 'no': '8', 'type': 'studio', 'p1': 33000}];
+    Store.I.cfg['groups'] = {'Double A property': 'Double A property'};
+    expect(AutoUpd.applyRows('Double A property', row, img: 'x0', company: vc), isEmpty); // Vellast مش مفعّلة → متجاهَلة
+    Store.I.cfg['groups'] = {'Double A property': 'Double A property', 'Vellast Property Management*': 'Vellast Property Management'};
+    AutoUpd.applyRows('Double A property', row, img: 'x1', company: vc);
     expect(str((Store.I.D['log'] as List).first['g']), 'Vellast Property Management*');
+    expect(AutoUpd.keepVilla({'auto': true, 'company': 'Kiev Real Estate'}), false);
+    expect(AutoUpd.keepVilla({'auto': true, 'company': 'Vellast Property Management'}), true);
+    Store.I.cfg['groups'] = {};
     AutoUpd.seenNames = [];
     final v = findVilla('Kiev Real Estate L.L.C', {'villa': 'Villa Madinat AL Riyad', 'area': 'Riyad'})!;
     expect(v['no'], '');

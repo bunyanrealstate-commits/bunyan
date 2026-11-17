@@ -51,7 +51,7 @@ class _ShotsState extends State<ShotsPage> {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(listenable: Store.I, builder: (context, _) {
-    final all = AutoUpd.log;
+    final all = AutoUpd.liveLog;
     final l = all.where((x) => shotKey(x).isNotEmpty && !str(x['m']).startsWith('⏭️') && (!onlyNew || x['same'] != true)).toList();
     final n = DateTime.now();
     bool isToday(Obj x) { final d = DateTime.tryParse(str(x['at'])); return d != null && d.year == n.year && d.month == n.month && d.day == n.day; }

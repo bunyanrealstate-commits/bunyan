@@ -130,7 +130,7 @@ object Auto {
             val ev0 = arr(c, "ev"); val ev = JSONArray()
             val mid = java.util.Calendar.getInstance().apply { set(java.util.Calendar.HOUR_OF_DAY, 0); set(java.util.Calendar.MINUTE, 0); set(java.util.Calendar.SECOND, 0) }.timeInMillis
             val lim = if (today) mid else System.currentTimeMillis() - 3 * 86400000L
-            for (i in 0 until ev0.length()) { val e = ev0.getJSONObject(i); if (e.getLong("t") > lim && (today || follows(c, e.getString("g")))) ev.put(e) }
+            for (i in 0 until ev0.length()) { val e = ev0.getJSONObject(i); if (e.getLong("t") > lim && follows(c, e.getString("g"))) ev.put(e) }
             if (today) ev.put(JSONObject().put("g", "").put("t", mid).put("anchor", true))
             if (ev.length() == 0) return 0
             val key = cfg(c).optString("key"); val prompt = cfg(c).optString("prompt")
@@ -150,7 +150,6 @@ object Auto {
                     var best: String? = null; var bd = Long.MAX_VALUE
                     for (i in 0 until ev.length()) { val e = ev.getJSONObject(i); if (e.has("doc") || e.has("anchor")) continue; val d = t - e.getLong("t"); if (d > -120000 && d < 900000 && Math.abs(d) < bd) { bd = Math.abs(d); best = e.getString("g") } }
                     // النهارده: صور واتساب الأعمال اللي ملهاش إشعار (وصلت قبل ما التطبيق يشتغل) — Gemini بيعرف لوحده لو مش أبديت
-                    if (best == null && today && t >= mid && (b.contains("Business", true) || b.contains("أعمال"))) best = ""
                     if (best != null) todo.add(Triple(id, t, best))
                 }
             }

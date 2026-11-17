@@ -19,9 +19,9 @@ class _VillasState extends State<VillasPage> {
   String q = '';
   @override
   Widget build(BuildContext context) => ListenableBuilder(listenable: Store.I, builder: (context, _) {
-        final vs = Store.I.villas.where((v) => q.isEmpty || '${v['name']} ${v['no']} ${v['company']} ${v['area']}'.toLowerCase().contains(q.toLowerCase())).toList()
+        final vs = Store.I.shown.where((v) => q.isEmpty || '${v['name']} ${v['no']} ${v['company']} ${v['area']}'.toLowerCase().contains(q.toLowerCase())).toList()
           ..sort((a, b) => '${a['name']} ${a['no']}'.compareTo('${b['name']} ${b['no']}'));
-        final all = Store.I.villas; final un = all.expand((v) => objs(v['units'])).toList();
+        final all = Store.I.shown; final un = all.expand((v) => objs(v['units'])).toList();
         return Scaffold(
           appBar: AppBar(title: Text('🏡 الفلل (${all.length})')),
           body: ListView(padding: const EdgeInsets.fromLTRB(14, 10, 14, 90), children: [

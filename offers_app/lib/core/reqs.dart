@@ -81,10 +81,10 @@ Obj? parseContactName(String n) {
 class Reqs {
   static List<Obj> get all => objs(Store.I.D['reqs']);
   static Obj? byId(String id) => all.where((r) => r['id'] == id).firstOrNull;
-  static List<String> get areas => {for (final v in Store.I.villas) if (str(v['area']).isNotEmpty) str(v['area'])}.toList();
+  static List<String> get areas => {for (final v in Store.I.shown) if (str(v['area']).isNotEmpty) str(v['area'])}.toList();
   static String key(Obj v, Obj u) => '${v['id']}/${u['id']}';
 
-  static List<Map<String, dynamic>> matches(Obj r) => Search.run(Store.I.villas, types: ((r['types'] as List?) ?? []).map(str).toSet(), pay: str(r['pay']).isEmpty ? 'any' : str(r['pay']), budget: numOf(r['budget']), tol: 10, q: str(r['area']), fur: r['fur'] is bool ? r['fur'] as bool : null);
+  static List<Map<String, dynamic>> matches(Obj r) => Search.run(Store.I.shown, types: ((r['types'] as List?) ?? []).map(str).toSet(), pay: str(r['pay']).isEmpty ? 'any' : str(r['pay']), budget: numOf(r['budget']), tol: 10, q: str(r['area']), fur: r['fur'] is bool ? r['fur'] as bool : null);
 
   /// شقق تناسبه ولسه مبعتهاش ولا شافها
   static List<Map<String, dynamic>> fresh(Obj r) {

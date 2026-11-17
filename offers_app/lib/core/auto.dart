@@ -137,6 +137,8 @@ class AutoUpd {
   }
 
   static List<Obj> get log => objs(Store.I.D['log']);
+  /// سجل الأبديت بتاع الشركات المفعّلة بس
+  static List<Obj> get liveLog => log.where((l) { final v = Store.I.villa(str(l['vid'])); return v != null ? keepVilla(v) : (groups.isEmpty || follows(str(l['g']))); }).toList();
 
   /// يقرا اللي اتجمع ويطبقه — بيرجع رسايل قصيرة باللي اتغير
   /// صفوف الأبديت → مجموعات حسب الفيلا (صورة واحدة ممكن يبقى فيها شقق من كذا فيلا)
@@ -164,14 +166,23 @@ class AutoUpd {
   static List<String> seenNames = [];
 
   /// الجروب بتاع الشركة دي (اسم الشركة مكتوب في اسم الجروب) — علشان صورة اتنسبت لجروب تاني بالوقت ترجع لجروبها
-  static String? groupFor(String company) {
+  static String? groupFor(String company, {bool any = false}) {
     final cs = _sig(company);
     if (cs.isEmpty) return null;
-    for (final k in {...groups.keys, ...seenNames.map(cleanGroup)}) {
+    for (final k in {...groups.keys, if (any) ...seenNames.map(cleanGroup)}) {
       final gs = {..._sig(k), ..._sig(companyOf(k))};
       if (cs.any(gs.contains)) return k;
     }
     return null;
+  }
+
+  /// الفيلا تبع شركة مفعّلة؟ (اللي ضفتها بإيدك بتظهر دايماً)
+  static bool keepVilla(Obj v) {
+    if (v['auto'] != true || groups.isEmpty) return true;
+    final cs = _sig(str(v['company']));
+    if (cs.isEmpty) return true;
+    for (final k in groups.keys) { final gs = {..._sig(k), ..._sig(companyOf(k))}; if (cs.any(gs.contains)) return true; }
+    return false;
   }
 
   /// الشركة من الكلام المكتوب في الصورة نفسها (اللوجو/الاسم) — علشان صورة شركة متتحطش باسم جروب تاني
@@ -203,6 +214,8 @@ class AutoUpd {
     if (company.isNotEmpty && !_sig(company).any((w) => _sig(companyOf(g)).contains(w) || _sig(g).contains(w))) {
       final own = groupFor(company);
       if (own != null) { g = own; company = companyOf(own); }
+      // شركة ليها جروب بس مش مفعّل → متهمناش
+      else if (groupFor(company, any: true) != null) { return []; }
     } else if (company.isNotEmpty) {
       company = companyOf(g);
     }

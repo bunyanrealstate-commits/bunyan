@@ -17,14 +17,14 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(listenable: Store.I, builder: (context, _) {
-        final un = Store.I.villas.expand((v) => objs(v['units'])).toList();
+        final un = Store.I.shown.expand((v) => objs(v['units'])).toList();
         final avail = un.where((u) => u['avail'] != false).length;
         final fresh = Reqs.newFor();
         final now = DateTime.now();
         final soon = Reqs.all.where((r) { final w = DateTime.tryParse(str(r['when'])); return Reqs.open(r) && w != null && w.difference(now).inDays <= 7 && w.difference(now).inDays >= -3; }).toList();
         final due = Reqs.all.where(Reqs.dueFollow).toList();
         bool today(Obj x) { final d = DateTime.tryParse(str(x['at'])); return d != null && d.year == now.year && d.month == now.month && d.day == now.day; }
-        final ups = AutoUpd.log.where((x) => today(x) && x['same'] != true && !str(x['m']).startsWith('⏭️')).toList();
+        final ups = AutoUpd.liveLog.where((x) => today(x) && x['same'] != true && !str(x['m']).startsWith('⏭️')).toList();
         final waiting = Reqs.all.where((r) => Reqs.open(r)).length;
         final sug = Sug.count();
         final deals = objs(Store.I.D['deals']);

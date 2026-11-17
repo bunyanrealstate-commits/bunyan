@@ -20,6 +20,9 @@ class Store extends ChangeNotifier {
   String backupMsg = '';
 
   List<Obj> get villas => objs(D['villas']);
+  /// الفلل اللي تظهر: بتاعة الشركات المفعّلة بس (اللي اتقرت من جروب مش مفعّل بتستخبى)
+  bool Function(Obj)? keep;
+  List<Obj> get shown => keep == null ? villas : villas.where(keep!).toList();
   Obj? villa(String id) => villas.where((v) => v['id'] == id).firstOrNull;
   bool get linked => str(cfg['token']).isNotEmpty && str(cfg['repo']).isNotEmpty;
   String get gemKey { final g = cfg['g']; if (g is Map) return str(g['key']); final s = str(g); if (s.startsWith('{')) { try { return str((jsonDecode(s) as Map)['key']); } catch (_) {} } return s.startsWith('AIza') ? s : ''; }
@@ -90,6 +93,8 @@ class Store extends ChangeNotifier {
       cfg['mig_vel2'] = true; await saveCfg();
       await save();
     }
+    // مرة واحدة: الشركات اللي أسامه مفعّلها بس — «تابع كل الجروبات» اتلغى
+    if (cfg['mig_all0'] != true) { cfg['allGroups'] = false; cfg['mig_all0'] = true; await saveCfg(); }
     loaded = true; notifyListeners();
     if (villas.isEmpty && linked) await restore();
   }

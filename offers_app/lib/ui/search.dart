@@ -21,7 +21,7 @@ class _SearchState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(listenable: Store.I, builder: (context, _) {
-        final res = Search.run(Store.I.villas, types: types, pay: pay, budget: numOf(bc.text), tol: tol, q: qc.text, fur: fur);
+        final res = Search.run(Store.I.shown, types: types, pay: pay, budget: numOf(bc.text), tol: tol, q: qc.text, fur: fur);
         final sel = res.where((x) => picked.contains('${(x['v'] as Obj)['id']}/${(x['u'] as Obj)['id']}')).toList();
         return Scaffold(
           appBar: AppBar(title: const Text('🔎 العميل عايز إيه؟')),
@@ -45,7 +45,7 @@ class _SearchState extends State<SearchPage> {
               TextField(controller: qc, decoration: const InputDecoration(labelText: 'منطقة / فيلا / شركة', prefixIcon: Icon(Icons.search)), onChanged: (_) => setState(() {})),
               Align(alignment: AlignmentDirectional.centerStart, child: FilterChip(label: Text('📄 ضيف الشروط (تأمين/رسوم) في الرسالة', style: TextStyle(color: terms ? Colors.white : kInk, fontSize: 12.5)), selected: terms, showCheckmark: false, onSelected: (b) => setState(() => terms = b))),
             ]),
-            Padding(padding: const EdgeInsets.symmetric(vertical: 10), child: Text(res.isEmpty ? (Store.I.villas.isEmpty ? 'لسه مفيش فلل — ضيفها من تبويب «الفلل»' : 'مفيش حاجة متاحة بالمواصفات دي — جرّب «الدفع: الكل» أو كبّر «السماح في السعر»') : '${res.length} شقة متاحة — علّم اللي عايز تبعته', style: const TextStyle(fontWeight: FontWeight.w700, color: kMuted))),
+            Padding(padding: const EdgeInsets.symmetric(vertical: 10), child: Text(res.isEmpty ? (Store.I.shown.isEmpty ? 'لسه مفيش فلل — ضيفها من تبويب «الفلل»' : 'مفيش حاجة متاحة بالمواصفات دي — جرّب «الدفع: الكل» أو كبّر «السماح في السعر»') : '${res.length} شقة متاحة — علّم اللي عايز تبعته', style: const TextStyle(fontWeight: FontWeight.w700, color: kMuted))),
             for (final x in res) _row(x),
           ]),
           floatingActionButton: sel.isEmpty || SendQ.I.active ? null : Row(mainAxisSize: MainAxisSize.min, children: [FloatingActionButton.small(heroTag: 'lnk', tooltip: 'لينك عرض', onPressed: () => _link(sel), child: const Icon(Icons.link)), const SizedBox(width: 8), FloatingActionButton.extended(heroTag: 'snd', onPressed: () => _send(sel), backgroundColor: const Color(0xFF25D366), icon: const Icon(Icons.send, color: Colors.white), label: Text('ابعت ${sel.length} للعميل', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)))]),
