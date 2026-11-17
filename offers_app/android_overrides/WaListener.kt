@@ -191,7 +191,12 @@ object Auto {
     /** رسالة خاصة من عميل: نحفظها، ولو شكلها طلب شقة نبلّغك (من غير ما نرد على حد) */
     @Synchronized fun dm(c: Context, sbn: StatusBarNotification, ex: android.os.Bundle) {
         if (!cfg(c).optBoolean("dm")) return
+        // إشعارات الواتساب نفسه (Sending video / Downloading…) مش رسايل عملاء
+        if (sbn.isOngoing || (sbn.notification.flags and Notification.FLAG_ONGOING_EVENT) != 0 || sbn.notification.category == Notification.CATEGORY_PROGRESS || sbn.notification.category == Notification.CATEGORY_SERVICE) return
         val name = ex.getCharSequence("android.title")?.toString()?.let { clean(it) } ?: return
+        if (name.equals("WhatsApp", true) || name.equals("WhatsApp Business", true) || name.contains("واتساب")) return
+        val tx0 = ex.getCharSequence("android.text")?.toString() ?: ""
+        if (Regex("^(Sending|Downloading|Uploading|جار|جارٍ)", RegexOption.IGNORE_CASE).containsMatchIn(tx0.trim()) && ex.getParcelableArray("android.messages") == null) return
         var phone = (sbn.notification.shortcutId ?: "").substringBefore("@").filter { it.isDigit() }
         if (phone.length < 8) {
             try { @Suppress("DEPRECATION") ex.getParcelableArrayList<android.os.Parcelable>("android.people.list")?.forEach { p ->

@@ -28,12 +28,15 @@ String _dt(String iso) {
   return '${d.day}/${d.month} $t';
 }
 
+String reqName(Obj r) => str(r['n']).isNotEmpty ? str(r['n']) : (str(r['cn']).isNotEmpty ? str(r['cn']) : '+${str(r['p'])}');
+
 String reqSummary(Obj r) {
   final tl = ((r['types'] as List?) ?? []).map(str).toSet();
   final fur = r['fur'] == true ? 'مفروش' : (r['fur'] == false ? 'فاضي' : '');
   final ts = tl.where((t) => !(t == '1bk2b' && tl.contains('1bk')) && !(t == '2bk2b' && tl.contains('2bk'))).map(typeName).join(' / ');
   final pay = {'mo': 'شهري', '1': 'دفعة واحدة', '3': '3 دفعات'}[str(r['pay'])] ?? '';
-  return [if (ts.isNotEmpty) ts, if (fur.isNotEmpty) fur, if (pay.isNotEmpty) pay, if (numOf(r['budget']) > 0) '${money(numOf(r['budget']))} درهم', if (str(r['area']).isNotEmpty) str(r['area'])].join(' • ');
+  final w = DateTime.tryParse(str(r['when']));
+  return [if (ts.isNotEmpty) ts, if (fur.isNotEmpty) fur, if (w != null) '📅 من ${w.day}/${w.month}', if (pay.isNotEmpty) pay, if (numOf(r['budget']) > 0) '${money(numOf(r['budget']))} درهم', if (str(r['area']).isNotEmpty) str(r['area'])].join(' • ');
 }
 
 /// 👥 العملاء: الطلبات الجديدة، اللي محتاجين متابعة، المعاينات، واللي نزلتلهم شقق جديدة
@@ -49,7 +52,9 @@ class ReqsPage extends StatelessWidget {
         final views = Reqs.views.where((v) => (DateTime.tryParse(str(v['at'])) ?? DateTime(2000)).isAfter(now.subtract(const Duration(hours: 2)))).toList()..sort((a, b) => str(a['at']).compareTo(str(b['at'])));
         final fid = fresh.map((r) => r['id']).toSet(), did = due.map((r) => r['id']).toSet();
         final rest = all.where((r) => Reqs.open(r) && r['st'] != 'new' && r['st'] != 'wait' && !did.contains(r['id']) && !fid.contains(r['id'])).toList();
-        final waiting = all.where((r) => Reqs.open(r) && r['st'] == 'wait' && !fid.contains(r['id'])).toList();
+        final soon = all.where((r) { final w = DateTime.tryParse(str(r['when'])); return Reqs.open(r) && w != null && w.difference(DateTime.now()).inDays <= 7 && w.difference(DateTime.now()).inDays >= -3; }).toList();
+        final sid = soon.map((r) => r['id']).toSet();
+        final waiting = all.where((r) => Reqs.open(r) && r['st'] == 'wait' && !fid.contains(r['id']) && !sid.contains(r['id'])).toList();
         final done = all.where((r) => !Reqs.open(r)).toList();
         final dmOn = Store.I.cfg['dm'] == true;
         return Scaffold(
@@ -67,6 +72,7 @@ class ReqsPage extends StatelessWidget {
               ]));
             }),
             if (fresh.isNotEmpty) ..._sec(context, '🆕 نزلتلهم شقق جديدة تناسبهم', fresh, (r) => '${Reqs.fresh(r).length} شقة جديدة'),
+            if (soon.isNotEmpty) ..._sec(context, '📅 هيسكنوا قريب — ابعتلهم المتاح', soon, (r) => '${Reqs.matches(r).length} شقة تناسبه دلوقتي'),
             if (nw.isNotEmpty) ..._sec(context, '📩 طلبات جديدة', nw, (r) => '${Reqs.matches(r).length} شقة تناسبه • ${_ago(str(r['at']))}'),
             if (due.isNotEmpty) ..._sec(context, '🔔 محتاجين متابعة', due, (r) => 'بعتله ${((r['sent'] as List?) ?? []).length} شقة ${_ago(str(r['sentAt']))}'),
             if (views.isNotEmpty) ...[
@@ -87,7 +93,7 @@ class ReqsPage extends StatelessWidget {
 
   Widget _tile(BuildContext context, Obj r, String sub) => Card(child: ListTile(
         leading: CircleAvatar(backgroundColor: const Color(0xFFD5EEF0), child: Text(str(r['n']).isEmpty ? '#' : str(r['n']).characters.first, style: const TextStyle(fontWeight: FontWeight.w800, color: kInk))),
-        title: Text(str(r['n']).isEmpty ? '+${str(r['p'])}' : str(r['n']), style: const TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(reqName(r), style: const TextStyle(fontWeight: FontWeight.w800)),
         subtitle: Text('${reqSummary(r)}\n$sub', style: const TextStyle(fontSize: 12.5)),
         isThreeLine: true,
         trailing: const Icon(Icons.chevron_left),
@@ -182,7 +188,7 @@ class _ReqState extends State<ReqPage> {
         final sel = res.where((x) => picked.contains(Reqs.key(x['v'] as Obj, x['u'] as Obj))).toList();
         final en = r['lang'] == 'en';
         return Scaffold(
-          appBar: AppBar(title: Text(str(r['n']).isEmpty ? '+${str(r['p'])}' : str(r['n'])), actions: [
+          appBar: AppBar(title: Text(reqName(r)), actions: [
             IconButton(tooltip: 'امسح', icon: const Icon(Icons.delete_outline, color: kRed), onPressed: () async { if (await confirmDlg(context, 'تمسح الطلب ده؟', ok: 'امسح')) { (Store.I.D['reqs'] as List).remove(r); await Store.I.save(); if (context.mounted) Navigator.pop(context); } }),
           ]),
           body: ListView(padding: const EdgeInsets.fromLTRB(14, 8, 14, 110), children: [

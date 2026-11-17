@@ -76,6 +76,12 @@ class Ai {
   static const kAreas = 'مدينة الرياض';
   static String areaRule(String areas) => '- وكمان في كل شقة حط "inArea": true لو فيلتها في المناطق دي: $areas ، و false لو مكتوب إنها في منطقة تانية (زي Shakhbot أو MBZ أو Bani Yas أو Khalifa City)، و null لو المنطقة مش مكتوبة خالص. (مدينة الرياض = Madinat Al Riyadh = Riyad City = Riyadh City = Al Riyadh City في أبوظبي. مدينة الشامخة Shamkha City وشخبوط ومدينة محمد بن زايد MBZ مناطق تانية = false — إلا لو مكتوب Riyadh City جنبها)';
 
+  /// كلام رسالة اللوكيشن ↔ أنهي فيلا (أسماء عربي/إنجليزي) — بيرجع الـ id أو فاضي
+  static Future<String> matchVilla(String text, List<String> villas) async {
+    final t = await _ask('رسالة في جروب شركة عقارات فيها لينك لوكيشن ومكتوب جنبه:\n"$text"\n\nدي فلل الشركة (id: الاسم):\n${villas.join('\n')}\n\nاللوكيشن ده لأنهي فيلا؟ قارن الأسماء حتى لو واحد عربي والتاني إنجليزي (الظاهري = Al Dhaheri، الهاجري = Al Hajeri) ورقم الفيلا. لو مش متأكد رجّع فاضي. رجّع JSON بس: {"id":"..."}', const [], json: true);
+    try { return str((jsonDecode(t.substring(t.indexOf('{'), t.lastIndexOf('}') + 1)) as Map)['id']); } catch (_) { return ''; }
+  }
+
   /// صفحات PDF (صور) → صفوف
   static Future<List<Obj>> readUpdatePages(List<Uint8List> imgs, {bool auto = false}) async => parseRows(await _ask(auto ? autoPrompt : updatePrompt, imgs));
 

@@ -106,6 +106,9 @@ void main() {
   test('إحداثيات من لينك الخريطة', () {
     expect(Geo.parse('https://www.google.com/maps/place/x/@24.3511,54.6012,17z'), [24.3511, 54.6012]);
     expect(Geo.parse('https://maps.google.com/?q=24.30,54.60'), [24.30, 54.60]);
+    expect(Geo.parse('🔗 24°20\'07.3"N 54°45\'17.5"E | https://maps.app.goo.gl/x'), [24.335361, 54.754861]);
+    expect(villaNoOf('📍فيلا رقم ١١٢ مدينة الرياض 📍'), '112');
+    expect(villaNoOf('🔗 24°19\'14.7"N 54°47\'24.8"E | https://maps.app.goo.gl/LM8 فيلا الهاملي حوض 29 رقم 138 Villa Alhamli Zone 29 No 138'), '138');
     expect(Geo.dist([24.3511, 54.6012], [24.3520, 54.6012]).round(), 100);
   });
   test('فهم طلب العميل', () {
@@ -121,6 +124,12 @@ void main() {
     c = parseContactName('1bhk empty 4000 Ali Hassan')!;
     expect(c['types'], containsAll(['1bk'])); expect(c['fur'], false); expect(c['name'], 'Ali Hassan');
     expect(parseContactName('Hkeem Uae'), isNull);
+    c = parseContactName('Studio Fur 2800 December')!;
+    expect(c['fur'], true); expect(c['budget'], 2800.0); expect(c['name'], ''); expect(str(c['when']).substring(5, 7), '12');
+    c = parseContactName('1bhk 40 Alvin')!;
+    expect(c['budget'], 40000.0); expect(c['name'], 'Alvin'); expect(c['pay'], '3');
+    c = parseContactName('1bhk 40 يفضل 2 حمام')!;
+    expect(c['types'], containsAll(['1bk', '1bk2b'])); expect(c['budget'], 40000.0); expect(c['name'], '');
     p = parseRequest('call me 0501234567');
     expect(p['isReq'], false);
   });

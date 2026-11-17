@@ -37,6 +37,14 @@ class Store extends ChangeNotifier {
       cfg['mig_yl1'] = true; await saveCfg();
       if (l.length != before) await save();
     }
+    // مرة واحدة: طلبات غلط اتعملت من إشعارات الواتساب نفسه (Sending video…)
+    if (cfg['mig_req1'] != true) {
+      final l = (D['reqs'] as List?) ?? [];
+      final before = l.length;
+      l.removeWhere((r) { final m = r as Map; final n = '${m['n']}'.toLowerCase(); return n == 'whatsapp business' || n == 'whatsapp' || '${m['txt']}'.trimLeft().startsWith('Sending'); });
+      cfg['mig_req1'] = true; await saveCfg();
+      if (l.length != before) await save();
+    }
     loaded = true; notifyListeners();
     if (villas.isEmpty && linked) await restore();
   }

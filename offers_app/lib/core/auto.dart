@@ -58,6 +58,9 @@ String applyUpdate(Obj v, List<Obj> rows, {bool missingBooked = true, bool auto 
 bool _same(String a, String b) { final x = nkey(a).toLowerCase(), y = nkey(b).toLowerCase(); return x.isNotEmpty && y.isNotEmpty && (x.contains(y) || y.contains(x)); }
 
 String villaNoOf(String s) {
+  s = s.replaceAllMapped(RegExp('[٠-٩]'), (m) => '${'٠١٢٣٤٥٦٧٨٩'.indexOf(m[0]!)}');
+  s = s.replaceAll(RegExp(r'\d+°[\d.\x27"]+\s*[NSEW]', caseSensitive: false), ' '); // الإحداثيات مش رقم فيلا
+  s = s.replaceAll(RegExp(r'https?://\S+'), ' ');
   final m = RegExp(r'\bno\.?\s*[-:#]?\s*([0-9]+)', caseSensitive: false).firstMatch(s) ?? RegExp(r'villa\s*(?:no\.?|#|:|-)?\s*([0-9]+[a-z]?)', caseSensitive: false).firstMatch(s) ?? RegExp(r'فيلا\s*(?:رقم)?\s*([0-9]+)').firstMatch(s);
   if (m != null) return m.group(1)!;
   final all = RegExp(r'[0-9]+').allMatches(s).toList();

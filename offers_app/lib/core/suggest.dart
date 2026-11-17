@@ -7,6 +7,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:photo_manager/photo_manager.dart';
+import 'ai.dart';
 import 'auto.dart';
 import 'model.dart';
 import 'native.dart';
@@ -14,7 +15,14 @@ import 'store.dart';
 
 class Geo {
   static List<double>? parse(String s) {
-    s = Uri.decodeFull(s);
+    try { s = Uri.decodeFull(s); } catch (_) {}
+    // 24°20'07.3"N 54°45'17.5"E
+    final dms = RegExp('(\\d{1,3})°\\s*(\\d{1,2})[\x27′]\\s*([\\d.]+)["″]?\\s*([NS])[\\s,+]*(\\d{1,3})°\\s*(\\d{1,2})[\x27′]\\s*([\\d.]+)["″]?\\s*([EW])', caseSensitive: false).firstMatch(s);
+    if (dms != null) {
+      double f(int i) => double.parse(dms.group(i)!) + double.parse(dms.group(i + 1)!) / 60 + double.parse(dms.group(i + 2)!) / 3600;
+      final la = f(1) * (dms.group(4)!.toUpperCase() == 'S' ? -1 : 1), lo = f(5) * (dms.group(8)!.toUpperCase() == 'W' ? -1 : 1);
+      return [double.parse(la.toStringAsFixed(6)), double.parse(lo.toStringAsFixed(6))];
+    }
     for (final r in [RegExp(r'@(-?\d{1,3}\.\d+),\s*(-?\d{1,3}\.\d+)'), RegExp(r'[?&](?:q|ll|query|center|destination)=(-?\d{1,3}\.\d+),\s*\+?(-?\d{1,3}\.\d+)'), RegExp(r'!3d(-?\d{1,3}\.\d+)!4d(-?\d{1,3}\.\d+)'), RegExp(r'search/(-?\d{1,3}\.\d+),\s*\+?(-?\d{1,3}\.\d+)')]) {
       final m = r.firstMatch(s);
       if (m != null) { final a = double.parse(m.group(1)!), b = double.parse(m.group(2)!); if (a.abs() <= 90 && b.abs() <= 180) return [a, b]; }
@@ -89,6 +97,7 @@ class Sug {
 
   /// الفيلا اللي اللينك ده غالباً بتاعها (من رقم الفيلا في الرسالة + شركة الجروب)
   static Obj? villaFor(Obj s) {
+    if (s['vid'] != null) { final v = Store.I.villa(str(s['vid'])); if (v != null) return v; }
     final no = villaNoOf(str(s['txt']).replaceAll(str(s['url']), ''));
     if (no.isNotEmpty) { final v = findVilla(AutoUpd.companyOf(str(s['g'])), {'villa': 'villa $no'}, create: false); if (v != null) return v; }
     return villaByTime(s);
@@ -107,12 +116,30 @@ class Sug {
   }
 
   /// 📍 اللوكيشن اللي في الجروبات بيتحط لوحده للفيلا لو معروفة ومعندهاش لوكيشن — والباقي يفضل اقتراح
+  /// اللينك اللي مكتوب جنبه اسم الفيلا بس (زي «فيلا الظاهري») → Gemini يطابقه بفلل نفس الشركة
+  static Future<void> _nameMatch() async {
+    if (Store.I.testMode || Store.I.gemKey.isEmpty) return;
+    var calls = 0;
+    for (final s in locs.where((s) => s['st'] == null && s['vid'] == null)) {
+      if (calls >= 8) break;
+      final comp = AutoUpd.companyOf(str(s['g']));
+      final cands = Store.I.villas.where((v) => str(v['loc']).isEmpty && (str(v['company']).toLowerCase().contains(comp.toLowerCase().split(' ').first) || comp.toLowerCase().contains(str(v['company']).toLowerCase().split(' ').first))).toList();
+      if (cands.isEmpty || s['tried'] == cands.length) continue;
+      s['tried'] = cands.length; calls++;
+      final id = await Ai.matchVilla(str(s['txt']).replaceAll(str(s['url']), ''), [for (final v in cands) '${v['id']}: ${str(v['name'])} ${str(v['no'])} — ${str(v['area'])}']);
+      if (id.isNotEmpty && cands.any((v) => v['id'] == id)) s['vid'] = id;
+    }
+  }
+
   static Future<List<String>> autoLocs() async {
     final out = <String>[];
+    try { await _nameMatch(); } catch (_) {}
     for (final s in locs.where((s) => s['st'] == null)) {
       final v = villaFor(s);
       if (v == null || str(v['loc']).isNotEmpty) continue;
       v['loc'] = s['url']; v.remove('ll'); s['st'] = 'auto';
+      final ll = Geo.parse(str(s['txt']));
+      if (ll != null) { v['ll'] = ll; v['llOf'] = v['loc']; }
       out.add('📍 ${str(v['name'])} ${str(v['no'])}: اتحط اللوكيشن من ${str(s['g'])}');
     }
     if (out.isNotEmpty) {
