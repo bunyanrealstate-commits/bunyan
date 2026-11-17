@@ -27,6 +27,7 @@ class MainActivity : FlutterActivity() {
                         val i = Intent(Intent.ACTION_SEND).apply { type = "video/*"; putExtra(Intent.EXTRA_STREAM, Uri.parse(call.argument<String>("uri") ?: "")); putExtra(Intent.EXTRA_TEXT, call.argument<String>("text") ?: ""); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK) }
                         if (has("com.instagram.android")) { i.setPackage("com.instagram.android"); startActivity(i); res.success("ig") } else { startActivity(Intent.createChooser(i, "انشر")); res.success("share") }
                     } catch (e: Exception) { res.success("fail") } }
+                "findImg" -> { val b = call.argument<ByteArray>("bytes") ?: ByteArray(0); Thread { val r = try { Auto.findImg(applicationContext, b).toString() } catch (e: Exception) { "[]" }; runOnUiThread { res.success(r) } }.start() }
                 "locTake" -> { val r = Auto.arr(this, "locs").toString(); Auto.put(this, "locs", "[]"); res.success(r) }
                 "dmTake" -> { val r = Auto.arr(this, "dm").toString(); Auto.put(this, "dm", "[]"); res.success(r) }
                 "dmOn" -> { val cf = Auto.cfg(this); cf.put("dm", call.argument<Boolean>("on") ?: false); Auto.put(this, "cfg", cf); res.success(true) }

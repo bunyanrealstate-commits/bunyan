@@ -108,9 +108,9 @@ object Auto {
         last.put(g, lt); seen.put(g, s)
         put(c, "seen", seen); put(c, "last", last)
         // نحتفظ بصور كل الجروبات 3 أيام — لو اخترت جروب بعدين يقرا صوره اللي فاتت
-        val keep = JSONArray(); val old = System.currentTimeMillis() - 3 * 86400000L
+        val keep = JSONArray(); val old = System.currentTimeMillis() - 21 * 86400000L
         for (i in 0 until ev.length()) { val e = ev.getJSONObject(i); if (e.getLong("t") > old) keep.put(e) }
-        while (keep.length() > 3000) keep.remove(0)
+        while (keep.length() > 6000) keep.remove(0)
         put(c, "ev", keep)
         if (got && follows(c, g)) {
             val app = c.applicationContext
@@ -125,7 +125,8 @@ object Auto {
         var n = 0
         try {
             val ev0 = arr(c, "ev"); val ev = JSONArray()
-            for (i in 0 until ev0.length()) { val e = ev0.getJSONObject(i); if (follows(c, e.getString("g"))) ev.put(e) }
+            val lim = System.currentTimeMillis() - 3 * 86400000L
+            for (i in 0 until ev0.length()) { val e = ev0.getJSONObject(i); if (e.getLong("t") > lim && follows(c, e.getString("g"))) ev.put(e) }
             if (ev.length() == 0) return 0
             val key = cfg(c).optString("key"); val prompt = cfg(c).optString("prompt")
             if (key.isEmpty() || prompt.isEmpty()) return 0
@@ -303,6 +304,50 @@ object Auto {
             val b = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(c, "app") else @Suppress("DEPRECATION") Notification.Builder(c)
             nm.notify(4242, b.setSmallIcon(android.R.drawable.stat_sys_download_done).setContentTitle("⬆️ نسخة جديدة من عروض الشقق").setContentText("دوس علشان تتحدث").setContentIntent(pi).setAutoCancel(true).build())
         } catch (_: Exception) {}
+    }
+
+    // ===== 🔍 الصورة دي جت من أنهي جروب؟ =====
+    /** بصمة شكل الصورة (dHash 64 بت) — بتلاقي نفس الصورة حتى لو اتضغطت أو اتعملها فوروارد */
+    fun dhash(bytes: ByteArray): Long? = try {
+        val o = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, o)
+        var smp = 1; while (o.outWidth / (smp * 2) >= 64 && o.outHeight / (smp * 2) >= 64) smp *= 2
+        val b0 = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, android.graphics.BitmapFactory.Options().apply { inSampleSize = smp })
+        val b = android.graphics.Bitmap.createScaledBitmap(b0, 9, 8, true)
+        var h = 0L; var bit = 0
+        fun g(x: Int, y: Int): Int { val p = b.getPixel(x, y); return ((p shr 16 and 255) * 299 + (p shr 8 and 255) * 587 + (p and 255) * 114) / 1000 }
+        for (y in 0 until 8) for (x in 0 until 8) { if (g(x, y) > g(x + 1, y)) h = h or (1L shl bit); bit++ }
+        h
+    } catch (_: Exception) { null }
+
+    /** يدوّر على الصورة في صور الواتساب (عادي وأعمال) آخر 21 يوم ويقول جت من أنهي جروب وإمتى */
+    fun findImg(c: Context, target: ByteArray): JSONArray {
+        val out = JSONArray()
+        val th = dhash(target) ?: return out
+        val ev = arr(c, "ev"); val cache = obj(c, "dh")
+        val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        val since = System.currentTimeMillis() / 1000 - 21 * 86400
+        c.contentResolver.query(uri, arrayOf(MediaStore.Images.Media._ID, MediaStore.Images.Media.DATE_ADDED, MediaStore.Images.Media.BUCKET_DISPLAY_NAME),
+            MediaStore.Images.Media.DATE_ADDED + " >= ?", arrayOf(since.toString()), MediaStore.Images.Media.DATE_ADDED + " DESC")?.use { k ->
+            while (k.moveToNext()) {
+                val id = k.getLong(0); val t = k.getLong(1) * 1000; val bk = k.getString(2) ?: ""
+                if (!bk.contains("WhatsApp", true)) continue
+                var h: Long? = if (cache.has(id.toString())) cache.getLong(id.toString()) else null
+                if (h == null) {
+                    val bytes = try { c.contentResolver.openInputStream(ContentUris.withAppendedId(uri, id))?.use { it.readBytes() } } catch (_: Exception) { null } ?: continue
+                    h = dhash(bytes) ?: continue
+                    cache.put(id.toString(), h)
+                }
+                val d = java.lang.Long.bitCount(h xor th)
+                if (d > 8) continue
+                var g = ""; var bd = Long.MAX_VALUE
+                for (i in 0 until ev.length()) { val e = ev.getJSONObject(i); val dd = t - e.getLong("t"); if (dd > -120000 && dd < 900000 && Math.abs(dd) < bd) { bd = Math.abs(dd); g = e.getString("g") } }
+                out.put(JSONObject().put("id", id).put("t", t).put("g", g).put("d", d).put("biz", bk.contains("Business", true) || bk.contains("أعمال")))
+                if (out.length() >= 20) break
+            }
+        }
+        trim(cache, 5000); put(c, "dh", cache)
+        return out
     }
 
     fun md5(b: ByteArray) = java.security.MessageDigest.getInstance("MD5").digest(b).joinToString("") { "%02x".format(it) }
