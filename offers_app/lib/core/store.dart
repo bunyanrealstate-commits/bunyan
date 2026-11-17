@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'model.dart';
+import 'reqs.dart';
 
 class Store extends ChangeNotifier {
   static final I = Store._();
@@ -44,6 +45,13 @@ class Store extends ChangeNotifier {
       l.removeWhere((r) { final m = r as Map; final n = '${m['n']}'.toLowerCase(); return n == 'whatsapp business' || n == 'whatsapp' || '${m['txt']}'.trimLeft().startsWith('Sending'); });
       cfg['mig_req1'] = true; await saveCfg();
       if (l.length != before) await save();
+    }
+    // مرة واحدة: العملاء = أسامي جهات الاتصال اللي بصيغة «Studio Fur 3500 Suzanne» بس — والباقي يتلغى
+    if (cfg['mig_req2'] != true) {
+      final l = (D['reqs'] as List?) ?? [];
+      l.removeWhere((r) { final m = r as Map; return m['src'] != 'contact' || parseContactName('${m['cn'] ?? m['txt'] ?? ''}') == null; });
+      cfg['dm'] = false; cfg['mig_req2'] = true; await saveCfg();
+      await save();
     }
     loaded = true; notifyListeners();
     if (villas.isEmpty && linked) await restore();

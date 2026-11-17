@@ -61,7 +61,6 @@ class ReqsPage extends StatelessWidget {
           appBar: AppBar(title: const Text('👥 العملاء')),
           body: ListView(padding: const EdgeInsets.fromLTRB(14, 8, 14, 100), children: [
             Card(child: ListTile(leading: const Icon(Icons.contacts_outlined, color: kAc), title: Text(Store.I.cfg['ctImport'] == true ? '📇 العملاء من جهات الاتصال (${all.where((r) => r['src'] == 'contact').length})' : '📇 هات العملاء من أسامي جهات الاتصال', style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('أي اسم زي «Studio Fur 3500 Suzanne» أو «1bhk empty 4000 Ali» بيتحول لطلب، ولما ينزل أبديت يناسبه تتنبّه'), onTap: () => _import(context))),
-            if (!dmOn) Card(color: const Color(0xFFFFF4E0), child: SwitchListTile(value: false, onChanged: (_) => _dm(context, true), title: const Text('📩 اقرا طلبات العملاء من الواتساب', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('العميل يكتب «عايز غرفة وصالة 3500» ← يجيلك إشعار والشقق المناسبة جاهزة. مفيش حاجة بتتبعت غير لما تدوس.'))),
             _Today(nw: nw.length, due: due.length, views: views.where((v) => _dt(str(v['at'])).startsWith('النهارده')).length, fresh: fresh.length),
             Builder(builder: (context) {
               final n = DateTime.now();

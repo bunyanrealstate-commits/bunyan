@@ -62,6 +62,8 @@ Obj parseRequest(String text, {List<String> areas = const []}) {
 
 /// اسم جهة الاتصال زي «Studio Fur 3500 Suzanne» → طلب: استديو مفروش لحد 3500، والاسم Suzanne
 Obj? parseContactName(String n) {
+  // بس الأسامي اللي بتبدأ بالنوع وفيها ميزانية (زي «Studio Fur 3500 Suzanne» / «1bhk 40 Alvin») — دي عملاء أسامه
+  if (!RegExp(r'^\s*(studio|stud|ستو?ديو|استو?ديو|[1-4]\s*bhk|[1-4]\s*b/?r|[1-4]\s*bk|room)', caseSensitive: false).hasMatch(n) || !RegExp(r'[0-9٠-٩]{2,}').hasMatch(n)) return null;
   final p = parseRequest(n);
   if ((p['types'] as List).isEmpty) return null;
   // «1bhk 40 Alvin» = 40 ألف في السنة
