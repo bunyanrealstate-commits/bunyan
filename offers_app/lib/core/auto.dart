@@ -3,7 +3,11 @@
 /// وهنا بنطبقها على الفيلا الصح (أو نعمل فيلا جديدة) ونسجل اللي اتغير.
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'dart:io' show File;
+import 'dart:typed_data';
 import 'ai.dart';
+import 'media.dart';
+import 'ocrparse.dart';
 import 'model.dart';
 import 'native.dart';
 import 'store.dart';
@@ -144,7 +148,7 @@ class AutoUpd {
 
   /// يطبق صورة أبديت (كل فيلا لوحدها) ويسجلها — بيرجع الرسايل اللي فيها تغيير
   static bool get onlyArea => Store.I.cfg['onlyArea'] != false;
-  static List<String> applyRows(String g, List<Obj> rows, {String img = '', List files = const [], bool same = false}) {
+  static List<String> applyRows(String g, List<Obj> rows, {String img = '', List files = const [], bool same = false, String how = ''}) {
     final out = <String>[];
     final l = (Store.I.D['log'] as List?) ?? (Store.I.D['log'] = <dynamic>[]);
     final skipped = <String>[];
@@ -167,7 +171,7 @@ class AutoUpd {
         msg = quiet ? '✓ ${str(v['name'])} ${str(v['no'])}: نفس الأبديت — مفيش جديد' : '${v['auto'] == true && objs(v['units']).length == good.length ? '🆕' : '📥'} ${str(v['name'])} ${str(v['no'])}: $ch${str(v['loc']).isEmpty ? ' • ⚠️ ضيف اللوكيشن' : ''}';
       }
       if (!quiet) out.add(msg);
-      l.insert(0, {'at': DateTime.now().toIso8601String(), 'g': g, 'm': msg, 'vid': v?['id'], 'img': img, if (files.isNotEmpty) 'files': files, 'same': quiet, 'n': good.length});
+      l.insert(0, {'at': DateTime.now().toIso8601String(), 'g': g, 'm': msg, 'vid': v?['id'], 'img': img, if (files.isNotEmpty) 'files': files, 'same': quiet, 'n': good.length, if (how.isNotEmpty) 'how': how});
     }
     if (skipped.isNotEmpty) l.insert(0, {'at': DateTime.now().toIso8601String(), 'g': g, 'm': '⏭️ اتجاهلت $skipN شقة برا مدينة الرياض: ${skipped.toSet().take(6).join('، ')}', 'img': img, if (files.isNotEmpty) 'files': files, 'same': true, 'n': skipN});
     while (l.length > 200) { l.removeLast(); }
@@ -188,6 +192,36 @@ class AutoUpd {
     try { return (jsonDecode(await Native.ch.invokeMethod<String>('autoDbg') ?? '[]') as List).whereType<Map>().toList().reversed.toList(); } catch (_) { return []; }
   }
 
+  static Future<List<Uint8List>> _pagesOf(Map it) async {
+    final out = <Uint8List>[];
+    final fs = (it['files'] as List?) ?? const [];
+    if (fs.isNotEmpty) { for (final f in fs) { try { out.add(await File('$f').readAsBytes()); } catch (_) {} } return out; }
+    final b = await Media.orig(str(it['id']));
+    if (b != null) out.add(b);
+    return out;
+  }
+
+  /// 🔍 قراية صفحات (صور) أبديت: على الموبايل الأول (OCR + فهم الجدول)، ولو مش واضح Gemini
+  static Future<({List<Obj> rows, String how})> smartRead(List<Uint8List> pages, {bool auto = true}) async {
+    if (!kIsWeb) {
+      try {
+        final all = <dynamic>[];
+        var off = 0.0;
+        for (final p in pages) {
+          final s = await Native.ch.invokeMethod<String>('ocr', {'bytes': p});
+          if (s == null) { all.clear(); break; }
+          final e = jsonDecode(s) as List;
+          var mh = 0.0;
+          for (final m in e.whereType<Map>()) { all.add({...m, 'y': numOf(m['y']) + off}); mh = [mh, numOf(m['y']) + numOf(m['h'])].reduce((a, b) => a > b ? a : b); }
+          off += (mh < 1000 ? 1000 : mh) + 200;
+        }
+        final r = all.isEmpty ? null : OcrParse.parse(all);
+        if (r != null) return (rows: r, how: 'ocr');
+      } catch (_) {}
+    }
+    return (rows: await Ai.readUpdatePages(pages, auto: auto), how: 'ai');
+  }
+
   static Future<String> progress() async { try { return await Native.ch.invokeMethod<String>('autoProg') ?? ''; } catch (_) { return ''; } }
 
   static Future<List<String>> pull({bool force = false}) async {
@@ -197,11 +231,32 @@ class AutoUpd {
     try { if (!force) await Native.ch.invokeMethod('autoRun'); items = jsonDecode(await Native.ch.invokeMethod<String>('autoTake') ?? '[]') as List; } catch (_) { return []; }
     final out = <String>[];
     var logged = false;
-    for (final it in items.whereType<Map>()) {
+    // اللي ما اتقراش المرة اللي فاتت (Gemini كان مش رادد) نحاول تاني
+    final pend = ((Store.I.D['pend'] as List?) ?? []).whereType<Map>().toList();
+    Store.I.D['pend'] = <dynamic>[];
+    for (final it in [...pend, ...items.whereType<Map>()]) {
       List<Obj> rows;
-      try { rows = Ai.parseRows(str(it['txt'])); } catch (_) { continue; }
+      var how = 'ai';
+      if (it['ocr'] != null || it['retry'] == true) {
+        // 🔍 القراءة على الموبايل نفسه — ولو الجدول مش واضح نسأل Gemini
+        final o = it['ocr'] is List ? it['ocr'] as List : (it['ocr'] is String ? (jsonDecode(it['ocr'] as String) as List) : null);
+        final local = o == null ? null : OcrParse.parse(o);
+        if (local != null) { rows = local; how = 'ocr'; } else {
+          try {
+            final pages = await _pagesOf(it);
+            if (pages.isEmpty) continue;
+            rows = await Ai.readUpdatePages(pages, auto: true);
+          } catch (_) {
+            ((Store.I.D['pend'] as List?) ?? (Store.I.D['pend'] = <dynamic>[])).add({'g': it['g'], 't': it['t'], 'id': it['id'], 'files': it['files'], 'retry': true});
+            logged = true;
+            continue;
+          }
+        }
+      } else {
+        try { rows = Ai.parseRows(str(it['txt'])); } catch (_) { continue; }
+      }
       if (rows.isEmpty) continue;
-      out.addAll(applyRows(str(it['g']), rows, img: it['files'] == null ? str(it['id']) : '', files: (it['files'] as List?) ?? const [], same: it['same'] == true));
+      out.addAll(applyRows(str(it['g']), rows, img: it['files'] == null ? str(it['id']) : '', files: (it['files'] as List?) ?? const [], same: it['same'] == true, how: how));
       logged = true;
     }
     if (logged) await Store.I.save();

@@ -169,7 +169,17 @@ object Auto {
                 if (!today && hashes.has(hash)) { doneSet.add(id); done.put(id); dbg(c, g, t, "same_img"); continue }
                 if (today && obj(c, "okHash").has(hash)) continue // اتقرت أبديت قبل كده — منستهلكش Gemini
                 // فلتر على الموبايل (من غير نت ولا Gemini): الصورة فيها كلام أبديت (BHK / Payment / Villa / أسعار)؟ لو لأ نسيبها
-                if (!ocrLooksUpdate(bytes)) { doneSet.add(id); done.put(id); dbg(c, g, t, "not_update_ocr", id); continue }
+                // القراءة بقت على الموبايل نفسه: الكلام وأماكنه بيتبعتوا للتطبيق وهو بيفهم الجدول (Gemini بس لو الجدول صعب)
+                val els = ocrEls(bytes)
+                if (els != null) {
+                    if (!looksUpdate(elsText(els))) { doneSet.add(id); done.put(id); dbg(c, g, t, "not_update_ocr", id); continue }
+                    doneSet.add(id); done.put(id); hashes.put(hash, t); trim(hashes, 400); put(c, "hash", hashes)
+                    obj(c, "okHash").let { o -> o.put(hash, t); trim(o, 600); put(c, "okHash", o) }
+                    dbg(c, g, t, "ocr", id)
+                    res.put(JSONObject().put("g", g).put("t", t).put("id", id).put("ocr", els)); n++
+                    notify(c, g, 0)
+                    continue
+                }
                 val txt = gemini(key, prompt, bytes) ?: run { dbg(c, g, t, "gemini_fail"); null } ?: break  // Gemini مش متاح دلوقتي → نحاول تاني بعدين
                 doneSet.add(id); done.put(id)
                 hashes.put(hash, t); trim(hashes, 400); put(c, "hash", hashes)
@@ -393,6 +403,24 @@ object Auto {
         val rec = com.google.mlkit.vision.text.TextRecognition.getClient(com.google.mlkit.vision.text.latin.TextRecognizerOptions.DEFAULT_OPTIONS)
         com.google.android.gms.tasks.Tasks.await(rec.process(com.google.mlkit.vision.common.InputImage.fromBitmap(bm, 0)), 25, java.util.concurrent.TimeUnit.SECONDS).text
     } catch (_: Throwable) { null }
+    /** كل كلمة في الصورة ومكانها: [{s, x, y, w, h}] — بالحجم الأصلي للصورة */
+    fun ocrEls(bytes: ByteArray): JSONArray? = try {
+        val o = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, o)
+        var smp = 1; while (o.outWidth / (smp * 2) >= 1600) smp *= 2
+        val bm = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, android.graphics.BitmapFactory.Options().apply { inSampleSize = smp })
+        val rec = com.google.mlkit.vision.text.TextRecognition.getClient(com.google.mlkit.vision.text.latin.TextRecognizerOptions.DEFAULT_OPTIONS)
+        val r = com.google.android.gms.tasks.Tasks.await(rec.process(com.google.mlkit.vision.common.InputImage.fromBitmap(bm, 0)), 25, java.util.concurrent.TimeUnit.SECONDS)
+        val a = JSONArray()
+        for (b in r.textBlocks) for (l in b.lines) for (e in l.elements) { val bb = e.boundingBox ?: continue
+            a.put(JSONObject().put("s", e.text).put("x", bb.left).put("y", bb.top).put("w", bb.width()).put("h", bb.height())) }
+        a
+    } catch (_: Throwable) { null }
+    fun elsText(a: JSONArray): String { val sb = StringBuilder(); for (i in 0 until a.length()) sb.append(a.getJSONObject(i).optString("s")).append(' '); return sb.toString() }
+    fun looksUpdate(t: String): Boolean {
+        val prices = Regex("\\b\\d{1,3}[,.]\\d{3}\\b|\\b\\d{4,6}\\b").findAll(t).count()
+        return kw.findAll(t).count() >= 2 || prices >= 2
+    }
     private val kw = Regex("bhk|b/r|bed ?room|studio|payment|cheque|monthly|yearly|villa|unit|flat|apartment|rent|aed|zone|floor|booked|available|vacant", RegexOption.IGNORE_CASE)
     fun ocrLooksUpdate(bytes: ByteArray): Boolean {
         val t = ocr(bytes) ?: return true // لو الـ OCR مش شغال نسيبها لـ Gemini
@@ -450,6 +478,18 @@ object Auto {
             if (pages.isEmpty()) { ds.add(k); doneF.put(k); continue }
             val hash = md5(f.readBytes()); val hashes = obj(c, "hash")
             if (hashes.has(hash)) { ds.add(k); doneF.put(k); continue }
+            // الصفحات تحت بعض: OCR لكل صفحة ونزوّد مكانها
+            val all = JSONArray(); var off = 0; var okOcr = true
+            for (pg in pages) { val e = ocrEls(pg); if (e == null) { okOcr = false; break }; var mh = 0
+                for (i in 0 until e.length()) { val o = e.getJSONObject(i); o.put("y", o.getInt("y") + off); all.put(o); mh = maxOf(mh, o.getInt("y") - off + o.getInt("h")) }
+                off += maxOf(mh, 1000) + 200 }
+            if (okOcr && all.length() > 0) {
+                ds.add(k); doneF.put(k); hashes.put(hash, t); trim(hashes, 400); put(c, "hash", hashes)
+                val dir = java.io.File(c.filesDir, "shots").apply { mkdirs() }
+                val saved = JSONArray(); pages.forEachIndexed { i, b -> val pf = java.io.File(dir, "$hash-$i.jpg"); pf.writeBytes(b); saved.put(pf.absolutePath) }
+                res.put(JSONObject().put("g", g).put("t", t).put("files", saved).put("pdf", f.name).put("ocr", all)); n++
+                notify(c, g, 0); continue
+            }
             val txt = gemini(key, prompt, pages) ?: break
             ds.add(k); doneF.put(k); hashes.put(hash, t); trim(hashes, 400); put(c, "hash", hashes)
             // نحفظ صور الصفحات علشان تشوفها في «صور الأبديت»

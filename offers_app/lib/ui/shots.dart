@@ -104,6 +104,7 @@ class _ShotsState extends State<ShotsPage> {
           _Img(x, w: 96, h: 96),
           const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            if (x['how'] != null) Text(x['how'] == 'ocr' ? '🔍 اتقرت على الموبايل' : '✨ اتقرت بـ Gemini', style: const TextStyle(fontSize: 11, color: kMuted)),
             if (shotFiles(x).any((f) => f.contains('/shots/'))) const Text('📄 ملف PDF', style: TextStyle(fontSize: 11.5, color: kAc2, fontWeight: FontWeight.w700)),
             Text(str(x['m']), style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: x['same'] == true ? kMuted : kInk)),
             const SizedBox(height: 4),
@@ -169,11 +170,12 @@ Future<void> reread(BuildContext context, Obj x) async {
     final pages = <Uint8List>[];
     if (files.isNotEmpty) { for (final f in files) { final b = await _fileBytes(f); if (b != null) pages.add(b); } } else { final b = await Media.orig(img); if (b != null) pages.add(b); }
     if (pages.isEmpty) throw 'الصورة اتمسحت من الموبايل';
-    final rows = await Ai.readUpdatePages(pages, auto: true);
+    final rd = await AutoUpd.smartRead(pages);
+    final rows = rd.rows;
     if (rows.isEmpty) throw 'Gemini مالقاش شقق في الصورة';
     for (final v in bad) { (Store.I.D['villas'] as List).remove(v); }
     (Store.I.D['log'] as List).removeWhere((l) => shotKey((l as Map).cast<String, dynamic>()) == key);
-    final r = AutoUpd.applyRows(g, rows, img: img, files: files);
+    final r = AutoUpd.applyRows(g, rows, img: img, files: files, how: rd.how);
     await Store.I.save();
     if (!context.mounted) return;
     Navigator.pop(context);
@@ -193,13 +195,24 @@ Future<void> readPicked(BuildContext context) async {
   showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
   try {
     final b = await f.readAsBytes();
-    final rows = await Ai.readUpdatePages([b], auto: true);
+    final rd = await AutoUpd.smartRead([b]);
+    final rows = rd.rows;
     if (rows.isEmpty) throw 'مالقيتش شقق في الصورة دي';
-    final comp = str(rows.first['company']).isEmpty ? 'أبديت' : str(rows.first['company']);
+    var comp = str(rows.first['company']);
+    if (comp.isEmpty) {
+      // القراية على الموبايل مش بتعرف الشركة من اللوجو — اختارها
+      if (!context.mounted) return;
+      Navigator.pop(context);
+      final opts = {for (final v in Store.I.villas) if (str(v['company']).isNotEmpty) str(v['company']), ...AutoUpd.groups.values}.toList()..sort();
+      final c = await pickDlg(context, 'الأبديت ده تبع أنهي شركة؟', [for (final o in opts) [o, o], ['+', '✏️ اكتب اسمها']]);
+      if (c == null || !context.mounted) return;
+      if (c == '+') { final o = await formDlg(context, 'اسم الشركة', [const FS('c', 'زي: NA Holding')]); if (o == null || (o['c'] ?? '').isEmpty || !context.mounted) return; comp = o['c']!; } else { comp = c; }
+      showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+    }
     final dir = await getApplicationDocumentsDirectory();
     final out = File('${dir.path}/shot-${DateTime.now().millisecondsSinceEpoch}.jpg');
     await out.writeAsBytes(b);
-    final r = AutoUpd.applyRows(comp, rows, files: [out.path]);
+    final r = AutoUpd.applyRows(comp, rows, files: [out.path], how: rd.how);
     await Store.I.save();
     if (!context.mounted) return;
     Navigator.pop(context);
