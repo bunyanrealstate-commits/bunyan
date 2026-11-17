@@ -101,7 +101,7 @@ class ReqsPage extends StatelessWidget {
 
   Future<void> _import(BuildContext context) async {
     final cs = await Native.contacts();
-    final found = cs.where((c) => parseContactName(c['n'] ?? '') != null).toList();
+    final found = cs.where((c) => parseContactName(c['n'] ?? '') != null && Reqs.recentContact(c)).toList();
     if (!context.mounted) return;
     if (found.isEmpty) { toast(context, cs.isEmpty ? '⚠️ مقدرتش أقرا جهات الاتصال — وافق على الإذن' : 'مالقيتش أسامي فيها طلب (زي Studio Fur 3500 Suzanne)'); return; }
     final ex = found.take(4).map((c) { final q = parseContactName(c['n']!)!; return '• ${c['n']} ← ${reqSummary(q)}${str(q['name']).isEmpty ? '' : ' (${q['name']})'}'; }).join('\n');

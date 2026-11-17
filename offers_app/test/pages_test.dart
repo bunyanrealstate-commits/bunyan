@@ -48,6 +48,10 @@ void main() {
     expect(imp, 1);
     final om = Reqs.all.firstWhere((r) => r['p'] == '971509998877');
     expect(om['st'], 'wait'); expect(Reqs.fresh(om), isEmpty);
+    final old = DateTime(2026, 9, 1).millisecondsSinceEpoch.toString();
+    expect(await t.runAsync(() => Reqs.importContacts([{'n': 'Studio Fur 3000 Old', 'p': '971501110000', 'u': old}])), 0);
+    expect(await t.runAsync(() => Reqs.pruneOld([{'n': '2bhk 2bath 80000 Omar', 'p': '971509998877', 'u': old}])), 1);
+    await t.runAsync(() => Reqs.importContacts([{'n': '2bhk 2bath 80000 Omar', 'p': '971509998877'}]));
     g10['type'] = '2bk2b'; g10['p1'] = 79000;
     expect(Reqs.newFor().any((r) => r['id'] == om['id']), true);
     await show(t, const ReqsPage(), 'reqs');

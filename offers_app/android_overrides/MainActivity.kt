@@ -94,14 +94,14 @@ class MainActivity : FlutterActivity() {
     private fun readContacts(): List<Map<String, String>> {
         val out = ArrayList<Map<String, String>>()
         try {
-            contentResolver.query(android.provider.ContactsContract.Data.CONTENT_URI, arrayOf(android.provider.ContactsContract.Data.DISPLAY_NAME, android.provider.ContactsContract.Data.DATA1),
+            contentResolver.query(android.provider.ContactsContract.Data.CONTENT_URI, arrayOf(android.provider.ContactsContract.Data.DISPLAY_NAME, android.provider.ContactsContract.Data.DATA1, "contact_last_updated_timestamp"),
                 android.provider.ContactsContract.Data.MIMETYPE + " IN (?,?)", arrayOf("vnd.android.cursor.item/vnd.com.whatsapp.profile", "vnd.android.cursor.item/vnd.com.whatsapp.w4b.profile"), null)?.use { c ->
-                while (c.moveToNext()) { val n = c.getString(0) ?: ""; val j = (c.getString(1) ?: "").substringBefore("@"); if (j.isNotEmpty()) out.add(mapOf("n" to n, "p" to j, "wa" to "1")) }
+                while (c.moveToNext()) { val n = c.getString(0) ?: ""; val j = (c.getString(1) ?: "").substringBefore("@"); if (j.isNotEmpty()) out.add(mapOf("n" to n, "p" to j, "wa" to "1", "u" to (try { c.getLong(2).toString() } catch (_: Exception) { "" }))) }
             }
         } catch (_: Exception) {}
         try {
-            contentResolver.query(android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI, arrayOf(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER), null, null, null)?.use { c ->
-                while (c.moveToNext()) { val n = c.getString(0) ?: ""; val p = c.getString(1) ?: ""; if (p.isNotEmpty()) out.add(mapOf("n" to n, "p" to p, "wa" to "")) }
+            contentResolver.query(android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI, arrayOf(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER, "contact_last_updated_timestamp"), null, null, null)?.use { c ->
+                while (c.moveToNext()) { val n = c.getString(0) ?: ""; val p = c.getString(1) ?: ""; if (p.isNotEmpty()) out.add(mapOf("n" to n, "p" to p, "wa" to "", "u" to (try { c.getLong(2).toString() } catch (_: Exception) { "" }))) }
             }
         } catch (_: Exception) {}
         return out

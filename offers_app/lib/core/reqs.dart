@@ -128,6 +128,20 @@ class Reqs {
     return n;
   }
 
+  /// من 17/11 أسامه عايز العملاء اللي اتضافوا من آخر 3 أسابيع وأحدث بس
+  static DateTime get since => DateTime.tryParse(str(Store.I.cfg['ctSince'])) ?? DateTime(2026, 10, 27);
+  static bool recentContact(Map<String, String> c) { final u = int.tryParse(c['u'] ?? ''); return u == null || u == 0 || DateTime.fromMillisecondsSinceEpoch(u).isAfter(since); }
+
+  /// يشيل عملاء جهات الاتصال الأقدم من 3 أسابيع (إلا اللي اشتغلت معاهم: بعتلهم/معاينة/خلص)
+  static Future<int> pruneOld(List<Map<String, String>> contacts) async {
+    final old = {for (final c in contacts) if (!recentContact(c)) c['p']};
+    final l = (Store.I.D['reqs'] as List?) ?? [];
+    final b = l.length;
+    l.removeWhere((r) { final m = r as Map; return m['src'] == 'contact' && (m['st'] == 'wait' || m['st'] == 'new') && old.contains(m['p']); });
+    if (l.length != b) await Store.I.save();
+    return b - l.length;
+  }
+
   /// 📇 العملاء المتسجلين في جهات الاتصال بأسماء فيها طلبهم (زي «Studio Fur 3500 Suzanne»)
   /// الجديد بس بيتضاف — والشقق المناسبة دلوقتي بتتحسب «اتشافت»، علشان تتنبه بس للي ينزل بعد كده
   static Future<int> importContacts(List<Map<String, String>> contacts) async {
@@ -136,6 +150,7 @@ class Reqs {
     for (final c in contacts) {
       final ph = c['p'] ?? '';
       if (ph.isEmpty || have.contains(ph)) continue;
+      if (!recentContact(c)) continue; // العملاء من آخر 3 أسابيع وجديد بس
       final q = parseContactName(c['n'] ?? '');
       if (q == null) continue;
       final r = add(name: str(q['name']), phone: ph, text: c['n'] ?? '');

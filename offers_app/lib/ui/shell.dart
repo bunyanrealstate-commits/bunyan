@@ -35,7 +35,13 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
     try { go = await Native.ch.invokeMethod<String>('go'); } catch (_) {}
     if (go == 'reqs' && mounted) setState(() => tab = 1);
     var nr = await Reqs.pullDms();
-    if (Store.I.cfg['ctImport'] == true) { try { nr += await Reqs.importContacts(await Native.contacts()); } catch (_) {} }
+    if (Store.I.cfg['ctImport'] == true) {
+      try {
+        final cs = await Native.contacts();
+        if (Store.I.cfg['prune1'] != true && cs.any((c) => (c['u'] ?? '').isNotEmpty)) { await Reqs.pruneOld(cs); Store.I.cfg['prune1'] = true; await Store.I.saveCfg(); }
+        nr += await Reqs.importContacts(cs);
+      } catch (_) {}
+    }
     await Sug.pullLocs();
     final r0 = await AutoUpd.pull();
     final r = [...r0, ...await Sug.autoLocs()];
