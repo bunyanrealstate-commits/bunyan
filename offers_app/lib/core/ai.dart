@@ -74,22 +74,20 @@ class Ai {
   /// للأبديت التلقائي من الجروبات: أي صورة مش أبديت → []
   static String get autoPrompt => 'لو الصورة دي مش جدول أو أبديت شقق/استديوهات للإيجار (صورة عادية، شخص، مكان، شات…) رجّع [] بس. ولو فيه أكتر من صورة فهي صفحات من نفس ملف الأبديت.\n\n$updatePrompt\n${areaRule(str(Store.I.cfg['areas']).isEmpty ? kAreas : str(Store.I.cfg['areas']))}';
   static const kAreas = 'مدينة الرياض';
-  static String areaRule(String areas) => '- وكمان في كل شقة حط "inArea": true لو فيلتها في المناطق دي: $areas ، و false لو مكتوب إنها في منطقة تانية (زي Shakhbot أو MBZ أو Bani Yas أو Khalifa City)، و null لو المنطقة مش مكتوبة خالص. (مدينة الرياض = Madinat Al Riyadh = Riyadh City = Al Riyadh City = Madinat Riyad في أبوظبي، والشامخة جنوب جزء منها)';
+  static String areaRule(String areas) => '- وكمان في كل شقة حط "inArea": true لو فيلتها في المناطق دي: $areas ، و false لو مكتوب إنها في منطقة تانية (زي Shakhbot أو MBZ أو Bani Yas أو Khalifa City)، و null لو المنطقة مش مكتوبة خالص. (مدينة الرياض = Madinat Al Riyadh = Riyad City = Riyadh City = Al Riyadh City في أبوظبي. مدينة الشامخة Shamkha City وشخبوط ومدينة محمد بن زايد MBZ مناطق تانية = false — إلا لو مكتوب Riyadh City جنبها)';
 
   /// صفحات PDF (صور) → صفوف
   static Future<List<Obj>> readUpdatePages(List<Uint8List> imgs, {bool auto = false}) async => parseRows(await _ask(auto ? autoPrompt : updatePrompt, imgs));
 
-  static const updatePrompt = '''دي صورة "أبديت" من شركة عقارات في الإمارات فيها شقق فيلا وأسعارها.
+  static const updatePrompt = '''دي صورة "أبديت" من شركة عقارات في الإمارات (أبوظبي) فيها شقق في فلل وأسعارها.
 طلّع كل الشقق في JSON array بالشكل ده بالظبط:
-[{"no":"رقم الشقة/الاستديو (عمود Flat أو Apt أو Studio No)","floor":"G أو 1 أو 2 أو 3 أو R أو فاضي","type":"st|1bk|1bk2b|2bk|2bk2b|3bk|x","tx":"اسم النوع لو x","p1":سعر السنة دفعة واحدة (1 Payment / 1 Cheque) أو 0,"p3":سعر السنة على 3 دفعات (3 Payments / 3 Cheques) أو 0,"mo":رقم الإيجار الشهري أو 0,"fur":true لو الشقة مكتوب إنها Furnished أو مفروشة (غير كده false),"booked":true لو مكتوب BOOKED أو Rented أو Occupied أو Not Available أو محجوز أو مشطوب أو ملوّن أحمر,"note":"أي ملاحظة قصيرة"}]
-- STUDIO = st • 1BHK / 1 B/R hall = 1bk • 1BHK + 2 bath = 1bk2b • 2BHK = 2bk • 2BHK 2 bath = 2bk2b • 3BHK = 3bk
-- 1 Payment / 1 Cheque = p1. و 3 Payments / 3 Cheques = p3. لو العمود مش واضح عدد دفعاته اعتبره p1. لو فيه 2 أو 4 دفعات بس حطه في p3 واكتب عدد الدفعات في note.
-- الدور من عمود Remark/Floor: Ground = G، 1st = 1، 2nd = 2، 3rd = 3، Roof/Penthouse = R. و Balcony وأي ميزة تانية تتكتب في note.
-- 2 Bed Room 2/3 Bathroom = 2bk2b • 3 Bed Room = 3bk • 1 Bed Room + 2 Bathroom = 1bk2b.
-- اسم الفيلا زي "VILLA 25" ورقم الشارع "RD 66" والمنطقة.
-- الأرقام من غير فواصل. ومتخترعش شقق مش في الصورة.
-مهم جداً: لو الصورة فيها شقق من أكتر من فيلا (عمود Villa أو Location أو مكتوب جنب الشقة زي "Shakhbot Villa 4" أو "MBZ Villa 123 Zone 34")، حط في كل شقة "villa":"اسم/رقم فيلتها زي ما هو مكتوب" و "area":"منطقتها". ومتحطش ملاحظة الفيلا في note.
-وكمان لو اسم الفيلا أو رقمها أو الشركة مكتوب للصورة كلها، رجّعهم في أول عنصر كـ "villa":"...","company":"...","area":"...","terms":"الشروط باختصار بالإنجليزي زي: Security 5% or 2000 • Contract fee 200 AED • Parking" (لو مكتوبة)''';
+[{"no":"رقم الشقة (عمود NO أو Unit No أو Flat)","villa":"اسم الفيلا ورقمها زي ما مكتوب (زي Villa Al Naqib 58 أو Al-Buraiki Villa 22)","area":"المدينة/المنطقة زي Riyadh City أو Shamkha City","floor":"G أو 1 أو 2 أو 3 أو R أو فاضي","type":"st|1bk|1bk2b|2bk|2bk2b|3bk|x","tx":"اسم النوع لو x","p1":سعر السنة دفعة واحدة أو 0,"p2":سعر السنة دفعتين أو 0,"p3":سعر السنة 3 دفعات أو 0,"mo":الإيجار الشهري أو 0,"fur":true لو مكتوب Furnished أو مفروشة (غير كده false),"booked":true لو مكتوب BOOKED أو BOOKING أو Rented أو Occupied أو Not Available أو محجوز أو مشطوب أو ملوّن أحمر,"note":"ميزة قصيرة زي Private entrance + Yard أو Extension on the left"}]
+- النوع: STUDIO = st • 1BHK / 1 B/R / 1 Bedroom = 1bk • 1BHK + 2 bathrooms = 1bk2b • 2BHK = 2bk • 2BHK + 2 أو 3 bathrooms = 2bk2b • 3BHK = 3bk. (عدد الحمامات ممكن يكون مكتوب في Remarks)
+- الأسعار: 1 Payment / One Payment / 1 Cheque / Yearly = p1 • 2 Payments / Two Payment = p2 • 3 Payments / 3 Cheques = p3 • Monthly = mo. لو الأسعار مكتوبة مختصرة زي 58 و 60 و 62 يبقى بالألف (58000). N/A أو - أو فاضي = 0. الأرقام من غير فواصل.
+- الدور من عمود Floor/Remarks: Ground = G • First/1st = 1 • Second/2nd = 2 • 3rd = 3 • Roof/Penthouse = R.
+- الفيلا: كل شقة حط فيها فيلتها حتى لو الصورة فيها فيلا واحدة. لو مفيش رقم فيلا خالص ومكتوب Zone/حوض بس، اكتب "villa":"Zone 47". ورقم الشارع RD ورقم الحوض مش رقم الفيلا.
+- متخترعش شقق مش في الصورة. والصفوف اللي مكتوب فيها BOOKING/Rented رجّعها كمان بـ "booked":true.
+- في أول عنصر كمان: "company":"اسم الشركة"، "kind":"price" لو الصورة إعلان سعر جديد/عرض لشقة أو اتنين (زي New price) مش قايمة المتاح كلها، وإلا "list"، و "terms":"الشروط باختصار بالإنجليزي زي: Deposit 1 month • Contract fee 500 AED" (لو مكتوبة).''';
 
   /// أول صورة من الفيديو → رقم الشقة (لو باين رقم الباب)
   static Future<String> readUnitNo(Uint8List thumb) async {

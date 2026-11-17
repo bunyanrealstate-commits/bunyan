@@ -114,12 +114,13 @@ Future<void> editUnit(BuildContext context, Obj v, Obj? u) async {
   final o = await formDlg(context, u == null ? 'شقة جديدة' : 'تعديل الشقة', [
     FS('no', 'رقم الشقة', v: u?['no']), if (ty == 'x') FS('tx', 'اكتب النوع', v: u?['tx']),
     FS('p1', 'سعر السنة دفعة واحدة (فاضي = مفيش)', v: u?['p1'], num: true),
+    FS('p2', 'سعر السنة دفعتين (فاضي = مفيش)', v: u?['p2'], num: true),
     FS('p3', 'سعر السنة على 3 دفعات (فاضي = مفيش)', v: u?['p3'], num: true), FS('mo', 'الشهري (فاضي = مفيش)', v: u?['mo'], num: true), FS('note', 'ملاحظة', v: u?['note']),
   ]);
   if (o == null) return;
   final t = u ?? <String, dynamic>{'id': uid(), 'avail': true, 'videos': <dynamic>[]};
   t['type'] = ty; t['floor'] = fl; if (fu == 'f') { t['fur'] = true; } else { t.remove('fur'); } t['no'] = o['no'] ?? ''; if (ty == 'x') t['tx'] = o['tx'] ?? '';
-  t['p1'] = numOf(o['p1']); t['p3'] = numOf(o['p3']); t['mo'] = numOf(o['mo']); t['note'] = o['note'] ?? '';
+  t['p1'] = numOf(o['p1']); t['p2'] = numOf(o['p2']); t['p3'] = numOf(o['p3']); t['mo'] = numOf(o['mo']); t['note'] = o['note'] ?? '';
   if (u == null) ((v['units'] as List?) ?? (v['units'] = <dynamic>[])).add(t);
   await Store.I.save();
 }

@@ -32,7 +32,7 @@ class _SearchState extends State<SearchPage> {
             const SizedBox(height: 10),
             SegmentedButton<String>(segments: const [ButtonSegment(value: 'f', label: Text('🛋️ مفروش')), ButtonSegment(value: 'e', label: Text('فاضي')), ButtonSegment(value: 'x', label: Text('مش مهم'))], selected: {fur == true ? 'f' : (fur == false ? 'e' : 'x')}, onSelectionChanged: (s) => setState(() => fur = s.first == 'f' ? true : (s.first == 'e' ? false : null))),
             const SizedBox(height: 8),
-            SegmentedButton<String>(segments: const [ButtonSegment(value: 'mo', label: Text('شهري')), ButtonSegment(value: '1', label: Text('دفعة واحدة')), ButtonSegment(value: '3', label: Text('3 دفعات')), ButtonSegment(value: 'any', label: Text('الكل'))], selected: {pay}, onSelectionChanged: (s) => setState(() => pay = s.first)),
+            SegmentedButton<String>(showSelectedIcon: false, segments: const [ButtonSegment(value: 'mo', label: Text('شهري')), ButtonSegment(value: '1', label: Text('دفعة')), ButtonSegment(value: '2', label: Text('دفعتين')), ButtonSegment(value: '3', label: Text('3 دفعات')), ButtonSegment(value: 'any', label: Text('الكل'))], selected: {pay}, onSelectionChanged: (s) => setState(() => pay = s.first)),
             const SizedBox(height: 10),
             Row(children: [
               Expanded(child: TextField(controller: bc, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'ميزانية العميل (شهري أو سنوي)', helperText: _bHint(), prefixIcon: const Icon(Icons.payments_outlined), suffixText: 'درهم'), onChanged: (_) => setState(() {}))),

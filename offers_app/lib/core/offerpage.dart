@@ -14,11 +14,12 @@ class OfferPage {
 
   static String priceLines(Obj u, String pay, bool en) {
     final o = <String>[];
-    final p1 = Price.p1(u), p3 = Price.p3(u), mo = Price.mo(u);
+    final p1 = Price.p1(u), p2 = Price.p2(u), p3 = Price.p3(u), mo = Price.mo(u);
     void a1() { if (p1 > 0) o.add(en ? 'AED ${money(p1)} / year — 1 payment' : '${money(p1)} درهم في السنة — دفعة واحدة'); }
+    void a2() { if (p2 > 0) o.add(en ? 'AED ${money(p2)} / year — 2 payments' : '${money(p2)} درهم في السنة — دفعتين'); }
     void a3() { if (p3 > 0) o.add(en ? 'AED ${money(p3)} / year — 3 payments' : '${money(p3)} درهم في السنة — 3 دفعات'); }
     void am() { if (mo > 0) o.add(en ? 'AED ${money(mo)} / month' : '${money(mo)} درهم شهري'); }
-    if (pay == '1') { a1(); } else if (pay == '3') { a3(); } else if (pay == 'mo') { am(); } else { a1(); am(); if (o.isEmpty) a3(); }
+    if (pay == '1') { a1(); } else if (pay == '2') { a2(); } else if (pay == '3') { a3(); } else if (pay == 'mo') { am(); } else { a1(); am(); if (o.isEmpty) a2(); if (o.isEmpty) a3(); }
     return o.join('<br>');
   }
 

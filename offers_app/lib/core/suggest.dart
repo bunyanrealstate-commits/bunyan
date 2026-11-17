@@ -175,7 +175,8 @@ class Sug {
     final pr = <String>[
       if (mo > 0) '💰 ${money(mo)} درهم شهرياً | AED ${money(mo)} / month',
       if (p1 > 0) '💰 ${money(p1)} درهم سنوياً (دفعة واحدة) | AED ${money(p1)} / year (1 payment)',
-      if (p3 > 0 && p1 <= 0) '💰 ${money(p3)} درهم سنوياً (3 دفعات) | AED ${money(p3)} / year (3 payments)',
+      if (Price.p2(u) > 0 && p1 <= 0) '💰 ${money(Price.p2(u))} درهم سنوياً (دفعتين) | AED ${money(Price.p2(u))} / year (2 payments)',
+      if (p3 > 0 && p1 <= 0 && Price.p2(u) <= 0) '💰 ${money(p3)} درهم سنوياً (3 دفعات) | AED ${money(p3)} / year (3 payments)',
     ];
     final area = str(v['area']);
     final ph = str(Store.I.cfg['myPhone']);

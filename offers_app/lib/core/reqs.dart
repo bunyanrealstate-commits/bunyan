@@ -20,6 +20,7 @@ Obj parseRequest(String text, {List<String> areas = const []}) {
   if (two) { if (types.contains('1bk')) types.remove('1bk'); if (types.contains('2bk')) types.remove('2bk'); }
   var pay = 'any';
   if (RegExp(r'month|monthly|شهري|شهريا|بالشهر|في الشهر|الشهر').hasMatch(t)) pay = 'mo';
+  if (RegExp(r'2\s*(cheque|chq|payment)|two (cheque|payment)|دفعتين').hasMatch(t)) pay = '2';
   if (RegExp(r'3\s*(cheque|chq|payment|دفع)|ثلاث دفعات|تلات دفعات').hasMatch(t)) pay = '3';
   if (RegExp(r'1\s*(cheque|chq|payment)|one (cheque|payment)|دفع[ةه] واحد[ةه]|كاش|cash|سنوي|yearly|annual|per year|بالسنة|في السنة').hasMatch(t)) pay = '1';
   var budget = 0.0;

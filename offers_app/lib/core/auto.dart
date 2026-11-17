@@ -21,7 +21,8 @@ String applyUpdate(Obj v, List<Obj> rows, {bool missingBooked = true, bool auto 
     final m = match(r);
     final t = m ?? <String, dynamic>{'id': uid(), 'videos': <dynamic>[]};
     final wasAvail = m == null ? null : m['avail'] != false;
-    for (final k in ['p1', 'p3', 'mo']) {
+    for (final k in ['p1', 'p2', 'p3', 'mo']) {
+      if (numOf(r[k]) > 0 && numOf(r[k]) < 1000 && k != 'mo') r[k] = numOf(r[k]) * 1000; // 58 = 58,000
       if (numOf(r[k]) > 0) {
         if (m != null && numOf(m[k]) > 0 && numOf(m[k]) != numOf(r[k])) price.add('${str(r['no'])}: ${money(numOf(m[k]))}→${money(numOf(r[k]))}');
         t[k] = numOf(r[k]);
@@ -57,7 +58,7 @@ String applyUpdate(Obj v, List<Obj> rows, {bool missingBooked = true, bool auto 
 bool _same(String a, String b) { final x = nkey(a).toLowerCase(), y = nkey(b).toLowerCase(); return x.isNotEmpty && y.isNotEmpty && (x.contains(y) || y.contains(x)); }
 
 String villaNoOf(String s) {
-  final m = RegExp(r'villa\s*(?:no\.?|#|:|-)?\s*([0-9]+[a-z]?)', caseSensitive: false).firstMatch(s) ?? RegExp(r'فيلا\s*(?:رقم)?\s*([0-9]+)').firstMatch(s);
+  final m = RegExp(r'\bno\.?\s*[-:#]?\s*([0-9]+)', caseSensitive: false).firstMatch(s) ?? RegExp(r'villa\s*(?:no\.?|#|:|-)?\s*([0-9]+[a-z]?)', caseSensitive: false).firstMatch(s) ?? RegExp(r'فيلا\s*(?:رقم)?\s*([0-9]+)').firstMatch(s);
   if (m != null) return m.group(1)!;
   final all = RegExp(r'[0-9]+').allMatches(s).toList();
   return all.isEmpty ? '' : all.last.group(0)!;
@@ -125,13 +126,13 @@ class AutoUpd {
   /// صفوف الأبديت → مجموعات حسب الفيلا (صورة واحدة ممكن يبقى فيها شقق من كذا فيلا)
   static List<MapEntry<Obj, List<Obj>>> groupRows(List<Obj> rows) {
     final meta = rows.isEmpty ? <String, dynamic>{} : rows.first;
-    final good = rows.where((x) => str(x['no']).isNotEmpty || numOf(x['p1']) > 0 || numOf(x['p3']) > 0 || numOf(x['mo']) > 0).toList();
+    final good = rows.where((x) => str(x['no']).isNotEmpty || numOf(x['p1']) > 0 || numOf(x['p2']) > 0 || numOf(x['p3']) > 0 || numOf(x['mo']) > 0).toList();
     final m = <String, MapEntry<Obj, List<Obj>>>{};
     for (final r in good) {
       final vn = str(r['villa']).isNotEmpty ? str(r['villa']) : str(meta['villa']);
       final ar = str(r['area']).isNotEmpty && str(r['villa']).isNotEmpty ? str(r['area']) : str(meta['area']);
       final k = '${nkey(vn).toLowerCase()}|${nkey(ar).toLowerCase()}';
-      m.putIfAbsent(k, () => MapEntry({'villa': vn, 'area': ar, 'company': meta['company'], 'terms': meta['terms']}, <Obj>[])).value.add(r);
+      m.putIfAbsent(k, () => MapEntry({'villa': vn, 'area': ar, 'company': meta['company'], 'terms': meta['terms'], 'kind': meta['kind']}, <Obj>[])).value.add(r);
     }
     // فيلا كل شققها مكتوب إنها برا المناطق اللي تهمك (مدينة الرياض)
     for (final e in m.values) { if (e.value.any((r) => r['inArea'] == false) && !e.value.any((r) => r['inArea'] == true)) e.key['out'] = true; }
@@ -157,7 +158,8 @@ class AutoUpd {
       } else if (v == null) {
         msg = '⚠️ $g: جالي أبديت بس مش عارف رقم الفيلا — ضيفه بإيدك من «من صورة الأبديت»';
       } else {
-        final ch = applyUpdate(v, good, auto: true);
+        // إعلان سعر جديد لشقة أو اتنين: منعلّمش باقي الفيلا محجوز
+        final ch = applyUpdate(v, good, auto: true, missingBooked: meta['kind'] != 'price');
         quiet = ch == 'مفيش تغيير';
         msg = quiet ? '✓ ${str(v['name'])} ${str(v['no'])}: نفس الأبديت — مفيش جديد' : '${v['auto'] == true && objs(v['units']).length == good.length ? '🆕' : '📥'} ${str(v['name'])} ${str(v['no'])}: $ch${str(v['loc']).isEmpty ? ' • ⚠️ ضيف اللوكيشن' : ''}';
       }

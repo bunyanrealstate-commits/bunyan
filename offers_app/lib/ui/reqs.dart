@@ -193,7 +193,7 @@ class _ReqState extends State<ReqPage> {
             const SizedBox(height: 8),
             SegmentedButton<String>(segments: const [ButtonSegment(value: 'f', label: Text('🛋️ مفروش')), ButtonSegment(value: 'e', label: Text('فاضي')), ButtonSegment(value: 'x', label: Text('مش مهم'))], selected: {r['fur'] == true ? 'f' : (r['fur'] == false ? 'e' : 'x')}, onSelectionChanged: (s) { r['fur'] = s.first == 'f' ? true : (s.first == 'e' ? false : null); Store.I.save(); }),
             const SizedBox(height: 8),
-            SegmentedButton<String>(segments: const [ButtonSegment(value: 'mo', label: Text('شهري')), ButtonSegment(value: '1', label: Text('دفعة واحدة')), ButtonSegment(value: '3', label: Text('3 دفعات')), ButtonSegment(value: 'any', label: Text('الكل'))], selected: {str(r['pay']).isEmpty ? 'any' : str(r['pay'])}, onSelectionChanged: (s) { r['pay'] = s.first; Store.I.save(); }),
+            SegmentedButton<String>(showSelectedIcon: false, segments: const [ButtonSegment(value: 'mo', label: Text('شهري')), ButtonSegment(value: '1', label: Text('دفعة')), ButtonSegment(value: '2', label: Text('دفعتين')), ButtonSegment(value: '3', label: Text('3 دفعات')), ButtonSegment(value: 'any', label: Text('الكل'))], selected: {str(r['pay']).isEmpty ? 'any' : str(r['pay'])}, onSelectionChanged: (s) { r['pay'] = s.first; Store.I.save(); }),
             const SizedBox(height: 8),
             Row(children: [
               Expanded(child: TextField(controller: bc, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'الميزانية (شهري أو سنوي)', suffixText: 'درهم'), onChanged: (v) { r['budget'] = numOf(v); Store.I.save(); })),

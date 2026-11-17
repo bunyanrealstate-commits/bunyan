@@ -32,7 +32,7 @@ class _ImportState extends State<ImportPage> {
       final r = await Ai.readUpdate(b);
       final first = r.isNotEmpty ? r.first : <String, dynamic>{};
       vname = str(first['villa']); vcomp = str(first['company']); vterms = str(first['terms']);
-      rows = r.where((x) => str(x['no']).isNotEmpty || numOf(x['p1']) > 0 || numOf(x['p3']) > 0 || numOf(x['mo']) > 0).map((x) => {...x, '_on': true}).toList();
+      rows = r.where((x) => str(x['no']).isNotEmpty || numOf(x['p1']) > 0 || numOf(x['p2']) > 0 || numOf(x['p3']) > 0 || numOf(x['mo']) > 0).map((x) => {...x, '_on': true}).toList();
       if (rows.isEmpty) err = 'مالقيتش شقق في الصورة دي — جرب صورة أوضح';
     } catch (e) { err = '$e'; }
     if (mounted) setState(() => busy = false);

@@ -69,6 +69,36 @@ void main() {
     await show(t, const SuggestPage(tab: 1), 'sug-loc');
     await show(t, const SuggestPage(tab: 2), 'sug-post');
   });
+  test('عينات أبديت حقيقية (Marasi / Platinum / NA Holding)', () {
+    // ده شكل اللي Gemini بيرجّعه للصور دي
+    AutoUpd.applyRows('MARASI PROPERTIES GROUP', [
+      {'company': 'MARASI PROPERTIES', 'kind': 'list', 'no': '12', 'villa': 'Villa Al Naqib 58', 'area': 'Riyad City', 'type': '1bk', 'p1': 37000, 'p2': 38000, 'p3': 39000, 'mo': 3700, 'inArea': true, 'note': 'Extension on the left'},
+      {'no': '4', 'villa': 'Villa Al Jazairi 26', 'area': 'Shamkha City', 'type': '2bk', 'floor': '1', 'p1': 65000, 'p2': 66000, 'p3': 67000, 'inArea': false},
+      {'no': '3', 'villa': 'Villa Al Hilal 13', 'area': 'Shakhbout City', 'type': '1bk', 'p1': 52000, 'inArea': false},
+      {'no': '9', 'villa': 'Al Mamari Compound 92', 'area': 'Shakhbout City', 'type': 'st', 'booked': true, 'inArea': false},
+      {'no': '5', 'villa': 'Villa Al Baharna 49', 'area': 'MBZ City', 'type': '1bk', 'p1': 58000, 'inArea': false},
+    ]);
+    final naqib = Store.I.villas.firstWhere((v) => v['no'] == '58');
+    expect(naqib['name'], 'Villa Al Naqib 58');
+    expect(Price.text(objs(naqib['units']).first), contains('38,000 درهم على دفعتين'));
+    expect(Store.I.villas.any((v) => ['26', '13', '92', '49'].contains(v['no'])), false);
+    expect(AutoUpd.log.first['m'], contains('اتجاهلت 4 شقة'));
+    // إعلان سعر جديد لشقة واحدة: الأرقام بالألف، وباقي الفيلا يفضل متاح
+    (Store.I.D['villas'] as List).add({'id': 'b22', 'name': 'Al-Buraiki Villa 22', 'no': '22', 'company': 'Platinum Team', 'area': 'Riyadh City', 'units': [{'id': 'b5', 'no': '5', 'type': '1bk', 'p1': 45000, 'avail': true}]});
+    AutoUpd.applyRows('Platinum Team Real Estate', [{'company': 'Platinum Team', 'kind': 'price', 'no': '6', 'villa': 'Al-Buraiki Villa 22', 'area': 'Riyadh City', 'type': '2bk', 'floor': 'G', 'p1': 58, 'p2': 60, 'p3': 62, 'inArea': true, 'note': 'with yard'}]);
+    final b22 = Store.I.villas.firstWhere((v) => v['id'] == 'b22');
+    expect(objs(b22['units']).firstWhere((u) => u['no'] == '6')['p1'], 58000.0);
+    expect(objs(b22['units']).firstWhere((u) => u['no'] == '5')['avail'], true);
+    // NA Holding: 4 فلل كل واحدة باسمها ورقمها
+    AutoUpd.applyRows('NA Holding Real-Estate', [
+      {'company': 'NA Holding', 'kind': 'list', 'no': '5', 'villa': 'Villa Al Hammadi 3 – No. 163', 'area': 'Madinat Al Riyad', 'type': '1bk', 'floor': '1', 'p1': 38000, 'p2': 40000, 'mo': 3900, 'inArea': true},
+      {'no': '9', 'villa': 'Villa Al Alhami – No. 138', 'area': 'Madinat Al Riyad', 'type': '1bk', 'floor': 'G', 'p1': 48000, 'p2': 50000, 'inArea': true},
+      {'no': '9', 'villa': 'Villa Al Dhaheri – No. 85', 'area': 'Madinat Al Riyad', 'type': '2bk2b', 'floor': 'G', 'p1': 62000, 'p2': 65000, 'inArea': true},
+      {'no': '11', 'villa': 'Villa Al Hajeri – No. 7', 'area': 'Madinat Al Riyad', 'type': '1bk', 'floor': 'G', 'p1': 35000, 'p2': 37000, 'inArea': true},
+    ]);
+    for (final n in ['163', '138', '85', '7']) { expect(Store.I.villas.where((v) => v['no'] == n && str(v['area']) == 'Madinat Al Riyad').length, 1, reason: n); }
+    expect(Search.run(Store.I.villas, types: {'1bk'}, pay: 'mo', budget: 4000).any((x) => (x['u'] as Obj)['no'] == '5'), true);
+  });
   test('إحداثيات من لينك الخريطة', () {
     expect(Geo.parse('https://www.google.com/maps/place/x/@24.3511,54.6012,17z'), [24.3511, 54.6012]);
     expect(Geo.parse('https://maps.google.com/?q=24.30,54.60'), [24.30, 54.60]);
