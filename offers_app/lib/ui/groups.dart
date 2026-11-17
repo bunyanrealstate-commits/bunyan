@@ -4,6 +4,7 @@ import '../core/model.dart';
 import '../core/native.dart';
 import '../core/store.dart';
 import 'theme.dart';
+import 'villas.dart';
 
 /// 📥 أبديت الجروبات التلقائي: تختار جروبات الشركات، وكل جروب تبع أنهي شركة
 class GroupsPage extends StatefulWidget {
@@ -13,7 +14,7 @@ class GroupsPage extends StatefulWidget {
 }
 
 class _GroupsState extends State<GroupsPage> with WidgetsBindingObserver {
-  bool on = false, loading = true, tried = false;
+  bool on = false, loading = true, tried = false, reading = false;
   Map<String, Map> seen = {};
   String q = '';
 
@@ -39,27 +40,59 @@ class _GroupsState extends State<GroupsPage> with WidgetsBindingObserver {
     if (r == 'fail') toast(context, '⚠️ الموبايل مفتحش الإعدادات — اتبع الخطوات اللي تحت');
   }
 
-  Future<void> _toggle(String g, bool b) async {
-    final m = Map<String, dynamic>.from((Store.I.cfg['groups'] as Map?) ?? {});
-    if (!b) { m.remove(g); } else {
-      final comps = {for (final v in Store.I.villas) if (str(v['company']).isNotEmpty) str(v['company'])}.toList()..sort();
-      var c = await pickDlg(context, 'جروب «$g» تبع أنهي شركة؟', [for (final x in comps) [x, x], ['+', '➕ شركة جديدة']]);
-      if (c == null || !mounted) return;
-      if (c == '+') { final o = await formDlg(context, 'اسم الشركة', [FS('c', 'زي: الغانم', v: g)], ok: 'تمام'); if (o == null) return; c = o['c'] ?? g; }
-      m[g] = c;
-    }
-    Store.I.cfg['groups'] = m;
+  Future<void> _save({bool read = true}) async {
     await Store.I.saveCfg();
     await AutoUpd.sync();
     try { await Native.ch.invokeMethod('perms'); } catch (_) {}
-    setState(() {});
+    if (mounted) setState(() {});
+    if (read) _read();
+  }
+
+  /// يقرا صور الأبديت اللي وصلت قبل كده (آخر 3 أيام) من الجروبات المتابَعة
+  Future<void> _read() async {
+    if (reading) return;
+    setState(() => reading = true);
+    final r = await AutoUpd.pull();
+    if (!mounted) return;
+    setState(() => reading = false);
+    if (r.isNotEmpty) toast(context, '📥 ${r.length} أبديت اتقرا — شوف «آخر التحديثات» تحت');
+  }
+
+  Future<void> _toggle(String g, bool b) async {
+    g = AutoUpd.cleanGroup(g);
+    if (AutoUpd.allOn) {
+      final o = AutoUpd.off..remove(g);
+      if (!b) o.add(g);
+      Store.I.cfg['offGroups'] = o;
+    } else {
+      final m = Map<String, dynamic>.from(AutoUpd.groups);
+      if (!b) { m.remove(g); } else { m[g] = AutoUpd.companyOf(g); }
+      Store.I.cfg['groups'] = m;
+    }
+    await _save(read: b);
+  }
+
+  Future<void> _company(String g) async {
+    final comps = {for (final v in Store.I.villas) if (str(v['company']).isNotEmpty) str(v['company'])}.toList()..sort();
+    var c = await pickDlg(context, 'جروب «$g» تبع أنهي شركة؟', [for (final x in comps) [x, x], ['+', '✏️ اكتب اسم الشركة']], AutoUpd.companyOf(g));
+    if (c == null || !mounted) return;
+    if (c == '+') { final o = await formDlg(context, 'اسم الشركة', [FS('c', 'زي: الغانم', v: AutoUpd.companyOf(g))], ok: 'تمام'); if (o == null) return; c = o['c'] ?? g; }
+    final m = Map<String, dynamic>.from(AutoUpd.groups)..[g] = c;
+    Store.I.cfg['groups'] = m;
+    await _save(read: false);
+  }
+
+  Future<void> _all(bool b) async {
+    if (b && !await confirmDlg(context, 'كل الجروبات (حتى الجديدة) هتتقري صورها بـ Gemini علشان يلاقي الأبديت.\nالصور العادية بيتجاهلها، بس بتتبعت لـ Gemini يشوفها.\nأي جروب مش عايزه اقفله من القايمة.', ok: 'تابع الكل')) return;
+    Store.I.cfg['allGroups'] = b;
+    await _save(read: b);
   }
 
   @override
   Widget build(BuildContext context) {
     final sel = AutoUpd.groups;
     final names = {...seen.keys, ...sel.keys}.where((g) => q.isEmpty || g.toLowerCase().contains(q.toLowerCase())).toList()
-      ..sort((a, b) { final x = sel.containsKey(a) ? 0 : 1, y = sel.containsKey(b) ? 0 : 1; if (x != y) return x - y; return ((seen[b]?['at'] ?? 0) as num).compareTo((seen[a]?['at'] ?? 0) as num); });
+      ..sort((a, b) { final x = AutoUpd.follows(a) ? 0 : 1, y = AutoUpd.follows(b) ? 0 : 1; if (x != y) return x - y; return ((seen[b]?['at'] ?? 0) as num).compareTo((seen[a]?['at'] ?? 0) as num); });
     final log = AutoUpd.log;
     return Scaffold(
       appBar: AppBar(title: const Text('📥 أبديت الجروبات')),
@@ -77,25 +110,28 @@ class _GroupsState extends State<GroupsPage> with WidgetsBindingObserver {
           const SizedBox(height: 8),
           OutlinedButton.icon(onPressed: () async { try { await Native.ch.invokeMethod('appInfo'); } catch (_) {} }, icon: const Icon(Icons.info_outline), label: const Text('افتح معلومات التطبيق')),
         ]))),
+        Card(child: SwitchListTile(value: AutoUpd.allOn, onChanged: _all, title: const Text('تابع كل الجروبات', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('أي جروب يبعت صورة أبديت يتقري — حتى الجروبات الجديدة. اقفل اللي مش عايزه من تحت'))),
+        Card(child: ListTile(leading: reading ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)) : const Icon(Icons.refresh, color: kAc), title: Text(reading ? 'بيقرا الصور اللي وصلت…' : 'اقرا صور الأبديت اللي وصلت (آخر 3 أيام)', style: const TextStyle(fontWeight: FontWeight.w700)), onTap: reading ? null : _read)),
         const SizedBox(height: 8),
         const Text('علّم جروبات الشركات (بيظهر هنا أي جروب يجيلك منه رسالة):', style: TextStyle(fontWeight: FontWeight.w800)),
         const SizedBox(height: 6),
         TextField(decoration: const InputDecoration(labelText: 'دوّر على جروب', prefixIcon: Icon(Icons.search)), onChanged: (v) => setState(() => q = v)),
         if (loading) const Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator())),
         if (q.trim().isNotEmpty && !names.any((g) => g.toLowerCase() == q.trim().toLowerCase()))
-          Card(color: const Color(0xFFE3F4F5), child: ListTile(leading: const Icon(Icons.add_circle, color: kAc), title: Text('تابع جروب «${q.trim()}»', style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('اكتب اسم الجروب زي ما هو مكتوب في الواتساب بالظبط'), onTap: () => _toggle(q.trim(), true))),
+          Card(color: const Color(0xFFE3F4F5), child: ListTile(leading: const Icon(Icons.add_circle, color: kAc), title: Text('تابع جروب «${q.trim()}»', style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('اكتب اسم الجروب زي ما هو مكتوب في الواتساب بالظبط'), onTap: () { Store.I.cfg['groups'] = {...AutoUpd.groups, AutoUpd.cleanGroup(q.trim()): AutoUpd.companyOf(q.trim())}; _save(); })),
         if (!loading && names.isEmpty) const Padding(padding: EdgeInsets.all(14), child: Text('الجروبات بتظهر هنا أول ما يجيلك منها رسالة جديدة (بعد ما شغّلت الإذن). أو اكتب اسم الجروب فوق ودوس «تابع».', style: TextStyle(color: kMuted))),
         for (final g in names)
           Card(child: SwitchListTile(
-            value: sel.containsKey(g), onChanged: (b) => _toggle(g, b),
+            value: AutoUpd.follows(g), onChanged: (b) => _toggle(g, b),
             title: Text(g, style: const TextStyle(fontWeight: FontWeight.w700)),
-            subtitle: Text([if (sel.containsKey(g)) '🏢 ${sel[g]}', if (((seen[g]?['img'] ?? 0) as num) > 0) '📷 ${seen[g]?['img']} صورة'].join(' • ')),
+            subtitle: Text([if (AutoUpd.follows(g)) '🏢 ${AutoUpd.companyOf(g)} ✏️', if (((seen[g]?['img'] ?? 0) as num) > 0) '📷 ${seen[g]?['img']} صورة'].join(' • ')),
+            secondary: AutoUpd.follows(g) ? IconButton(tooltip: 'غيّر الشركة', icon: const Icon(Icons.edit_outlined, size: 20), onPressed: () => _company(g)) : null,
           )),
         if (log.isNotEmpty) ...[
           const SizedBox(height: 14),
           const Text('آخر التحديثات:', style: TextStyle(fontWeight: FontWeight.w800)),
           for (final l in log.take(25))
-            Card(child: ListTile(dense: true, title: Text(str(l['m'])), subtitle: Text('${str(l['g'])} • ${str(l['at']).replaceFirst('T', ' ').split('.').first}'))),
+            Card(child: ListTile(dense: true, title: Text(str(l['m'])), subtitle: Text('${str(l['g'])} • ${str(l['at']).replaceFirst('T', ' ').split('.').first}'), trailing: Store.I.villa(str(l['vid'])) == null ? null : const Icon(Icons.chevron_left), onTap: Store.I.villa(str(l['vid'])) == null ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => VillaPage(str(l['vid'])))))),
         ],
       ]),
     );

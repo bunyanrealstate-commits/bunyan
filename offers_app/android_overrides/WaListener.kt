@@ -82,6 +82,12 @@ object Auto {
     fun arr(c: Context, k: String) = try { JSONArray(prefs(c).getString(k, "[]")!!) } catch (_: Exception) { JSONArray() }
     fun put(c: Context, k: String, v: Any) = prefs(c).edit().putString(k, v.toString()).apply()
     fun cfg(c: Context) = obj(c, "cfg")
+    /** الجروب متابَع؟ (مختار، أو «كل الجروبات» شغال وهو مش مستثنى) */
+    fun follows(c: Context, g: String): Boolean {
+        val k = g.trim().lowercase(); val cf = cfg(c)
+        if (cf.optBoolean("all")) { val off = cf.optJSONArray("off") ?: JSONArray(); return (0 until off.length()).none { off.getString(it).trim().lowercase() == k } }
+        return groups(c).contains(k)
+    }
     fun groups(c: Context): Set<String> { val a = cfg(c).optJSONArray("groups") ?: return setOf(); return (0 until a.length()).map { a.getString(it).trim().lowercase() }.toSet() }
 
     @Synchronized fun seen(c: Context, g: String, msgs: List<Pair<String, Long>>) {
@@ -97,10 +103,12 @@ object Auto {
         }
         last.put(g, lt); seen.put(g, s)
         put(c, "seen", seen); put(c, "last", last)
-        if (got && groups(c).contains(g.lowercase())) {
-            val keep = JSONArray(); val old = System.currentTimeMillis() - 86400000L
-            for (i in 0 until ev.length()) { val e = ev.getJSONObject(i); if (e.getLong("t") > old && groups(c).contains(e.getString("g").lowercase())) keep.put(e) }
-            put(c, "ev", keep)
+        // نحتفظ بصور كل الجروبات 3 أيام — لو اخترت جروب بعدين يقرا صوره اللي فاتت
+        val keep = JSONArray(); val old = System.currentTimeMillis() - 3 * 86400000L
+        for (i in 0 until ev.length()) { val e = ev.getJSONObject(i); if (e.getLong("t") > old) keep.put(e) }
+        while (keep.length() > 3000) keep.remove(0)
+        put(c, "ev", keep)
+        if (got && follows(c, g)) {
             val app = c.applicationContext
             h.postDelayed({ Thread { run(app) }.start() }, 60000)
             h.postDelayed({ Thread { run(app) }.start() }, 300000)
@@ -112,7 +120,9 @@ object Auto {
         synchronized(this) { if (busy) return 0; busy = true }
         var n = 0
         try {
-            val ev = arr(c, "ev"); if (ev.length() == 0) return 0
+            val ev0 = arr(c, "ev"); val ev = JSONArray()
+            for (i in 0 until ev0.length()) { val e = ev0.getJSONObject(i); if (follows(c, e.getString("g"))) ev.put(e) }
+            if (ev.length() == 0) return 0
             val key = cfg(c).optString("key"); val prompt = cfg(c).optString("prompt")
             if (key.isEmpty() || prompt.isEmpty()) return 0
             var minT = Long.MAX_VALUE

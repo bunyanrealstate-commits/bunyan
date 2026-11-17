@@ -25,7 +25,7 @@ class MainActivity : FlutterActivity() {
                 "installPerm" -> { try { startActivity(Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))); res.success(true) } catch (e: Exception) { res.success(false) } }
                 "install" -> { try { install(File(call.argument<String>("path")!!)); res.success(true) } catch (e: Exception) { res.success(false) } }
                 "contacts" -> contacts(res)
-                "autoCfg" -> { Auto.put(this, "cfg", org.json.JSONObject().put("key", call.argument<String>("key") ?: "").put("prompt", call.argument<String>("prompt") ?: "").put("groups", org.json.JSONArray(call.argument<List<String>>("groups") ?: listOf<String>()))); res.success(true) }
+                "autoCfg" -> { Auto.put(this, "cfg", org.json.JSONObject().put("key", call.argument<String>("key") ?: "").put("prompt", call.argument<String>("prompt") ?: "").put("groups", org.json.JSONArray(call.argument<List<String>>("groups") ?: listOf<String>())).put("all", call.argument<Boolean>("all") ?: false).put("off", org.json.JSONArray(call.argument<List<String>>("off") ?: listOf<String>()))); res.success(true) }
                 "autoRun" -> Thread { val n = Auto.run(applicationContext); runOnUiThread { res.success(n) } }.start()
                 "autoTake" -> { val r = Auto.arr(this, "res").toString(); Auto.put(this, "res", "[]"); res.success(r) }
                 "autoSeen" -> res.success(Auto.mergeSeen(this).toString())

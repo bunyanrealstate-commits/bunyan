@@ -83,9 +83,16 @@ class AutoUpd {
     return t.replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 
+  /// «تابع كل الجروبات»: أي جروب (حتى الجديد) متابَع إلا اللي قفلته
+  static bool get allOn => Store.I.cfg['allGroups'] == true;
+  static List<String> get off => ((Store.I.cfg['offGroups'] as List?) ?? const []).map((e) => cleanGroup('$e')).toList();
+  static bool follows(String g) => allOn ? !off.contains(cleanGroup(g)) : groups.containsKey(cleanGroup(g));
+  /// الشركة بتاعة الجروب: اللي اخترتها، وإلا اسم الجروب نفسه
+  static String companyOf(String g) => groups[cleanGroup(g)] ?? cleanGroup(g).replaceAll(RegExp(r'[^\p{L}\p{N}\s&.-]', unicode: true), '').trim();
+
   static Future<void> sync() async {
     if (kIsWeb || Store.I.testMode) return;
-    try { await Native.ch.invokeMethod('autoCfg', {'key': Store.I.gemKey, 'prompt': Ai.autoPrompt, 'groups': groups.keys.toList()}); } catch (_) {}
+    try { await Native.ch.invokeMethod('autoCfg', {'key': Store.I.gemKey, 'prompt': Ai.autoPrompt, 'groups': groups.keys.toList(), 'all': allOn, 'off': off}); } catch (_) {}
   }
 
   static Future<bool> on() async { if (kIsWeb) return false; try { return await Native.ch.invokeMethod<bool>('notifOn') ?? false; } catch (_) { return false; } }
@@ -107,7 +114,7 @@ class AutoUpd {
 
   /// يقرا اللي اتجمع ويطبقه — بيرجع رسايل قصيرة باللي اتغير
   static Future<List<String>> pull() async {
-    if (kIsWeb || Store.I.testMode || groups.isEmpty) return [];
+    if (kIsWeb || Store.I.testMode || (!allOn && groups.isEmpty)) return [];
     await sync();
     List items;
     try { await Native.ch.invokeMethod('autoRun'); items = jsonDecode(await Native.ch.invokeMethod<String>('autoTake') ?? '[]') as List; } catch (_) { return []; }
@@ -120,7 +127,7 @@ class AutoUpd {
       final meta = rows.first;
       final good = rows.where((x) => str(x['no']).isNotEmpty || numOf(x['p1']) > 0 || numOf(x['p3']) > 0 || numOf(x['mo']) > 0).toList();
       if (good.isEmpty) continue;
-      final v = findVilla(groups[g] ?? '', meta);
+      final v = findVilla(companyOf(g), meta);
       final String msg;
       if (v == null) {
         msg = '⚠️ $g: جالي أبديت بس مش عارف رقم الفيلا — ضيفه بإيدك من «من صورة الأبديت»';

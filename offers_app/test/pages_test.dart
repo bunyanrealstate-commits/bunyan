@@ -49,5 +49,9 @@ void main() {
     expect(AutoUpd.cleanGroup('\u200fModren Look Real Estate 🏡 (3 رسائل)'), 'Modren Look Real Estate 🏡');
     expect(AutoUpd.cleanGroup('Master Leader (5 messages)'), 'Master Leader');
     expect(AutoUpd.cleanGroup('Global Egyptian  3m'), 'Global Egyptian 3m');
+    expect(AutoUpd.companyOf('Modren Look Real Estate 🏡 (رسالتان)'), 'Modren Look Real Estate');
+    Store.I.cfg['allGroups'] = true; Store.I.cfg['offGroups'] = ['Family'];
+    expect(AutoUpd.follows('MARASI PROPERTIES  GROUP'), true);
+    expect(AutoUpd.follows('Family (3 رسائل)'), false);
   });
 }
