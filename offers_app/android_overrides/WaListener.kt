@@ -31,6 +31,7 @@ class WaListener : NotificationListenerService() {
     override fun onListenerConnected() {
         super.onListenerConnected()
         try { activeNotifications?.forEach { onNotificationPosted(it) } } catch (_: Exception) {}
+        Auto.updSoon(applicationContext)
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
@@ -50,6 +51,7 @@ class WaListener : NotificationListenerService() {
         } catch (_: Exception) {}
         if (msgs.isEmpty()) msgs.add(Pair(ex.getCharSequence("android.text")?.toString() ?: "", sbn.postTime))
         Auto.seen(this, g, msgs)
+        Auto.updSoon(applicationContext)
     }
 }
 
@@ -166,6 +168,65 @@ object Auto {
         } catch (_: Exception) {
         } finally { synchronized(this) { busy = false } }
         return n
+    }
+
+    // ===== التحديث التلقائي للتطبيق في الخلفية (من غير ما تفتحه) =====
+    private const val BASE = "https://raw.githubusercontent.com/bunyanrealstate-commits/bunyan/apk-offers/"
+    @Volatile private var lastChk = 0L
+    @Volatile private var updBusy = false
+    /** بيتنده مع أي إشعار واتساب — بيشيك كل 15 دقيقة بالكتير */
+    fun updSoon(c: Context) { if (System.currentTimeMillis() - lastChk < 15 * 60000L || updBusy) return; lastChk = System.currentTimeMillis(); Thread { try { upd(c) } catch (_: Exception) {} }.start() }
+
+    fun myVer(c: Context): Long = try { val pi = c.packageManager.getPackageInfo(c.packageName, 0); if (Build.VERSION.SDK_INT >= 28) pi.longVersionCode else @Suppress("DEPRECATION") pi.versionCode.toLong() } catch (_: Exception) { 0L }
+
+    /** بيرجع: "same" مفيش جديد • "inst" نزّل وبدأ يسطّب • "fail" */
+    fun upd(c: Context): String {
+        if (updBusy) return "busy"; updBusy = true
+        try {
+            val cn = URL(BASE + "version.json?t=" + System.currentTimeMillis()).openConnection() as HttpURLConnection
+            cn.connectTimeout = 15000; cn.readTimeout = 15000; cn.useCaches = false
+            if (cn.responseCode != 200) return "fail"
+            val code = JSONObject(cn.inputStream.bufferedReader().readText()).optLong("code")
+            if (code <= myVer(c)) return "same"
+            val f = java.io.File(c.cacheDir, "upd-$code.apk")
+            if (!f.exists() || f.length() < 1000000) {
+                val tmp = java.io.File(c.cacheDir, "upd.part")
+                val dn = URL(BASE + "Offers.apk?t=" + System.currentTimeMillis()).openConnection() as HttpURLConnection
+                dn.connectTimeout = 20000; dn.readTimeout = 60000; dn.useCaches = false
+                if (dn.responseCode != 200) return "fail"
+                dn.inputStream.use { i -> tmp.outputStream().use { o -> i.copyTo(o, 64 * 1024) } }
+                if (tmp.length() < 1000000) return "fail"
+                c.cacheDir.listFiles()?.filter { it.name.startsWith("upd-") }?.forEach { it.delete() }
+                tmp.renameTo(f)
+            }
+            install(c, f); return "inst"
+        } catch (_: Exception) { return "fail" } finally { updBusy = false }
+    }
+
+    fun install(c: Context, f: java.io.File) {
+        val pi = c.packageManager.packageInstaller
+        val p = android.content.pm.PackageInstaller.SessionParams(android.content.pm.PackageInstaller.SessionParams.MODE_FULL_INSTALL)
+        p.setAppPackageName(c.packageName)
+        if (Build.VERSION.SDK_INT >= 31) p.setRequireUserAction(android.content.pm.PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
+        val id = pi.createSession(p)
+        pi.openSession(id).use { s ->
+            s.openWrite("app.apk", 0, f.length()).use { out -> f.inputStream().use { it.copyTo(out, 64 * 1024) }; s.fsync(out) }
+            val i = Intent(c, UpdRx::class.java)
+            val pend = PendingIntent.getBroadcast(c, 77, i, PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0))
+            s.commit(pend.intentSender)
+        }
+    }
+
+    /** لو أندرويد طلب موافقة وإحنا في الخلفية: إشعار «دوس علشان تحدّث» */
+    fun askNotify(c: Context, confirm: Intent) {
+        try {
+            val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel("app", "تحديث التطبيق", NotificationManager.IMPORTANCE_HIGH))
+            confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            val pi = PendingIntent.getActivity(c, 9, confirm, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            val b = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(c, "app") else @Suppress("DEPRECATION") Notification.Builder(c)
+            nm.notify(4242, b.setSmallIcon(android.R.drawable.stat_sys_download_done).setContentTitle("⬆️ نسخة جديدة من عروض الشقق").setContentText("دوس علشان تتحدث").setContentIntent(pi).setAutoCancel(true).build())
+        } catch (_: Exception) {}
     }
 
     fun md5(b: ByteArray) = java.security.MessageDigest.getInstance("MD5").digest(b).joinToString("") { "%02x".format(it) }

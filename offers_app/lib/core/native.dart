@@ -1,10 +1,8 @@
 /// أندرويد: الإرسال للواتساب (الفيديو + الرسالة لرقم العميل)، كود الربط من بنيان، والتحديث التلقائي
 import 'dart:convert';
-import 'dart:io' show File;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'store.dart';
 
@@ -48,20 +46,22 @@ class Native {
     try { final l = await ch.invokeMethod<String>('take'); if (l == null || !l.contains('c=')) return false; return Store.I.link(Uri.parse(l).queryParameters['c'] ?? ''); } catch (_) { return false; }
   }
 
+  static DateTime _last = DateTime(2000);
+  /// التحديث: أندرويد بينزّل النسخة الجديدة (مقاس صغير) ويسطّبها — وكمان بيشيك لوحده في الخلفية
   static Future<void> check({bool force = false}) async {
     if (kIsWeb) return;
+    if (!force && DateTime.now().difference(_last).inSeconds < 90) return;
+    _last = DateTime.now();
     try {
-      final r = await http.get(Uri.parse('${_base}version.json?t=${DateTime.now().millisecondsSinceEpoch}')).timeout(const Duration(seconds: 20));
+      mine = await ch.invokeMethod<int>('version') ?? 0;
+      final r = await http.get(Uri.parse('${_base}version.json?t=${DateTime.now().millisecondsSinceEpoch}')).timeout(const Duration(seconds: 15));
       if (r.statusCode != 200) return;
       latest = (jsonDecode(r.body) as Map)['code'] as int;
-      mine = await ch.invokeMethod<int>('version') ?? 0;
       if (latest <= mine) { upd.value = null; return; }
       if (!(await ch.invokeMethod<bool>('canInstall') ?? true)) { upd.value = 'perm'; return; }
       upd.value = 'dl';
-      final a = await http.get(Uri.parse('${_base}Offers.apk?t=${DateTime.now().millisecondsSinceEpoch}')).timeout(const Duration(minutes: 4));
-      if (a.statusCode != 200 || a.bodyBytes.length < 1000000) { upd.value = 'new'; return; }
-      final f = File('${(await getTemporaryDirectory()).path}/upd.apk'); await f.writeAsBytes(a.bodyBytes, flush: true);
-      await ch.invokeMethod('install', {'path': f.path}); upd.value = 'inst';
+      final res = await ch.invokeMethod<String>('upd');
+      upd.value = res == 'inst' ? 'inst' : (res == 'same' ? null : 'new');
     } catch (_) { if (latest > mine) upd.value = 'new'; }
   }
   static Future<void> askPerm() async { try { await ch.invokeMethod('installPerm'); } catch (_) {} }

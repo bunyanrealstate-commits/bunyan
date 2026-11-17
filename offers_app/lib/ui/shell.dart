@@ -24,7 +24,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
   void _r() { if (mounted) setState(() {}); }
   Future<void> _wake() async {
     if (await Native.takeLink()) { if (Store.I.villas.isEmpty) await Store.I.restore(); await Store.I.backup(); if (mounted) toast(context, '✅ اتربط ببنيان — Gemini والباك أب شغالين'); }
-    Future.delayed(const Duration(seconds: 4), Native.check);
+    Native.check();
     final r = await AutoUpd.pull();
     if (r.isNotEmpty && mounted) {
       showDialog(context: context, builder: (ctx) => Directionality(textDirection: TextDirection.rtl, child: AlertDialog(title: Text('📥 ${r.length} أبديت جديد من الجروبات'), content: SingleChildScrollView(child: Text(r.join('\n\n'))), actions: [FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('تمام'))])));

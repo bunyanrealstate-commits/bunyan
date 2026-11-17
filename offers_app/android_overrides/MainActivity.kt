@@ -23,7 +23,8 @@ class MainActivity : FlutterActivity() {
                 "version" -> res.success(try { val pi = packageManager.getPackageInfo(packageName, 0); if (Build.VERSION.SDK_INT >= 28) pi.longVersionCode else @Suppress("DEPRECATION") pi.versionCode.toLong() } catch (e: Exception) { 0L })
                 "canInstall" -> res.success(if (Build.VERSION.SDK_INT >= 26) packageManager.canRequestPackageInstalls() else true)
                 "installPerm" -> { try { startActivity(Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))); res.success(true) } catch (e: Exception) { res.success(false) } }
-                "install" -> { try { install(File(call.argument<String>("path")!!)); res.success(true) } catch (e: Exception) { res.success(false) } }
+                "install" -> { try { Auto.install(this, File(call.argument<String>("path")!!)); res.success(true) } catch (e: Exception) { res.success(false) } }
+                "upd" -> Thread { val r = Auto.upd(applicationContext); runOnUiThread { res.success(r) } }.start()
                 "contacts" -> contacts(res)
                 "autoCfg" -> { Auto.put(this, "cfg", org.json.JSONObject().put("key", call.argument<String>("key") ?: "").put("prompt", call.argument<String>("prompt") ?: "").put("groups", org.json.JSONArray(call.argument<List<String>>("groups") ?: listOf<String>())).put("all", call.argument<Boolean>("all") ?: false).put("off", org.json.JSONArray(call.argument<List<String>>("off") ?: listOf<String>()))); res.success(true) }
                 "autoRun" -> Thread { val n = Auto.run(applicationContext); runOnUiThread { res.success(n) } }.start()
@@ -108,26 +109,13 @@ class MainActivity : FlutterActivity() {
         } catch (e: Exception) { try { i.setPackage(null); startActivity(Intent.createChooser(i, "ابعت للعميل")); "share" } catch (e2: Exception) { "fail" } }
     }
 
-    private fun install(f: File) {
-        val pi = packageManager.packageInstaller
-        val p = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
-        p.setAppPackageName(packageName)
-        if (Build.VERSION.SDK_INT >= 31) p.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
-        val id = pi.createSession(p)
-        pi.openSession(id).use { s ->
-            s.openWrite("app.apk", 0, f.length()).use { out -> f.inputStream().use { it.copyTo(out) }; s.fsync(out) }
-            val i = Intent(this, UpdRx::class.java)
-            val pend = PendingIntent.getBroadcast(this, 77, i, PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0))
-            s.commit(pend.intentSender)
-        }
-    }
 }
 
 class UpdRx : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         if (intent.getIntExtra(PackageInstaller.EXTRA_STATUS, -999) == PackageInstaller.STATUS_PENDING_USER_ACTION) {
             @Suppress("DEPRECATION") val c = intent.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)
-            if (c != null) { c.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); try { ctx.startActivity(c) } catch (_: Exception) {} }
+            if (c != null) { Auto.askNotify(ctx, Intent(c)); c.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); try { ctx.startActivity(c) } catch (_: Exception) {} }
         }
     }
 }
