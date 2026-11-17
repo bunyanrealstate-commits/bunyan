@@ -29,6 +29,14 @@ class Store extends ChangeNotifier {
     String? raw;
     if (kIsWeb) { raw = _p!.getString('of_data'); } else { try { final f = await _file(); if (await f.exists()) raw = await f.readAsString(); } catch (_) {} }
     if (raw != null && raw.isNotEmpty) { try { D = (jsonDecode(raw) as Map).cast<String, dynamic>(); } catch (_) {} }
+    // مرة واحدة: أسامه طلب يشيل شقق Yellow Line (كانت اتقرت غلط)
+    if (cfg['mig_yl1'] != true) {
+      final l = (D['villas'] as List?) ?? [];
+      final before = l.length;
+      l.removeWhere((v) => '${(v as Map)['company']} ${v['name']}'.toLowerCase().contains('yellow line'));
+      cfg['mig_yl1'] = true; await saveCfg();
+      if (l.length != before) await save();
+    }
     loaded = true; notifyListeners();
     if (villas.isEmpty && linked) await restore();
   }

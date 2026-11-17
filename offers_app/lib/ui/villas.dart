@@ -40,7 +40,14 @@ class _VillasState extends State<VillasPage> {
               Padding(padding: const EdgeInsets.fromLTRB(4, 14, 4, 4), child: Builder(builder: (_) {
                 final cv = vs.where((v) => (str(v['company']).isEmpty ? 'من غير شركة' : str(v['company'])) == c).toList();
                 final av = cv.expand((v) => objs(v['units'])).where((u) => u['avail'] != false).length;
-                return Text('🏢 $c • ${cv.length} فيلا • $av متاح', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: kAc));
+                return Row(children: [
+                  Expanded(child: Text('🏢 $c • ${cv.length} فيلا • $av متاح', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: kAc))),
+                  IconButton(tooltip: 'امسح الشركة', visualDensity: VisualDensity.compact, icon: const Icon(Icons.delete_outline, size: 20, color: kMuted), onPressed: () async {
+                    if (!await confirmDlg(context, 'تمسح كل فلل «$c» (${cv.length} فيلا، ${cv.fold<int>(0, (a, v) => a + objs(v['units']).length)} شقة)؟', ok: 'امسح')) return;
+                    (Store.I.D['villas'] as List).removeWhere((v) => cv.any((x) => x['id'] == (v as Map)['id']));
+                    await Store.I.save();
+                  }),
+                ]);
               })),
               for (final v in vs.where((v) => (str(v['company']).isEmpty ? 'من غير شركة' : str(v['company'])) == c)) _card(v),
             ],
