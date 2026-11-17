@@ -75,6 +75,21 @@ class Store extends ChangeNotifier {
       cfg['mig_vel1'] = true; await saveCfg();
       await save();
     }
+    // مرة واحدة: رجّع جروب «Double A property» لاسمه — Vellast ليها جروب لوحدها (الصورة كانت اتنسبت له غلط بالوقت)
+    if (cfg['mig_vel2'] != true) {
+      final g = ((cfg['groups'] as Map?) ?? {}).map((k, v) => MapEntry('$k', '$v'));
+      for (final k in g.keys.toList()) { if (k.toLowerCase().contains('double a') && g[k] == 'Vellast') g[k] = k; }
+      cfg['groups'] = g;
+      final log = ((D['log'] as List?) ?? []).whereType<Map>().toList();
+      for (final v in ((D['villas'] as List?) ?? []).whereType<Map>()) {
+        if ('${v['company']}' != 'Vellast') continue;
+        final farsi = '${v['name']}'.toLowerCase().contains('farsi');
+        for (final l in log) { if (l['vid'] == v['id'] && farsi) l['g'] = 'Vellast Property Management'; }
+        if (!farsi) { final l = log.where((l) => l['vid'] == v['id']).firstOrNull; if (l != null) v['company'] = '${l['g']}'; }
+      }
+      cfg['mig_vel2'] = true; await saveCfg();
+      await save();
+    }
     loaded = true; notifyListeners();
     if (villas.isEmpty && linked) await restore();
   }

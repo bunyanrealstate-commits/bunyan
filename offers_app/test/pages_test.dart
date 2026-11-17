@@ -125,11 +125,12 @@ void main() {
     const vel = 'فيلا الفارسي مدينة الرياض Al-Farsi Villa, Riyadh City Vellast Property Management Number Description Floor 1 payments 2 payments 3 payments monthly 8 Studio with Balcony First Floor 33000 34000 35000 3400 Deposit one Month (Vellast Property Management) Hani Al-Sanani';
     final vc = AutoUpd.companyFromText(vel, 'Double A property');
     expect(vc, 'Vellast Property Management');
-    AutoUpd.linkGroup('Double A property', vc);
-    expect(AutoUpd.companyOf('Double A property'), vc);
-    AutoUpd.linkGroup('Double A property', 'Other Real Estate');
-    expect(AutoUpd.companyOf('Double A property'), vc);
-    expect(AutoUpd.companyFromText(vel, 'Double A property'), vc);
+    AutoUpd.seenNames = ['Double A property', 'Vellast Property Management* (13 رسالة)'];
+    expect(AutoUpd.companyFromText(vel, 'Double A property'), 'Vellast Property Management');
+    expect(AutoUpd.groupFor(vc), 'Vellast Property Management*');
+    AutoUpd.applyRows('Double A property', [<String, dynamic>{'villa': 'Al-Farsi Villa', 'area': 'Riyadh City', 'no': '8', 'type': 'studio', 'p1': 33000}], img: 'x1', company: vc);
+    expect(str((Store.I.D['log'] as List).first['g']), 'Vellast Property Management*');
+    AutoUpd.seenNames = [];
     final v = findVilla('Kiev Real Estate L.L.C', {'villa': 'Villa Madinat AL Riyad', 'area': 'Riyad'})!;
     expect(v['no'], '');
     expect(findVilla('Kiev Real Estate L.L.C', {'villa': 'Villa Madinat AL Riyad'})!['id'], v['id']);

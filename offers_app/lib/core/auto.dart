@@ -160,16 +160,18 @@ class AutoUpd {
   static const _generic = {'real', 'estate', 'properties', 'property', 'llc', 'l.l.c', 'l.l.c.', 'management', 'group', 'team', 'co', 'company', 'and', 'the', 'realestate', 'real-estate', 'برو', 'للعقارات', 'العقارية', 'عقارات'};
   static List<String> _sig(String s) => s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9\u0600-\u06FF ]'), ' ').split(RegExp(r'\s+')).where((w) => w.length >= 3 && !_generic.contains(w)).toList();
 
-  /// الجروب لسه باسمه هو (مش متربط بشركة) والأبديت مكتوب عليه اسم شركة → اربط الجروب بيها وغيّر اسم فللها
-  static void linkGroup(String g, String company) {
-    final k = cleanGroup(g);
-    final cur = groups[k];
-    final def = k.replaceAll(RegExp(r'[^\p{L}\p{N}\s&.-]', unicode: true), '').trim();
-    if (cur != null && cur != def && cur != k) return; // متربط بشركة قبل كده
-    if (_sig(company).any((w) => _sig(def).contains(w))) return;
-    Store.I.cfg['groups'] = {...groups, k: company};
-    Store.I.saveCfg();
-    for (final v in Store.I.villas) { if (str(v['company']) == def || str(v['company']) == k) v['company'] = company; }
+  /// أسامي كل الجروبات اللي الواتساب بعت منها (بتتحدث مع كل سحب)
+  static List<String> seenNames = [];
+
+  /// الجروب بتاع الشركة دي (اسم الشركة مكتوب في اسم الجروب) — علشان صورة اتنسبت لجروب تاني بالوقت ترجع لجروبها
+  static String? groupFor(String company) {
+    final cs = _sig(company);
+    if (cs.isEmpty) return null;
+    for (final k in {...groups.keys, ...seenNames.map(cleanGroup)}) {
+      final gs = {..._sig(k), ..._sig(companyOf(k))};
+      if (cs.any(gs.contains)) return k;
+    }
+    return null;
   }
 
   /// الشركة من الكلام المكتوب في الصورة نفسها (اللوجو/الاسم) — علشان صورة شركة متتحطش باسم جروب تاني
@@ -178,7 +180,7 @@ class AutoUpd {
     bool has(String c) { final w = _sig(c); return w.isNotEmpty && w.every((x) => t.contains(' $x ') || t.contains(x)); }
     final mine = companyOf(g);
     if (mine.isNotEmpty && has(mine)) return mine;
-    final known = {for (final v in Store.I.villas) str(v['company']), ...groups.values, ...groups.keys.map(cleanGroup)}.where((c) => _sig(c).isNotEmpty).toList()
+    final known = {for (final v in Store.I.villas) str(v['company']), ...groups.values, ...groups.keys.map(cleanGroup), ...seenNames.map(cleanGroup).map(companyOf)}.where((c) => _sig(c).isNotEmpty).toList()
       ..sort((a, b) => _sig(b).length.compareTo(_sig(a).length));
     for (final c in known) { if (has(c)) return c; }
     final m = RegExp(r'([A-Z][A-Z&\. ]{2,40}?)\s+(REAL\s*ESTATE|PROPERTIES|PROPERTY|HOLDING|REALTY)', caseSensitive: true).firstMatch(text);
@@ -197,13 +199,19 @@ class AutoUpd {
   static List<String> applyRows(String g, List<Obj> rows, {String img = '', List files = const [], bool same = false, String how = '', String company = ''}) {
     final out = <String>[];
     final l = (Store.I.D['log'] as List?) ?? (Store.I.D['log'] = <dynamic>[]);
+    // الصورة مكتوب عليها شركة ليها جروب تاني (اتنسبت للجروب الغلط بالوقت) → ترجع لجروبها
+    if (company.isNotEmpty && !_sig(company).any((w) => _sig(companyOf(g)).contains(w) || _sig(g).contains(w))) {
+      final own = groupFor(company);
+      if (own != null) { g = own; company = companyOf(own); }
+    } else if (company.isNotEmpty) {
+      company = companyOf(g);
+    }
     for (final grp in groupRows(rows)) {
       final meta = grp.key, good = grp.value;
       if (onlyArea && meta['out'] == true) continue;
       final gc = companyOf(g), mc = str(meta['company']);
       // الشركة المكتوبة في الصورة لو مختلفة عن الجروب (صورة شركة اتعملها فوروارد في جروب تاني)
       final cmp = company.isNotEmpty ? company : (mc.isNotEmpty && (gc.isEmpty || !_sig(mc).any((w) => _sig(gc).contains(w))) ? mc : gc);
-      if (company.isNotEmpty) linkGroup(g, company);
       final v = findVilla(cmp, meta);
       if (v != null && str(meta['terms']).isNotEmpty) v['terms'] = str(meta['terms']);
       final String msg;
@@ -253,7 +261,7 @@ class AutoUpd {
   /// 🛠️ تصليح لوحده: أبديت اتحط باسم شركة غلط (أو فلل برا الرياض) — بيتقري تاني على الموبايل ويتحط صح من غير ما تعمل حاجة
   static Future<int> autoFix() async {
     if (kIsWeb || Store.I.testMode) return 0;
-    final done = ((Store.I.cfg['fixed3'] as List?) ?? const []).map(str).toSet();
+    final done = ((Store.I.cfg['fixed4'] as List?) ?? const []).map(str).toSet();
     final keys = <String, Obj>{};
     for (final l in log) {
       final k = str(l['img']).isNotEmpty ? str(l['img']) : (((l['files'] as List?) ?? const []).map(str).firstOrNull ?? '');
@@ -290,7 +298,7 @@ class AutoUpd {
         n++;
       } catch (_) {}
     }
-    Store.I.cfg['fixed3'] = done.toList().reversed.take(400).toList();
+    Store.I.cfg['fixed4'] = done.toList().reversed.take(400).toList();
     await Store.I.saveCfg();
     if (n > 0) await Store.I.save();
     return n;
@@ -331,6 +339,7 @@ class AutoUpd {
     try { if (!force) await Native.ch.invokeMethod('autoRun'); items = jsonDecode(await Native.ch.invokeMethod<String>('autoTake') ?? '[]') as List; } catch (_) { return []; }
     final out = <String>[];
     var logged = false;
+    try { seenNames = (await seen()).keys.toList(); } catch (_) {}
     // اللي ما اتقراش المرة اللي فاتت (Gemini كان مش رادد) نحاول تاني
     final pend = ((Store.I.D['pend'] as List?) ?? []).whereType<Map>().toList();
     Store.I.D['pend'] = <dynamic>[];
@@ -357,7 +366,7 @@ class AutoUpd {
         try { rows = Ai.parseRows(str(it['txt'])); } catch (_) { continue; }
       }
       if (rows.isEmpty) continue;
-      out.addAll(applyRows(str(it['g']), rows, img: it['files'] == null ? str(it['id']) : '', files: (it['files'] as List?) ?? const [], same: it['same'] == true, how: how, company: comp.isNotEmpty ? comp : str(rows.first['company']).isNotEmpty && companyOf(str(it['g'])).isEmpty ? str(rows.first['company']) : ''));
+      out.addAll(applyRows(str(it['g']), rows, img: it['files'] == null ? str(it['id']) : '', files: (it['files'] as List?) ?? const [], same: it['same'] == true, how: how, company: comp.isNotEmpty ? comp : str(rows.first['company'])));
       logged = true;
     }
     if (logged) await Store.I.save();
