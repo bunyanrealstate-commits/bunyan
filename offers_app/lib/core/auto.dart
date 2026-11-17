@@ -160,6 +160,18 @@ class AutoUpd {
   static const _generic = {'real', 'estate', 'properties', 'property', 'llc', 'l.l.c', 'l.l.c.', 'management', 'group', 'team', 'co', 'company', 'and', 'the', 'realestate', 'real-estate', 'برو', 'للعقارات', 'العقارية', 'عقارات'};
   static List<String> _sig(String s) => s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9\u0600-\u06FF ]'), ' ').split(RegExp(r'\s+')).where((w) => w.length >= 3 && !_generic.contains(w)).toList();
 
+  /// الجروب لسه باسمه هو (مش متربط بشركة) والأبديت مكتوب عليه اسم شركة → اربط الجروب بيها وغيّر اسم فللها
+  static void linkGroup(String g, String company) {
+    final k = cleanGroup(g);
+    final cur = groups[k];
+    final def = k.replaceAll(RegExp(r'[^\p{L}\p{N}\s&.-]', unicode: true), '').trim();
+    if (cur != null && cur != def && cur != k) return; // متربط بشركة قبل كده
+    if (_sig(company).any((w) => _sig(def).contains(w))) return;
+    Store.I.cfg['groups'] = {...groups, k: company};
+    Store.I.saveCfg();
+    for (final v in Store.I.villas) { if (str(v['company']) == def || str(v['company']) == k) v['company'] = company; }
+  }
+
   /// الشركة من الكلام المكتوب في الصورة نفسها (اللوجو/الاسم) — علشان صورة شركة متتحطش باسم جروب تاني
   static String companyFromText(String text, String g, [List? els]) {
     final t = ' ${text.toLowerCase().replaceAll(RegExp(r'[^a-z0-9\u0600-\u06FF ]'), ' ')} ';
@@ -171,6 +183,12 @@ class AutoUpd {
     for (final c in known) { if (has(c)) return c; }
     final m = RegExp(r'([A-Z][A-Z&\. ]{2,40}?)\s+(REAL\s*ESTATE|PROPERTIES|PROPERTY|HOLDING|REALTY)', caseSensitive: true).firstMatch(text);
     if (m != null) return '${m.group(1)!.trim()} ${m.group(2)!.replaceAll(RegExp(r'\s+'), ' ')}'.split(' ').map((w) => w.isEmpty ? w : w[0] + w.substring(1).toLowerCase()).join(' ');
+    // «Vellast Property Management» / «Kiev Real Estate» مكتوبة بحروف صغيرة
+    for (final m2 in RegExp(r'([A-Za-z][A-Za-z&\.]{2,20})\s+(real\s*estate|properties|property\s+management|property|holding|realty)\b', caseSensitive: false).allMatches(text)) {
+      final n = m2.group(1)!;
+      if (RegExp(r'^(villa|city|riyadh?|the|for|and|our|new|private|rent|abu|dhabi|zone|with|floor|al|el)$', caseSensitive: false).hasMatch(n)) continue;
+      return '${n[0].toUpperCase()}${n.substring(1).toLowerCase()} ${m2.group(2)!.replaceAll(RegExp(r'\s+'), ' ').split(' ').map((w) => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(' ')}';
+    }
     // اسم الشركة مش مكتوب جنبه Real Estate (زي «Grand Aroma») → أكبر كلام فوق في الصورة
     if (els != null) { final tt = OcrParse.titleText(els); if (tt.isNotEmpty) return tt; }
     return '';
@@ -185,6 +203,7 @@ class AutoUpd {
       final gc = companyOf(g), mc = str(meta['company']);
       // الشركة المكتوبة في الصورة لو مختلفة عن الجروب (صورة شركة اتعملها فوروارد في جروب تاني)
       final cmp = company.isNotEmpty ? company : (mc.isNotEmpty && (gc.isEmpty || !_sig(mc).any((w) => _sig(gc).contains(w))) ? mc : gc);
+      if (company.isNotEmpty) linkGroup(g, company);
       final v = findVilla(cmp, meta);
       if (v != null && str(meta['terms']).isNotEmpty) v['terms'] = str(meta['terms']);
       final String msg;
@@ -234,7 +253,7 @@ class AutoUpd {
   /// 🛠️ تصليح لوحده: أبديت اتحط باسم شركة غلط (أو فلل برا الرياض) — بيتقري تاني على الموبايل ويتحط صح من غير ما تعمل حاجة
   static Future<int> autoFix() async {
     if (kIsWeb || Store.I.testMode) return 0;
-    final done = ((Store.I.cfg['fixed2'] as List?) ?? const []).map(str).toSet();
+    final done = ((Store.I.cfg['fixed3'] as List?) ?? const []).map(str).toSet();
     final keys = <String, Obj>{};
     for (final l in log) {
       final k = str(l['img']).isNotEmpty ? str(l['img']) : (((l['files'] as List?) ?? const []).map(str).firstOrNull ?? '');
@@ -271,7 +290,7 @@ class AutoUpd {
         n++;
       } catch (_) {}
     }
-    Store.I.cfg['fixed2'] = done.toList().reversed.take(400).toList();
+    Store.I.cfg['fixed3'] = done.toList().reversed.take(400).toList();
     await Store.I.saveCfg();
     if (n > 0) await Store.I.save();
     return n;

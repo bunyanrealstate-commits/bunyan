@@ -66,6 +66,15 @@ class Store extends ChangeNotifier {
       cfg['mig_req3'] = true; await saveCfg();
       await save();
     }
+    // مرة واحدة: جروب «Double A property» أبديتاته بتاعة شركة Vellast
+    if (cfg['mig_vel1'] != true) {
+      final g = ((cfg['groups'] as Map?) ?? {}).map((k, v) => MapEntry('$k', '$v'));
+      for (final k in g.keys.toList()) { if (k.toLowerCase().contains('double a')) g[k] = 'Vellast'; }
+      cfg['groups'] = g;
+      for (final v in ((D['villas'] as List?) ?? []).whereType<Map>()) { if ('${v['company']}'.toLowerCase().contains('double a')) v['company'] = 'Vellast'; }
+      cfg['mig_vel1'] = true; await saveCfg();
+      await save();
+    }
     loaded = true; notifyListeners();
     if (villas.isEmpty && linked) await restore();
   }
