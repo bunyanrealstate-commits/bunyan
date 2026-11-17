@@ -17,7 +17,7 @@ jobs:
       - name: Create platform folders + settings
         working-directory: offers_app
         run: |
-          pip install -q fonttools brotli && python3 tool/fonts.py ../rental-tracker.html fonts
+          (pip install -q fonttools brotli || (sleep 15; pip install -q fonttools brotli) || (sleep 30; pip install -q fonttools brotli)) && python3 tool/fonts.py ../rental-tracker.html fonts
           flutter create --org com.bunyan --project-name offers --platforms android,web . >/dev/null
           cp android_overrides/MainActivity.kt android_overrides/WaListener.kt android/app/src/main/kotlin/com/bunyan/offers/
           python3 - <<'PY'
