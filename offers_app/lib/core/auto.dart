@@ -33,9 +33,9 @@ String applyUpdate(Obj v, List<Obj> rows, {bool missingBooked = true, bool auto 
     if (str(r['tx']).isNotEmpty) t['tx'] = r['tx'];
     if (str(r['note']).isNotEmpty) t['note'] = r['note'];
     t['avail'] = r['booked'] != true;
-    if (m == null) { us.add(t); added.add(str(r['no'])); }
+    if (m == null) { us.add(t); added.add(str(r['no'])); if (t['avail'] != false) t['newAt'] = DateTime.now().toIso8601String(); }
     else if (wasAvail == true && t['avail'] == false) { booked.add(str(r['no'])); }
-    else if (wasAvail == false && t['avail'] == true) { back.add(str(r['no'])); }
+    else if (wasAvail == false && t['avail'] == true) { back.add(str(r['no'])); t['newAt'] = DateTime.now().toIso8601String(); }
   }
   // أمان للتلقائي: لو الأبديت فيه شقق أقل بكتير من اللي عندنا (صورة ناقصة أو قراية غلط) منعلّمش الباقي محجوز
   var warn = '';

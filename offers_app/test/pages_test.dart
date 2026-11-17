@@ -12,6 +12,8 @@ import 'package:offers/ui/settings.dart';
 import 'package:offers/ui/groups.dart';
 import 'package:offers/ui/shots.dart';
 import 'package:offers/ui/reqs.dart';
+import 'package:offers/ui/suggest.dart';
+import 'package:offers/core/suggest.dart';
 import 'package:offers/core/reqs.dart';
 import 'package:offers/core/auto.dart';
 import 'package:offers/core/model.dart';
@@ -44,6 +46,18 @@ void main() {
     expect(find.textContaining('Ahmed'), findsOneWidget);
     await show(t, ReqPage(str(r['id'])), 'req');
     expect(find.textContaining('شقة تناسبه'), findsOneWidget);
+    final g2 = objs(Store.I.villa('v3')!['units']).first..['newAt'] = DateTime.now().toIso8601String()..['videos'] = ['42'];
+    expect(Sug.posts().length, 1);
+    expect(Sug.caption(Store.I.villa('v3')!, g2), contains('AED 70,000 / year'));
+    Store.I.D['locSug'] = [{'id': 'l1', 'g': 'Alghanim', 'url': 'https://maps.app.goo.gl/abc', 'txt': 'Villa 25 location https://maps.app.goo.gl/abc'}];
+    expect(Sug.villaFor(Sug.locs.first)?['id'], 'v3');
+    await show(t, const SuggestPage(tab: 1), 'sug-loc');
+    await show(t, const SuggestPage(tab: 2), 'sug-post');
+  });
+  test('إحداثيات من لينك الخريطة', () {
+    expect(Geo.parse('https://www.google.com/maps/place/x/@24.3511,54.6012,17z'), [24.3511, 54.6012]);
+    expect(Geo.parse('https://maps.google.com/?q=24.30,54.60'), [24.30, 54.60]);
+    expect(Geo.dist([24.3511, 54.6012], [24.3520, 54.6012]).round(), 100);
   });
   test('فهم طلب العميل', () {
     var p = parseRequest('السلام عليكم عايز غرفة وصالة شهري ميزانيتي 3500 في الشامخة', areas: ['الشامخة', 'مدينة الرياض']);

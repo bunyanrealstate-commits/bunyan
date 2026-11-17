@@ -92,6 +92,7 @@ object Auto {
     }
     fun groups(c: Context): Set<String> { val a = cfg(c).optJSONArray("groups") ?: return setOf(); return (0 until a.length()).map { a.getString(it).trim().lowercase() }.toSet() }
 
+    private val mapRx = Regex("https?://(maps\\.app\\.goo\\.gl|goo\\.gl/maps|(www\\.)?google\\.[a-z.]+/maps|maps\\.google\\.[a-z.]+)\\S*", RegexOption.IGNORE_CASE)
     @Synchronized fun seen(c: Context, g: String, msgs: List<Pair<String, Long>>) {
         val seen = obj(c, "seen"); val last = obj(c, "last")
         val s = seen.optJSONObject(g) ?: JSONObject()
@@ -101,6 +102,7 @@ object Auto {
         for ((t, time) in msgs) {
             if (time <= lt) continue
             lt = maxOf(lt, time)
+            mapRx.find(t)?.let { m -> val la = arr(c, "locs"); la.put(JSONObject().put("g", g).put("url", m.value).put("txt", t.take(300)).put("t", time)); while (la.length() > 300) la.remove(0); put(c, "locs", la) }
             if (t.contains("📷") || t.contains("🖼")) { s.put("img", s.optInt("img") + 1); ev.put(JSONObject().put("g", g).put("t", time)); got = true }
         }
         last.put(g, lt); seen.put(g, s)

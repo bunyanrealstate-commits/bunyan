@@ -9,6 +9,7 @@ import 'settings.dart';
 import 'reqs.dart';
 import 'send.dart';
 import '../core/reqs.dart';
+import '../core/suggest.dart';
 import '../core/model.dart';
 
 class Shell extends StatefulWidget {
@@ -33,6 +34,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
     try { go = await Native.ch.invokeMethod<String>('go'); } catch (_) {}
     if (go == 'reqs' && mounted) setState(() => tab = 1);
     final nr = await Reqs.pullDms();
+    await Sug.pullLocs();
     final r = await AutoUpd.pull();
     final fresh = r.isEmpty ? <Obj>[] : Reqs.newFor();
     await Reqs.pushSummary();
@@ -41,7 +43,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
     if (r.isNotEmpty) {
       showDialog(context: context, builder: (ctx) => Directionality(textDirection: TextDirection.rtl, child: AlertDialog(
             title: Text('📥 ${r.length} أبديت جديد من الجروبات'),
-            content: SingleChildScrollView(child: Text([...r, if (fresh.isNotEmpty) '\n🔔 فيه شقق جديدة تناسب ${fresh.length} عميل: ${fresh.map((x) => str(x['n'])).take(5).join('، ')}'].join('\n\n'))),
+            content: SingleChildScrollView(child: Text([...r, if (Sug.posts().isNotEmpty) '\n📣 ${Sug.posts().length} شقة جديدة جاهزة بوست انستجرام (الفلل ← 💡 اقتراحات)', if (fresh.isNotEmpty) '\n🔔 فيه شقق جديدة تناسب ${fresh.length} عميل: ${fresh.map((x) => str(x['n'])).take(5).join('، ')}'].join('\n\n'))),
             actions: [if (fresh.isNotEmpty) TextButton(onPressed: () { Navigator.pop(ctx); setState(() => tab = 1); }, child: const Text('شوف العملاء')), FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('تمام'))])));
     }
   }

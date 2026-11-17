@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../core/model.dart';
 import '../core/store.dart';
 import 'theme.dart';
+import 'suggest.dart';
+import '../core/suggest.dart';
 import 'thumb.dart';
 import 'import.dart';
 import 'videos.dart';
@@ -23,6 +25,7 @@ class _VillasState extends State<VillasPage> {
         return Scaffold(
           appBar: AppBar(title: Text('🏡 الفلل (${all.length})')),
           body: ListView(padding: const EdgeInsets.fromLTRB(14, 10, 14, 90), children: [
+            Card(color: const Color(0xFFE3F4F5), child: ListTile(leading: const Icon(Icons.lightbulb_outline, color: kAc), title: Text('💡 اقتراحات${Sug.count() > 0 ? ' (${Sug.count()})' : ''}', style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('فيديوهات جديدة تتربط • لوكيشن من الجروبات • بوستات انستجرام'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SuggestPage())))),
             Text('${un.where((u) => u['avail'] != false).length} شقة متاحة • ${un.where((u) => u['avail'] == false).length} محجوزة • ${un.where((u) => ((u['videos'] as List?) ?? []).isEmpty).length} من غير فيديو', style: const TextStyle(color: kMuted, fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             TextField(decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'دوّر على فيلا / شركة / منطقة'), onChanged: (v) => setState(() => q = v.trim())),
