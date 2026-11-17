@@ -47,8 +47,9 @@ class ReqsPage extends StatelessWidget {
         final fresh = Reqs.newFor();
         final now = DateTime.now();
         final views = Reqs.views.where((v) => (DateTime.tryParse(str(v['at'])) ?? DateTime(2000)).isAfter(now.subtract(const Duration(hours: 2)))).toList()..sort((a, b) => str(a['at']).compareTo(str(b['at'])));
-        final rest = all.where((r) => Reqs.open(r) && r['st'] != 'new' && r['st'] != 'wait' && !due.contains(r) && !fresh.contains(r)).toList();
-        final waiting = all.where((r) => Reqs.open(r) && r['st'] == 'wait' && !fresh.contains(r)).toList();
+        final fid = fresh.map((r) => r['id']).toSet(), did = due.map((r) => r['id']).toSet();
+        final rest = all.where((r) => Reqs.open(r) && r['st'] != 'new' && r['st'] != 'wait' && !did.contains(r['id']) && !fid.contains(r['id'])).toList();
+        final waiting = all.where((r) => Reqs.open(r) && r['st'] == 'wait' && !fid.contains(r['id'])).toList();
         final done = all.where((r) => !Reqs.open(r)).toList();
         final dmOn = Store.I.cfg['dm'] == true;
         return Scaffold(

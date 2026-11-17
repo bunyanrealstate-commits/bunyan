@@ -49,7 +49,7 @@ void main() {
     final om = Reqs.all.firstWhere((r) => r['p'] == '971509998877');
     expect(om['st'], 'wait'); expect(Reqs.fresh(om), isEmpty);
     g10['type'] = '2bk2b'; g10['p1'] = 79000;
-    expect(Reqs.newFor().contains(om), true);
+    expect(Reqs.newFor().any((r) => r['id'] == om['id']), true);
     await show(t, const ReqsPage(), 'reqs');
     expect(find.textContaining('Ahmed'), findsOneWidget);
     await show(t, ReqPage(str(r['id'])), 'req');
