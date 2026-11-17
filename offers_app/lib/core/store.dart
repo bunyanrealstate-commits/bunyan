@@ -59,6 +59,7 @@ class Store extends ChangeNotifier {
     } catch (_) { return false; }
   }
 
+  Map<String, String> get gh => _h;
   Map<String, String> get _h => {'Authorization': 'Bearer ${cfg['token']}', 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28'};
   Uri get _u => Uri.parse('https://api.github.com/repos/${cfg['repo']}/contents/offers.json');
 

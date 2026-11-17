@@ -54,6 +54,14 @@ class ReqsPage extends StatelessWidget {
           body: ListView(padding: const EdgeInsets.fromLTRB(14, 8, 14, 100), children: [
             if (!dmOn) Card(color: const Color(0xFFFFF4E0), child: SwitchListTile(value: false, onChanged: (_) => _dm(context, true), title: const Text('📩 اقرا طلبات العملاء من الواتساب', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('العميل يكتب «عايز غرفة وصالة 3500» ← يجيلك إشعار والشقق المناسبة جاهزة. مفيش حاجة بتتبعت غير لما تدوس.'))),
             _Today(nw: nw.length, due: due.length, views: views.where((v) => _dt(str(v['at'])).startsWith('النهارده')).length, fresh: fresh.length),
+            Builder(builder: (context) {
+              final n = DateTime.now();
+              final ds = objs(Store.I.D['deals']).where((d) { final t = DateTime.tryParse(str(d['at'])); return t != null && t.year == n.year && t.month == n.month; }).toList();
+              if (objs(Store.I.D['deals']).isEmpty) return const SizedBox.shrink();
+              return Card(color: const Color(0xFFE6F6EC), child: ExpansionTile(title: Text('💰 الشهر ده: ${ds.length} صفقة • ${money(ds.fold<double>(0, (a, d) => a + numOf(d['comm'])))} درهم عمولة', style: const TextStyle(fontWeight: FontWeight.w800)), children: [
+                for (final d in objs(Store.I.D['deals']).take(30)) ListTile(dense: true, title: Text('${str(d['n'])}${str(d['unit']).isNotEmpty ? ' — ${d['unit']}' : ''}'), subtitle: Text('${_dt(str(d['at']))}${numOf(d['comm']) > 0 ? ' • ${money(numOf(d['comm']))} درهم' : ''}')),
+              ]));
+            }),
             if (fresh.isNotEmpty) ..._sec(context, '🆕 نزلتلهم شقق جديدة تناسبهم', fresh, (r) => '${Reqs.fresh(r).length} شقة جديدة'),
             if (nw.isNotEmpty) ..._sec(context, '📩 طلبات جديدة', nw, (r) => '${Reqs.matches(r).length} شقة تناسبه • ${_ago(str(r['at']))}'),
             if (due.isNotEmpty) ..._sec(context, '🔔 محتاجين متابعة', due, (r) => 'بعتله ${((r['sent'] as List?) ?? []).length} شقة ${_ago(str(r['sentAt']))}'),
@@ -177,6 +185,7 @@ class _ReqState extends State<ReqPage> {
             const SizedBox(height: 6),
             Wrap(spacing: 8, runSpacing: 8, children: [
               OutlinedButton.icon(onPressed: () => _view(r, sel.isNotEmpty ? sel : res), icon: const Icon(Icons.event), label: const Text('معاينة')),
+              if (sel.isNotEmpty) OutlinedButton.icon(onPressed: () => _link(r, sel), icon: const Icon(Icons.link), label: const Text('لينك عرض')),
               if (str(r['p']).isNotEmpty) OutlinedButton.icon(onPressed: () => _follow(r), icon: const Icon(Icons.notifications_active_outlined), label: const Text('تابع معاه')),
               OutlinedButton.icon(onPressed: () => _done(r), icon: const Icon(Icons.check_circle_outline), label: Text(Reqs.open(r) ? 'خلص' : 'رجّعه مفتوح')),
             ]),
@@ -214,6 +223,13 @@ class _ReqState extends State<ReqPage> {
     setState(() => picked.clear());
   }
 
+  Future<void> _link(Obj r, List<Map<String, dynamic>> sel) async {
+    var c = {'n': str(r['n']), 'p': str(r['p']), 'lang': str(r['lang'])};
+    if (c['p']!.isEmpty) { final pc = await pickClient(context); if (pc == null || !mounted) return; c = {...pc, 'lang': str(r['lang'])}; r['p'] = pc['p']; }
+    if (!mounted) return;
+    if (await sendOfferLink(context, c, sel, str(r['pay']).isEmpty ? 'any' : str(r['pay']))) { await Reqs.markSent(r, sel); if (mounted) setState(() => picked.clear()); }
+  }
+
   Future<void> _follow(Obj r) async {
     final o = await formDlg(context, '🔔 رسالة متابعة', [FS('t', 'الرسالة (تقدر تعدلها)', v: Reqs.followText(r), multi: true)], ok: 'افتح الواتساب');
     if (o == null) return;
@@ -227,6 +243,18 @@ class _ReqState extends State<ReqPage> {
     if (!Reqs.open(r)) { r['st'] = 'sent'; await Store.I.save(); return; }
     final why = await pickDlg(context, 'خلص إزاي؟', const [['rent', '🎉 أجّر'], ['other', '🏠 لقى حاجة تانية'], ['no', '❌ مبقاش محتاج']]);
     if (why == null) return;
+    if (why == 'rent' && mounted) {
+      final opts = [...Reqs.matches(r)];
+      final sentK = ((r['sent'] as List?) ?? []).map(str).toSet();
+      opts.sort((a, b) => (sentK.contains(Reqs.key(b['v'] as Obj, b['u'] as Obj)) ? 1 : 0) - (sentK.contains(Reqs.key(a['v'] as Obj, a['u'] as Obj)) ? 1 : 0));
+      final k = opts.isEmpty ? null : await pickDlg(context, 'أجّر أنهي شقة؟', [for (var i = 0; i < opts.length && i < 30; i++) ['$i', '${typeName((opts[i]['u'] as Obj)['type'])} ${str((opts[i]['u'] as Obj)['no'])} — ${str((opts[i]['v'] as Obj)['name'])} ${str((opts[i]['v'] as Obj)['no'])}'], ['-', 'شقة مش في الليستة']]);
+      if (!mounted) return;
+      final o = await formDlg(context, '🎉 مبروك! العمولة كام؟', [const FS('c', 'العمولة بالدرهم (فاضي = مش عارف)', num: true)], ok: 'سجّل');
+      if (o == null) return;
+      final x = k == null || k == '-' ? null : opts[int.parse(k)];
+      if (x != null) { (x['u'] as Obj)['avail'] = false; (x['u'] as Obj)['rentedTo'] = str(r['n']); }
+      ((Store.I.D['deals'] as List?) ?? (Store.I.D['deals'] = <dynamic>[])).insert(0, {'at': DateTime.now().toIso8601String(), 'n': str(r['n']), 'p': str(r['p']), 'rid': r['id'], if (x != null) 'unit': '${typeName((x['u'] as Obj)['type'])} ${str((x['u'] as Obj)['no'])} — ${str((x['v'] as Obj)['name'])} ${str((x['v'] as Obj)['no'])}', 'comm': numOf(o['c'])});
+    }
     r['st'] = 'done'; r['res'] = {'rent': '🎉 أجّر', 'other': 'لقى حاجة تانية', 'no': 'مبقاش محتاج'}[why]; r['doneAt'] = DateTime.now().toIso8601String();
     await Store.I.save();
     await Reqs.pushSummary();

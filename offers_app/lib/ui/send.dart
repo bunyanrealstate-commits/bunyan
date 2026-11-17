@@ -3,6 +3,8 @@ import '../core/media.dart';
 import '../core/model.dart';
 import '../core/native.dart';
 import 'theme.dart';
+import '../core/offerpage.dart';
+import '../core/store.dart';
 
 /// طابور الإرسال: كل شقة رسالة لوحدها (الفيديو وتحته السعر واللوكيشن) — إنت اللي بتدوس إرسال في الواتساب
 class SendQ extends ChangeNotifier {
@@ -60,4 +62,29 @@ class SendBar extends StatelessWidget {
           ]),
         );
       });
+}
+
+/// 🔗 يعمل صفحة عروض ويفتح شات العميل ومعاه اللينك — إنت اللي بتدوس إرسال
+Future<bool> sendOfferLink(BuildContext context, Map<String, String> c, List<Map<String, dynamic>> picks, String pay) async {
+  if (str(Store.I.cfg['myPhone']).isEmpty) {
+    final o = await formDlg(context, 'رقم الواتساب بتاعك (العميل يدوس «عايز دي» يوصلك)', [const FS('p', 'زي 0523501023', num: true)]);
+    if (o == null || (o['p'] ?? '').isEmpty) return false;
+    Store.I.cfg['myPhone'] = Native.phone(o['p']!); await Store.I.saveCfg();
+  }
+  if (!context.mounted) return false;
+  final en = c['lang'] == 'en';
+  showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+  try {
+    final url = await OfferPage.publish(picks, pay: pay, en: en, client: (c['n'] ?? '').split(' ').first);
+    if (!context.mounted) return false;
+    Navigator.pop(context);
+    final n = (c['n'] ?? '').split(' ').first;
+    final t = en ? 'Hi${n.isEmpty ? '' : ' $n'} 👋 Here are the available apartments for you (${picks.length}):\n$url\nTap "I want this" on any one you like 🙏' : 'أهلاً${n.isEmpty ? '' : ' $n'} 👋 دي الشقق المتاحة اللي تناسبك (${picks.length}):\n$url\nدوس «عايز دي» على اللي تعجبك 🙏';
+    toast(context, '⏳ الصفحة بتجهز في دقيقة — ابعت الرسالة عادي');
+    await Native.sendWa(phone: c['p'] ?? '', text: t, uris: const []);
+    return true;
+  } catch (e) {
+    if (context.mounted) { Navigator.pop(context); toast(context, '⚠️ $e'); }
+    return false;
+  }
 }

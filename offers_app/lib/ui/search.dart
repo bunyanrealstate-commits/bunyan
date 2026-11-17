@@ -43,7 +43,7 @@ class _SearchState extends State<SearchPage> {
             Padding(padding: const EdgeInsets.symmetric(vertical: 10), child: Text(res.isEmpty ? (Store.I.villas.isEmpty ? 'لسه مفيش فلل — ضيفها من تبويب «الفلل»' : 'مفيش حاجة متاحة بالمواصفات دي — جرّب «± 20%» أو «أي حاجة»') : '${res.length} شقة متاحة — علّم اللي عايز تبعته', style: const TextStyle(fontWeight: FontWeight.w700, color: kMuted))),
             for (final x in res) _row(x),
           ]),
-          floatingActionButton: sel.isEmpty || SendQ.I.active ? null : FloatingActionButton.extended(onPressed: () => _send(sel), backgroundColor: const Color(0xFF25D366), icon: const Icon(Icons.send, color: Colors.white), label: Text('ابعت ${sel.length} للعميل', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700))),
+          floatingActionButton: sel.isEmpty || SendQ.I.active ? null : Row(mainAxisSize: MainAxisSize.min, children: [FloatingActionButton.small(heroTag: 'lnk', tooltip: 'لينك عرض', onPressed: () => _link(sel), child: const Icon(Icons.link)), const SizedBox(width: 8), FloatingActionButton.extended(heroTag: 'snd', onPressed: () => _send(sel), backgroundColor: const Color(0xFF25D366), icon: const Icon(Icons.send, color: Colors.white), label: Text('ابعت ${sel.length} للعميل', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)))]),
         );
       });
 
@@ -68,6 +68,14 @@ class _SearchState extends State<SearchPage> {
       ])),
       Checkbox(value: on, onChanged: (_) => setState(() => on ? picked.remove(key) : picked.add(key))),
     ]))));
+  }
+
+  Future<void> _link(List<Map<String, dynamic>> sel) async {
+    final c = await pickClient(context);
+    if (c == null || !mounted) return;
+    await rememberClient(c);
+    if (!mounted) return;
+    if (await sendOfferLink(context, c, sel, pay)) setState(() => picked.clear());
   }
 
   Future<void> _send(List<Map<String, dynamic>> sel) async {
