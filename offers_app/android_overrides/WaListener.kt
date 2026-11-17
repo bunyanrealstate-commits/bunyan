@@ -144,10 +144,22 @@ object Auto {
             }
             for ((id, t, g) in todo) {
                 val bytes = try { c.contentResolver.openInputStream(ContentUris.withAppendedId(uri, id))?.use { it.readBytes() } } catch (_: Exception) { null } ?: continue
+                // نفس الصورة اتبعتت تاني (أو في جروب تاني) → منقراهاش تاني ومنستهلكش Gemini
+                val hash = md5(bytes); val hashes = obj(c, "hash")
+                if (hashes.has(hash)) { doneSet.add(id); done.put(id); continue }
                 val txt = gemini(key, prompt, bytes) ?: break  // Gemini مش متاح دلوقتي → نحاول تاني بعدين
                 doneSet.add(id); done.put(id)
-                val units = try { JSONArray(txt.substring(txt.indexOf('['), txt.lastIndexOf(']') + 1)).length() } catch (_: Exception) { 0 }
-                if (units > 0) { res.put(JSONObject().put("g", g).put("t", t).put("id", id).put("txt", txt)); n++; notify(c, g, units) }
+                hashes.put(hash, t); trim(hashes, 400); put(c, "hash", hashes)
+                val rows = try { JSONArray(txt.substring(txt.indexOf('['), txt.lastIndexOf(']') + 1)) } catch (_: Exception) { JSONArray() }
+                if (rows.length() == 0) continue
+                // نفس الأبديت بنفس الشقق والأسعار (الشركات بتعيد بعته كذا مرة في اليوم) → متتعاملش كأبديت جديد
+                val sig = sig(rows); val vk = g.lowercase() + "|" + (rows.optJSONObject(0)?.optString("villa") ?: "").uppercase().replace(Regex("[^A-Z0-9]"), "")
+                val sigs = obj(c, "sig")
+                if (sigs.optString(vk) == sig) continue
+                sigs.put(vk, sig); trim(sigs, 600); put(c, "sig", sigs)
+                res.put(JSONObject().put("g", g).put("t", t).put("id", id).put("txt", txt)); n++
+                notify(c, g, rows.length())
+
             }
             while (done.length() > 600) done.remove(0)
             put(c, "done", done); put(c, "res", res)
@@ -155,6 +167,16 @@ object Auto {
         } finally { synchronized(this) { busy = false } }
         return n
     }
+
+    fun md5(b: ByteArray) = java.security.MessageDigest.getInstance("MD5").digest(b).joinToString("") { "%02x".format(it) }
+    /** بصمة الأبديت: رقم كل شقة + أسعارها + محجوزة ولا لأ (مترتبة) */
+    fun sig(a: JSONArray): String {
+        val l = ArrayList<String>()
+        for (i in 0 until a.length()) { val o = a.optJSONObject(i) ?: continue
+            l.add(o.optString("no").uppercase().replace(Regex("[^A-Z0-9]"), "") + "|" + o.optDouble("p1", 0.0).toLong() + "|" + o.optDouble("p3", 0.0).toLong() + "|" + o.optDouble("mo", 0.0).toLong() + "|" + o.optBoolean("booked")) }
+        return l.sorted().joinToString(";")
+    }
+    fun trim(o: JSONObject, max: Int) { if (o.length() <= max) return; val ks = o.keys().asSequence().toList(); ks.take(o.length() - max).forEach { o.remove(it) } }
 
     private var models: List<String>? = null
     private fun list(key: String): List<String> {

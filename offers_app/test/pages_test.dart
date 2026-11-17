@@ -41,6 +41,10 @@ void main() {
     expect(r, contains('اتحجزت: 7'));
     expect(r, contains('جديدة: 12'));
     expect(r, contains('2: 70,000→72,000'));
+    expect(applyUpdate(v, [meta, {'no': '10', 'type': '3bk', 'p1': 90000}, {'no': '12', 'type': 'st', 'p1': 30000}], auto: true), 'مفيش تغيير');
+    final few = applyUpdate(v, [{'no': '12', 'type': 'st', 'p1': 30000}], auto: true);
+    expect(few, contains('معلّمتهمش'));
+    expect(objs(v['units']).where((u) => u['avail'] != false).length, 3);
     final nv = findVilla('Apex', {'villa': 'Villa 40'})!;
     expect(nv['no'], '40');
     expect(Store.I.villas.length, 4);

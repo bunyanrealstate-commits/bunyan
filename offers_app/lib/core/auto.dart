@@ -11,7 +11,7 @@ import 'store.dart';
 String nkey(dynamic s) => str(s).toUpperCase().replaceAll(RegExp(r'[^A-Z0-9؀-ۿ]'), '').replaceAll(RegExp(r'^0+'), '');
 
 /// يطبق صفوف الأبديت على الفيلا: الجديد يتضاف، الموجود يتحدث، واللي اختفى من الأبديت يتعلم محجوز
-String applyUpdate(Obj v, List<Obj> rows, {bool missingBooked = true}) {
+String applyUpdate(Obj v, List<Obj> rows, {bool missingBooked = true, bool auto = false}) {
   final us = (v['units'] as List?) ?? (v['units'] = <dynamic>[]);
   Obj? match(Obj r) => objs(v['units']).where((u) => nkey(u['no']).isNotEmpty && nkey(u['no']) == nkey(r['no'])).firstOrNull;
   final seen = rows.map((r) => nkey(r['no'])).toSet();
@@ -37,14 +37,19 @@ String applyUpdate(Obj v, List<Obj> rows, {bool missingBooked = true}) {
     else if (wasAvail == true && t['avail'] == false) { booked.add(str(r['no'])); }
     else if (wasAvail == false && t['avail'] == true) { back.add(str(r['no'])); }
   }
+  // أمان للتلقائي: لو الأبديت فيه شقق أقل بكتير من اللي عندنا (صورة ناقصة أو قراية غلط) منعلّمش الباقي محجوز
+  var warn = '';
+  if (auto && missing.length >= 2 && missing.length > rows.length) { missingBooked = false; warn = '⚠️ الأبديت فيه ${rows.length} شقة بس وعندك ${missing.length} مش موجودين فيه — معلّمتهمش محجوزين، راجع'; }
   if (missingBooked) { for (final u in missing) { u['avail'] = false; booked.add(str(u['no'])); } }
   final d = DateTime.now();
   v['upd'] = '${d.day}/${d.month}';
+  v['chk'] = d.toIso8601String();
   final o = <String>[];
   if (booked.isNotEmpty) o.add('اتحجزت: ${booked.join('، ')}');
   if (added.isNotEmpty) o.add('جديدة: ${added.join('، ')}');
   if (back.isNotEmpty) o.add('رجعت متاحة: ${back.join('، ')}');
   if (price.isNotEmpty) o.add('السعر: ${price.join('، ')}');
+  if (warn.isNotEmpty) o.add(warn);
   return o.isEmpty ? 'مفيش تغيير' : o.join(' • ');
 }
 
@@ -132,7 +137,8 @@ class AutoUpd {
       if (v == null) {
         msg = '⚠️ $g: جالي أبديت بس مش عارف رقم الفيلا — ضيفه بإيدك من «من صورة الأبديت»';
       } else {
-        final ch = applyUpdate(v, good);
+        final ch = applyUpdate(v, good, auto: true);
+        if (ch == 'مفيش تغيير') continue; // نفس الأبديت اتبعت تاني — منزعجكش
         msg = '${v['auto'] == true && objs(v['units']).length == good.length ? '🆕' : '📥'} ${str(v['name'])} ${str(v['no'])}: $ch${str(v['loc']).isEmpty ? ' • ⚠️ ضيف اللوكيشن' : ''}';
       }
       out.add(msg);
