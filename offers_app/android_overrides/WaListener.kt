@@ -167,12 +167,16 @@ object Auto {
                 // نفس الصورة اتبعتت تاني (أو في جروب تاني) → منقراهاش تاني ومنستهلكش Gemini
                 val hash = md5(bytes); val hashes = obj(c, "hash")
                 if (!today && hashes.has(hash)) { doneSet.add(id); done.put(id); dbg(c, g, t, "same_img"); continue }
+                if (today && obj(c, "okHash").has(hash)) continue // اتقرت أبديت قبل كده — منستهلكش Gemini
+                // فلتر على الموبايل (من غير نت ولا Gemini): الصورة فيها كلام أبديت (BHK / Payment / Villa / أسعار)؟ لو لأ نسيبها
+                if (!ocrLooksUpdate(bytes)) { doneSet.add(id); done.put(id); dbg(c, g, t, "not_update_ocr", id); continue }
                 val txt = gemini(key, prompt, bytes) ?: run { dbg(c, g, t, "gemini_fail"); null } ?: break  // Gemini مش متاح دلوقتي → نحاول تاني بعدين
                 doneSet.add(id); done.put(id)
                 hashes.put(hash, t); trim(hashes, 400); put(c, "hash", hashes)
                 val rows = try { JSONArray(txt.substring(txt.indexOf('['), txt.lastIndexOf(']') + 1)) } catch (_: Exception) { JSONArray() }
                 if (rows.length() == 0) { dbg(c, g, t, "not_update", id); continue }
                 dbg(c, g, t, "read:" + rows.length(), id)
+                obj(c, "okHash").let { o -> o.put(hash, t); trim(o, 600); put(c, "okHash", o) }
                 // نفس الأبديت بنفس الشقق والأسعار (الشركات بتعيد بعته كذا مرة في اليوم) → متتعاملش كأبديت جديد
                 val sig = sig(rows); val vk = g.lowercase() + "|" + (rows.optJSONObject(0)?.optString("villa") ?: "").uppercase().replace(Regex("[^A-Z0-9]"), "")
                 val sigs = obj(c, "sig")
@@ -380,6 +384,22 @@ object Auto {
         for (i in a.length() - 1 downTo 0) { val o = a.getJSONObject(i); if (o.optString("k") == k) { if (o.optString("s").startsWith("read") && s == "no_file") return; a.remove(i) } }
         a.put(JSONObject().put("k", k).put("g", g).put("t", t).put("s", s).put("id", id)); while (a.length() > 80) a.remove(0); put(c, "dbg", a)
     }
+    /** قراءة الكلام اللي في الصورة على الموبايل نفسه (ML Kit) — علشان منبعتش لـ Gemini غير صور الأبديت */
+    fun ocr(bytes: ByteArray): String? = try {
+        val o = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, o)
+        var smp = 1; while (o.outWidth / (smp * 2) >= 1200) smp *= 2
+        val bm = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, android.graphics.BitmapFactory.Options().apply { inSampleSize = smp })
+        val rec = com.google.mlkit.vision.text.TextRecognition.getClient(com.google.mlkit.vision.text.latin.TextRecognizerOptions.DEFAULT_OPTIONS)
+        com.google.android.gms.tasks.Tasks.await(rec.process(com.google.mlkit.vision.common.InputImage.fromBitmap(bm, 0)), 25, java.util.concurrent.TimeUnit.SECONDS).text
+    } catch (_: Throwable) { null }
+    private val kw = Regex("bhk|b/r|bed ?room|studio|payment|cheque|monthly|yearly|villa|unit|flat|apartment|rent|aed|zone|floor|booked|available|vacant", RegexOption.IGNORE_CASE)
+    fun ocrLooksUpdate(bytes: ByteArray): Boolean {
+        val t = ocr(bytes) ?: return true // لو الـ OCR مش شغال نسيبها لـ Gemini
+        val prices = Regex("\\b\\d{1,3}[,.]\\d{3}\\b|\\b\\d{4,6}\\b").findAll(t).count()
+        return kw.findAll(t).count() >= 2 || prices >= 2
+    }
+
     fun md5(b: ByteArray) = java.security.MessageDigest.getInstance("MD5").digest(b).joinToString("") { "%02x".format(it) }
     /** بصمة الأبديت: رقم كل شقة + أسعارها + محجوزة ولا لأ (مترتبة) */
     fun sig(a: JSONArray): String {
@@ -467,7 +487,10 @@ object Auto {
                 }
                 fun rank(s: String) = (if (s.contains("lite")) 4 else 0) + (if (s.contains("preview")) 2 else 0) + (if (s.contains("latest")) 0 else 1)
                 val srt = ok.sortedWith(compareBy<String>({ rank(it) }, { -(Regex("(\\d+(?:\\.\\d+)?)").find(it)?.value?.toDoubleOrNull() ?: 0.0) }))
-                if (srt.isNotEmpty()) { models = (srt.take(5) + fall.filter { it !in srt }).take(7); return models!! }
+                // كل موديل ليه حد مجاني لوحده — بنخلط العادي مع الـ lite (حده أكبر) علشان لو واحد خلص حده التاني يرد
+                val full = srt.filter { !it.contains("lite") }.take(3); val lite = srt.filter { it.contains("lite") }.take(3)
+                val mix = ArrayList<String>(); for (i in 0 until 3) { full.getOrNull(i)?.let { mix.add(it) }; lite.getOrNull(i)?.let { mix.add(it) } }
+                if (mix.isNotEmpty()) { models = (mix + fall.filter { it !in mix }).take(8); return models!! }
             }
         } catch (_: Exception) {}
         return fall
@@ -475,6 +498,15 @@ object Auto {
 
     fun gemini(key: String, prompt: String, img: ByteArray): String? = gemini(key, prompt, listOf(img))
     fun gemini(key: String, prompt: String, imgs: List<ByteArray>): String? {
+        for (attempt in 0..1) {
+            val r = gemini1(key, prompt, imgs)
+            if (r != "429") return r
+            Thread.sleep(65000) // الحد المجاني بتاع الدقيقة خلص — نستنى دقيقة ونحاول تاني
+        }
+        return null
+    }
+    private fun gemini1(key: String, prompt: String, imgs: List<ByteArray>): String? {
+        var all429 = true
         val parts = JSONArray().put(JSONObject().put("text", prompt))
         for (img in imgs) parts.put(JSONObject().put("inline_data", JSONObject().put("mime_type", "image/jpeg").put("data", Base64.encodeToString(img, Base64.NO_WRAP))))
         val body = JSONObject()
@@ -494,10 +526,11 @@ object Auto {
                     if (sb.isNotBlank()) return sb.toString()
                 }
                 if (code == 401 || code == 403) return null
-                if (code == 404) models = null
-            } catch (_: Exception) {}
+                if (code == 404) { models = null; continue }
+                if (code != 429) all429 = false
+            } catch (_: Exception) { all429 = false }
         }
-        return null
+        return if (all429) "429" else null
     }
 
     private fun notify(c: Context, g: String, units: Int) {

@@ -148,11 +148,12 @@ class _GroupsState extends State<GroupsPage> with WidgetsBindingObserver {
             final t = DateTime.fromMillisecondsSinceEpoch((d['t'] as num?)?.toInt() ?? 0);
             final msg = st.startsWith('read') ? '✅ اتقرت (${st.split(':').last} شقة)' : {
               'not_update': '🤷 Gemini قال دي مش صورة أبديت',
+              'not_update_ocr': '🖼️ صورة عادية (مفيهاش كلام أبديت) — ما اتبعتتش لـ Gemini',
               'gemini_fail': '⚠️ Gemini مكانش رادد — هيحاول تاني لوحده',
               'no_file': '📵 الصورة ما اتحملتش على الموبايل — افتح الجروب يتحمل، أو شغّل تحميل الصور التلقائي',
               'same_img': '♻️ نفس صورة اتقرت قبل كده',
             }[st] ?? st;
-            final bad = !st.startsWith('read') && st != 'same_img';
+            final bad = !st.startsWith('read') && st != 'same_img' && st != 'not_update_ocr';
             return Card(color: bad ? const Color(0xFFFFF4E0) : null, child: ListTile(dense: true,
               title: Text('${'${d['g']}'.isEmpty ? 'واتساب الأعمال' : d['g']} • ${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}', style: const TextStyle(fontWeight: FontWeight.w700)),
               subtitle: Text(msg),

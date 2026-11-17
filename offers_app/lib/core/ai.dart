@@ -25,7 +25,9 @@ class Ai {
         }).map((m) => str(m['name']).replaceFirst('models/', '')).toList();
         int rank(String n) => (n.contains('lite') ? 4 : 0) + (n.contains('preview') ? 2 : 0) + (n.contains('latest') ? 0 : 1);
         ms.sort((a, b) { final d = rank(a) - rank(b); return d != 0 ? d : _ver(b).compareTo(_ver(a)); });
-        if (ms.isNotEmpty) return _models = [...ms.take(5), ..._fall.where((f) => !ms.contains(f))].take(7).toList();
+        final full = ms.where((m) => !m.contains('lite')).take(3).toList(), lite = ms.where((m) => m.contains('lite')).take(3).toList();
+        final mix = <String>[for (var i = 0; i < 3; i++) ...[if (i < full.length) full[i], if (i < lite.length) lite[i]]];
+        if (mix.isNotEmpty) return _models = [...mix, ..._fall.where((f) => !mix.contains(f))].take(8).toList();
       }
     } catch (_) {}
     return _fall;
@@ -56,7 +58,7 @@ class Ai {
         if (r.statusCode == 404) _models = null;
       } on String { rethrow; } catch (e) { errs.add('$m: ${e is TimeoutException ? 'اتأخر' : 'مفيش نت'}'); }
     }
-    if (errs.every((e) => e.endsWith('429'))) throw 'Gemini مضغوط دلوقتي (الحد المجاني) — استنى دقيقة وجرب تاني';
+    if (errs.where((e) => !e.endsWith('404')).every((e) => e.endsWith('429'))) throw 'Gemini خلّص الحد المجاني دلوقتي — استنى دقيقة وجرّب تاني (ولو فضل كده يبقى حد اليوم خلص ويرجع بكره الصبح)';
     throw 'Gemini مش رادد\n${errs.join('\n')}';
   }
 
