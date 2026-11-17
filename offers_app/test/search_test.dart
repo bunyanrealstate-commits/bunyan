@@ -29,6 +29,12 @@ void main() {
   test('غرفتين وصالة بتشمل اللي بحمامين', () {
     expect(Search.run(vs, types: {'2bk'}).any((x) => (x['u'] as Obj)['id'] == 'g2'), true);
   });
+  test('3 دفعات: لو الشركة كاتبة دفعة/دفعتين بس، بياخد الأقرب', () {
+    final u = <String, dynamic>{'type': '1bk2b', 'p1': 50000, 'p2': 52000, 'avail': true, 'videos': ['x']};
+    final r = Search.run([{'id': 'z', 'units': [u]}], types: {'1bk'}, pay: '3', budget: 4500);
+    expect(r.length, 1);
+    expect(unitCaption({'loc': ''}, u, '3'), '💰 52,000 درهم — دفعتين');
+  });
   test('رسالة العميل', () {
     final r = Search.run(vs, types: {'1bk'}, pay: 'mo', budget: 3500);
     final m = clientMsg(r.take(1).toList());

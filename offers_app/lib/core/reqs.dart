@@ -36,6 +36,8 @@ Obj parseRequest(String text, {List<String> areas = const []}) {
   var area = '';
   for (final a in areas) { if (a.trim().length >= 3 && t.contains(a.toLowerCase().trim())) { area = a; break; } }
   final latin = RegExp('[a-z]').allMatches(t).length, ar = RegExp('[؀-ۿ]').allMatches(t).length;
+  if (pay == 'any' && budget > 20000) pay = '3'; // الميزانية بالسنة = الشركات بتمشي 3 دفعات
+  if (pay == 'any' && budget > 0 && budget <= 20000) pay = 'mo';
   bool? fur;
   if (RegExp(r'\bfur|furnished|مفروش|مفروشة|مفروشه').hasMatch(t)) fur = true;
   if (RegExp(r'\bempty|unfur|un-fur|فاضي|فاضى|فاضية|غير مفروش|مش مفروش|بدون فرش').hasMatch(t)) fur = false;

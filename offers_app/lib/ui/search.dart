@@ -16,7 +16,7 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchState extends State<SearchPage> {
-  final types = <String>{'1bk'}; String pay = 'mo'; bool terms = false; bool? fur; final bc = TextEditingController(), qc = TextEditingController(); double tol = 10;
+  final types = <String>{'1bk'}; String pay = '3'; bool terms = false; bool? fur; final bc = TextEditingController(), qc = TextEditingController(); double tol = 10;
   final picked = <String>{};
 
   @override

@@ -19,7 +19,7 @@ class OfferPage {
     void a2() { if (p2 > 0) o.add(en ? 'AED ${money(p2)} / year — 2 payments' : '${money(p2)} درهم في السنة — دفعتين'); }
     void a3() { if (p3 > 0) o.add(en ? 'AED ${money(p3)} / year — 3 payments' : '${money(p3)} درهم في السنة — 3 دفعات'); }
     void am() { if (mo > 0) o.add(en ? 'AED ${money(mo)} / month' : '${money(mo)} درهم شهري'); }
-    if (pay == '1') { a1(); } else if (pay == '2') { a2(); } else if (pay == '3') { a3(); } else if (pay == 'mo') { am(); } else { a1(); am(); if (o.isEmpty) a2(); if (o.isEmpty) a3(); }
+    if (pay == '1') { a1(); } else if (pay == '2') { a2(); } else if (pay == '3') { if (p3 > 0) { a3(); } else if (p2 > 0) { a2(); } else { a1(); } } else if (pay == 'mo') { am(); } else { a1(); am(); if (o.isEmpty) a2(); if (o.isEmpty) a3(); }
     return o.join('<br>');
   }
 

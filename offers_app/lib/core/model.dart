@@ -39,7 +39,7 @@ class Price {
     if (pay == 'mo') return mo(u);
     if (pay == '1') return p1(u) / 12;
     if (pay == '2') return p2(u) / 12;
-    if (pay == '3') return p3(u) / 12;
+    if (pay == '3') return (p3(u) > 0 ? p3(u) : (p2(u) > 0 ? p2(u) : p1(u))) / 12; // الشركات بتمشي 3 دفعات — لو مش مكتوب ناخد الأقرب
     if (mo(u) > 0) return mo(u);
     final y = [p1(u), p2(u), p3(u)].where((x) => x > 0);
     return y.isEmpty ? 0 : y.reduce(math.min) / 12;
@@ -73,7 +73,7 @@ class Search {
         if (pay == 'mo' && Price.mo(u) <= 0) continue;
         if (pay == '1' && Price.p1(u) <= 0) continue;
         if (pay == '2' && Price.p2(u) <= 0) continue;
-        if (pay == '3' && Price.p3(u) <= 0) continue;
+        if (pay == '3' && Price.p3(u) <= 0 && Price.p2(u) <= 0 && Price.p1(u) <= 0) continue;
         final m = Price.monthlyEq(u, pay);
         if (budget > 0) { if (m <= 0) continue; if (m > budget * (1 + tol / 100)) continue; }
         if (qq.isNotEmpty && !'${v['name']} ${v['no']} ${v['company']} ${v['area']} ${u['no']}'.toLowerCase().contains(qq)) continue;
@@ -112,7 +112,7 @@ String unitCaption(Obj v, Obj u, String pay, {bool en = false, bool terms = fals
   void a2() { if (p2 > 0) o.add(en ? '💰 AED ${money(p2)} / year — 2 payments' : '💰 ${money(p2)} درهم — دفعتين'); }
   void a3() { if (p3 > 0) o.add(en ? '💰 AED ${money(p3)} / year — 3 payments' : '💰 ${money(p3)} درهم — 3 دفعات'); }
   void am() { if (mo > 0) o.add(en ? '💰 AED ${money(mo)} / month' : '💰 ${money(mo)} درهم شهري'); }
-  if (pay == '1') { a1(); } else if (pay == '2') { a2(); } else if (pay == '3') { a3(); } else if (pay == 'mo') { am(); } else { a1(); am(); if (p1 <= 0 && mo <= 0) { a2(); if (p2 <= 0) a3(); } }
+  if (pay == '1') { a1(); } else if (pay == '2') { a2(); } else if (pay == '3') { if (p3 > 0) { a3(); } else if (p2 > 0) { a2(); } else { a1(); } } else if (pay == 'mo') { am(); } else { a1(); am(); if (p1 <= 0 && mo <= 0) { a2(); if (p2 <= 0) a3(); } }
   if (terms && str(v['terms']).isNotEmpty) o.add('📄 ${v['terms']}');
   if (str(v['loc']).isNotEmpty) o.add('📍 ${v['loc']}');
   return o.join('\n');
