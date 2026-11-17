@@ -48,6 +48,7 @@ class MainActivity : FlutterActivity() {
                 "autoRun" -> Thread { val n = Auto.run(applicationContext); runOnUiThread { res.success(n) } }.start()
                 "autoToday" -> Thread { val n = Auto.run(applicationContext, true); runOnUiThread { res.success(n) } }.start()
                 "autoProg" -> res.success(Auto.prog)
+                "play" -> { try { startActivity(Intent(Intent.ACTION_VIEW).apply { setDataAndType(Uri.parse(call.argument<String>("uri") ?: ""), "video/*"); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK) }); res.success(true) } catch (e: Exception) { res.success(false) } }
                 "autoDbg" -> res.success(Auto.arr(this, "dbg").toString())
                 "forget" -> { val h = Auto.obj(this, "hash"); val d = Auto.arr(this, "dbg"); Auto.put(this, "hash", "{}"); Auto.put(this, "done", "[]"); Auto.put(this, "doneF", "[]"); Auto.put(this, "sig", "{}"); res.success(h.length() + d.length()) }
                 "autoTake" -> { val r = Auto.arr(this, "res").toString(); Auto.put(this, "res", "[]"); res.success(r) }

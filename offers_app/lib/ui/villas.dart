@@ -62,7 +62,7 @@ class _VillasState extends State<VillasPage> {
     final us = objs(v['units']); final av = us.where((u) => u['avail'] != false).length;
     final first = us.expand((u) => ((u['videos'] as List?) ?? []).map(str)).firstOrNull;
     return Card(child: InkWell(borderRadius: BorderRadius.circular(16), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => VillaPage(str(v['id'])))), child: Padding(padding: const EdgeInsets.all(10), child: Row(children: [
-      VThumb(first, w: 64, h: 64), const SizedBox(width: 10),
+      VThumb(first, w: 64, h: 64, play: false), const SizedBox(width: 10),
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('${str(v['name'])} ${str(v['no'])}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15.5)),
         Text([str(v['company']), str(v['area'])].where((x) => x.isNotEmpty).join(' • '), style: const TextStyle(color: kMuted, fontSize: 12.5)),
