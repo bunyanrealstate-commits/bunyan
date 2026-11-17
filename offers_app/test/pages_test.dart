@@ -53,7 +53,8 @@ void main() {
     expect(await t.runAsync(() => Reqs.pruneOld([{'n': '2bhk 2bath 80000 Omar', 'p': '971509998877', 'u': old}])), 1);
     await t.runAsync(() => Reqs.importContacts([{'n': '2bhk 2bath 80000 Omar', 'p': '971509998877'}]));
     g10['type'] = '2bk2b'; g10['p1'] = 79000;
-    expect(Reqs.newFor().any((r) => r['id'] == om['id']), true);
+    final om2 = Reqs.all.firstWhere((r) => r['p'] == '971509998877');
+    expect(Reqs.newFor().any((r) => r['id'] == om2['id']), true);
     await show(t, const ReqsPage(), 'reqs');
     expect(find.textContaining('Ahmed'), findsOneWidget);
     await show(t, ReqPage(str(r['id'])), 'req');
