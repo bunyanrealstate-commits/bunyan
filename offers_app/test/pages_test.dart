@@ -10,6 +10,7 @@ import 'package:offers/ui/villas.dart';
 import 'package:offers/ui/import.dart';
 import 'package:offers/ui/settings.dart';
 import 'package:offers/ui/groups.dart';
+import 'package:offers/ui/shots.dart';
 import 'package:offers/core/auto.dart';
 import 'package:offers/core/model.dart';
 import 'fixture.dart';
@@ -32,6 +33,8 @@ void main() {
     await show(t, const ImportPage('v1'), 'import');
     await show(t, const SettingsPage(), 'settings');
     await show(t, const GroupsPage(), 'groups');
+    Store.I.D['log'] = [{'at': DateTime.now().toIso8601String(), 'g': 'MARASI', 'm': '📥 الغانم 25: اتحجزت: 7', 'img': '123', 'vid': 'v3'}];
+    await show(t, const ShotsPage(), 'shots');
   });
   test('أبديت الجروب: يلاقي فيلا الغانم 25 ويحدثها', () {
     final meta = {'villa': 'RD 66 , VILLA 25', 'company': 'ALGHANIM REAL ESTATE', 'no': '2', 'type': '2bk2b', 'p1': 72000};

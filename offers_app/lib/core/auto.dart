@@ -124,6 +124,7 @@ class AutoUpd {
     List items;
     try { await Native.ch.invokeMethod('autoRun'); items = jsonDecode(await Native.ch.invokeMethod<String>('autoTake') ?? '[]') as List; } catch (_) { return []; }
     final out = <String>[];
+    var logged = false;
     for (final it in items.whereType<Map>()) {
       final g = str(it['g']);
       List<Obj> rows;
@@ -134,19 +135,24 @@ class AutoUpd {
       if (good.isEmpty) continue;
       final v = findVilla(companyOf(g), meta);
       final String msg;
-      if (v == null) {
+      var quiet = it['same'] == true;
+      if (quiet) {
+        msg = '✓ ${v == null ? g : '${str(v['name'])} ${str(v['no'])}'}: نفس الأبديت — مفيش جديد';
+      } else if (v == null) {
         msg = '⚠️ $g: جالي أبديت بس مش عارف رقم الفيلا — ضيفه بإيدك من «من صورة الأبديت»';
       } else {
         final ch = applyUpdate(v, good, auto: true);
-        if (ch == 'مفيش تغيير') continue; // نفس الأبديت اتبعت تاني — منزعجكش
-        msg = '${v['auto'] == true && objs(v['units']).length == good.length ? '🆕' : '📥'} ${str(v['name'])} ${str(v['no'])}: $ch${str(v['loc']).isEmpty ? ' • ⚠️ ضيف اللوكيشن' : ''}';
+        quiet = ch == 'مفيش تغيير'; // نفس الأبديت اتبعت تاني — منزعجكش، بس الصورة بتتسجل
+        msg = quiet ? '✓ ${str(v['name'])} ${str(v['no'])}: نفس الأبديت — مفيش جديد' : '${v['auto'] == true && objs(v['units']).length == good.length ? '🆕' : '📥'} ${str(v['name'])} ${str(v['no'])}: $ch${str(v['loc']).isEmpty ? ' • ⚠️ ضيف اللوكيشن' : ''}';
       }
-      out.add(msg);
+      if (!quiet) out.add(msg);
       final l = (Store.I.D['log'] as List?) ?? (Store.I.D['log'] = <dynamic>[]);
-      l.insert(0, {'at': DateTime.now().toIso8601String(), 'g': g, 'm': msg, 'vid': v?['id']});
-      while (l.length > 60) { l.removeLast(); }
+      l.insert(0, {'at': DateTime.now().toIso8601String(), 'g': g, 'm': msg, 'vid': v?['id'], 'img': str(it['id']), 'same': quiet, 'n': good.length});
+      while (l.length > 150) { l.removeLast(); }
+      logged = true;
     }
-    if (out.isNotEmpty) { await Store.I.save(); last.value = out; }
+    if (logged) await Store.I.save();
+    if (out.isNotEmpty) last.value = out;
     return out;
   }
 }

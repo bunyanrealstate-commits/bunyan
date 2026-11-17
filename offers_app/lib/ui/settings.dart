@@ -3,6 +3,7 @@ import '../core/store.dart';
 import '../core/native.dart';
 import 'theme.dart';
 import 'groups.dart';
+import 'shots.dart';
 import '../core/auto.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -13,6 +14,7 @@ class SettingsPage extends StatelessWidget {
         return Scaffold(
           appBar: AppBar(title: const Text('⚙️ الإعدادات')),
           body: ListView(padding: const EdgeInsets.all(14), children: [
+            Card(child: ListTile(leading: const Icon(Icons.photo_library_outlined, color: kAc), title: const Text('📷 صور الأبديت', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('الصور اللي التطبيق قراها من الجروبات'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ShotsPage())))),
             Card(child: ListTile(leading: const Icon(Icons.groups_outlined, color: kAc), title: const Text('📥 أبديت الجروبات التلقائي', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: Text(AutoUpd.groups.isEmpty ? 'اختار جروبات الشركات والأبديت يتقري لوحده' : '${AutoUpd.groups.length} جروب متابَع'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GroupsPage())))),
             Card(child: ListTile(leading: Icon(s.linked ? Icons.link : Icons.link_off, color: s.linked ? kOk : kGold), title: Text(s.linked ? 'مربوط ببنيان' : 'مش مربوط ببنيان لسه'),
               subtitle: Text(s.linked ? 'الباك أب بيترفع لوحده • ${s.gemKey.isEmpty ? 'مفتاح Gemini مش موجود' : 'Gemini شغال'}${s.backupMsg.isNotEmpty ? '\n${s.backupMsg}' : ''}' : 'افتح بنيان مرة على الموبايل — هيفتح التطبيق ده ويبعتله مفتاح Gemini والباك أب لوحده'))),

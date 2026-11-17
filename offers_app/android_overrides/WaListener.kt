@@ -157,7 +157,7 @@ object Auto {
                 // نفس الأبديت بنفس الشقق والأسعار (الشركات بتعيد بعته كذا مرة في اليوم) → متتعاملش كأبديت جديد
                 val sig = sig(rows); val vk = g.lowercase() + "|" + (rows.optJSONObject(0)?.optString("villa") ?: "").uppercase().replace(Regex("[^A-Z0-9]"), "")
                 val sigs = obj(c, "sig")
-                if (sigs.optString(vk) == sig) continue
+                if (sigs.optString(vk) == sig) { res.put(JSONObject().put("g", g).put("t", t).put("id", id).put("txt", txt).put("same", true)); continue }
                 sigs.put(vk, sig); trim(sigs, 600); put(c, "sig", sigs)
                 res.put(JSONObject().put("g", g).put("t", t).put("id", id).put("txt", txt)); n++
                 notify(c, g, rows.length())

@@ -10,6 +10,13 @@ class Media {
     final p = await PhotoManager.requestPermissionExtend(requestOption: const PermissionRequestOption(androidPermission: AndroidPermission(type: RequestType.video, mediaLocation: false)));
     return p.isAuth || p.hasAccess;
   }
+  static Future<bool> permImg() async {
+    if (kIsWeb) return false;
+    final p = await PhotoManager.requestPermissionExtend(requestOption: const PermissionRequestOption(androidPermission: AndroidPermission(type: RequestType.common, mediaLocation: false)));
+    return p.isAuth || p.hasAccess;
+  }
+  /// الصورة بحجم كبير للعرض
+  static Future<Uint8List?> big(String id) async { final a = await byId(id); return a?.thumbnailDataWithSize(const ThumbnailSize(1600, 1600), quality: 90); }
   static Future<List<AssetPathEntity>> albums() async {
     if (!await perm()) return [];
     final l = await PhotoManager.getAssetPathList(type: RequestType.video, hasAll: false);

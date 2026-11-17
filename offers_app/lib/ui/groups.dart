@@ -5,6 +5,7 @@ import '../core/native.dart';
 import '../core/store.dart';
 import 'theme.dart';
 import 'villas.dart';
+import 'shots.dart';
 
 /// 📥 أبديت الجروبات التلقائي: تختار جروبات الشركات، وكل جروب تبع أنهي شركة
 class GroupsPage extends StatefulWidget {
@@ -110,6 +111,7 @@ class _GroupsState extends State<GroupsPage> with WidgetsBindingObserver {
           const SizedBox(height: 8),
           OutlinedButton.icon(onPressed: () async { try { await Native.ch.invokeMethod('appInfo'); } catch (_) {} }, icon: const Icon(Icons.info_outline), label: const Text('افتح معلومات التطبيق')),
         ]))),
+        Card(color: const Color(0xFFE3F4F5), child: ListTile(leading: const Icon(Icons.photo_library_outlined, color: kAc), title: Text('📷 صور الأبديت اللي اتقرت (${AutoUpd.log.where((x) => str(x['img']).isNotEmpty).length})', style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('شوف كل صورة لقطها وإيه اللي اتغير بسببها'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ShotsPage())))),
         Card(child: SwitchListTile(value: AutoUpd.allOn, onChanged: _all, title: const Text('تابع كل الجروبات', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('أي جروب يبعت صورة أبديت يتقري — حتى الجروبات الجديدة. اقفل اللي مش عايزه من تحت'))),
         Card(child: ListTile(leading: reading ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)) : const Icon(Icons.refresh, color: kAc), title: Text(reading ? 'بيقرا الصور اللي وصلت…' : 'اقرا صور الأبديت اللي وصلت (آخر 3 أيام)', style: const TextStyle(fontWeight: FontWeight.w700)), onTap: reading ? null : _read)),
         const SizedBox(height: 8),
