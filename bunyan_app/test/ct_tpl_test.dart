@@ -34,6 +34,10 @@ void main() {
     }
     expect(Ct.chqTxt({'cq': '1', 'cqd': true}, true), '1 Cheque + 1 Security Deposit Cheque');
     expect(Ct.chqTxt({'cq': '4'}, false), '4 شيكات');
+    for (final l in ['ar', 'en', 'bi']) {
+      Ct.switchTpl(S, 'b'); Ct.ct(S)['cl'] = l; Ct.ct(S)['lang'] = l == 'ar' ? 'ar' : 'en'; Ct.F(S)['rm'] = 'p'; Ct.F(S)['pn'] = '3'; Ct.autoPays(S);
+      File('build/ct_$l.pdf').writeAsBytesSync(await CtPdf.build(Ct.finalHtml(S)));
+    }
     Ct.newContract(S); expect(str(Ct.F(S)['tn']), '');
     // 40000 على 6 دفعات من 31/10/2026 لـ 30/10/2027 = كل شهرين
     final f = Ct.F(S); f..['st'] = '2026-10-31'..['en'] = '2027-10-30'..['tot'] = '40000'..['pn'] = '6';
