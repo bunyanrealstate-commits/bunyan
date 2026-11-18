@@ -342,7 +342,6 @@ fun StatsAndBadges() {
     if (fresh.isNotEmpty()) AlertDialog(onDismissRequest = { fresh = emptyList() }, confirmButton = { TextButton({ fresh = emptyList() }) { Text("كمّل كدا 💪") } },
         title = { Text("🏅 إنجاز جديد!", fontWeight = FontWeight.Black) },
         text = { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) { fresh.forEach { Column(horizontalAlignment = Alignment.CenterHorizontally) { Text(it.ic, fontSize = 42.sp); Text(it.t, fontWeight = FontWeight.Bold) } } } })
-    WeeklyReport()
 }
 
 @Composable
@@ -545,7 +544,7 @@ val GENRES = listOf("📏 كتب قصيرة (أقل من 150 صفحة)", "📖 �
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-fun ExploreSheet(onDismiss: () -> Unit, onSearch: (String) -> Unit) {
+fun ExploreBody(onSearch: (String) -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var g by remember { mutableStateOf<String?>(null) }
@@ -555,7 +554,7 @@ fun ExploreSheet(onDismiss: () -> Unit, onSearch: (String) -> Unit) {
             "رجّع JSON بس: {\"r\":[{\"t\":\"اسم الكتاب بالعربي\",\"a\":\"المؤلف\",\"pg\":عدد الصفحات التقريبي,\"why\":\"بيتكلم عن إيه — سطر بالمصري\"}]}")
         res = j?.optJSONArray("r")?.let { a -> (0 until a.length()).mapNotNull { a.optJSONObject(it) } } ?: emptyList()
     } }
-    Sheet("🧭 استكشف كتب", onDismiss) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) { GENRES.forEach { x -> Chip(x, g == x) { load(x) } } }
         if (g != null) {
             val l = res
@@ -608,9 +607,9 @@ fun AboutSheet(b: JSONObject, onDismiss: () -> Unit) {
 
 /* ───── 📈 إحصائياتي (زي Reading Stats) ───── */
 @Composable
-fun StatsSheet(onDismiss: () -> Unit) {
+fun StatsBody() {
     val m = Lib.dayMap()
-    Sheet("📈 إحصائياتي", onDismiss) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("📄 الصفحات في آخر 30 يوم", fontWeight = FontWeight.Bold, color = Ink)
         val c = Calendar.getInstance(); c.add(Calendar.DAY_OF_MONTH, -29)
         val days = (0 until 30).map { val v = m[Lib.ds(c.time)] ?: 0; c.add(Calendar.DAY_OF_MONTH, 1); v }

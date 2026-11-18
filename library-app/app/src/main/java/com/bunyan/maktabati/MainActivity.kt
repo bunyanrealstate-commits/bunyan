@@ -16,6 +16,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -229,28 +230,31 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
     var epBusy by remember { mutableStateOf("") }
     @Suppress("UNUSED_VARIABLE") val v = Lib.ver
     var shelf by remember { mutableStateOf("now") }
+    var tab by rememberSaveable { mutableStateOf("home") }
+    BackHandler(tab != "home") { tab = "home" }
     var q by remember { mutableStateOf("") }
     var menu by remember { mutableStateOf<JSONObject?>(null) }
     var goalDlg by remember { mutableStateOf(false) }
     var rate by remember { mutableStateOf<JSONObject?>(null) }
     var year by remember { mutableStateOf(false) }
     var about by remember { mutableStateOf<JSONObject?>(null) }
-    var explore by remember { mutableStateOf(false) }
-    var stats by remember { mutableStateOf(false) }
     val cur = Lib.current()
     val today = Lib.todayPages(); val goal = Lib.goal; val st = Lib.streak()
     val list = Lib.books.filter { it.optString("sh", "want") == shelf && (q.isBlank() || it.optString("t").contains(q) || it.optString("a").contains(q)) }
         .let { l -> if (shelf == "want") l.sortedBy { b -> Lib.queue.indexOf(b.optString("id")).let { if (it < 0) 9999 else it } } else l.sortedByDescending { it.optLong("rd", 0) } }
 
-    LazyVerticalGrid(GridCells.Fixed(3), Modifier.fillMaxSize().background(Paper), contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 0.dp, bottom = 40.dp),
+    Column(Modifier.fillMaxSize().background(Paper)) {
+    LazyVerticalGrid(GridCells.Fixed(3), Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 0.dp, bottom = 40.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item(span = { GridItemSpan(3) }) {
             Row(Modifier.statusBarsPadding().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("📚 مكتبتي", fontSize = 26.sp, fontWeight = FontWeight.Black, color = Ink, modifier = Modifier.weight(1f))
+                Text(when (tab) { "books" -> "📚 كتبي"; "find" -> "🧭 اكتشف"; "me" -> "🏅 إنجازاتي"; else -> "📚 مكتبتي" }, fontSize = 26.sp, fontWeight = FontWeight.Black, color = Ink, modifier = Modifier.weight(1f))
                 if (Lib.syncing) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                 else if (Lib.link != null) Text("🔄", fontSize = 20.sp, modifier = Modifier.clickable { onSync() }.padding(8.dp))
+                Text("⚙️", fontSize = 20.sp, modifier = Modifier.clickable { onSettings() }.padding(8.dp))
             }
         }
+        if (tab == "home") {
         if (Lib.link != null && Lib.msg.isNotEmpty() && !Lib.msg.startsWith("تمام")) item(span = { GridItemSpan(3) }) {
             Surface(onClick = onSync, shape = RoundedCornerShape(14.dp), color = Color(0xFFFDECEC)) {
                 Text("⚠️ المزامنة مع بنيان: " + Lib.msg + " — دوس هنا تجرب تاني", Modifier.padding(12.dp), color = Color(0xFFB3261E), fontSize = 13.sp, fontWeight = FontWeight.Bold)
@@ -338,26 +342,18 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 }
             }
         }
-        item(span = { GridItemSpan(3) }) { ChallengeCard { year = true } }
         item(span = { GridItemSpan(3) }) { MotivationCards { onMore("jar") } }
         item(span = { GridItemSpan(3) }) { ReviewCard() }
-        // أزرار
+        }
+        if (tab == "books") {
         item(span = { GridItemSpan(3) }) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Action("🔎", "نزّل كتاب", Modifier.weight(1f), onSearch)
-                Action("✨", "رشّحلي", Modifier.weight(1f), onRec)
                 Action("📄", "من موبايلي", Modifier.weight(1f), onPick)
+                Action("📷", "كتاب ورق", Modifier.weight(1f)) { onMore("paper") }
                 Action(if (Lib.link == null) "🔗" else "✅", if (Lib.link == null) "اربط ببنيان" else "مربوط", Modifier.weight(1f), onLink)
             }
         }
-        item(span = { GridItemSpan(3) }) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Action("🧭", "استكشف", Modifier.weight(1f)) { explore = true }
-                Action("📈", "إحصائياتي", Modifier.weight(1f)) { stats = true }
-                Action("📖", "سنتي", Modifier.weight(1f)) { year = true }
-            }
-        }
-        item(span = { GridItemSpan(3) }) { MoreActions({ onMore("journey") }, { onMore("buddy") }, { onMore("paper") }, onSettings) }
         // الرفوف
         item(span = { GridItemSpan(3) }) {
             Column {
@@ -386,9 +382,38 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 if (b.optInt("r") > 0) Stars(b.optInt("r"), 12)
             }
         }
+        }
+        if (tab == "find") {
+        item(span = { GridItemSpan(3) }) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Action("✨", "أقرا إيه بعد كده؟", Modifier.weight(1f), onRec)
+                Action("💬", "رفيق القراية", Modifier.weight(1f)) { onMore("buddy") }
+            }
+        }
+        item(span = { GridItemSpan(3) }) { Text("🧭 استكشف بالتصنيف", fontWeight = FontWeight.Black, fontSize = 17.sp, color = Ink) }
+        item(span = { GridItemSpan(3) }) { ExploreBody { q -> onSearchQ(q) } }
+        }
+        if (tab == "me") {
+        item(span = { GridItemSpan(3) }) { ChallengeCard { year = true } }
+        item(span = { GridItemSpan(3) }) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Action("📖", "سنتي في القراية", Modifier.weight(1f)) { year = true }
+                Action("🗺", "رحلتي", Modifier.weight(1f)) { onMore("journey") }
+            }
+        }
         item(span = { GridItemSpan(3) }) { Column(Modifier.padding(top = 10.dp)) { StatsAndBadges() } }
         item(span = { GridItemSpan(3) }) { Text("«عشر صفحات كل يوم = حوالي 12 كتاب في السنة»", Modifier.fillMaxWidth().padding(top = 16.dp), textAlign = TextAlign.Center, color = Muted, fontSize = 13.sp) }
+        item(span = { GridItemSpan(3) }) { Surface(shape = RoundedCornerShape(20.dp), color = Card) { Column(Modifier.padding(14.dp)) { StatsBody() } } }
+        }
     }
+    NavigationBar(containerColor = Card, tonalElevation = 0.dp) {
+        listOf(Triple("home", "🏠", "الرئيسية"), Triple("books", "📚", "كتبي"), Triple("find", "🧭", "اكتشف"), Triple("me", "🏅", "إنجازاتي")).forEach { (k, ic, t) ->
+            NavigationBarItem(selected = tab == k, onClick = { tab = k }, icon = { Text(ic, fontSize = 22.sp) }, label = { Text(t, fontWeight = FontWeight.Bold, fontSize = 12.sp) },
+                colors = NavigationBarItemDefaults.colors(indicatorColor = Color(0xFFE8F3EE), selectedTextColor = Green, unselectedTextColor = Muted))
+        }
+    }
+    }
+    WeeklyReport()
 
     menu?.let { b ->
         AlertDialog(onDismissRequest = { menu = null }, confirmButton = { TextButton({ menu = null }) { Text("قفل") } },
@@ -415,8 +440,6 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
     }
     rate?.let { RateSheet(it) { rate = null } }
     about?.let { AboutSheet(it) { about = null } }
-    if (explore) ExploreSheet({ explore = false }) { q -> explore = false; onSearchQ(q) }
-    if (stats) StatsSheet { stats = false }
     if (year) YearSheet({ year = false }) { menu = it }
     if (goalDlg) {
         AlertDialog(onDismissRequest = { goalDlg = false }, confirmButton = { TextButton({ goalDlg = false }) { Text("تمام") } },
