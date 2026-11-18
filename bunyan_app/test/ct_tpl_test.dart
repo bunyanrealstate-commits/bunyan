@@ -28,5 +28,13 @@ void main() {
       Ct.issues(S);
     }
     Ct.newContract(S); expect(str(Ct.F(S)['tn']), '');
+    // 40000 على 6 دفعات من 31/10/2026 لـ 30/10/2027 = كل شهرين
+    final f = Ct.F(S); f..['st'] = '2026-10-31'..['en'] = '2027-10-30'..['tot'] = '40000'..['pn'] = '6';
+    Ct.autoPays(S); final P = lst(f['pays']);
+    expect(P.length, 6);
+    expect([for (final x in P) obj(x)!['d']], ['2026-10-31', '2026-12-31', '2027-02-28', '2027-04-30', '2027-06-30', '2027-08-31']);
+    expect([for (final x in P) obj(x)!['a']].fold<num>(0, (a, b) => a + (b as num)), 40000);
+    expect(Ct.spanMonths('2026-10-31', '2027-10-30'), 12);
+    expect(Ct.endOf('2026-10-31', 12), '2027-10-30');
   });
 }

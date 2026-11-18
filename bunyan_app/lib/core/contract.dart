@@ -41,7 +41,7 @@ class Ct {
   }
 
   /// نهاية العقد (endOf في موديول العقد): بداية + شهور − يوم
-  static String endOf(String st, dynamic mo) { final m = (double.tryParse('$mo') ?? 0).round(); if (st.isEmpty || m == 0) return ''; final d = pd(st); return iso(DateTime(d.year, d.month + m, d.day - 1)); }
+  static String endOf(String st, dynamic mo) { final m = (double.tryParse('$mo') ?? 0).round(); if (st.isEmpty || m == 0) return ''; return iso(pd(addMon(st, m)).subtract(const Duration(days: 1))); }
 
   /// نفس ctFill: تعبئة من عقد مستأجر قائم
   static void fill(Obj S, Obj u, Obj L) {
@@ -135,13 +135,27 @@ class Ct {
   }
   static dynamic jsonCopy(dynamic v) => v is Map ? {for (final e in v.entries) '${e.key}': jsonCopy(e.value)} : v is List ? [for (final x in v) jsonCopy(x)] : v;
 
-  static String _addM(String st, int m) { final d = pd(st); return iso(DateTime(d.year, d.month + m, d.day)); }
-  /// 🧮 وزّع الإجمالي على الدفعات
+  /// إضافة شهور من غير ما يفيض لشهر بعده (31 أكتوبر + 4 شهور = 28 فبراير مش 3 مارس)
+  static String addMon(String st, int m) { final d = pd(st); final last = DateTime(d.year, d.month + m + 1, 0).day; return iso(DateTime(d.year, d.month + m, math.min(d.day, last))); }
+  /// عدد شهور العقد من البداية للنهاية (31/10/2026 ← 30/10/2027 = 12)
+  static int spanMonths(String st, String en) {
+    if (st.isEmpty || en.isEmpty) return 0; final a = pd(st), b = pd(en).add(const Duration(days: 1));
+    var m = (b.year - a.year) * 12 + (b.month - a.month); if (b.day < a.day && DateTime(b.year, b.month + 1, 0).day != b.day) m--; return math.max(1, m);
+  }
+  /// 🧮 وزّع الإجمالي على عدد الدفعات بالتساوي، والتواريخ على مدة العقد من البداية للنهاية
   static void autoPays(Obj S) {
-    final f = F(S); final n0p = (n0(f['pn']) > 0 ? n0(f['pn']) : (lst(f['pays']).isNotEmpty ? lst(f['pays']).length : 3)).round().clamp(1, 12);
-    final T = n0(f['tot']) > 0 ? n0(f['tot']) : n0(f['rent']) * n0(f['mo']); final mo = n0(f['mo']) > 0 ? n0(f['mo']) : 12; final st = str(f['st']);
-    final each = ((T / n0p / 500).ceil() * 500).toDouble();
-    f['pn'] = n0p; f['pays'] = [for (var i = 0; i < n0p; i++) {'a': (i < n0p - 1 ? each : math.max(0.0, T - each * (n0p - 1))).round(), 'd': st.isEmpty ? '' : _addM(st, (i * mo / n0p).round()), 'm': i == 0 ? 'تحويل' : 'شيك'}];
+    final f = F(S); final n = (n0(f['pn']) > 0 ? n0(f['pn']) : (lst(f['pays']).isNotEmpty ? lst(f['pays']).length : 3)).round().clamp(1, 24);
+    final st = str(f['st']), sp = spanMonths(st, str(f['en']));
+    final mo = sp > 0 ? sp : (n0(f['mo']) > 0 ? n0(f['mo']).round() : 12);
+    final T = n0(f['tot']) > 0 ? n0(f['tot']) : n0(f['rent']) * mo;
+    final each = (T / n / 100).round() * 100.0; // مقرّب لأقرب 100، والفرق على آخر دفعة
+    final old = lst(f['pays']);
+    f['pn'] = n;
+    f['pays'] = [for (var i = 0; i < n; i++) {
+      'a': (i < n - 1 ? each : T - each * (n - 1)).round(),
+      'd': st.isEmpty ? '' : addMon(st, (i * mo / n).round()),
+      'm': i < old.length && str(obj(old[i])?['m']).isNotEmpty ? str(obj(old[i])?['m']) : (i == 0 ? 'تحويل' : 'شيك'),
+    }];
   }
 
   static const _need = [['tn', 'اسم المستأجر'], ['tid', 'رقم هوية المستأجر'], ['ph', 'موبايل المستأجر'], ['sub', 'موضوع الإيجار'], ['st', 'من تاريخ'], ['en', 'إلى تاريخ'], ['rent', 'قيمة الإيجار'], ['mo', 'عدد الأشهر'], ['ll', 'اسم المؤجر']];

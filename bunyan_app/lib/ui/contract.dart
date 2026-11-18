@@ -61,6 +61,10 @@ class _CtState extends State<ContractPage> {
     if (k == 'rent' && !truthy(f['cx'])) f['cx'] = f['rent'];
     if ((k == 'rent' || k == 'mo') && autoTot && truthy(f['rent']) && truthy(f['mo'])) { f['tot'] = (n0(f['rent']) * n0(f['mo'])).round(); f['_r'] = f['rent']; f['_m'] = f['mo']; }
     if (k == 'rent' && Ct.tpl(S) == 'b' && !truthy(f['dep'])) f['dep'] = f['rent'];
+    // نهاية العقد اتكتبت بإيدك → عدد الشهور يتحسب منها
+    if (k == 'en' && str(f['st']).isNotEmpty && str(f['en']).isNotEmpty) { final sp = Ct.spanMonths(str(f['st']), str(f['en'])); if (sp > 0 && n0(f['mo']).round() != sp) f['mo'] = '$sp'; }
+    // العقد الفاضي: الدفعات تتوزع لوحدها على المدة (إلا لو عدّلت دفعة بإيدك)
+    if (Ct.tpl(S) == 'b' && Ct.lay(S) != 'tc' && ['tot', 'pn', 'st', 'en', 'mo', 'rent'].contains(k) && c['paysMan'] != true && (n0(f['tot']) > 0 || n0(f['rent']) > 0)) Ct.autoPays(S);
     _sync(); await _save();
   }
 
@@ -300,20 +304,20 @@ class _CtState extends State<ContractPage> {
           _fld('tot', label: ly == 'tc' ? 'إجمالي الإيجار (بيتحسب لوحده = الإيجار × الشهور)' : 'إجمالي الإيجار', num: true),
           if (ly != 'tc') ...[
             Row(children: [Expanded(child: _fld('dep', label: 'التأمين (مبلغ)', num: true)), const SizedBox(width: 8), Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 10), child: SegmentedButton<String>(segments: const [ButtonSegment(value: 'chq', label: Text('شيك')), ButtonSegment(value: 'cash', label: Text('كاش'))], selected: {f['depT'] == 'cash' ? 'cash' : 'chq'}, showSelectedIcon: false, onSelectionChanged: (s) async { f['depT'] = s.first; await _save(); })))]),
-            Row(children: [Expanded(child: _fld('pn', label: 'عدد الدفعات', num: true)), const SizedBox(width: 8), Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 10), child: OutlinedButton(onPressed: () async { f['pn'] = _c('pn').text; Ct.autoPays(S); await _save(); if (mounted) toast(context, '✅ اتوزعت الدفعات على ${lst(f['pays']).length}'); }, child: const Text('🧮 وزّع الإجمالي'))))]),
+            Row(children: [Expanded(child: _fld('pn', label: 'عدد الدفعات', num: true)), const SizedBox(width: 8), Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 10), child: OutlinedButton(onPressed: () async { FocusManager.instance.primaryFocus?.unfocus(); for (final k in ['tot', 'pn']) { f[k] = _c(k).text; } c['paysMan'] = false; Ct.autoPays(S); await _save(); if (mounted) toast(context, '✅ اتوزّع ${money(n0(f['tot']))} على ${lst(f['pays']).length} دفعات من ${Ct.dm(str(f['st']))} لـ ${Ct.dm(str(f['en']))}'); }, child: const Text('🧮 وزّع الإجمالي'))))]),
             for (var i = 0; i < lst(f['pays']).length; i++) Builder(builder: (_) {
               final P = obj(lst(f['pays'])[i])!;
               return Padding(padding: const EdgeInsets.only(bottom: 8), child: Row(children: [
                 SizedBox(width: 22, child: Text('${i + 1}', style: const TextStyle(fontWeight: FontWeight.w900))),
-                Expanded(flex: 3, child: TextFormField(key: ValueKey('pa$i${P['a']}$v'), initialValue: str(P['a']), keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'المبلغ', isDense: true, border: OutlineInputBorder()), onChanged: (x) { P['a'] = double.tryParse(x)?.round() ?? ''; }, onTapOutside: (_) { FocusManager.instance.primaryFocus?.unfocus(); _save(); })),
+                Expanded(flex: 3, child: TextFormField(key: ValueKey('pa$i${P['a']}$v'), initialValue: str(P['a']), keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'المبلغ', isDense: true, border: OutlineInputBorder()), onChanged: (x) { P['a'] = double.tryParse(x)?.round() ?? ''; c['paysMan'] = true; }, onTapOutside: (_) { FocusManager.instance.primaryFocus?.unfocus(); _save(); })),
                 const SizedBox(width: 6),
-                Expanded(flex: 3, child: InkWell(onTap: () async { final d = await showDatePicker(context: context, initialDate: DateTime.tryParse(str(P['d'])) ?? DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime(2040)); if (d != null) { P['d'] = iso(d); await _save(); } }, child: InputDecorator(decoration: const InputDecoration(labelText: 'التاريخ', isDense: true, border: OutlineInputBorder()), child: Text(str(P['d']).isEmpty ? '—' : Ct.dm(str(P['d'])), style: const TextStyle(fontSize: 13))))),
+                Expanded(flex: 3, child: InkWell(onTap: () async { final d = await showDatePicker(context: context, initialDate: DateTime.tryParse(str(P['d'])) ?? DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime(2040)); if (d != null) { P['d'] = iso(d); c['paysMan'] = true; await _save(); } }, child: InputDecorator(decoration: const InputDecoration(labelText: 'التاريخ', isDense: true, border: OutlineInputBorder()), child: FittedBox(fit: BoxFit.scaleDown, alignment: AlignmentDirectional.centerStart, child: Text(str(P['d']).isEmpty ? '—' : Ct.dm(str(P['d'])), maxLines: 1, style: const TextStyle(fontSize: 14)))))),
                 const SizedBox(width: 6),
                 DropdownButton<String>(value: ['تحويل', 'شيك', 'كاش'].contains(P['m']) ? P['m'] : 'شيك', items: [for (final m in ['تحويل', 'شيك', 'كاش']) DropdownMenuItem(value: m, child: Text(m))], onChanged: (m) async { P['m'] = m; await _save(); }),
-                IconButton(onPressed: () async { (f['pays'] as List).removeAt(i); f['pn'] = lst(f['pays']).length; await _save(); }, icon: const Icon(Icons.close, color: kRed)),
+                IconButton(onPressed: () async { (f['pays'] as List).removeAt(i); f['pn'] = lst(f['pays']).length; c['paysMan'] = true; tc.remove('pn'); await _save(); }, icon: const Icon(Icons.close, color: kRed)),
               ]));
             }),
-            Align(alignment: AlignmentDirectional.centerStart, child: OutlinedButton(onPressed: () async { if (f['pays'] is! List) f['pays'] = []; (f['pays'] as List).add({'a': '', 'd': '', 'm': 'شيك'}); f['pn'] = lst(f['pays']).length; await _save(); }, child: const Text('➕ دفعة'))),
+            Align(alignment: AlignmentDirectional.centerStart, child: OutlinedButton(onPressed: () async { if (f['pays'] is! List) f['pays'] = []; (f['pays'] as List).add({'a': '', 'd': '', 'm': 'شيك'}); f['pn'] = lst(f['pays']).length; c['paysMan'] = true; tc.remove('pn'); await _save(); }, child: const Text('➕ دفعة'))),
           ] else const Text('الإيجار الشهري ويوم الدفع وعدد الشيكات من الخانات اللي فوق.', style: TextStyle(color: kMuted, fontSize: 12.5)),
         ],
       ])),
