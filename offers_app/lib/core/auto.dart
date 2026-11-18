@@ -159,8 +159,8 @@ class AutoUpd {
 
   /// يطبق صورة أبديت (كل فيلا لوحدها) ويسجلها — بيرجع الرسايل اللي فيها تغيير
   static bool get onlyArea => Store.I.cfg['onlyArea'] != false;
-  static const _generic = {'real', 'estate', 'properties', 'property', 'llc', 'l.l.c', 'l.l.c.', 'management', 'group', 'team', 'co', 'company', 'and', 'the', 'realestate', 'real-estate', 'برو', 'للعقارات', 'العقارية', 'عقارات'};
-  static List<String> _sig(String s) => s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9\u0600-\u06FF ]'), ' ').split(RegExp(r'\s+')).where((w) => w.length >= 3 && !_generic.contains(w)).toList();
+  static const _generic = {'real', 'estate', 'properties', 'property', 'llc', 'l.l.c', 'l.l.c.', 'management', 'holding', 'group', 'team', 'co', 'company', 'and', 'the', 'realestate', 'real-estate', 'برو', 'للعقارات', 'العقارية', 'عقارات'};
+  static List<String> _sig(String s) => s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9\u0600-\u06FF ]'), ' ').split(RegExp(r'\s+')).where((w) => (w.length >= 3 || (w.length == 2 && !const {'al', 'el', 'of', 'to', 'in', 'at', 'by', 'an', 'de', 'no', 'ab'}.contains(w))) && !_generic.contains(w)).toList();
 
   /// أسامي كل الجروبات اللي الواتساب بعت منها (بتتحدث مع كل سحب)
   static List<String> seenNames = [];
@@ -197,9 +197,10 @@ class AutoUpd {
     final m = RegExp(r'([A-Z][A-Z&\. ]{2,40}?)\s+(REAL\s*ESTATE|PROPERTIES|PROPERTY|HOLDING|REALTY)', caseSensitive: true).firstMatch(text);
     if (m != null) return '${m.group(1)!.trim()} ${m.group(2)!.replaceAll(RegExp(r'\s+'), ' ')}'.split(' ').map((w) => w.isEmpty ? w : w[0] + w.substring(1).toLowerCase()).join(' ');
     // «Vellast Property Management» / «Kiev Real Estate» مكتوبة بحروف صغيرة
-    for (final m2 in RegExp(r'([A-Za-z][A-Za-z&\.]{2,20})\s+(real\s*estate|properties|property\s+management|property|holding|realty)\b', caseSensitive: false).allMatches(text)) {
+    for (final m2 in RegExp(r'\b([A-Za-z]{2}|[A-Za-z][A-Za-z&\.]{2,20})\s+(real\s*estate|properties|property\s+management|property|holding|realty)\b', caseSensitive: false).allMatches(text)) {
       final n = m2.group(1)!;
-      if (RegExp(r'^(villa|city|riyadh?|the|for|and|our|new|private|rent|abu|dhabi|zone|with|floor|al|el)$', caseSensitive: false).hasMatch(n)) continue;
+      if (n.length == 2 && n != n.toUpperCase()) continue;
+      if (RegExp(r'^(villa|city|riyadh?|the|for|and|our|new|private|rent|abu|dhabi|zone|with|floor|al|el|holding|real|estate|management|lease|properties|property|services)$', caseSensitive: false).hasMatch(n)) continue;
       return '${n[0].toUpperCase()}${n.substring(1).toLowerCase()} ${m2.group(2)!.replaceAll(RegExp(r'\s+'), ' ').split(' ').map((w) => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(' ')}';
     }
     // اسم الشركة مش مكتوب جنبه Real Estate (زي «Grand Aroma») → أكبر كلام فوق في الصورة
@@ -274,7 +275,7 @@ class AutoUpd {
   /// 🛠️ تصليح لوحده: أبديت اتحط باسم شركة غلط (أو فلل برا الرياض) — بيتقري تاني على الموبايل ويتحط صح من غير ما تعمل حاجة
   static Future<int> autoFix() async {
     if (kIsWeb || Store.I.testMode) return 0;
-    final done = ((Store.I.cfg['fixed4'] as List?) ?? const []).map(str).toSet();
+    final done = ((Store.I.cfg['fixed5'] as List?) ?? const []).map(str).toSet();
     final keys = <String, Obj>{};
     for (final l in log) {
       final k = str(l['img']).isNotEmpty ? str(l['img']) : (((l['files'] as List?) ?? const []).map(str).firstOrNull ?? '');
@@ -311,7 +312,7 @@ class AutoUpd {
         n++;
       } catch (_) {}
     }
-    Store.I.cfg['fixed4'] = done.toList().reversed.take(400).toList();
+    Store.I.cfg['fixed5'] = done.toList().reversed.take(400).toList();
     await Store.I.saveCfg();
     if (n > 0) await Store.I.save();
     return n;

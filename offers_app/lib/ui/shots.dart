@@ -108,7 +108,7 @@ class _ShotsState extends State<ShotsPage> {
             if (shotFiles(x).any((f) => f.contains('/shots/'))) const Text('📄 ملف PDF', style: TextStyle(fontSize: 11.5, color: kAc2, fontWeight: FontWeight.w700)),
             Text(str(x['m']), style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: x['same'] == true ? kMuted : kInk)),
             const SizedBox(height: 4),
-            Text('${str(x['g'])} • ${_when(str(x['at']))}', style: const TextStyle(color: kMuted, fontSize: 12)),
+            Text('${str(Store.I.villa(str(x['vid']))?['company']).isNotEmpty ? str(Store.I.villa(str(x['vid']))!['company']) : str(x['g'])} • ${_when(str(x['at']))}', style: const TextStyle(color: kMuted, fontSize: 12)),
           ])),
         ])),
       ));

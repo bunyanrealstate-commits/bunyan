@@ -126,6 +126,7 @@ void main() {
       {'s': 'Room', 'x': 110, 'y': 400, 'w': 50, 'h': 24}, {'s': 'No', 'x': 170, 'y': 400, 'w': 30, 'h': 24}, {'s': 'F06', 'x': 140, 'y': 900, 'w': 30, 'h': 22},
     ]), 'Grand Aroma');
     const vel = 'فيلا الفارسي مدينة الرياض Al-Farsi Villa, Riyadh City Vellast Property Management Number Description Floor 1 payments 2 payments 3 payments monthly 8 Studio with Balcony First Floor 33000 34000 35000 3400 Deposit one Month (Vellast Property Management) Hani Al-Sanani';
+    expect(AutoUpd.companyFromText('NA Holding Real Estate Lease and Management Services Villa Al Dhaheri No. 85 Madinat Al Riyad', 'LIVING YARD _ ليفينج يارد').toLowerCase(), 'na holding');
     final vc = AutoUpd.companyFromText(vel, 'Double A property');
     expect(vc, 'Vellast Property Management');
     AutoUpd.seenNames = ['Double A property', 'Vellast Property Management* (13 رسالة)'];
