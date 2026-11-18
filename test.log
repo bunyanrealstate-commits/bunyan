@@ -1,0 +1,22 @@
+
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/search_test.dart: غرفة وصالة شهري بميزانية 3500 ± 10%
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/search_test.dart: 3 دفعات: الشهري التقريبي = السنة ÷ 12، والمحجوز مش بيظهر
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/search_test.dart: دفعة واحدة: ميزانية سنوية 72 ألف
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/search_test.dart: رسالة قصيرة تحت الفيديو
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/search_test.dart: غرفتين وصالة بتشمل اللي بحمامين
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/search_test.dart: 3 دفعات: لو الشركة كاتبة دفعة/دفعتين بس، بياخد الأقرب
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/search_test.dart: رسالة العميل
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/ocr_test.dart: Platinum Zone 47 (عناوين على سطرين + الحمامات في Remarks)
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/ocr_test.dart: NA Holding (4 فلل كل واحدة بجدول)
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/ocr_test.dart: MARASI (كذا مدينة + BOOKING + N\A)
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/ocr_test.dart: Kiev (فيلا من غير رقم + F/2B)
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/ocr_test.dart: Grand Aroma (Room No حروف + Unit Type + Yearly + خليفة/الخالدية برا)
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/ocr_test.dart: صورة عادية → null
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/pages_test.dart: كل الصفحات تفتح
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/pages_test.dart: عينات أبديت حقيقية (Marasi / Platinum / NA Holding)
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/pages_test.dart: الشركة من الكلام اللي في الصورة
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/pages_test.dart: إحداثيات من لينك الخريطة
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/pages_test.dart: فهم طلب العميل
+✅ /home/runner/work/bunyan/bunyan/offers_app/test/pages_test.dart: أبديت الجروب: يلاقي فيلا الغانم 25 ويحدثها
+
+🎉 19 tests passed.
