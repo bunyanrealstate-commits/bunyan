@@ -263,7 +263,7 @@ class BellBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final al = alertsOf(Engine(Store.I.S, WS: Ws.I.resolve()));
-    return Padding(padding: const EdgeInsetsDirectional.only(end: 4), child: Stack(clipBehavior: Clip.none, children: [
+    return Padding(padding: EdgeInsets.zero, child: Stack(clipBehavior: Clip.none, children: [
       _SqBtn(icon: Icons.notifications_none_rounded, onTap: () => _open(context, al)),
       Positioned(top: -5, right: -5, child: Container(
         constraints: const BoxConstraints(minWidth: 18), height: 18, padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -307,7 +307,7 @@ class _SqBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) => InkWell(
         borderRadius: BorderRadius.circular(12), onTap: onTap,
-        child: Container(width: 38, height: 38, decoration: BoxDecoration(color: const Color(0xFFF4F5F8), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFD6D9E0))), child: Icon(icon, size: 21, color: kInk)),
+        child: Container(width: 36, height: 36, decoration: BoxDecoration(color: const Color(0xFFF4F5F8), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFD6D9E0))), child: Icon(icon, size: 21, color: kInk)),
       );
 }
 
@@ -328,7 +328,7 @@ class _HdClockState extends State<HdClock> {
   Widget build(BuildContext context) {
     final n = DateTime.now(); final h = n.hour % 12 == 0 ? 12 : n.hour % 12;
     return Directionality(textDirection: TextDirection.ltr, child: Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.end, children: [
-      Text('$h:${n.minute.toString().padLeft(2, '0')}', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: kInk, height: 1)),
+      Text('$h:${n.minute.toString().padLeft(2, '0')}', style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800, color: kInk, height: 1)),
       const SizedBox(width: 2),
       Text(n.hour < 12 ? 'AM' : 'PM', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: kAc, height: 1.4)),
     ]));
@@ -355,9 +355,9 @@ class GroupPill extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(99), onTap: () => openGroups(context),
       child: Container(
-        height: 40, padding: const EdgeInsets.symmetric(horizontal: 14),
+        height: 38, padding: const EdgeInsets.symmetric(horizontal: 11),
         decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF0D8A74), Color(0xFF14B8A6)]), borderRadius: BorderRadius.circular(99), boxShadow: const [BoxShadow(color: Color(0x4014B8A6), blurRadius: 12, offset: Offset(0, 4))]),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
+        child: Row(children: [
           Container(width: 8, height: 8, decoration: BoxDecoration(color: const Color(0xFFBFFFE9), shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.white.withOpacity(.7), blurRadius: 4)])),
           const SizedBox(width: 8),
           Flexible(child: Text(Priv.on ? '••••' : name, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14.5))),

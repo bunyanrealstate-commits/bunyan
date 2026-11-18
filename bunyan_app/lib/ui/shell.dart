@@ -75,23 +75,22 @@ class _ShellState extends State<Shell> {
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: 62,
-          titleSpacing: 12,
+          titleSpacing: 10,
+          // الهيدر زي القديم: اللوجو • العين • المجموعة • الساعة • الجرس • المزامنة
           title: Row(children: [
-            Column(mainAxisSize: MainAxisSize.min, children: [SvgPicture.asset('assets/logo.svg', height: 24), const Text('Furnished', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF1D4B66), letterSpacing: 1.6, height: 1.2))]),
+            Column(mainAxisSize: MainAxisSize.min, children: [SvgPicture.asset('assets/logo.svg', height: 21), const Text('Furnished', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF1D4B66), letterSpacing: 1.4, height: 1.2))]),
             EyeBtn(key: ValueKey('eye${Priv.on}')),
-            const SizedBox(width: 12),
-            const SizedBox(width: 10),
-            const Expanded(child: Align(alignment: AlignmentDirectional.centerStart, child: GroupPill())),
-          ]),
-          actions: [
-            const HdClock(), const SizedBox(width: 10),
+            const SizedBox(width: 8),
+            const Expanded(child: GroupPill()),
+            const SizedBox(width: 8),
+            const HdClock(), const SizedBox(width: 8),
             const BellBtn(),
-            IconButton(
-              tooltip: Tr.t('مزامنة'),
+            SizedBox(width: 36, child: IconButton(
+              padding: EdgeInsets.zero, tooltip: Tr.t('مزامنة'),
               onPressed: st.syncing ? null : () async { final m = await st.sync(); if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m))); },
-              icon: st.syncing ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(Icons.sync, color: st.cfg['dirty'] == true ? kTerra : kAc),
-            ),
-          ],
+              icon: st.syncing ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(Icons.sync, color: st.cfg['dirty'] == true ? kTerra : kAc),
+            )),
+          ]),
           bottom: PreferredSize(preferredSize: const Size.fromHeight(46), child: Container(
             decoration: const BoxDecoration(color: Color(0xF5FFFFFF), border: Border(bottom: BorderSide(color: Color(0xFF8D97A8), width: .6))),
             child: SingleChildScrollView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 6), child: Row(children: [
