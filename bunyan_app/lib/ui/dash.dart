@@ -12,6 +12,7 @@ import 'theme.dart';
 import 'shell.dart';
 import 'units.dart';
 import 'forecast.dart';
+import 'notif.dart';
 
 /* ───────── عنوان قسم (اللمسة التنظيمية: الداشبورد متقسم أقسام واضحة) ───────── */
 class SecHead extends StatelessWidget {
@@ -252,63 +253,26 @@ class CapitalCard extends StatelessWidget {
 }
 
 /* ───────── 🔔 الجرس: عدد التنبيهات وقايمتها ───────── */
-List<Map<String, dynamic>> alertsOf(Engine e) => e.items().where((x) {
-      final d = Engine.dd(x['d']); final offs = lst(x['offs']).map((o) => n(o).toInt()).toList();
-      if (d < 0) return ['rent', 'inst', 'debt'].contains(x['ty']);
-      return offs.contains(d) || (offs.isNotEmpty && d <= offs.first && x['ty'] != 'exp' && x['ty'] != 'end' && d <= 3);
-    }).toList()..sort((a, b) => str(a['d']).compareTo(str(b['d'])));
-
 class BellBtn extends StatelessWidget {
   const BellBtn({super.key});
   @override
   Widget build(BuildContext context) {
-    final al = alertsOf(Engine(Store.I.S, WS: Ws.I.resolve()));
-    return Padding(padding: EdgeInsets.zero, child: Stack(clipBehavior: Clip.none, children: [
-      _SqBtn(icon: Icons.notifications_none_rounded, onTap: () => _open(context, al)),
+    // زي القديم: العدد = تنبيهات النهارده + المتأخر، والجرس بيحمرّ لو فيه متأخر
+    final e = Engine(Store.I.S, WS: Ws.I.resolve());
+    final al = alertsNow(e).length, od = overdueN(e), tot = al + od;
+    final c = od > 0 ? kRed : al > 0 ? kTerra : null;
+    return Stack(clipBehavior: Clip.none, children: [
+      InkWell(
+        borderRadius: BorderRadius.circular(12), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NotifPage())),
+        child: Container(width: 36, height: 36, decoration: BoxDecoration(color: c ?? const Color(0xFFF4F5F8), borderRadius: BorderRadius.circular(12), border: Border.all(color: c ?? const Color(0xFFD6D9E0))), child: Icon(tot > 0 ? Icons.notifications_active_rounded : Icons.notifications_none_rounded, size: 21, color: c == null ? kInk : Colors.white)),
+      ),
       Positioned(top: -5, right: -5, child: Container(
         constraints: const BoxConstraints(minWidth: 18), height: 18, padding: const EdgeInsets.symmetric(horizontal: 4),
-        decoration: BoxDecoration(color: al.isEmpty ? const Color(0xFF8A93A3) : kRed, borderRadius: BorderRadius.circular(99), border: Border.all(color: Colors.white, width: 1.5)),
-        alignment: Alignment.center, child: Text('${al.length}', style: const TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w900)),
+        decoration: BoxDecoration(color: tot == 0 ? const Color(0xFF8A93A3) : kRed, borderRadius: BorderRadius.circular(99), border: Border.all(color: Colors.white, width: 1.5)),
+        alignment: Alignment.center, child: Text('$tot', style: const TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w900)),
       )),
-    ]));
+    ]);
   }
-  void _open(BuildContext context, List<Map<String, dynamic>> al) {
-    showModalBottomSheet(context: context, backgroundColor: Colors.white, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))), builder: (_) => Directionality(textDirection: Tr.dir, child: SafeArea(child: Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: kBd, borderRadius: BorderRadius.circular(9)))),
-        const SizedBox(height: 12),
-        Text('🔔 ${Tr.t('التنبيهات')} (${al.length})', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17)),
-        const SizedBox(height: 8),
-        if (al.isEmpty) Padding(padding: const EdgeInsets.all(20), child: Text(Tr.t('مفيش تنبيهات — كله تمام ✅'), textAlign: TextAlign.center, style: const TextStyle(color: kMuted))),
-        Flexible(child: ListView(shrinkWrap: true, children: [for (final x in al) Builder(builder: (_) {
-          final d = Engine.dd(x['d']); final when = d < 0 ? '${Tr.t('متأخر')} ${-d} ${Tr.t('يوم')}' : d == 0 ? Tr.t('النهارده') : '${Tr.t('بعد')} $d ${Tr.t('يوم')}';
-          return Container(
-            margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: d < 0 ? const Color(0xFFFDEEEE) : const Color(0xFFF1F6FE), borderRadius: BorderRadius.circular(14)),
-            child: Row(children: [
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(Priv.txt(str(x['label'])), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
-                Text('${str(x['d'])} • $when', style: TextStyle(color: d < 0 ? kRed : kMuted, fontSize: 12, fontWeight: FontWeight.w600)),
-              ])),
-              if ((x['amt'] as num) != 0) Text(money(x['amt'] as num), style: TextStyle(fontWeight: FontWeight.w900, color: x['ty'] == 'rent' || x['ty'] == 'recv' ? kGreen : kRed)),
-            ]),
-          );
-        })])),
-      ]),
-    ))));
-  }
-}
-
-/// زرار مربع بحواف مدورة (زي أزرار الهيدر في القديم)
-class _SqBtn extends StatelessWidget {
-  final IconData icon; final VoidCallback onTap;
-  const _SqBtn({required this.icon, required this.onTap});
-  @override
-  Widget build(BuildContext context) => InkWell(
-        borderRadius: BorderRadius.circular(12), onTap: onTap,
-        child: Container(width: 36, height: 36, decoration: BoxDecoration(color: const Color(0xFFF4F5F8), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFD6D9E0))), child: Icon(icon, size: 21, color: kInk)),
-      );
 }
 
 /* ───────── 🕒 الساعة في الهيدر ───────── */

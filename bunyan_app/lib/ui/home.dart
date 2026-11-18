@@ -12,6 +12,7 @@ import 'lease_edit.dart';
 import 'monitor.dart';
 import 'dash.dart';
 import 'explain.dart';
+import 'notif.dart';
 import 'forecast.dart';
 
 /// 🔄 عقود قربت تخلص — هتجدد؟ (renewCard)
@@ -50,7 +51,7 @@ class HomePage extends StatelessWidget {
     return ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 90), children: [
       const HeroScene(),
       const SizedBox(height: 12),
-      _Alert(e),
+      NtBar(e),
       // ───── 💰 فلوسك ─────
       SecHead(Tr.t('💰 فلوسك'), sub: Tr.t('النهارده')),
       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -178,28 +179,3 @@ class _Upcoming extends StatelessWidget {
   }
 }
 
-/// 🔔 شريط التنبيه الأزرق (زي ntb في القديم): أقرب حاجة محتاجة تتعمل
-class _Alert extends StatelessWidget {
-  final Engine e;
-  const _Alert(this.e);
-  @override
-  Widget build(BuildContext context) {
-    final al = e.items().where((x) {
-      final d = Engine.dd(x['d']); final offs = lst(x['offs']).map((o) => n(o).toInt()).toList();
-      if (d < 0) return ['rent', 'inst', 'debt'].contains(x['ty']);
-      return offs.contains(d) || (offs.isNotEmpty && d <= offs.first && x['ty'] != 'exp' && x['ty'] != 'end' && d <= 3);
-    }).toList()..sort((a, b) => str(a['d']).compareTo(str(b['d'])));
-    if (al.isEmpty) return const SizedBox.shrink();
-    final x = al.first; final d = Engine.dd(x['d']);
-    final when = d < 0 ? '${Tr.t('متأخر')} ${-d} ${Tr.t('يوم')}' : d == 0 ? Tr.t('النهارده') : '${Tr.t('بعد')} $d ${Tr.t('يوم')}';
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14), padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-      decoration: BoxDecoration(color: kAc, borderRadius: BorderRadius.circular(14), boxShadow: const [BoxShadow(color: Color(0x401473E6), blurRadius: 14, offset: Offset(0, 6))]),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2), decoration: BoxDecoration(color: Colors.white.withOpacity(.22), borderRadius: BorderRadius.circular(99)), child: Text('🔔 ${al.length} ${Tr.t('تنبيه')}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12))),
-        const SizedBox(height: 6),
-        Text('$when: ${Priv.txt(str(x['label']))}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14.5, height: 1.5)),
-      ]),
-    );
-  }
-}

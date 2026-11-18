@@ -23,6 +23,7 @@ class MainActivity : FlutterFragmentActivity() {
             when (call.method) {
                 "take" -> { val l = link; link = null; res.success(l) }
                 "openOld" -> { val i = packageManager.getLaunchIntentForPackage("com.bunyan.furnished"); if (i != null) { startActivity(i); res.success(true) } else res.success(false) }
+                "openUrl" -> { try { startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(call.argument<String>("u")!!)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); res.success(true) } catch (e: Exception) { res.success(false) } }
                 "hasOld" -> res.success(packageManager.getLaunchIntentForPackage("com.bunyan.furnished") != null)
                 "version" -> res.success(try { val pi = packageManager.getPackageInfo(packageName, 0); if (Build.VERSION.SDK_INT >= 28) pi.longVersionCode else @Suppress("DEPRECATION") pi.versionCode.toLong() } catch (e: Exception) { 0L })
                 "canInstall" -> res.success(if (Build.VERSION.SDK_INT >= 26) packageManager.canRequestPackageInstalls() else true)

@@ -23,6 +23,7 @@ import 'package:bunyan/ui/lease_edit.dart';
 import 'package:bunyan/ui/unit_edit.dart';
 import 'package:bunyan/ui/i18n.dart';
 import 'package:bunyan/ui/theme.dart';
+import 'package:bunyan/ui/notif.dart';
 import 'package:flutter/services.dart';
 
 void main() {
@@ -56,6 +57,7 @@ void main() {
         await show(t, const AccountsPage(), 'accounts $g');
         await show(t, const ChequesPage(), 'cheques $g');
         await show(t, const ForecastPage(), 'forecast $g');
+        await show(t, const NotifPage(), 'notif $g');
       }
       await show(t, const GroupsPage(), 'groups');
       await show(t, const TrashPage(), 'trash');

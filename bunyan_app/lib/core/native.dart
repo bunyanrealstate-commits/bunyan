@@ -28,5 +28,8 @@ class Native {
     } catch (_) { return false; }
   }
 
+  /// فتح لينك (واتساب مثلاً) في التطبيق المناسب
+  static Future<bool> openUrl(String u) async { if (kIsWeb) return false; try { return await _ch.invokeMethod<bool>('openUrl', {'u': u}) ?? false; } catch (_) { return false; } }
+
   static Future<bool> openOld() async { try { return await _ch.invokeMethod<bool>('openOld') ?? false; } catch (_) { return false; } }
 }
