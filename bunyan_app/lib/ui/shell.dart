@@ -7,6 +7,8 @@ import 'groups.dart';
 import 'accounts.dart';
 import 'eye.dart';
 import 'dash.dart';
+import 'hadith.dart';
+import '../core/hq.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'home.dart';
 import 'units.dart';
@@ -53,9 +55,10 @@ class _ShellState extends State<Shell> {
     Native.takeLink().then((ok) { if (!ok && Store.I.linked) Store.I.sync(); });
     Future.delayed(const Duration(seconds: 5), () => Updater.check());
     Future.delayed(const Duration(seconds: 3), () => Rem.schedule());
+    Future.delayed(const Duration(seconds: 4), () => HQ.maybeShow());
     WidgetsBinding.instance.addObserver(_life);
   }
-  late final _life = _Life(() { Native.takeLink().then((ok) { if (!ok && Store.I.linked) Store.I.sync(); }); Updater.check(force: Updater.needPerm || Updater.state.value != null).then((m) { if (m != null && mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m))); }); });
+  late final _life = _Life(() { HQ.maybeShow(); Native.takeLink().then((ok) { if (!ok && Store.I.linked) Store.I.sync(); }); Updater.check(force: Updater.needPerm || Updater.state.value != null).then((m) { if (m != null && mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m))); }); });
   void _r() { if (mounted) setState(() {}); }
   @override
   void dispose() { Store.I.removeListener(_r); Ws.I.removeListener(_r); Shell.tabN.removeListener(_r); WidgetsBinding.instance.removeObserver(_life); super.dispose(); }
@@ -72,7 +75,8 @@ class _ShellState extends State<Shell> {
     ];
     return Directionality(
       textDirection: Tr.dir,
-      child: Scaffold(
+      // 📖 كارت الحديث الأخضر بيطلع فوق كل حاجة (زي القديم)
+      child: Stack(children: [Scaffold(
         appBar: AppBar(
           toolbarHeight: 62,
           titleSpacing: 10,
@@ -117,7 +121,7 @@ class _ShellState extends State<Shell> {
             Expanded(child: KeyedSubtree(key: ValueKey('$tab|$w|${Tr.lang}|${Priv.on}'), child: page)),
           ]);
         })),
-      ),
+      ), const HadithOverlay()]),
     );
   }
 }

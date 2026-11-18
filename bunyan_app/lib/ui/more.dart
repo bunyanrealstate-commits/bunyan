@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'hadith.dart';
+import '../core/hq.dart';
 import 'i18n.dart';
 import '../core/store.dart';
 import '../core/js.dart';
@@ -40,6 +42,8 @@ class MorePage extends StatelessWidget {
       Card(child: ListTile(leading: const Text('📢', style: TextStyle(fontSize: 22)), title: Text(Tr.t('الأبديت (صورة الإعلان)')), subtitle: Text(Tr.t('نفس قايمة القديم — بتتزامن معاه')), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const UpdPage())))),
       Card(child: ListTile(leading: const Text('📝', style: TextStyle(fontSize: 22)), title: Text(Tr.t('عقد العميل (PDF)')), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ContractPage())))),
       Card(child: ListTile(leading: const Text('🧮', style: TextStyle(fontSize: 22)), title: Text(Tr.t('المحاكي — أفتح استديو جديد؟')), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SimPage())))),
+      Card(child: ListTile(leading: const Text('📖', style: TextStyle(fontSize: 22)), title: Text(Tr.t('حديث أو قول دلوقتي')), subtitle: Text(Tr.t('بيظهر لوحده مرة كل ساعة')), trailing: const Icon(Icons.chevron_left), onTap: () => HQ.maybeShow(force: true))),
+      Card(child: ListTile(leading: const Text('📜', style: TextStyle(fontSize: 22)), title: Text(Tr.t('طبقات الصوفية')), subtitle: Text(Tr.t('للسلمي — تراجمهم وأقوالهم وأخبارهم')), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SalafPage())))),
       Card(child: ListTile(leading: const Text('🛡', style: TextStyle(fontSize: 22)), title: Text(Tr.t('المراقب والشكاوى')), subtitle: Text(Tr.t('فحص البيانات + «مش عاجبني»')), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MonitorPage())))),
       Card(child: ListTile(leading: const Text('🗑', style: TextStyle(fontSize: 22)), title: Text(Tr.t('سلة المحذوفات')), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TrashPage())))),
       Card(child: ListTile(leading: const Text('🔒', style: TextStyle(fontSize: 22)), title: Text(Tr.t('قفل التطبيق برقم سري')), subtitle: Text(AppLock.on ? Tr.t('مفعّل') : Tr.t('مش مفعّل')), trailing: const Icon(Icons.chevron_left), onTap: () => lockSettings(context))),
