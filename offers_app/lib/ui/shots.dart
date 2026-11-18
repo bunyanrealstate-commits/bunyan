@@ -74,7 +74,7 @@ class _ShotsState extends State<ShotsPage> {
         const SizedBox(height: 6),
         FilledButton.icon(onPressed: reading ? null : _today, icon: reading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white)) : const Icon(Icons.download_for_offline_outlined),
           label: Text(reading ? (prog.isEmpty ? 'بيدوّر على أبديتات النهارده…' : (prog == 'pdf' ? 'بيقرا ملفات الـ PDF…' : 'بيقرا $prog…')) : '📥 اقرا كل أبديتات النهارده')),
-        if (reading) const Padding(padding: EdgeInsets.only(top: 4), child: Text('ممكن ياخد كام دقيقة (Gemini المجاني بيقرا صورة كل كام ثانية) — سيبه شغال', textAlign: TextAlign.center, style: TextStyle(color: kMuted, fontSize: 12))),
+        if (reading) const Padding(padding: EdgeInsets.only(top: 4), child: Text('بيقرا الصور الجديدة بس على الموبايل — ثواني', textAlign: TextAlign.center, style: TextStyle(color: kMuted, fontSize: 12))),
         const SizedBox(height: 6),
         Row(children: [
           Expanded(child: OutlinedButton.icon(onPressed: () => readPicked(context), icon: const Icon(Icons.add_photo_alternate_outlined), label: const Text('صورة من الموبايل'))),

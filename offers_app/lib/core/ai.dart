@@ -43,7 +43,7 @@ class Ai {
     final errs = <String>[];
     for (final m in await _list(k)) {
       try {
-        final r = await http.post(Uri.parse('${_base}models/$m:generateContent'), headers: {'Content-Type': 'application/json', 'x-goog-api-key': k}, body: body).timeout(const Duration(seconds: 90));
+        final r = await http.post(Uri.parse('${_base}models/$m:generateContent'), headers: {'Content-Type': 'application/json', 'x-goog-api-key': k}, body: body).timeout(const Duration(seconds: 45));
         if (r.statusCode == 200) {
           final o = jsonDecode(utf8.decode(r.bodyBytes));
           final t = ((o['candidates'] as List?)?.firstOrNull?['content']?['parts'] as List? ?? []).where((p) => p['thought'] != true).map((p) => str(p['text'])).join();
@@ -54,6 +54,7 @@ class Ai {
         var msg = '';
         try { msg = str(jsonDecode(utf8.decode(r.bodyBytes))['error']?['message']); } catch (_) {}
         errs.add('$m: ${r.statusCode}');
+        if (errs.where((e) => e.endsWith('429')).length >= 3) break; // خلص الحد — منلفّش على كل الموديلات
         if (r.statusCode == 401 || r.statusCode == 403 || (r.statusCode == 400 && RegExp('API key|API_KEY', caseSensitive: false).hasMatch(msg))) throw 'مفتاح Gemini مش شغال ($msg)';
         if (r.statusCode == 404) _models = null;
       } on String { rethrow; } catch (e) { errs.add('$m: ${e is TimeoutException ? 'اتأخر' : 'مفيش نت'}'); }

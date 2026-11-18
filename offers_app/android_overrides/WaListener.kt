@@ -177,7 +177,7 @@ object Auto {
             cur.use { k ->
                 while (k.moveToNext()) {
                     val id = k.getLong(0); val t = k.getLong(1) * 1000; val b = k.getString(2) ?: ""
-                    if ((!today && id in doneSet) || !b.contains("WhatsApp", true) || b.contains("Sent", true)) continue
+                    if (id in doneSet || !b.contains("WhatsApp", true) || b.contains("Sent", true)) continue
                     var best: String? = null; var bd = Long.MAX_VALUE
                     for (i in 0 until ev.length()) { val e = ev.getJSONObject(i); if (e.has("doc") || e.has("anchor")) continue; val d = t - e.getLong("t"); if (d > -120000 && d < 900000 && Math.abs(d) < bd) { bd = Math.abs(d); best = e.getString("g") } }
                     // 🎯 الصورة نفسها كانت في الإشعار → نعرف جروبها بالظبط بدل الوقت
@@ -198,7 +198,6 @@ object Auto {
             var k0 = 0
             for ((id, t, g) in todo) {
                 k0++; prog = "$k0/${todo.size}"
-                if (today && k0 > 1) Thread.sleep(3500) // الحد المجاني لـ Gemini
                 val bytes = try { c.contentResolver.openInputStream(ContentUris.withAppendedId(uri, id))?.use { it.readBytes() } } catch (_: Exception) { null } ?: continue
                 // نفس الصورة اتبعتت تاني (أو في جروب تاني) → منقراهاش تاني ومنستهلكش Gemini
                 val hash = md5(bytes); val hashes = obj(c, "hash")
@@ -216,6 +215,7 @@ object Auto {
                     notify(c, g, 0)
                     continue
                 }
+                if (today && k0 > 1) Thread.sleep(3500) // الحد المجاني لـ Gemini (بس لو هنسأله)
                 val txt = gemini(key, prompt, bytes) ?: run { dbg(c, g, t, "gemini_fail"); null } ?: break  // Gemini مش متاح دلوقتي → نحاول تاني بعدين
                 doneSet.add(id); done.put(id)
                 hashes.put(hash, t); trim(hashes, 400); put(c, "hash", hashes)

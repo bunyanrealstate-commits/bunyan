@@ -357,6 +357,7 @@ class AutoUpd {
     // اللي ما اتقراش المرة اللي فاتت (Gemini كان مش رادد) نحاول تاني
     final pend = ((Store.I.D['pend'] as List?) ?? []).whereType<Map>().toList();
     Store.I.D['pend'] = <dynamic>[];
+    var gemDown = false; // Gemini مش رادد → الباقي يستنى للمرة الجاية بدل ما نستنى كل صورة
     for (final it in [...pend, ...items.whereType<Map>()]) {
       List<Obj> rows;
       var how = 'ai', comp = '';
@@ -365,7 +366,8 @@ class AutoUpd {
         final msg = str(it['msg']), h = msg.hashCode.toString();
         final hs = ((Store.I.cfg['msgH'] as List?) ?? const []).map(str).toList();
         if (hs.contains(h)) continue;
-        try { rows = await Ai.readUpdateText(msg); } catch (_) {
+        try { if (gemDown) throw 'down'; rows = await Ai.readUpdateText(msg); } catch (_) {
+          gemDown = true;
           ((Store.I.D['pend'] as List?) ?? (Store.I.D['pend'] = <dynamic>[])).add({'g': it['g'], 't': it['t'], 'msg': msg});
           logged = true;
           continue;
@@ -380,10 +382,12 @@ class AutoUpd {
         if (o != null) comp = companyFromText(o.whereType<Map>().map((m) => '${m['s']}').join(' '), str(it['g']), o);
         if (local != null) { rows = local; how = 'ocr'; } else {
           try {
+            if (gemDown) throw 'down';
             final pages = await _pagesOf(it);
             if (pages.isEmpty) continue;
             rows = await Ai.readUpdatePages(pages, auto: true);
           } catch (_) {
+            gemDown = true;
             ((Store.I.D['pend'] as List?) ?? (Store.I.D['pend'] = <dynamic>[])).add({'g': it['g'], 't': it['t'], 'id': it['id'], 'files': it['files'], 'retry': true});
             logged = true;
             continue;
