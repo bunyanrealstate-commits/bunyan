@@ -49,7 +49,7 @@ class _UnitsState extends State<UnitsPage> {
           label: Text('$l $n', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: f == k ? Colors.white : kInk)), selected: f == k, showCheckmark: false,
           avatar: k == 'all' ? null : CircleAvatar(radius: 5, backgroundColor: c), selectedColor: kAc, backgroundColor: Colors.white, onSelected: (_) => setState(() => f = k)));
     return Stack(children: [
-      ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 90), children: [
+      ListView(padding: const EdgeInsets.fromLTRB(10, 10, 14, 90), children: [
         TextField(decoration: InputDecoration(prefixIcon: const Icon(Icons.search), hintText: Tr.t('ابحث: استديو، شركة، مستأجر'), isDense: true), onChanged: (v) => setState(() => q = v.trim())),
         const SizedBox(height: 10),
         Wrap(children: [
@@ -128,7 +128,7 @@ class _UnitDetailState extends State<UnitDetail> {
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => UnitEdit(str(u['id']))));
       })]),
       floatingActionButton: FloatingActionButton.extended(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => LeaseEdit(u, null))), icon: const Icon(Icons.person_add), label: Text(Tr.t('عقد مستأجر جديد'))),
-      body: ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 90), children: [
+      body: ListView(padding: const EdgeInsets.fromLTRB(10, 10, 14, 90), children: [
         RenBox(u, () { if (mounted) setState(() {}); }),
         GraceBox(u),
         Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

@@ -96,7 +96,7 @@ class _ShellState extends State<Shell> {
               icon: st.syncing ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(Icons.sync, color: st.cfg['dirty'] == true ? kTerra : kAc),
             )),
           ]),
-          bottom: PreferredSize(preferredSize: const Size.fromHeight(46), child: Container(
+          bottom: PreferredSize(preferredSize: const Size.fromHeight(40), child: Container(
             decoration: const BoxDecoration(color: Color(0xF5FFFFFF), border: Border(bottom: BorderSide(color: Color(0xFF8D97A8), width: .6))),
             child: SingleChildScrollView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 6), child: Row(children: [
               for (final i in const [0, 1, 2, 3, 4, 6, 5]) InkWell(

@@ -178,12 +178,12 @@ class _CtState extends State<ContractPage> {
     } catch (e) { if (mounted) toast(context, '⚠️ $e'); } finally { if (mounted) setState(() => busy = false); }
   }
 
-  /// عربي/EN: لو فيه الاسم التاني من صورة الهوية بيتبدّل
+  /// لغة العقد: عربي / English / الاتنين — البيانات بتتكتب بالعربي في العقد العربي وبالإنجليزي في الباقي
   Future<void> _lang(String l) async {
-    c['lang'] = l; final alt = obj(c['alt']) ?? {};
-    for (final k in ['tn', 'll', 'nat']) { final a = obj(alt[k]); final x = str(a?[l]); if (x.isNotEmpty) f[k] = x; }
+    c['cl'] = l; final dl = l == 'ar' ? 'ar' : 'en'; c['lang'] = dl; final alt = obj(c['alt']) ?? {};
+    for (final k in ['tn', 'll', 'nat']) { final a = obj(alt[k]); final x = str(a?[dl]); if (x.isNotEmpty) f[k] = x; }
     _sync(); await _save();
-    if (mounted) toast(context, l == 'en' ? 'بيانات العميل هتتكتب بالإنجليزي' : 'بيانات العميل هتتكتب بالعربي');
+    if (mounted) toast(context, l == 'ar' ? 'العقد بالعربي' : l == 'en' ? 'Contract in English' : 'العقد عربي + English');
   }
 
   /* ───────── التوقيعات ───────── */
@@ -230,44 +230,44 @@ class _CtState extends State<ContractPage> {
   Widget _opt(String t, bool on, VoidCallback tap) => InkWell(
         borderRadius: BorderRadius.circular(14), onTap: tap,
         child: Container(
-          constraints: const BoxConstraints(minHeight: 50), padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), alignment: Alignment.center,
-          decoration: BoxDecoration(color: on ? const Color(0xFF2563EB) : Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: on ? const Color(0xFF2563EB) : const Color(0xFFC9D2DE), width: 1.5)),
-          child: Text(t, textAlign: TextAlign.center, style: TextStyle(color: on ? Colors.white : kInk, fontWeight: FontWeight.w800, fontSize: 14.5)),
+          constraints: const BoxConstraints(minHeight: 40), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7), alignment: Alignment.center,
+          decoration: BoxDecoration(color: on ? const Color(0xFF2563EB) : Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: on ? const Color(0xFF2563EB) : const Color(0xFFC9D2DE), width: 1.2)),
+          child: FittedBox(fit: BoxFit.scaleDown, child: Text(t, textAlign: TextAlign.center, maxLines: 1, style: TextStyle(color: on ? Colors.white : kInk, fontWeight: FontWeight.w800, fontSize: 13.5))),
         ),
       );
   Widget _mini(String t, bool on, VoidCallback tap) => InkWell(
         borderRadius: BorderRadius.circular(99), onTap: tap,
-        child: Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8), decoration: BoxDecoration(color: on ? const Color(0xFF2563EB) : const Color(0xFFF1F4F9), borderRadius: BorderRadius.circular(99), border: Border.all(color: on ? const Color(0xFF2563EB) : const Color(0xFFD5DCE6))),
-          child: Text(t, style: TextStyle(color: on ? Colors.white : kInk, fontWeight: FontWeight.w800, fontSize: 13.5))),
+        child: Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5), decoration: BoxDecoration(color: on ? const Color(0xFF2563EB) : const Color(0xFFF1F4F9), borderRadius: BorderRadius.circular(99), border: Border.all(color: on ? const Color(0xFF2563EB) : const Color(0xFFD5DCE6))),
+          child: Text(t, style: TextStyle(color: on ? Colors.white : kInk, fontWeight: FontWeight.w800, fontSize: 12.5))),
       );
-  Widget _sec(String t) => Padding(padding: const EdgeInsets.only(top: 14, bottom: 8), child: Text(t, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: kNavy)));
+  Widget _sec(String t) => Padding(padding: const EdgeInsets.only(top: 8, bottom: 6), child: Text(t, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: kNavy)));
 
   Widget _fld(String k, {String? label, bool num = false, String? hint}) {
     final lb = label ?? Ct.lb[k] ?? k;
     if (k == 'st' || k == 'en') {
-      return Padding(padding: const EdgeInsets.only(bottom: 10), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      return Padding(padding: const EdgeInsets.only(bottom: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         InkWell(onTap: () async { final d = await showDatePicker(context: context, initialDate: DateTime.tryParse(str(f[k])) ?? DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime(2040)); if (d != null) _set(k, iso(d)); },
-          child: InputDecorator(decoration: InputDecoration(labelText: lb, border: const OutlineInputBorder(), isDense: true, suffixIcon: const Icon(Icons.calendar_month)), child: Text(str(f[k]).isEmpty ? '—' : Ct.dm(str(f[k]))))),
-        if (k == 'st') Align(alignment: AlignmentDirectional.centerStart, child: TextButton(onPressed: () { c['d'] = Ct.dmy(); _set('st', iso(DateTime.now())); toast(context, '📅 تاريخ العقد: ${c['d']}'); }, child: const Text('📅 العقد بتاريخ النهارده'))),
+          child: InputDecorator(decoration: InputDecoration(labelText: lb, border: const OutlineInputBorder(), isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), suffixIcon: const Icon(Icons.calendar_month, size: 20), suffixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 20)), child: Text(str(f[k]).isEmpty ? '—' : Ct.dm(str(f[k]))))),
+        if (k == 'st') Align(alignment: AlignmentDirectional.centerStart, child: TextButton(style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 6), tapTargetSize: MaterialTapTargetSize.shrinkWrap), onPressed: () { c['d'] = Ct.dmy(); _set('st', iso(DateTime.now())); toast(context, '📅 تاريخ العقد: ${c['d']}'); }, child: const Text('📅 العقد بتاريخ النهارده'))),
       ]));
     }
     final t = _c(k);
-    return Padding(padding: const EdgeInsets.only(bottom: 10), child: TextField(
+    return Padding(padding: const EdgeInsets.only(bottom: 8), child: TextField(
       controller: t, keyboardType: num ? const TextInputType.numberWithOptions(decimal: true) : (k == 'ph' ? TextInputType.phone : TextInputType.text),
-      decoration: InputDecoration(labelText: lb, hintText: hint, border: const OutlineInputBorder(), isDense: true),
+      style: const TextStyle(fontSize: 14), decoration: InputDecoration(labelText: lb, hintText: hint, border: const OutlineInputBorder(), isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11)),
       onSubmitted: (x) => _set(k, x), onTapOutside: (_) { FocusManager.instance.primaryFocus?.unfocus(); _set(k, t.text); }, onEditingComplete: () => _set(k, t.text),
     ));
   }
 
   Widget _chip(String t, Color c0, VoidCallback on) => Expanded(child: InkWell(borderRadius: BorderRadius.circular(99), onTap: busy ? null : on, child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 6), alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 6), alignment: Alignment.center,
         decoration: BoxDecoration(color: c0.withOpacity(.08), borderRadius: BorderRadius.circular(99), border: Border.all(color: c0.withOpacity(.45), width: 1.4)),
-        child: FittedBox(fit: BoxFit.scaleDown, child: Text(t, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5))),
+        child: FittedBox(fit: BoxFit.scaleDown, child: Text(t, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5))),
       )));
 
   Widget _sigTile({Widget? child, required VoidCallback onTap, bool on = false, VoidCallback? onDel}) => Stack(clipBehavior: Clip.none, children: [
         InkWell(borderRadius: BorderRadius.circular(16), onTap: onTap, child: Container(
-          height: 96, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: on ? const Color(0xFF2563EB) : const Color(0xFFD6DAE2), width: on ? 3 : 1.5), boxShadow: on ? const [BoxShadow(color: Color(0x332563EB), blurRadius: 10)] : null),
+          height: 76, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: on ? const Color(0xFF2563EB) : const Color(0xFFD6DAE2), width: on ? 3 : 1.5), boxShadow: on ? const [BoxShadow(color: Color(0x332563EB), blurRadius: 10)] : null),
           alignment: Alignment.center, padding: const EdgeInsets.all(6), child: child,
         )),
         if (onDel != null) Positioned(top: -8, left: -8, child: InkWell(onTap: onDel, child: Container(width: 30, height: 30, decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: const Color(0xFFE5A0A0))), child: const Icon(Icons.close, color: kRed, size: 18)))),
@@ -277,9 +277,9 @@ class _CtState extends State<ContractPage> {
 
   @override
   Widget build(BuildContext context) {
-    final t = Ct.tpl(S), ly = Ct.lay(S), lg = Ct.en(S) ? 'en' : 'ar';
+    final t = Ct.tpl(S);
     final miss = Ct.missing(S), iss = Ct.issues(S); final sigs = Ct.sigs(S); final cur = str(c['sig']); final W = obj(c['wsig']) ?? {};
-    final body = ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 60), children: [
+    final body = ListView(padding: const EdgeInsets.fromLTRB(10, 10, 10, 40), children: [
       // ───── 1) البيانات ─────
       BCard(c: const Color(0xFF2563EB), title: '📝 عقد إيجار للعميل', child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         _seg([['a', '🛋️ عقد مفروش'], ['b', '🏠 عقد فاضي']], t, (x) async { Ct.switchTpl(S, x); tc.clear(); await _save(); if (mounted) toast(context, x == 'b' ? '🏠 عقد فاضي' : '🛋️ عقد مفروش'); }),
@@ -289,11 +289,9 @@ class _CtState extends State<ContractPage> {
         Container(
           padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: const Color(0xFFF2F5FA), borderRadius: BorderRadius.circular(18)),
           child: Column(children: [
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              const Flexible(child: Text('لغة بيانات العميل في العقد:', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF3D5568)))),
-              const SizedBox(width: 8),
-              SegmentedButton<String>(segments: const [ButtonSegment(value: 'ar', label: Text('عربي')), ButtonSegment(value: 'en', label: Text('EN'))], selected: {lg}, showSelectedIcon: false, onSelectionChanged: (s) => _lang(s.first)),
-            ]),
+            const Align(alignment: AlignmentDirectional.centerStart, child: Text('🌐 لغة العقد:', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF3D5568)))),
+            const SizedBox(height: 6),
+            _seg([['ar', 'عربي'], ['en', 'English'], ['bi', 'عربي + English']], Ct.cl(S), _lang),
             const SizedBox(height: 10),
             const Text('📷 املا البيانات من صورة (اختياري) — دوس وصوّر:', style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF3D5568))),
             const SizedBox(height: 8),
@@ -302,15 +300,10 @@ class _CtState extends State<ContractPage> {
           ]),
         ),
         const SizedBox(height: 10),
-        OutlinedButton.icon(onPressed: _fill, icon: const Icon(Icons.person_search), label: const Text('— تعبئة من عقد مستأجر قائم (اختياري) —'), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50))),
+        OutlinedButton.icon(onPressed: _fill, icon: const Icon(Icons.person_search), label: const Text('— تعبئة من عقد مستأجر قائم (اختياري) —'), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(40))),
         _sec('👤 المؤجر'), _fld('ll'), _fld('lid'),
         _sec('🧑 المستأجر'), _fld('tn'), _fld('tid'), _fld('nat'), _fld('ph', hint: 'مثال: 0501234567 — عليه هيتبعت العقد'),
         _sec('🏠 الإيجار'), _fld('sub'), _fld('st'), _fld('mo', num: true), _fld('en'),
-        if (t == 'b') ...[
-          const Padding(padding: EdgeInsets.only(top: 4, bottom: 6), child: Text('شكل العقد الفاضي:', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF3D5568)))),
-          for (final o in const [['bi', '🌐 عربي + English (زي المفروش)'], ['one', '📄 لغة واحدة (زي الورقة)'], ['tc', '📃 Tenant Contract — صفحة واحدة']])
-            Padding(padding: const EdgeInsets.only(bottom: 8), child: _opt(o[1], ly == o[0], () async { c['lay'] = o[0]; await _save(); })),
-        ],
         // ───── طريقة الإيجار: شهري ولا دفعات ─────
         _sec('💰 طريقة الإيجار'),
         _seg([['m', '📅 إيجار شهري'], ['p', '💵 دفعات']], Ct.rm(S), (x) async { f['rm'] = x; if (x == 'p' && lst(f['pays']).isEmpty && (n0(f['tot']) > 0 || n0(f['rent']) > 0)) Ct.autoPays(S); if (x == 'm') f['pn'] = ''; tc.clear(); await _save(); }),
@@ -320,7 +313,7 @@ class _CtState extends State<ContractPage> {
           _fld('tot', label: 'إجمالي الإيجار (بيتحسب لوحده = الإيجار × الشهور)', num: true),
         ] else ...[
           _fld('tot', label: 'إجمالي الإيجار', num: true),
-          Row(children: [Expanded(child: _fld('pn', label: 'عدد الدفعات', num: true)), const SizedBox(width: 8), Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 10), child: OutlinedButton(style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50)), onPressed: () async { FocusManager.instance.primaryFocus?.unfocus(); for (final k in ['tot', 'pn']) { f[k] = _c(k).text; } c['paysMan'] = false; Ct.autoPays(S); await _save(); if (mounted) toast(context, '✅ اتوزّع ${money(n0(f['tot']))} على ${lst(f['pays']).length} دفعات من ${Ct.dm(str(f['st']))} لـ ${Ct.dm(str(f['en']))}'); }, child: const Text('🧮 وزّع الإجمالي', style: TextStyle(color: kInk, fontWeight: FontWeight.w800)))))]),
+          Row(children: [Expanded(child: _fld('pn', label: 'عدد الدفعات', num: true)), const SizedBox(width: 8), Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 8), child: OutlinedButton(style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(40)), onPressed: () async { FocusManager.instance.primaryFocus?.unfocus(); for (final k in ['tot', 'pn']) { f[k] = _c(k).text; } c['paysMan'] = false; Ct.autoPays(S); await _save(); if (mounted) toast(context, '✅ اتوزّع ${money(n0(f['tot']))} على ${lst(f['pays']).length} دفعات من ${Ct.dm(str(f['st']))} لـ ${Ct.dm(str(f['en']))}'); }, child: const Text('🧮 وزّع الإجمالي', style: TextStyle(color: kInk, fontWeight: FontWeight.w800)))))]),
           for (var i = 0; i < lst(f['pays']).length; i++) Builder(builder: (_) {
             final P = obj(lst(f['pays'])[i])!;
             return Padding(padding: const EdgeInsets.only(bottom: 8), child: Row(children: [
@@ -340,7 +333,7 @@ class _CtState extends State<ContractPage> {
         Row(children: [
           Expanded(child: _fld('cq', label: 'عدد الشيكات', num: true, hint: 'مثال: 1')),
           const SizedBox(width: 8),
-          Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 10), child: _opt(truthy(f['cqd']) ? '✅ + شيك تأمين' : '+ شيك تأمين', truthy(f['cqd']), () async { f['cqd'] = !truthy(f['cqd']); await _save(); }))),
+          Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 8), child: _opt(truthy(f['cqd']) ? '✅ + شيك تأمين' : '+ شيك تأمين', truthy(f['cqd']), () async { f['cqd'] = !truthy(f['cqd']); await _save(); }))),
         ]),
         Wrap(spacing: 6, runSpacing: 6, children: [
           for (final q in [1, 2, 3, 4, 6, 12]) _mini(q == 1 ? 'شيك واحد' : '$q', n0(f['cq']).round() == q, () async { f['cq'] = '$q'; tc.remove('cq'); await _save(); }),
@@ -350,9 +343,9 @@ class _CtState extends State<ContractPage> {
         const SizedBox(height: 8),
         if (n0(f['cq']) > 0) Text('في العقد: ${Ct.chqTxt(f, Ct.en(S))}', style: const TextStyle(color: kMuted, fontWeight: FontWeight.w700))
         else _fld('chq', label: 'أو اكتب الشيكات بنفسك (زي ما هتتكتب في العقد)'),
-        if (t == 'b' && ly != 'tc') ...[
+        if (t == 'b') ...[
           _sec('🔐 التأمين'),
-          Row(children: [Expanded(child: _fld('dep', label: 'التأمين (مبلغ)', num: true)), const SizedBox(width: 8), Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 10), child: _seg([['chq', 'شيك'], ['cash', 'كاش']], f['depT'] == 'cash' ? 'cash' : 'chq', (x) async { f['depT'] = x; await _save(); })))]),
+          Row(children: [Expanded(child: _fld('dep', label: 'التأمين (مبلغ)', num: true)), const SizedBox(width: 8), Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 8), child: _seg([['chq', 'شيك'], ['cash', 'كاش']], f['depT'] == 'cash' ? 'cash' : 'chq', (x) async { f['depT'] = x; await _save(); })))]),
         ],
 
       ])),
@@ -363,7 +356,7 @@ class _CtState extends State<ContractPage> {
         const SizedBox(height: 10),
         GridView.count(crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 1.75, children: [
           for (final s in sigs) _sigTile(on: s['id'] == cur, onTap: () async { c['sig'] = s['id']; await _save(); }, onDel: () => _delSig(s), child: Column(mainAxisSize: MainAxisSize.min, children: [Flexible(child: _b64(str(s['img']))), Text(str(s['n']), style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF555B66)))])),
-          _sigTile(onTap: _newSig, child: const Text('➕ توقيع جديد', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Color(0xFF1473E6)))),
+          _sigTile(onTap: _newSig, child: const Text('➕ توقيع جديد', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Color(0xFF1473E6)))),
           if (cur.isNotEmpty) _sigTile(onTap: () async { c['sig'] = ''; await _save(); }, child: const Text('بدون توقيع', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Color(0xFF667080)))),
         ]),
         const SizedBox(height: 12),
@@ -393,21 +386,21 @@ class _CtState extends State<ContractPage> {
       ),
       const SizedBox(height: 12),
       // ───── 5) الأزرار ─────
-      FilledButton(onPressed: _send, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(58)), child: const Text('📤 ابعت العقد للعميل على واتساب', style: TextStyle(color: Colors.white, fontSize: 16.5, fontWeight: FontWeight.w700))),
+      FilledButton(onPressed: _send, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(40)), child: const Text('📤 ابعت العقد للعميل على واتساب', style: TextStyle(color: Colors.white, fontSize: 16.5, fontWeight: FontWeight.w700))),
       const SizedBox(height: 10),
       Row(children: [
-        Expanded(child: OutlinedButton(onPressed: _pdf, style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(54)), child: const Text('📄 تنزيل PDF'))),
+        Expanded(child: OutlinedButton(onPressed: _pdf, style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(42)), child: const Text('📄 تنزيل PDF'))),
         const SizedBox(width: 10),
-        Expanded(child: OutlinedButton(onPressed: _print, style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(54)), child: const Text('🖨 طباعة'))),
+        Expanded(child: OutlinedButton(onPressed: _print, style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(42)), child: const Text('🖨 طباعة'))),
       ]),
       const SizedBox(height: 10),
       Row(children: [
-        Expanded(child: OutlinedButton(onPressed: () async { if (!await confirmDlg(context, 'تبدأ عقد جديد؟ بيانات العميل هتتمسح (المؤجر والتوقيع هيفضلوا).', ok: '➕ عقد جديد')) return; Ct.newContract(S); tc.clear(); await _save('📝 عقد جديد'); }, style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(54)), child: const Text('➕ عقد جديد'))),
+        Expanded(child: OutlinedButton(onPressed: () async { if (!await confirmDlg(context, 'تبدأ عقد جديد؟ بيانات العميل هتتمسح (المؤجر والتوقيع هيفضلوا).', ok: '➕ عقد جديد')) return; Ct.newContract(S); tc.clear(); await _save('📝 عقد جديد'); }, style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(42)), child: const Text('➕ عقد جديد'))),
         const SizedBox(width: 10),
-        Expanded(child: OutlinedButton(onPressed: () async { if (!await confirmDlg(context, 'ترجّع نص العقد الأصلي؟ أي تعديل كتبته بإيدك على ورقة العقد هيتمسح (البيانات اللي في الفورم مش هتتمسح).', ok: '↺ رجّعه')) return; c['html'] = ''; await _save(); }, style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(54)), child: const Text('↺ النموذج الأصلي'))),
+        Expanded(child: OutlinedButton(onPressed: () async { if (!await confirmDlg(context, 'ترجّع نص العقد الأصلي؟ أي تعديل كتبته بإيدك على ورقة العقد هيتمسح (البيانات اللي في الفورم مش هتتمسح).', ok: '↺ رجّعه')) return; c['html'] = ''; await _save(); }, style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(42)), child: const Text('↺ النموذج الأصلي'))),
       ]),
       const SizedBox(height: 10),
-      OutlinedButton(onPressed: _toLease, style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(54)), child: const Text('🏠 سجّله عقد مستأجر في الاستديوهات')),
+      OutlinedButton(onPressed: _toLease, style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(42)), child: const Text('🏠 سجّله عقد مستأجر في الاستديوهات')),
     ]);
     if (widget.inTab) return body;
     return Directionality(textDirection: Tr.dir, child: Scaffold(appBar: AppBar(title: Text(Tr.t('📝 عقد العميل'))), body: body));
@@ -556,8 +549,8 @@ class _CtPaperState extends State<CtPaper> {
 
   Widget _rb(String t, VoidCallback on, {bool wide = false}) => InkWell(
         borderRadius: BorderRadius.circular(99), onTap: on,
-        child: Container(height: 46, constraints: BoxConstraints(minWidth: wide ? 120 : 46), padding: const EdgeInsets.symmetric(horizontal: 14), alignment: Alignment.center,
+        child: Container(height: 36, constraints: BoxConstraints(minWidth: wide ? 100 : 40), padding: const EdgeInsets.symmetric(horizontal: 12), alignment: Alignment.center,
           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(99), border: Border.all(color: kBd), boxShadow: const [BoxShadow(color: Color(0x1214213D), blurRadius: 8, offset: Offset(0, 3))]),
-          child: Text(t, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: kInk))),
+          child: Text(t, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: kInk))),
       );
 }

@@ -17,7 +17,7 @@ void main() {
     const px = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
     Ct.sigs(S); (S['sigs'] as List).add({'id': 's1', 'n': 'x', 'img': px}); Ct.ct(S)['sig'] = 's1'; Ct.ct(S)['tsig'] = px; Ct.ct(S)['wsig'] = {'1': px};
     for (final cfg in [['a', 'bi', 'ar', 'm'], ['a', 'bi', 'ar', 'p'], ['b', 'bi', 'ar', 'p'], ['b', 'bi', 'ar', 'm'], ['b', 'one', 'ar', 'p'], ['b', 'one', 'en', 'm'], ['b', 'tc', 'en', 'm'], ['b', 'tc', 'en', 'p']]) {
-      Ct.switchTpl(S, cfg[0]); Ct.ct(S)['lay'] = cfg[1]; Ct.ct(S)['lang'] = cfg[2]; Ct.ct(S)['html'] = '';
+      Ct.switchTpl(S, cfg[0]); Ct.ct(S)['lay'] = cfg[1]; Ct.ct(S)['lang'] = cfg[2]; Ct.ct(S)['cl'] = ['ar', 'en', 'bi'][cfg.join().length % 3]; Ct.ct(S)['html'] = '';
       Ct.F(S)['rm'] = cfg[3]; Ct.F(S)['cq'] = '1'; Ct.F(S)['cqd'] = true; Ct.F(S)['pn'] = '4';
       if (cfg[3] == 'p') Ct.autoPays(S);
       final hh = Ct.paper(S);
@@ -26,6 +26,7 @@ void main() {
       final h = Ct.finalHtml(S);
       expect(h.contains('data-f="tn"'), true, reason: cfg.join('/'));
       expect('ctsig'.allMatches(h).length, 3, reason: 'sigs ${cfg.join('/')}');
+      expect(h.contains('class="tc2"'), true, reason: 'terms ${cfg.join('/')}');
       final b = await CtPdf.build(h);
       expect(b.length > 2000, true, reason: cfg.join('/'));
       expect(Ct.missing(S), isA<List<String>>());

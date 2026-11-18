@@ -39,7 +39,7 @@ class _AccState extends State<AccountsPage> {
     final ymK = months.keys.toList()..sort((a, b) => b.compareTo(a));
     return Directionality(textDirection: Tr.dir, child: Scaffold(
       appBar: widget.inTab ? null : AppBar(title: Text(Tr.t('الحسابات'))),
-      body: ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 40), children: [
+      body: ListView(padding: const EdgeInsets.fromLTRB(10, 10, 14, 40), children: [
         // ───── نفس ترتيب حسابات بنيان القديم ─────
         Builder(builder: (_) { final rp = e.rcvP(), an = e.annW(); final mine = S['pmode'] == 'me'; return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(child: BStat(mine ? Tr.t('ربحي حتى اليوم') : Tr.t('ربح المجموعة حتى اليوم'), rp['profit']!, c: rp['profit']! < 0 ? kRed : kOk, sub: 'على الإيجار المقبوض (${(rp['mo']! * 10).round() / 10} شهر): ${money(rp['rev']!)}', onTap: () => eqProfit(context, e))),

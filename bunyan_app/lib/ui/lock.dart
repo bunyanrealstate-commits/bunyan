@@ -47,7 +47,7 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
       TextField(controller: c, autofocus: true, obscureText: true, keyboardType: TextInputType.number, textAlign: TextAlign.center, style: const TextStyle(fontSize: 24, letterSpacing: 8),
         decoration: InputDecoration(hintText: Tr.t('الرقم السري'), errorText: err.isEmpty ? null : err, border: const OutlineInputBorder()), onSubmitted: (_) => _try()),
       const SizedBox(height: 12),
-      FilledButton(onPressed: _try, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)), child: Text(Tr.t('افتح'))),
+      FilledButton(onPressed: _try, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(42)), child: Text(Tr.t('افتح'))),
     ])))));
   }
 }

@@ -29,7 +29,7 @@ class _RemindersPageState extends State<RemindersPage> {
     return Directionality(textDirection: Tr.dir, child: Scaffold(
       appBar: AppBar(title: Text(Tr.t('⏰ تذكيراتي')), actions: [IconButton(tooltip: Tr.t('جرّب إشعار'), onPressed: () => Rem.test(), icon: const Icon(Icons.notifications_active))]),
       floatingActionButton: FloatingActionButton.extended(onPressed: () => _edit(null), icon: const Icon(Icons.add_alarm), label: Text(Tr.t('تذكير جديد'))),
-      body: ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 90), children: [
+      body: ListView(padding: const EdgeInsets.fromLTRB(10, 10, 14, 90), children: [
         FutureBuilder<bool>(future: Rem.oldInstalled(), builder: (_, s) => s.data == true ? Card(color: Color(0xFFFFF4E0), child: Padding(padding: EdgeInsets.all(12), child: Text(Tr.t('ℹ️ الإشعارات بتيجي من بنيان القديم دلوقتي علشان متجيش مرتين — لما تمسح القديم، التطبيق ده هو اللي هيرن لوحده.'), style: TextStyle(height: 1.6)))) : const SizedBox()),
         if (rs.isEmpty) Padding(padding: EdgeInsets.all(30), child: Text(Tr.t('مفيش تذكيرات'), textAlign: TextAlign.center)),
         for (final r in rs) Builder(builder: (_) {

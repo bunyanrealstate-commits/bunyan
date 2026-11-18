@@ -48,7 +48,7 @@ class HomePage extends StatelessWidget {
     final w = Ws.I.resolve(); final g = objs(Store.I.S['groups']).where((x) => x['id'] == w).firstOrNull;
     final an = e.annW();
     var lp = 0.0, lf = 0.0; for (final u in e.SU()) { final o = e.occ(u); lp += o['lossPast'] as double; lf += o['lossFut'] as double; }
-    return ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 90), children: [
+    return ListView(padding: const EdgeInsets.fromLTRB(10, 10, 14, 90), children: [
       const HeroScene(),
       const SizedBox(height: 12),
       NtBar(e),

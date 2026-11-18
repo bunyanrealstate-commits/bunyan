@@ -162,7 +162,7 @@ class _LeaseEditState extends State<LeaseEdit> {
         _tf('fee', Tr.t('المبلغ الذي دفعه المستأجر (0 إن لم يكن هناك رسوم)'), (v) => f.fee = double.tryParse(v) ?? 0, num: true),
         Text(Tr.t('تُحسب إيراداً لك في تاريخ بداية العقد، ولا تدخل في الإيجار ولا في الشيكات.'), style: TextStyle(color: kMuted, fontSize: 12)),
         const SizedBox(height: 16),
-        FilledButton(onPressed: _save, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)), child: Text(Tr.t('حفظ العقد'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+        FilledButton(onPressed: _save, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(42)), child: Text(Tr.t('حفظ العقد'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
         const SizedBox(height: 30),
       ]),
     ));

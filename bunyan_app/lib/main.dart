@@ -22,6 +22,8 @@ class BunyanApp extends StatelessWidget {
         locale: Locale(Tr.lang),
         supportedLocales: const [Locale('ar'), Locale('en')],
         localizationsDelegates: const [GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
+        // خط الموبايل لو مكبّر من الإعدادات ميبوّظش الشاشات: أقصى تكبير 1.0
+        builder: (ctx, child) { final mq = MediaQuery.of(ctx); return MediaQuery(data: mq.copyWith(textScaler: mq.textScaler.clamp(minScaleFactor: .85, maxScaleFactor: 1.0)), child: child!); },
         home: const LockGate(child: Shell()),
       ));
 }

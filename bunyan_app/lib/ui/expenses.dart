@@ -17,7 +17,7 @@ class ExpensesPage extends StatelessWidget {
     final l = e.SE()..sort((a, b) => str(b['d']).compareTo(str(a['d'])));
     final total = l.fold(0.0, (s, x) => s + n0(x['a']) * (truthy(x['n']) ? n(x['n']) : 1));
     return Stack(children: [
-      ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 90), children: [
+      ListView(padding: const EdgeInsets.fromLTRB(10, 10, 14, 90), children: [
         Card(child: ListTile(title: Text(Tr.t('إجمالي المصاريف')), trailing: Text(money(total), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: kRed)))),
         if (l.isEmpty) Padding(padding: EdgeInsets.all(30), child: Text(Tr.t('مفيش مصاريف'), textAlign: TextAlign.center)),
         for (final x in l) Card(child: ListTile(

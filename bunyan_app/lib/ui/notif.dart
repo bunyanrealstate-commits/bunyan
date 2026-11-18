@@ -161,7 +161,7 @@ class NotifPage extends StatelessWidget {
           }
           final alx = _alxRows(e); final aod = alx.where((x) => (x['n'] as int) < 0).toList(), asn = alx.where((x) => (x['n'] as int) >= 0).toList();
           double s(List<Map<String, dynamic>> l) => l.fold(0.0, (q, x) => q + n0(x['amt']));
-          return ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 40), children: [
+          return ListView(padding: const EdgeInsets.fromLTRB(10, 10, 14, 40), children: [
             if (alx.isNotEmpty) Padding(padding: const EdgeInsets.only(bottom: 12), child: InkWell(
               borderRadius: BorderRadius.circular(18), onTap: () => openAlx(ctx),
               child: Container(

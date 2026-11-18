@@ -84,7 +84,7 @@ class _UnitEditState extends State<UnitEdit> {
           if (src == 'mix') ...[const SizedBox(height: 10), _tf('mx', Tr.t('المبلغ من أموالي الخاصة (والباقي من الرصيد)'), num: true)],
         ],
         const SizedBox(height: 18),
-        FilledButton(onPressed: _save, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)), child: Text(Tr.t('حفظ'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+        FilledButton(onPressed: _save, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(42)), child: Text(Tr.t('حفظ'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
         const SizedBox(height: 30),
       ]),
     ));

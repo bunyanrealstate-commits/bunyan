@@ -14,15 +14,17 @@ const kCC = [Color(0xFF2563EB), Color(0xFF16A34A), Color(0xFF7C3AED), Color(0xFF
 
 ThemeData bunyanTheme() => ThemeData(
       useMaterial3: true,
+      visualDensity: VisualDensity.compact,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       fontFamily: 'Plex',
       colorScheme: ColorScheme.fromSeed(seedColor: kAc, primary: kAc, secondary: kTeal, surface: Colors.white),
       scaffoldBackgroundColor: kBg,
       appBarTheme: const AppBarTheme(backgroundColor: Colors.white, foregroundColor: kInk, elevation: 0, scrolledUnderElevation: 1, centerTitle: false, surfaceTintColor: Colors.white, titleTextStyle: TextStyle(fontFamily: 'Plex', fontSize: 18, fontWeight: FontWeight.w700, color: kInk)),
       cardTheme: CardTheme(color: Colors.white, elevation: 0, margin: const EdgeInsets.symmetric(vertical: 5), shadowColor: const Color(0x1A14213D), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Color(0xFFE3E6EC)))),
-      filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(backgroundColor: kAc, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)), textStyle: const TextStyle(fontFamily: 'Plex', fontWeight: FontWeight.w700))),
-      outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(foregroundColor: kInk, side: const BorderSide(color: kBd), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)), textStyle: const TextStyle(fontFamily: 'Plex', fontWeight: FontWeight.w700))),
+      filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(backgroundColor: kAc, minimumSize: const Size(0, 40), padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)), textStyle: const TextStyle(fontFamily: 'Plex', fontWeight: FontWeight.w700, fontSize: 14))),
+      outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(foregroundColor: kInk, minimumSize: const Size(0, 38), padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7), side: const BorderSide(color: kBd), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)), textStyle: const TextStyle(fontFamily: 'Plex', fontWeight: FontWeight.w700))),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: kAc, foregroundColor: Colors.white),
-      inputDecorationTheme: InputDecorationTheme(filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kBd)), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kBd))),
+      inputDecorationTheme: InputDecorationTheme(filled: true, fillColor: Colors.white, isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kBd)), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kBd))),
       chipTheme: ChipThemeData(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)), side: const BorderSide(color: kBd), selectedColor: kAc, labelStyle: const TextStyle(fontFamily: 'Plex', fontWeight: FontWeight.w700)),
       dividerTheme: const DividerThemeData(color: Color(0xFFE3E6EC)),
     );
@@ -48,15 +50,15 @@ Color sign(num v) => v < 0 ? kRed : kGreen;
 /// كارت بنيان: شريط ملوّن فوق + لون خفيف + عنوان بنفس اللون (زي cardsep في القديم)
 class BCard extends StatelessWidget {
   final Color c; final String? title; final Widget child; final EdgeInsets pad; final Widget? trailing;
-  const BCard({super.key, this.c = const Color(0xFF2563EB), this.title, required this.child, this.pad = const EdgeInsets.fromLTRB(14, 12, 14, 14), this.trailing});
+  const BCard({super.key, this.c = const Color(0xFF2563EB), this.title, required this.child, this.pad = const EdgeInsets.fromLTRB(12, 10, 12, 12), this.trailing});
   @override
   Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(bottom: 14),
+        margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: c.withOpacity(.22), blurRadius: 22, offset: const Offset(0, 8), spreadRadius: -8), const BoxShadow(color: Color(0x0F0F2742), blurRadius: 2, offset: Offset(0, 1))]),
         child: ClipRRect(borderRadius: BorderRadius.circular(16), child: Container(
           decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color.alphaBlend(c.withOpacity(.09), Colors.white), Colors.white], stops: const [0, .35]), border: Border.all(color: Color.alphaBlend(c.withOpacity(.30), kBd), width: 1.2)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Container(height: 6, color: c),
+            Container(height: 4, color: c),
             Padding(padding: pad, child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               if (title != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Row(children: [
                 Container(width: 4, height: 18, decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(2))), const SizedBox(width: 8),
@@ -85,10 +87,10 @@ class BStat extends StatelessWidget {
         color: Color.alphaBlend(col.withOpacity(.08), Colors.white),
         child: IntrinsicHeight(child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Container(width: 6, color: col),
-          Expanded(child: Padding(padding: const EdgeInsets.fromLTRB(12, 10, 12, 10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(child: Padding(padding: const EdgeInsets.fromLTRB(10, 8, 10, 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(l, style: const TextStyle(color: kMuted, fontSize: 12, fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
-            Text(text != null ? (Priv.on ? '•••' : text!) : money(v), style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: Color.alphaBlend(Colors.black.withOpacity(.08), col))),
+            Text(text != null ? (Priv.on ? '•••' : text!) : money(v), style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: Color.alphaBlend(Colors.black.withOpacity(.08), col))),
             if (sub != null) Text(sub!, style: const TextStyle(color: kMuted, fontSize: 11)),
             if (onTap != null) const Align(alignment: AlignmentDirectional.centerEnd, child: Text('🧮', style: TextStyle(fontSize: 15))),
           ]))),

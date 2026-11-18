@@ -41,7 +41,7 @@ class HeroScene extends StatelessWidget {
     const ds = ['الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'];
     final t = DateTime.now();
     return Container(
-      height: 150, margin: const EdgeInsets.only(bottom: 4),
+      height: 118, margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(22), boxShadow: const [BoxShadow(color: Color(0x2614213D), blurRadius: 18, offset: Offset(0, 8), spreadRadius: -6)]),
       child: ClipRRect(borderRadius: BorderRadius.circular(22), child: Stack(children: [
         Positioned.fill(child: CustomPaint(painter: _Scene())),
@@ -136,7 +136,7 @@ class StatusTiles extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFFD5E8E2)), boxShadow: const [BoxShadow(color: Color(0x1214213D), blurRadius: 12, offset: Offset(0, 4))]),
             child: Column(children: [
-              Text(Priv.on ? '•' : '$n', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: c, height: 1.1)),
+              Text(Priv.on ? '•' : '$n', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: c, height: 1.1)),
               const SizedBox(height: 4),
               Text('$ic $l', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF3B4250))),
             ]),
@@ -169,7 +169,7 @@ class WithdrawCard extends StatelessWidget {
         child: ClipRRect(borderRadius: BorderRadius.circular(20), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Container(height: 5, color: const Color(0xFF2563EB)),
           Padding(padding: const EdgeInsets.fromLTRB(14, 12, 10, 14), child: Row(children: [
-            const Text('🧭', style: TextStyle(fontSize: 34)), const SizedBox(width: 10),
+            const Text('🧭', style: TextStyle(fontSize: 26)), const SizedBox(width: 10),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text.rich(TextSpan(children: [
                 TextSpan(text: Tr.t('تقدر تسحب دلوقتي من غير عجز: '), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: kInk)),
