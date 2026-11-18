@@ -429,6 +429,8 @@ fun SettingsSheet(onDismiss: () -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Lib.ver
     fun set(k: String, x: Any) { Lib.cfg.put(k, x); Lib.save(); Notify.schedule(ctx) }
     Sheet("🎯 هدفك والتذكيرات", onDismiss) {
+        val uctx = LocalContext.current; val uscope = rememberCoroutineScope()
+        OutlinedButton({ uscope.launch { Toast.makeText(uctx, Updater.check(uctx, true) ?: "", Toast.LENGTH_LONG).show() } }, Modifier.fillMaxWidth()) { Text("⬆️ شوف لو فيه تحديث للتطبيق (نسختك ${Updater.myVersion(uctx)})") }
         Text("هدفك كل يوم (صفحات)", fontWeight = FontWeight.Bold)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(1, 5, 10, 15, 20, 30).forEach { g -> Chip(if (g == 1) "1️⃣ تحدي" else "$g", Lib.goal == g) { Lib.goal = g; Lib.save() } } }
         if (Lib.goal == 1) Text("1️⃣ تحدي الصفحة الواحدة: أصعب حاجة البداية — صفحة واحدة بس، وغالباً هتكمّل لوحدك.", color = Muted, fontSize = 13.sp, lineHeight = 20.sp)

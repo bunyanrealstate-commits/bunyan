@@ -31,13 +31,13 @@ object Updater {
     /** بيرجع رسالة لو حصل تحديث، أو null */
     suspend fun check(ctx: Context, force: Boolean = false): String? = withContext(Dispatchers.IO) {
         val sp = ctx.getSharedPreferences("upd", Context.MODE_PRIVATE)
-        if (!force && System.currentTimeMillis() - sp.getLong("at", 0) < 30 * 60 * 1000) return@withContext null
+        if (!force && System.currentTimeMillis() - sp.getLong("at", 0) < 3 * 60 * 1000) return@withContext null
         sp.edit().putLong("at", System.currentTimeMillis()).apply()
         try {
             val v = JSONObject(get(BASE + "version.json").inputStream.bufferedReader().readText())
             val code = v.optLong("code")
             if (code <= myVersion(ctx)) return@withContext if (force) "✅ عندك آخر نسخة" else null
-            if (sp.getLong("tried", 0) == code && !force && System.currentTimeMillis() - sp.getLong("triedAt", 0) < 6 * 3600 * 1000) return@withContext null
+            if (sp.getLong("tried", 0) == code && !force && System.currentTimeMillis() - sp.getLong("triedAt", 0) < 20 * 60 * 1000) return@withContext null
             sp.edit().putLong("tried", code).putLong("triedAt", System.currentTimeMillis()).apply()
             val f = File(ctx.cacheDir, "upd.apk")
             get(BASE + "Maktabati.apk").inputStream.use { i -> f.outputStream().use { i.copyTo(it, 256 * 1024) } }
@@ -69,7 +69,12 @@ class UpdRx : BroadcastReceiver() {
                 @Suppress("DEPRECATION") val confirm = intent.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)
                 if (confirm != null) { confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); try { ctx.startActivity(confirm) } catch (_: Exception) {} }
             }
-            else -> {}
+            PackageInstaller.STATUS_SUCCESS -> {}
+            else -> {
+                val m = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) ?: ""
+                ctx.getSharedPreferences("upd", Context.MODE_PRIVATE).edit().putLong("tried", 0).apply()
+                android.widget.Toast.makeText(ctx, "⚠️ التحديث متسطّبش — افتح الإعدادات ⚙️ ودوس «شوف لو فيه تحديث». $m", android.widget.Toast.LENGTH_LONG).show()
+            }
         }
     }
 }
