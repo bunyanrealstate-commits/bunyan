@@ -338,7 +338,7 @@ class _CtState extends State<ContractPage> {
       ),
       const SizedBox(height: 12),
       // ───── 5) الأزرار ─────
-      FilledButton(onPressed: _send, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(58), textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)), child: const Text('📤 ابعت العقد للعميل على واتساب')),
+      FilledButton(onPressed: _send, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(58)), child: const Text('📤 ابعت العقد للعميل على واتساب', style: TextStyle(color: Colors.white, fontSize: 16.5, fontWeight: FontWeight.w700))),
       const SizedBox(height: 10),
       Row(children: [
         Expanded(child: OutlinedButton(onPressed: _pdf, style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(54)), child: const Text('📄 تنزيل PDF'))),
