@@ -231,6 +231,8 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
     var q by remember { mutableStateOf("") }
     var menu by remember { mutableStateOf<JSONObject?>(null) }
     var goalDlg by remember { mutableStateOf(false) }
+    var rate by remember { mutableStateOf<JSONObject?>(null) }
+    var year by remember { mutableStateOf(false) }
     val cur = Lib.current()
     val today = Lib.todayPages(); val goal = Lib.goal; val st = Lib.streak()
     val list = Lib.books.filter { it.optString("sh", "want") == shelf && (q.isBlank() || it.optString("t").contains(q) || it.optString("a").contains(q)) }
@@ -332,6 +334,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 }
             }
         }
+        item(span = { GridItemSpan(3) }) { ChallengeCard { year = true } }
         item(span = { GridItemSpan(3) }) { MotivationCards { onMore("jar") } }
         item(span = { GridItemSpan(3) }) { ReviewCard() }
         // أزرار
@@ -369,6 +372,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 }
                 val pg = b.optInt("pg"); if (pg > 0 && b.optInt("cur") > 0) LinearProgressIndicator(progress = { (b.optInt("cur").toFloat() / pg).coerceIn(0f, 1f) }, Modifier.fillMaxWidth().padding(top = 4.dp).height(4.dp).clip(CircleShape), color = Green, trackColor = Sand)
                 Text(b.optString("t"), fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, color = Ink, modifier = Modifier.padding(top = 4.dp))
+                if (b.optInt("r") > 0) Stars(b.optInt("r"), 12)
             }
         }
         item(span = { GridItemSpan(3) }) { Column(Modifier.padding(top = 10.dp)) { StatsAndBadges() } }
@@ -384,17 +388,21 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                     Button({ menu = null; onOpen(b) }, Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Green)) { Text(if (Lib.have(b)) "📖 اقرأ" else "⬇️ نزّل واقرأ") }
                     val nq = (b.optJSONArray("q")?.length() ?: 0) + (b.optJSONArray("sums")?.length() ?: 0)
                     OutlinedButton({ menu = null; onNotes(b) }, Modifier.fillMaxWidth()) { Text("💬 اقتباساتي وملخصاتي ($nq)") }
+                    if (b.optString("sh") == "done") Row(verticalAlignment = Alignment.CenterVertically) { Text("تقييمك: ", color = Muted); Stars(b.optInt("r"), 26) { menu = null; rate = b } }
+                    if (Net.hasGem()) OutlinedButton({ menu = null; recSeed = b; onRec() }, Modifier.fillMaxWidth()) { Text("👥 اللي حبّوه حبّوا كمان…") }
                     if (!Lib.have(b) && b.optString("ia").isNotEmpty()) OutlinedButton({ menu = null; onFetch(b) }, Modifier.fillMaxWidth()) { Text("⬇️ نزّله بس") }
                     if (Net.hasGem() && b.optString("sh") != "want" && b.optJSONObject("ch") == null) OutlinedButton({ val bb = b; menu = null; Toast.makeText(hctx, "⏳ بجهّزلك تحدي من الكتاب…", Toast.LENGTH_SHORT).show()
                         hscope.launch { Toast.makeText(hctx, if (Boost.genChallenge(bb)) "🛠 التحدي في الصفحة الرئيسية" else "⚠️ مقدرتش دلوقتي", Toast.LENGTH_SHORT).show() } }, Modifier.fillMaxWidth()) { Text("🛠 طبّقها: تحدي من الكتاب") }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf("want" to "📌 عايز", "now" to "📖 بقراه", "done" to "✅ خلصته").forEach { (k, t) -> Chip(t, b.optString("sh", "want") == k) { Lib.setShelf(b, k); menu = null
+                        listOf("want" to "📌 عايز", "now" to "📖 بقراه", "done" to "✅ خلصته").forEach { (k, t) -> Chip(t, b.optString("sh", "want") == k) { Lib.setShelf(b, k); menu = null; if (k == "done") rate = b
                             if (k == "done" && Net.hasGem() && b.optJSONObject("ch") == null) hscope.launch { if (Boost.genChallenge(b)) Toast.makeText(hctx, "🛠 ليك تحدي تطبّقه من الكتاب ده — في الرئيسية", Toast.LENGTH_LONG).show() } } }
                     }
                     if (Lib.have(b)) TextButton({ Lib.files(b).forEach { it.delete() }; Lib.save(); menu = null }) { Text("🗑 امسح الملف من الموبايل (التقدم بيفضل)", color = Color(0xFFB3261E)) }
                 }
             })
     }
+    rate?.let { RateSheet(it) { rate = null } }
+    if (year) YearSheet({ year = false }) { menu = it }
     if (goalDlg) {
         AlertDialog(onDismissRequest = { goalDlg = false }, confirmButton = { TextButton({ goalDlg = false }) { Text("تمام") } },
             title = { Text("🎯 هدفك كل يوم") }, text = {

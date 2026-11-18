@@ -3,6 +3,7 @@ package com.bunyan.maktabati
 import android.graphics.Bitmap
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -371,10 +372,21 @@ fun WeeklyReport() {
 }
 
 /* ───── رشّحلي الكتاب الجاي ───── */
+/** 👥 زي Goodreads «اللي حبّوا الكتاب ده حبّوا كمان» — لو متحدد، الترشيح بيبقى حوالين الكتاب ده */
+var recSeed: JSONObject? = null
+
 @Composable
 fun RecommendSheet(onDismiss: () -> Unit, onSearch: (String) -> Unit) {
     var res by remember { mutableStateOf<List<JSONObject>?>(null) }
+    val seed = remember { recSeed.also { recSeed = null } }
     LaunchedEffect(Unit) {
+        if (seed != null) {
+            val j = Net.askJson("زي قسم «Readers also enjoyed» في Goodreads: اللي حبّوا كتاب «${seed.optString("t")}»" + (if (seed.optString("a").isNotEmpty()) " لـ${seed.optString("a")}" else "") +
+                (if (seed.has("r")) " (القارئ ده ادّاه ${seed.optInt("r")}/5)" else "") + " حبّوا كمان إيه؟ رشّح 5 كتب حقيقية ومشهورة ومتقيّمة عالي على Goodreads، يفضّل عربي أو مترجم للعربي، وسهلة لواحد لسه بيتعوّد على القراية. " +
+                "رجّع JSON بس: {\"r\":[{\"t\":\"اسم الكتاب بالعربي\",\"a\":\"المؤلف\",\"why\":\"ليه هيعجبه — سطر واحد بالمصري\"}]}")
+            res = j?.optJSONArray("r")?.let { a -> (0 until a.length()).map { a.getJSONObject(it) } } ?: emptyList()
+            return@LaunchedEffect
+        }
         val done = Lib.books.filter { it.optString("sh") == "done" }; val want = Lib.books.filter { it.optString("sh") == "want" }.take(40)
         val pr = "ده شخص بيحاول يتعوّد على القراية (بيقول إنه كسول). الكتب اللي خلصها وتقييمه: " + (done.joinToString("، ") { "«" + it.optString("t") + "» " + (if (it.has("r")) it.optInt("r").toString() + "/5" else "") }.ifEmpty { "لسه مخلصش" }) +
                 ". الكتب اللي في قايمته: " + want.joinToString("، ") { "«" + it.optString("t") + "»" } + ". اختار 3 كتب من قايمته يبدأ بيها بالترتيب (الأسهل والأمتع الأول) ولو مفيش كفاية رشّح كتب عربية سهلة ومشهورة. رجّع JSON بس: {\"r\":[{\"t\":\"اسم الكتاب\",\"a\":\"المؤلف\",\"why\":\"ليه — سطر واحد بالمصري\"}]}"
@@ -383,9 +395,10 @@ fun RecommendSheet(onDismiss: () -> Unit, onSearch: (String) -> Unit) {
         if (l.isEmpty()) l = want.filter { it.optInt("pg") in 1..250 }.ifEmpty { want }.take(3).map { JSONObject().put("t", it.optString("t")).put("a", it.optString("a")).put("why", "من قايمتك") }
         res = l
     }
-    Sheet("✨ أقرأ إيه بعد كده؟", onDismiss) {
+    Sheet(if (seed != null) "👥 اللي حبّوا «${seed.optString("t")}» حبّوا كمان" else "✨ أقرأ إيه بعد كده؟", onDismiss) {
         val l = res
-        if (l == null) Busy("⏳ بفكّر في أنسب كتاب ليك…") else l.take(3).forEachIndexed { i, r ->
+        if (l != null && l.isEmpty()) Text("⚠️ مقدرتش أجيب ترشيحات دلوقتي — اتأكد من النت", color = Muted)
+        if (l == null) Busy("⏳ بفكّر في أنسب كتاب ليك…") else l.take(if (seed != null) 5 else 3).forEachIndexed { i, r ->
             val mine = Lib.books.firstOrNull { it.optString("t") == r.optString("t") }
             Surface(shape = RoundedCornerShape(16.dp), color = Card) { Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text("${i + 1}. " + r.optString("t"), fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Ink)
@@ -428,5 +441,98 @@ fun SettingsSheet(onDismiss: () -> Unit) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf("08:00", "13:00", "17:00", "19:00").forEach { t -> Chip(t, Lib.cfg.optString("paraT", "13:00") == t) { set("paraT", t) } } }
         OutlinedButton({ Notify.post(ctx, 9299, "🔔 تجربة", "التذكيرات شغالة ✅", null) }, Modifier.fillMaxWidth()) { Text("🔔 جرّب إشعار دلوقتي") }
         MoreSettings()
+    }
+}
+
+
+/* ───── ⭐ تقييم الكتاب (زي Goodreads) ───── */
+@Composable
+fun Stars(n: Int, size: Int = 30, onPick: ((Int) -> Unit)? = null) {
+    Row { (1..5).forEach { i -> Text(if (i <= n) "★" else "☆", fontSize = size.sp, color = Color(0xFFF0A04B),
+        modifier = if (onPick != null) Modifier.clickable { onPick(i) }.padding(horizontal = 3.dp) else Modifier) } }
+}
+
+@Composable
+fun RateSheet(b: JSONObject, onDismiss: () -> Unit) {
+    var r by remember { mutableIntStateOf(b.optInt("r", 0)) }
+    var rv by remember { mutableStateOf(b.optString("rv")) }
+    Sheet("⭐ عجبك «${b.optString("t")}»؟", onDismiss) {
+        Box(Modifier.fillMaxWidth(), Alignment.Center) { Stars(r, 40) { r = it } }
+        Text(listOf("", "😕 معجبنيش", "😐 عادي", "🙂 كويس", "😃 حلو أوي", "🤩 تحفة!").getOrElse(r) { "" }, Modifier.fillMaxWidth(), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, color = Ink)
+        OutlinedTextField(rv, { rv = it }, Modifier.fillMaxWidth(), label = { Text("رأيك في سطر (اختياري)") }, shape = RoundedCornerShape(14.dp))
+        Button({ if (r > 0) { b.put("r", r); if (rv.isNotBlank()) b.put("rv", rv.trim()) else b.remove("rv"); Lib.touch(b, "r", "rv"); Lib.save() }; onDismiss() },
+            Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Green)) { Text("💾 احفظ") }
+    }
+}
+
+/* ───── 🎯 تحدي القراية السنوي (زي Goodreads Reading Challenge) ───── */
+fun yearKey() = Calendar.getInstance().get(Calendar.YEAR).toString()
+fun challengeGoal(): Int = Lib.cfg.optJSONObject("chY")?.optInt(yearKey(), 0) ?: 0
+
+@Composable
+fun ChallengeCard(onYear: () -> Unit) {
+    @Suppress("UNUSED_VARIABLE") val v = Lib.ver
+    val yr = yearKey(); val g = challengeGoal()
+    val done = Lib.books.count { it.optString("sh") == "done" && it.optString("fd").startsWith(yr) }
+    var pick by remember { mutableStateOf(false) }
+    Surface(onClick = { if (g == 0) pick = true else onYear() }, shape = RoundedCornerShape(20.dp), color = Color(0xFFF3ECFA)) {
+        Column(Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("🎯 تحدي $yr", fontWeight = FontWeight.Black, color = Color(0xFF5B2C83), fontSize = 16.sp, modifier = Modifier.weight(1f))
+                if (g > 0) Text("✏️", Modifier.clickable { pick = true }.padding(4.dp))
+            }
+            if (g == 0) Text("حدد كام كتاب ناوي تخلّص السنة دي — زي تحدي Goodreads 📚", color = Ink, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
+            else {
+                val c = Calendar.getInstance()
+                val exp = g * c.get(Calendar.DAY_OF_YEAR).toFloat() / c.getActualMaximum(Calendar.DAY_OF_YEAR)
+                val diff = Math.round(done - exp)
+                Text("$done من $g كتب", fontWeight = FontWeight.Black, fontSize = 20.sp, color = Ink, modifier = Modifier.padding(top = 4.dp))
+                LinearProgressIndicator(progress = { (done.toFloat() / g).coerceIn(0f, 1f) }, Modifier.fillMaxWidth().padding(vertical = 6.dp).height(10.dp).clip(CircleShape), color = Color(0xFF7B3FA0), trackColor = Sand)
+                Text(when { done >= g -> "🏆 خلّصت التحدي! أي كتاب زيادة بونص"; diff > 0 -> "📈 متقدّم عن الجدول بـ $diff كتاب"; diff < 0 -> "⏳ متأخر ${-diff} كتاب عن الجدول — كتاب صغير يعوّضها"; else -> "✅ ماشي في الجدول بالظبط" },
+                    fontSize = 13.sp, color = Muted, fontWeight = FontWeight.Bold)
+                Text("دوس تشوف «سنتي في القراية» 📖", fontSize = 12.sp, color = Color(0xFF7B3FA0), modifier = Modifier.padding(top = 4.dp))
+            }
+        }
+    }
+    if (pick) AlertDialog(onDismissRequest = { pick = false }, confirmButton = { TextButton({ pick = false }) { Text("قفل") } },
+        title = { Text("🎯 هتقرا كام كتاب في $yr؟") }, text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("ابدأ بحاجة سهلة — تقدر تزوّدها بعدين", color = Muted, fontSize = 13.sp)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(2, 4, 6, 12, 24).forEach { n -> Chip("$n", g == n) {
+                    val o = Lib.cfg.optJSONObject("chY") ?: JSONObject().also { Lib.cfg.put("chY", it) }; o.put(yr, n); Lib.save(); pick = false } } }
+            }
+        })
+}
+
+/* ───── 📖 سنتي في القراية (زي Year in Books) ───── */
+@Composable
+fun YearSheet(onDismiss: () -> Unit, onOpen: (JSONObject) -> Unit) {
+    val yr = yearKey()
+    val bs = Lib.books.filter { it.optString("sh") == "done" && it.optString("fd").startsWith(yr) }.sortedBy { it.optString("fd") }
+    val pages = Lib.dayMap().filter { it.key.startsWith(yr) }.values.sum()
+    val days = Lib.dayMap().count { it.key.startsWith(yr) && it.value > 0 }
+    val rated = bs.filter { it.optInt("r") > 0 }
+    Sheet("📖 سنتي في القراية $yr", onDismiss) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("${bs.size}" to "كتاب", "$pages" to "صفحة", "$days" to "يوم قريت").forEach { (n, l) ->
+                Surface(shape = RoundedCornerShape(14.dp), color = Color(0xFFF3ECFA), modifier = Modifier.weight(1f)) {
+                    Column(Modifier.padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) { Text(n, fontWeight = FontWeight.Black, fontSize = 22.sp, color = Ink); Text(l, fontSize = 11.sp, color = Muted) } } }
+        }
+        if (bs.isEmpty()) Text("لسه مخلّصتش كتاب السنة دي — أول كتاب هيظهر هنا 🌱", color = Muted)
+        else {
+            bs.maxByOrNull { it.optInt("pg") }?.takeIf { it.optInt("pg") > 0 }?.let { Text("📏 أطول كتاب: «${it.optString("t")}» (${it.optInt("pg")} صفحة)", color = Ink, fontSize = 13.sp) }
+            rated.maxByOrNull { it.optInt("r") }?.let { Text("❤️ أكتر كتاب عجبك: «${it.optString("t")}»", color = Ink, fontSize = 13.sp) }
+            if (rated.isNotEmpty()) Text("⭐ متوسط تقييمك: " + String.format(java.util.Locale.US, "%.1f", rated.map { it.optInt("r") }.average()), color = Ink, fontSize = 13.sp)
+            bs.forEach { b -> Surface(onClick = { onDismiss(); onOpen(b) }, shape = RoundedCornerShape(14.dp), color = Card) {
+                Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Cover(b, Modifier.width(44.dp).height(62.dp)); Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(b.optString("t"), fontWeight = FontWeight.Bold, color = Ink, fontSize = 14.sp, maxLines = 2)
+                        if (b.optInt("r") > 0) Stars(b.optInt("r"), 14)
+                        if (b.optString("rv").isNotEmpty()) Text("«${b.optString("rv")}»", color = Muted, fontSize = 12.sp, maxLines = 2)
+                    }
+                }
+            } }
+        }
     }
 }
