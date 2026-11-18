@@ -182,7 +182,8 @@ fun App(incoming: MutableState<Intent?>) {
             onPick = { pick.launch(arrayOf("application/pdf")) }, onLink = { screen = "link" },
             onSync = { scope.launch { Lib.msg = Lib.sync(); toast(Lib.msg) } },
             onRec = { sheet = "rec" }, onSettings = { sheet = "set" }, onNotes = { notes = it },
-            onMore = { k -> if (k == "jar") sheet = "jar" else screen = k })
+            onMore = { k -> if (k == "jar") sheet = "jar" else screen = k },
+            onSearchQ = { q -> searchQ = q; screen = "search" })
     }
 }
 
@@ -222,7 +223,7 @@ fun Cover(b: JSONObject, modifier: Modifier) {
 
 @Composable
 fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (JSONObject) -> Unit, onSearch: () -> Unit, onPick: () -> Unit, onLink: () -> Unit, onSync: () -> Unit,
-               onRec: () -> Unit, onSettings: () -> Unit, onNotes: (JSONObject) -> Unit, onMore: (String) -> Unit = {}) {
+               onRec: () -> Unit, onSettings: () -> Unit, onNotes: (JSONObject) -> Unit, onMore: (String) -> Unit = {}, onSearchQ: (String) -> Unit = {}) {
     val hctx = LocalContext.current
     val hscope = rememberCoroutineScope()
     var epBusy by remember { mutableStateOf("") }
@@ -233,6 +234,9 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
     var goalDlg by remember { mutableStateOf(false) }
     var rate by remember { mutableStateOf<JSONObject?>(null) }
     var year by remember { mutableStateOf(false) }
+    var about by remember { mutableStateOf<JSONObject?>(null) }
+    var explore by remember { mutableStateOf(false) }
+    var stats by remember { mutableStateOf(false) }
     val cur = Lib.current()
     val today = Lib.todayPages(); val goal = Lib.goal; val st = Lib.streak()
     val list = Lib.books.filter { it.optString("sh", "want") == shelf && (q.isBlank() || it.optString("t").contains(q) || it.optString("a").contains(q)) }
@@ -346,12 +350,19 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 Action(if (Lib.link == null) "🔗" else "✅", if (Lib.link == null) "اربط ببنيان" else "مربوط", Modifier.weight(1f), onLink)
             }
         }
+        item(span = { GridItemSpan(3) }) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Action("🧭", "استكشف", Modifier.weight(1f)) { explore = true }
+                Action("📈", "إحصائياتي", Modifier.weight(1f)) { stats = true }
+                Action("📖", "سنتي", Modifier.weight(1f)) { year = true }
+            }
+        }
         item(span = { GridItemSpan(3) }) { MoreActions({ onMore("journey") }, { onMore("buddy") }, { onMore("paper") }, onSettings) }
         // الرفوف
         item(span = { GridItemSpan(3) }) {
             Column {
                 Row(Modifier.clip(RoundedCornerShape(14.dp)).background(Sand).padding(4.dp)) {
-                    listOf("now" to "📖 بقراه", "want" to "📌 عايز أقراه", "done" to "✅ خلصته").forEach { (k, t) ->
+                    listOf("now" to "📖 بقراه", "want" to "📌 عايز", "done" to "✅ خلصته", "dnf" to "🚫 سبته").forEach { (k, t) ->
                         val n = Lib.books.count { it.optString("sh", "want") == k }
                         Surface(onClick = { shelf = k }, shape = RoundedCornerShape(11.dp), color = if (shelf == k) Card else Color.Transparent, modifier = Modifier.weight(1f)) {
                             Text("$t $n", Modifier.padding(vertical = 9.dp), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = if (shelf == k) Ink else Muted)
@@ -361,7 +372,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 OutlinedTextField(q, { q = it }, Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("🔎 دوّر في كتبك") }, singleLine = true, shape = RoundedCornerShape(14.dp))
             }
         }
-        if (list.isEmpty()) item(span = { GridItemSpan(3) }) { Text("مفيش كتب هنا", Modifier.fillMaxWidth().padding(30.dp), textAlign = TextAlign.Center, color = Muted) }
+        if (list.isEmpty()) item(span = { GridItemSpan(3) }) { Text(if (shelf == "dnf") "الكتاب اللي مش عاجبك سيبه من غير ذنب — زي Goodreads «Did not finish» 🙂" else "مفيش كتب هنا", Modifier.fillMaxWidth().padding(30.dp), textAlign = TextAlign.Center, color = Muted) }
         items(list, key = { it.optString("id") }) { b ->
             val p = dl[b.optString("id")]; val have = Lib.have(b)
             Column(Modifier.clickable { menu = b }) {
@@ -389,12 +400,13 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                     val nq = (b.optJSONArray("q")?.length() ?: 0) + (b.optJSONArray("sums")?.length() ?: 0)
                     OutlinedButton({ menu = null; onNotes(b) }, Modifier.fillMaxWidth()) { Text("💬 اقتباساتي وملخصاتي ($nq)") }
                     if (b.optString("sh") == "done") Row(verticalAlignment = Alignment.CenterVertically) { Text("تقييمك: ", color = Muted); Stars(b.optInt("r"), 26) { menu = null; rate = b } }
+                    if (Net.hasGem()) OutlinedButton({ menu = null; about = b }, Modifier.fillMaxWidth()) { Text("ℹ️ عن الكتاب") }
                     if (Net.hasGem()) OutlinedButton({ menu = null; recSeed = b; onRec() }, Modifier.fillMaxWidth()) { Text("👥 اللي حبّوه حبّوا كمان…") }
                     if (!Lib.have(b) && b.optString("ia").isNotEmpty()) OutlinedButton({ menu = null; onFetch(b) }, Modifier.fillMaxWidth()) { Text("⬇️ نزّله بس") }
                     if (Net.hasGem() && b.optString("sh") != "want" && b.optJSONObject("ch") == null) OutlinedButton({ val bb = b; menu = null; Toast.makeText(hctx, "⏳ بجهّزلك تحدي من الكتاب…", Toast.LENGTH_SHORT).show()
                         hscope.launch { Toast.makeText(hctx, if (Boost.genChallenge(bb)) "🛠 التحدي في الصفحة الرئيسية" else "⚠️ مقدرتش دلوقتي", Toast.LENGTH_SHORT).show() } }, Modifier.fillMaxWidth()) { Text("🛠 طبّقها: تحدي من الكتاب") }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf("want" to "📌 عايز", "now" to "📖 بقراه", "done" to "✅ خلصته").forEach { (k, t) -> Chip(t, b.optString("sh", "want") == k) { Lib.setShelf(b, k); menu = null; if (k == "done") rate = b
+                        listOf("want" to "📌 عايز", "now" to "📖 بقراه", "done" to "✅ خلصته", "dnf" to "🚫 سبته").forEach { (k, t) -> Chip(t, b.optString("sh", "want") == k) { Lib.setShelf(b, k); menu = null; if (k == "done") rate = b; if (k == "dnf") Toast.makeText(hctx, "🚫 سيبناه — مش كل كتاب لازم يكمل. شوف الجاي 👇", Toast.LENGTH_SHORT).show()
                             if (k == "done" && Net.hasGem() && b.optJSONObject("ch") == null) hscope.launch { if (Boost.genChallenge(b)) Toast.makeText(hctx, "🛠 ليك تحدي تطبّقه من الكتاب ده — في الرئيسية", Toast.LENGTH_LONG).show() } } }
                     }
                     if (Lib.have(b)) TextButton({ Lib.files(b).forEach { it.delete() }; Lib.save(); menu = null }) { Text("🗑 امسح الملف من الموبايل (التقدم بيفضل)", color = Color(0xFFB3261E)) }
@@ -402,6 +414,9 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
             })
     }
     rate?.let { RateSheet(it) { rate = null } }
+    about?.let { AboutSheet(it) { about = null } }
+    if (explore) ExploreSheet({ explore = false }) { q -> explore = false; onSearchQ(q) }
+    if (stats) StatsSheet { stats = false }
     if (year) YearSheet({ year = false }) { menu = it }
     if (goalDlg) {
         AlertDialog(onDismissRequest = { goalDlg = false }, confirmButton = { TextButton({ goalDlg = false }) { Text("تمام") } },

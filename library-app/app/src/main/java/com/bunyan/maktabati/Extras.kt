@@ -462,6 +462,8 @@ fun RateSheet(b: JSONObject, onDismiss: () -> Unit) {
         OutlinedTextField(rv, { rv = it }, Modifier.fillMaxWidth(), label = { Text("رأيك في سطر (اختياري)") }, shape = RoundedCornerShape(14.dp))
         Button({ if (r > 0) { b.put("r", r); if (rv.isNotBlank()) b.put("rv", rv.trim()) else b.remove("rv"); Lib.touch(b, "r", "rv"); Lib.save() }; onDismiss() },
             Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Green)) { Text("💾 احفظ") }
+        val rctx = LocalContext.current
+        if (r > 0) OutlinedButton({ Boost.shareQuote(rctx, "★".repeat(r) + "☆".repeat(5 - r) + (if (rv.isNotBlank()) "\n\n" + rv.trim() else ""), b) }, Modifier.fillMaxWidth()) { Text("📸 شارك تقييمك صورة") }
     }
 }
 
@@ -534,5 +536,101 @@ fun YearSheet(onDismiss: () -> Unit, onOpen: (JSONObject) -> Unit) {
                 }
             } }
         }
+    }
+}
+
+
+/* ───── 🧭 استكشف (زي Explore / Lists في Goodreads) ───── */
+val GENRES = listOf("📏 كتب قصيرة (أقل من 150 صفحة)", "📖 روايات عربية مشهورة", "🌍 روايات عالمية مترجمة", "💪 تطوير الذات", "💰 فلوس وبيزنس", "🕌 إسلاميات سهلة", "🏛 تاريخ بأسلوب قصصي", "🧠 علم نفس", "🔍 غموض وتشويق", "👨‍👧 تربية وأسرة", "🏆 أحسن كتب 2025-2026")
+
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+fun ExploreSheet(onDismiss: () -> Unit, onSearch: (String) -> Unit) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var g by remember { mutableStateOf<String?>(null) }
+    var res by remember { mutableStateOf<List<JSONObject>?>(null) }
+    fun load(x: String) { g = x; res = null; scope.launch {
+        val j = Net.askJson("زي قوائم Goodreads الأعلى تقييماً: رشّح 8 كتب حقيقية ومشهورة ومتقيّمة عالي على Goodreads في تصنيف «$x»، يفضّل عربي أو مترجم للعربي ومتاح، ومناسبة لواحد لسه بيتعوّد على القراية (الأسهل الأول). " +
+            "رجّع JSON بس: {\"r\":[{\"t\":\"اسم الكتاب بالعربي\",\"a\":\"المؤلف\",\"pg\":عدد الصفحات التقريبي,\"why\":\"بيتكلم عن إيه — سطر بالمصري\"}]}")
+        res = j?.optJSONArray("r")?.let { a -> (0 until a.length()).mapNotNull { a.optJSONObject(it) } } ?: emptyList()
+    } }
+    Sheet("🧭 استكشف كتب", onDismiss) {
+        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) { GENRES.forEach { x -> Chip(x, g == x) { load(x) } } }
+        if (g != null) {
+            val l = res
+            if (l == null) Busy("⏳ بجيب أحسن كتب في التصنيف ده…")
+            else if (l.isEmpty()) Text("⚠️ مقدرتش أجيب دلوقتي — اتأكد من النت أو اربط ببنيان", color = Muted)
+            else l.forEach { r ->
+                val mine = Lib.books.firstOrNull { it.optString("t") == r.optString("t") }
+                Surface(shape = RoundedCornerShape(16.dp), color = Card) { Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(r.optString("t"), fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Ink)
+                    Text(r.optString("a") + (if (r.optInt("pg") > 0) " • ~${r.optInt("pg")} صفحة" else ""), color = Muted, fontSize = 12.sp)
+                    Text(r.optString("why"), fontSize = 13.sp, color = Ink, lineHeight = 21.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (mine == null) Chip("📌 عايز أقراه", false) { Lib.addLocal(r.optString("t"), r.optString("a")) {}; Toast.makeText(ctx, "📌 اتضاف لـ«عايز أقراه»", Toast.LENGTH_SHORT).show() }
+                        else Chip("✅ عندك", true) {}
+                        Chip("🔎 نزّله", false) { onSearch(r.optString("t")) }
+                    }
+                } }
+            }
+        }
+    }
+}
+
+/* ───── ℹ️ عن الكتاب (زي صفحة الكتاب في Goodreads) ───── */
+@Composable
+fun AboutSheet(b: JSONObject, onDismiss: () -> Unit) {
+    var info by remember { mutableStateOf<JSONObject?>(b.optJSONObject("info")) }
+    var err by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (info != null) return@LaunchedEffect
+        val j = Net.askJson("عن كتاب «${b.optString("t")}»" + (if (b.optString("a").isNotEmpty()) " لـ${b.optString("a")}" else "") + ": اكتب معلومات صحيحة بس، ولو مش متأكد من حاجة سيبها فاضية. " +
+            "رجّع JSON بس: {\"about\":\"الكتاب بيتكلم عن إيه في 3-4 سطور بالمصري من غير حرق\",\"genre\":\"التصنيف\",\"gr\":متوسط تقييمه التقريبي على Goodreads من 5 أو 0 لو مش عارف,\"pages\":عدد الصفحات التقريبي,\"who\":\"هيعجب مين — سطر\",\"time\":\"هياخد قد إيه لو قريت 10 صفحات في اليوم\"}")
+        if (j == null) err = true else { b.put("info", j); Lib.save(); info = j }
+    }
+    Sheet("ℹ️ " + b.optString("t"), onDismiss) {
+        val i = info
+        if (i == null) { if (err) Text("⚠️ مقدرتش أجيب المعلومات دلوقتي", color = Muted) else Busy("⏳ بجيب معلومات الكتاب…") }
+        else {
+            if (b.optString("a").isNotEmpty()) Text("✍️ " + b.optString("a"), color = Muted)
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (i.optDouble("gr", 0.0) > 0) Text("⭐ ~" + String.format(java.util.Locale.US, "%.1f", i.optDouble("gr")) + " على Goodreads", fontWeight = FontWeight.Bold, color = Color(0xFFB46A14), fontSize = 13.sp)
+                if (i.optString("genre").isNotEmpty()) Text("🏷 " + i.optString("genre"), color = Muted, fontSize = 13.sp)
+            }
+            Text(i.optString("about"), color = Ink, lineHeight = 24.sp)
+            if (i.optString("who").isNotEmpty()) Text("👤 " + i.optString("who"), color = Ink, fontSize = 13.sp)
+            if (i.optString("time").isNotEmpty()) Text("⏳ " + i.optString("time"), color = Ink, fontSize = 13.sp)
+            Text("المعلومات دي من الذكاء الاصطناعي وممكن تكون تقريبية", color = Muted, fontSize = 11.sp)
+        }
+    }
+}
+
+/* ───── 📈 إحصائياتي (زي Reading Stats) ───── */
+@Composable
+fun StatsSheet(onDismiss: () -> Unit) {
+    val m = Lib.dayMap()
+    Sheet("📈 إحصائياتي", onDismiss) {
+        Text("📄 الصفحات في آخر 30 يوم", fontWeight = FontWeight.Bold, color = Ink)
+        val c = Calendar.getInstance(); c.add(Calendar.DAY_OF_MONTH, -29)
+        val days = (0 until 30).map { val v = m[Lib.ds(c.time)] ?: 0; c.add(Calendar.DAY_OF_MONTH, 1); v }
+        val mx = (days.maxOrNull() ?: 0).coerceAtLeast(1)
+        Row(Modifier.fillMaxWidth().height(90.dp), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            days.forEach { v -> Box(Modifier.weight(1f).fillMaxHeight(maxOf(0.03f, v.toFloat() / mx)).clip(RoundedCornerShape(3.dp)).background(if (v > 0) Green else Sand)) }
+        }
+        Text("أعلى يوم: $mx صفحة • متوسط: ${days.sum() / 30} صفحة/يوم", color = Muted, fontSize = 12.sp)
+        Text("📚 كتب خلصتها كل شهر (${yearKey()})", fontWeight = FontWeight.Bold, color = Ink, modifier = Modifier.padding(top = 8.dp))
+        val per = (1..12).map { mo -> Lib.books.count { it.optString("sh") == "done" && it.optString("fd").startsWith(yearKey() + "-" + String.format(java.util.Locale.US, "%02d", mo)) } }
+        val pmx = (per.maxOrNull() ?: 0).coerceAtLeast(1)
+        Row(Modifier.fillMaxWidth().height(80.dp), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            per.forEachIndexed { i, v -> Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                if (v > 0) Text("$v", fontSize = 10.sp, color = Ink)
+                Box(Modifier.fillMaxWidth().height((60f * maxOf(0.05f, v.toFloat() / pmx)).dp).clip(RoundedCornerShape(3.dp)).background(if (v > 0) Color(0xFF7B3FA0) else Sand))
+                Text("${i + 1}", fontSize = 9.sp, color = Muted)
+            } }
+        }
+        val done = Lib.books.filter { it.optString("sh") == "done" }
+        val avgPg = done.map { it.optInt("pg") }.filter { it > 0 }.let { if (it.isEmpty()) 0 else it.average().toInt() }
+        Text("✅ خلصت ${done.size} كتاب • 🚫 سبت ${Lib.books.count { it.optString("sh") == "dnf" }} • 🔥 أطول سلسلة: ${bestStreak()} يوم" + (if (avgPg > 0) " • متوسط طول الكتاب $avgPg صفحة" else ""), color = Ink, fontSize = 13.sp, lineHeight = 22.sp)
     }
 }
