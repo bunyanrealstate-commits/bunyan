@@ -85,6 +85,9 @@ class Ai {
   }
 
   /// صفحات PDF (صور) → صفوف
+  /// ✍️ أبديت مكتوب كرسالة واتساب (من غير صورة)
+  static Future<List<Obj>> readUpdateText(String msg) async => parseRows(await _ask('دي رسالة واتساب من جروب شركة عقارات. لو فيها شقق للإيجار بأسعار أو حالة (متاح/محجوز) تبقى أبديت — طلّع الشقق. لو مفيهاش شقق بأسعار (سلام، سؤال، لوكيشن بس، إعلان عام) رجّع [] بس.\n\nالرسالة:\n"""\n$msg\n"""\n\n$updatePrompt\n${areaRule(str(Store.I.cfg['areas']).isEmpty ? kAreas : str(Store.I.cfg['areas']))}', const []));
+
   static Future<List<Obj>> readUpdatePages(List<Uint8List> imgs, {bool auto = false}) async => parseRows(await _ask(auto ? autoPrompt : updatePrompt, imgs));
 
   static const updatePrompt = '''دي صورة "أبديت" من شركة عقارات في الإمارات (أبوظبي) فيها شقق في فلل وأسعارها.

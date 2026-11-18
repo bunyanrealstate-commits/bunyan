@@ -359,7 +359,20 @@ class AutoUpd {
     for (final it in [...pend, ...items.whereType<Map>()]) {
       List<Obj> rows;
       var how = 'ai', comp = '';
-      if (it['ocr'] != null || it['retry'] == true) {
+      if (it['msg'] != null) {
+        // ✍️ أبديت مكتوب: نفس الرسالة بالظبط اتقرت قبل كده → نسيبها
+        final msg = str(it['msg']), h = msg.hashCode.toString();
+        final hs = ((Store.I.cfg['msgH'] as List?) ?? const []).map(str).toList();
+        if (hs.contains(h)) continue;
+        try { rows = await Ai.readUpdateText(msg); } catch (_) {
+          ((Store.I.D['pend'] as List?) ?? (Store.I.D['pend'] = <dynamic>[])).add({'g': it['g'], 't': it['t'], 'msg': msg});
+          logged = true;
+          continue;
+        }
+        Store.I.cfg['msgH'] = [...hs.length > 300 ? hs.sublist(hs.length - 300) : hs, h];
+        comp = companyFromText(msg, str(it['g']));
+        how = 'txt';
+      } else if (it['ocr'] != null || it['retry'] == true) {
         // 🔍 القراءة على الموبايل نفسه — ولو الجدول مش واضح نسأل Gemini
         final o = it['ocr'] is List ? it['ocr'] as List : (it['ocr'] is String ? (jsonDecode(it['ocr'] as String) as List) : null);
         final local = o == null ? null : OcrParse.parse(o);
@@ -379,10 +392,10 @@ class AutoUpd {
         try { rows = Ai.parseRows(str(it['txt'])); } catch (_) { continue; }
       }
       if (rows.isEmpty) continue;
-      out.addAll(applyRows(str(it['g']), rows, img: it['files'] == null ? str(it['id']) : '', files: (it['files'] as List?) ?? const [], same: it['same'] == true, how: how, company: comp.isNotEmpty ? comp : str(rows.first['company'])));
+      out.addAll(applyRows(str(it['g']), rows, img: it['files'] == null && it['msg'] == null ? str(it['id']) : '', files: (it['files'] as List?) ?? const [], same: it['same'] == true, how: how, company: comp.isNotEmpty ? comp : str(rows.first['company'])));
       logged = true;
     }
-    if (logged) await Store.I.save();
+    if (logged) { await Store.I.save(); await Store.I.saveCfg(); }
     if (out.isNotEmpty) last.value = out;
     return out;
   }

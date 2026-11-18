@@ -52,7 +52,7 @@ class MainActivity : FlutterActivity() {
                 "play" -> { try { startActivity(Intent(Intent.ACTION_VIEW).apply { setDataAndType(Uri.parse(call.argument<String>("uri") ?: ""), "video/*"); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK) }); res.success(true) } catch (e: Exception) { res.success(false) } }
                 "autoDbg" -> res.success(Auto.arr(this, "dbg").toString())
                 "forget" -> { val h = Auto.obj(this, "hash"); val d = Auto.arr(this, "dbg"); Auto.put(this, "hash", "{}"); Auto.put(this, "done", "[]"); Auto.put(this, "doneF", "[]"); Auto.put(this, "sig", "{}"); res.success(h.length() + d.length()) }
-                "autoTake" -> { val r = Auto.arr(this, "res").toString(); Auto.put(this, "res", "[]"); res.success(r) }
+                "autoTake" -> { val r = Auto.arr(this, "res"); val m = Auto.arr(this, "tmsg"); for (i in 0 until m.length()) r.put(m.get(i)); Auto.put(this, "res", "[]"); Auto.put(this, "tmsg", "[]"); res.success(r.toString()) }
                 "autoSeen" -> res.success(Auto.mergeSeen(this).toString())
                 "notifOn" -> res.success((android.provider.Settings.Secure.getString(contentResolver, "enabled_notification_listeners") ?: "").contains(packageName))
                 "notifPerm" -> res.success(notifPerm())

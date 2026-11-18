@@ -104,7 +104,7 @@ class _ShotsState extends State<ShotsPage> {
           _Img(x, w: 96, h: 96),
           const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            if (x['how'] != null) Text(x['how'] == 'ocr' ? '🔍 اتقرت على الموبايل' : '✨ اتقرت بـ Gemini', style: const TextStyle(fontSize: 11, color: kMuted)),
+            if (x['how'] != null) Text(x['how'] == 'ocr' ? '🔍 اتقرت على الموبايل' : x['how'] == 'txt' ? '✍️ أبديت مكتوب في الجروب' : '✨ اتقرت بـ Gemini', style: const TextStyle(fontSize: 11, color: kMuted)),
             if (shotFiles(x).any((f) => f.contains('/shots/'))) const Text('📄 ملف PDF', style: TextStyle(fontSize: 11.5, color: kAc2, fontWeight: FontWeight.w700)),
             Text(str(x['m']), style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: x['same'] == true ? kMuted : kInk)),
             const SizedBox(height: 4),
@@ -122,7 +122,7 @@ class _Img extends StatelessWidget {
   final Obj x; final double w, h;
   const _Img(this.x, {this.w = 96, this.h = 96});
   @override
-  Widget build(BuildContext context) => ClipRRect(borderRadius: BorderRadius.circular(10), child: SizedBox(width: w, height: h, child: FutureBuilder<Uint8List?>(
+  Widget build(BuildContext context) => x['how'] == 'txt' ? SizedBox(width: w, height: h, child: Container(decoration: BoxDecoration(color: const Color(0xFFE3F4F5), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.notes, color: kAc, size: 36))) : ClipRRect(borderRadius: BorderRadius.circular(10), child: SizedBox(width: w, height: h, child: FutureBuilder<Uint8List?>(
         future: str(x['img']).isNotEmpty ? Media.thumb(str(x['img']), s: 260) : _fileBytes(shotKey(x)),
         builder: (_, s) => s.data == null ? Container(color: const Color(0xFFE6ECEF), child: Icon(s.connectionState == ConnectionState.done ? Icons.image_not_supported_outlined : Icons.image_outlined, color: kMuted)) : Image.memory(s.data!, fit: BoxFit.cover),
       )));

@@ -92,6 +92,7 @@ object Auto {
     }
     fun groups(c: Context): Set<String> { val a = cfg(c).optJSONArray("groups") ?: return setOf(); return (0 until a.length()).map { a.getString(it).trim().lowercase() }.toSet() }
 
+    private val textUpd = Regex("studio|ستوديو|استديو|استوديو|غرف|غرفة|غرفه|صال|bhk|bedroom|\\broom|فيلا|villa|aed|درهم|vacant|available|booked|محجوز|متاح|شاغر|للإيجار|للايجار|for rent", RegexOption.IGNORE_CASE)
     private val mapRx = Regex("https?://(maps\\.app\\.goo\\.gl|goo\\.gl/maps|(www\\.)?google\\.[a-z.]+/maps|maps\\.google\\.[a-z.]+)\\S*", RegexOption.IGNORE_CASE)
     @Synchronized fun seen(c: Context, g: String, msgs: List<Pair<String, Long>>) {
         val seen = obj(c, "seen"); val last = obj(c, "last")
@@ -105,6 +106,11 @@ object Auto {
             mapRx.find(t)?.let { m -> val la = arr(c, "locs"); la.put(JSONObject().put("g", g).put("url", m.value).put("txt", t.take(300)).put("t", time)); while (la.length() > 300) la.remove(0); put(c, "locs", la) }
             if (t.contains("📷") || t.contains("🖼")) { s.put("img", s.optInt("img") + 1); ev.put(JSONObject().put("g", g).put("t", time)); got = true }
             else if (t.contains("📄") && t.contains("pdf", true)) { s.put("img", s.optInt("img") + 1); ev.put(JSONObject().put("g", g).put("t", time).put("doc", t.replace("📄", "").trim())); got = true }
+            // ✍️ أبديت مكتوب كرسالة (من غير صورة): أسعار وأنواع شقق
+            else if (t.length >= 25 && textUpd.containsMatchIn(t) && Regex("\\d{2,}").containsMatchIn(t) && follows(c, g)) {
+                val tm = arr(c, "tmsg"); tm.put(JSONObject().put("g", g).put("t", time).put("msg", t.take(4000))); while (tm.length() > 200) tm.remove(0); put(c, "tmsg", tm)
+                s.put("txt", s.optInt("txt") + 1)
+            }
         }
         last.put(g, lt); seen.put(g, s)
         put(c, "seen", seen); put(c, "last", last)
