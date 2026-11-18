@@ -7,6 +7,8 @@ import '../core/js.dart';
 import 'theme.dart';
 import 'dialogs.dart';
 import 'shell.dart';
+import 'explain.dart';
+import 'dash.dart';
 
 /// الحسابات: الرصيد النقدي، التأمينات، قفل الشهور، الدفتر — نفس accTab في القديم
 class AccountsPage extends StatefulWidget {
@@ -37,19 +39,46 @@ class _AccState extends State<AccountsPage> {
     final ymK = months.keys.toList()..sort((a, b) => b.compareTo(a));
     return Directionality(textDirection: Tr.dir, child: Scaffold(
       appBar: widget.inTab ? null : AppBar(title: Text(Tr.t('الحسابات'))),
-      body: ListView(padding: const EdgeInsets.all(12), children: [
-        Card(child: ListTile(
-          leading: const Text('💰', style: TextStyle(fontSize: 24)),
-          title: Text('الرصيد النقدي: ${money(cash)}', style: const TextStyle(fontWeight: FontWeight.w900)),
-          subtitle: Text('السيولة الصافية بعد التأمينات المحجوزة: ${money(cash - held)}'),
-          trailing: const Icon(Icons.edit),
-          onTap: _setCash,
-        )),
-        Row(children: [
-          Expanded(child: OutlinedButton(onPressed: () => _draw(true), child: Text(Tr.t('🙋 سحب لحاجاتي')))),
-          const SizedBox(width: 8),
-          Expanded(child: OutlinedButton(onPressed: () => _draw(false), child: Text(Tr.t('🤝 سحب لشريك')))),
-        ]),
+      body: ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 40), children: [
+        // ───── نفس ترتيب حسابات بنيان القديم ─────
+        Builder(builder: (_) { final rp = e.rcvP(), an = e.annW(); final mine = S['pmode'] == 'me'; return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(child: BStat(mine ? Tr.t('ربحي حتى اليوم') : Tr.t('ربح المجموعة حتى اليوم'), rp['profit']!, c: rp['profit']! < 0 ? kRed : kOk, sub: 'على الإيجار المقبوض (${(rp['mo']! * 10).round() / 10} شهر): ${money(rp['rev']!)}', onTap: () => eqProfit(context, e))),
+          const SizedBox(width: 10),
+          Expanded(child: BStat(Tr.t('الربح المتوقع على مدة العقود'), an['p'] as double, c: const Color(0xFF2563EB), sub: (an['e'] as DateTime?) == null ? null : 'حتى ${fdd(an['e'] as DateTime)}', onTap: () => eqProj(context, e))),
+        ]); }),
+        SecHead(Tr.t('💼 النقدي: مصاريف وسحب')),
+        BCard(c: const Color(0xFF7C3AED), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          InkWell(onTap: () => eqCash(context, e), child: Row(children: [
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('💵 الرصيد النقدي: ${money(cash)}  🧮', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+              Text('السيولة الصافية بعد التأمينات المحجوزة: ${money(cash - held)}', style: const TextStyle(color: kMuted, fontSize: 12.5)),
+            ])),
+            IconButton(onPressed: _setCash, tooltip: Tr.t('عدّل الرصيد'), icon: const Icon(Icons.edit_outlined)),
+          ])),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: FilledButton(onPressed: () => Shell.go(3), child: Text(Tr.t('💸 مصروف')))),
+            const SizedBox(width: 8),
+            Expanded(child: OutlinedButton(onPressed: () => _draw(true), child: Text(Tr.t('🙋 سحب ليا')))),
+          ]),
+          const SizedBox(height: 8),
+          OutlinedButton(onPressed: () => _draw(false), child: Text(Tr.t('🤝 سحب لشريك'))),
+          const SizedBox(height: 10),
+          Builder(builder: (_) { final gk = (ws == 'all' || ws == '-') ? '' : ws; final nt = str(obj(S['cnote'])?[gk]);
+            return InkWell(borderRadius: BorderRadius.circular(14), onTap: () => _note(gk, nt), child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: const Color(0xFFFFF9E6), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFF0D68A))),
+              child: Text(nt.isEmpty ? Tr.t('📝 اضغط هنا واكتب ملاحظة تفضل ظاهرة دايماً…') : '📝 $nt', style: TextStyle(color: nt.isEmpty ? kMuted : kInk, fontWeight: FontWeight.w700)),
+            )); }),
+        ])),
+        SecHead(Tr.t('🏦 وضعي المالي اليوم')),
+        BCard(c: const Color(0xFF2563EB), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [kvTable(fpRows(e)), Builder(builder: (_) { final fu = e.fpos()['fut']!; return fu.abs() < 1 ? const SizedBox.shrink() : eqMu('دفعات شركة جاية عليك (لسه ميعادها مجاش): ${money(fu)}'); })])),
+        ArrearsCard(e),
+        SecHead(Tr.t('📂 التقارير')),
+        tRow([TCard('📊', Tr.t('التحليل المالي'), onTap: () => analysisSheet(context, e)), TCard('🏆', Tr.t('مقارنة الاستديوهات'), c: kOk, onTap: () => compareSheet(context, e))]),
+        tRow([TCard('📤', Tr.t('تصدير للمحاسب'), sub: Tr.t('دفتر الحسابات CSV (يفتح في Excel)'), onTap: () => exportCsv(e)), TCard('📋', Tr.t('الحركة النقدية (ما دخل وخرج فعلياً)'), c: kOk, onTap: () => cashflowSheet(context, e))]),
+        tRow([TCard('📋', Tr.t('الربح المحاسبي (موزع على الشهور)'), c: const Color(0xFF7C3AED), onTap: () => accrualSheet(context, e)), TCard('🧾', Tr.t('سندات القبض'), c: kTerra, onTap: () => receiptsSheet(context, e))]),
+        SecHead(Tr.t('🗂 التفاصيل')),
         Builder(builder: (_) {
           final g = (ws == 'all' || ws == '-') ? '' : ws;
           final ad = objs(S['adj']).where((a) => ws == 'all' || str(a['g']) == g).toList()..sort((a, b) => n0(b['at']).compareTo(n0(a['at'])));
@@ -135,6 +164,17 @@ class _AccState extends State<AccountsPage> {
     l.add({'id': Act.uid(), 'at': at, 'a': -(a == a.roundToDouble() ? a.toInt() : a), 'k': 'draw', 'p': who, 'g': g, 'w': 'سحب ${who == '__me' ? 'شخصي ($me)' : 'لـ $who'}${w.isNotEmpty ? ' — $w' : ''}', 'n': w});
     await Store.I.save(log: '💸 سحب ${money(a)} — ${who == '__me' ? me : who}');
     if (mounted) { setState(() {}); toast(context, 'اتسجل السحب: ${money(a)} — بيتخصم من النقدي ومش بيأثر على الربح'); }
+  }
+
+  /// 📝 ملاحظة دايمة (S.cnote زي القديم)
+  Future<void> _note(String gk, String cur) async {
+    final o = await formDlg(context, Tr.t('📝 ملاحظة دايمة'), [FieldSpec('t', Tr.t('الملاحظة (بتفضل ظاهرة هنا)'), v: cur)]);
+    if (o == null) return;
+    final m = S['cnote'] is Map<String, dynamic> ? S['cnote'] as Map<String, dynamic> : (S['cnote'] = <String, dynamic>{});
+    final t = (o['t'] ?? '').trim();
+    if (t.isEmpty) { m.remove(gk); } else { m[gk] = t.length > 600 ? t.substring(0, 600) : t; }
+    await Store.I.save(log: '📝 ملاحظة النقدي');
+    if (mounted) setState(() {});
   }
 
   Future<void> _delAdj(Obj a) async {

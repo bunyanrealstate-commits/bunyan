@@ -73,11 +73,13 @@ class BCard extends StatelessWidget {
 /// مربع رقم (stat) — خلفية بلون خفيف وشريط على الجنب
 class BStat extends StatelessWidget {
   final String l; final double v; final String? sub; final Color? c; final String? text;
-  const BStat(this.l, this.v, {super.key, this.sub, this.c, this.text});
+  /// لو موجود: الكارت بيتداس عليه ويفتح «الرقم ده جه منين» (🧮 زي القديم)
+  final VoidCallback? onTap;
+  const BStat(this.l, this.v, {super.key, this.sub, this.c, this.text, this.onTap});
   @override
   Widget build(BuildContext context) {
     final col = c ?? (v < 0 ? kRed : kOk);
-    return Container(
+    final w = Container(
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), boxShadow: [BoxShadow(color: col.withOpacity(.35), blurRadius: 16, offset: const Offset(0, 6), spreadRadius: -8)]),
       child: ClipRRect(borderRadius: BorderRadius.circular(14), child: Container(
         color: Color.alphaBlend(col.withOpacity(.08), Colors.white),
@@ -88,9 +90,12 @@ class BStat extends StatelessWidget {
             const SizedBox(height: 4),
             Text(text != null ? (Priv.on ? '•••' : text!) : money(v), style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: Color.alphaBlend(Colors.black.withOpacity(.08), col))),
             if (sub != null) Text(sub!, style: const TextStyle(color: kMuted, fontSize: 11)),
+            if (onTap != null) const Align(alignment: AlignmentDirectional.centerEnd, child: Text('🧮', style: TextStyle(fontSize: 15))),
           ]))),
         ])),
       )),
     );
+    if (onTap == null) return w;
+    return GestureDetector(onTap: onTap, behavior: HitTestBehavior.opaque, child: w);
   }
 }

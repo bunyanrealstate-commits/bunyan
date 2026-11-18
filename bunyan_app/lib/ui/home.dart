@@ -11,6 +11,8 @@ import '../core/actions.dart';
 import 'lease_edit.dart';
 import 'monitor.dart';
 import 'dash.dart';
+import 'explain.dart';
+import 'forecast.dart';
 
 /// 🔄 عقود قربت تخلص — هتجدد؟ (renewCard)
 class _Renew extends StatelessWidget {
@@ -52,9 +54,9 @@ class HomePage extends StatelessWidget {
       // ───── 💰 فلوسك ─────
       SecHead(Tr.t('💰 فلوسك'), sub: Tr.t('النهارده')),
       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(child: _Stat(Tr.t('💵 الرصيد النقدي'), cash, c: kOk)),
+        Expanded(child: _Stat(Tr.t('💵 الرصيد النقدي'), cash, c: kOk, onTap: () => eqCash(context, e))),
         const SizedBox(width: 10),
-        Expanded(child: _Stat(mine ? Tr.t('📈 ربحي حتى اليوم') : Tr.t('📈 ربح المجموعة حتى اليوم'), rp['profit']!, c: const Color(0xFF2563EB), sub: 'على الإيجار المقبوض (${(rp['mo']! * 10).round() / 10} شهر)')),
+        Expanded(child: _Stat(mine ? Tr.t('📈 ربحي حتى اليوم') : Tr.t('📈 ربح المجموعة حتى اليوم'), rp['profit']!, c: const Color(0xFF2563EB), sub: 'على الإيجار المقبوض (${(rp['mo']! * 10).round() / 10} شهر)', onTap: () => eqProfit(context, e))),
       ]),
       const SizedBox(height: 12),
       WithdrawCard(e),
@@ -63,7 +65,7 @@ class HomePage extends StatelessWidget {
       StatusTiles(e),
       const SizedBox(height: 10),
       Row(children: [
-        Expanded(child: BStat(Tr.t('🏠 نسبة الإشغال'), 0, c: const Color(0xFF2563EB), text: '${((an['occ'] as double) * 100).round()}%')),
+        Expanded(child: BStat(Tr.t('🏠 نسبة الإشغال'), 0, c: const Color(0xFF2563EB), text: '${((an['occ'] as double) * 100).round()}%', onTap: () => kpis(e)[1].open(context))),
         const SizedBox(width: 10),
         Expanded(child: _Stat(Tr.t('🧾 الإيجار المقبوض'), rp['rev']!, c: kTeal)),
       ]),
@@ -75,14 +77,23 @@ class HomePage extends StatelessWidget {
       // ───── 📊 الأداء والتوقعات ─────
       SecHead(Tr.t('📊 الأداء والتوقعات')),
       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(child: _Stat(Tr.t('🎯 الربح المتوقع على مدة العقود'), an['p'] as double, c: kOk, sub: Tr.t('بعد كل التكاليف والمصاريف'))),
+        Expanded(child: _Stat(Tr.t('🎯 الربح المتوقع على مدة العقود'), an['p'] as double, c: kOk, sub: Tr.t('بعد كل التكاليف والمصاريف'), onTap: () => eqProj(context, e))),
         const SizedBox(width: 10),
-        Expanded(child: _Stat(Tr.t('🤝 فلوس الشراكة'), g == null ? 0 : e.gpMine(g), c: const Color(0xFF2563EB), sub: g == null ? null : (Priv.on ? '••••' : str(g['name'])))),
+        Expanded(child: _Stat(Tr.t('🤝 فلوس الشراكة'), g == null ? 0 : e.gpMine(g), c: const Color(0xFF2563EB), sub: g == null ? null : (Priv.on ? '••••' : str(g['name'])), onTap: () => Shell.go(4))),
       ]),
       const SizedBox(height: 10),
-      _Stat(Tr.t('🏦 صافي حقوقك'), f['eq']!, c: const Color(0xFF7C3AED)),
+      _Stat(Tr.t('🏦 صافي حقوقك'), f['eq']!, c: const Color(0xFF7C3AED), onTap: () => eqSheet(context, Tr.t('وضعي المالي اليوم'), [kvTable(fpRows(e)), eqMu('صافي رصيدك بيتغير بنفس مقدار ربحك المحاسبي، زائد أي فلوس تضيفها أو تسحبها.')], icon: '🏦')),
       const SizedBox(height: 14),
       PerUnitCard(e),
+      // ───── كروت بتفتح شاشات (زي القديم) ─────
+      tRow([
+        TCard('📅', '${Tr.t('الدفعات القادمة')}', sub: Tr.t('كل دفعة شركة هتتغطى منين'), onTap: () => coverageSheet(context, e)),
+        TCard('🧭', Tr.t('خطة السحب'), c: kOk, onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ForecastPage()))),
+      ]),
+      tRow([
+        TCard('📊', Tr.t('التحليل المالي'), onTap: () => analysisSheet(context, e)),
+        TCard('🕘', Tr.t('آخر التعديلات'), c: const Color(0xFF7C3AED), onTap: () => lastEditsSheet(context)),
+      ]),
       // ───── 📅 المواعيد ─────
       SecHead(Tr.t('📅 المواعيد')),
       _Renew(e),
@@ -116,10 +127,10 @@ class HomePage extends StatelessWidget {
 }
 
 class _Stat extends StatelessWidget {
-  final String l; final double v; final String? sub; final Color? c;
-  const _Stat(this.l, this.v, {this.sub, this.c});
+  final String l; final double v; final String? sub; final Color? c; final VoidCallback? onTap;
+  const _Stat(this.l, this.v, {this.sub, this.c, this.onTap});
   @override
-  Widget build(BuildContext context) => BStat(l, v, sub: sub, c: v < 0 ? kRed : c);
+  Widget build(BuildContext context) => BStat(l, v, sub: sub, c: v < 0 ? kRed : c, onTap: onTap);
 }
 
 /// المتأخر والقادم خلال 30 يوم — دوس على الإيجار تسجّله اتدفع
