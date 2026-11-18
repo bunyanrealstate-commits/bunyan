@@ -27,7 +27,7 @@ class EyeBtn extends StatelessWidget {
   }
   @override
   Widget build(BuildContext context) => Container(
-        width: 40, height: 40, margin: const EdgeInsetsDirectional.only(start: 8),
+        width: 38, height: 38, margin: const EdgeInsetsDirectional.only(start: 6),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: kBd)),
         child: IconButton(
           padding: EdgeInsets.zero, tooltip: Priv.on ? Tr.t('إظهار الأرقام') : Tr.t('إخفاء الأرقام'),

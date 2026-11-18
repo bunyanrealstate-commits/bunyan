@@ -355,14 +355,13 @@ class GroupPill extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(99), onTap: () => openGroups(context),
       child: Container(
-        height: 38, padding: const EdgeInsets.symmetric(horizontal: 11),
+        height: 38, padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF0D8A74), Color(0xFF14B8A6)]), borderRadius: BorderRadius.circular(99), boxShadow: const [BoxShadow(color: Color(0x4014B8A6), blurRadius: 12, offset: Offset(0, 4))]),
         child: Row(children: [
           Container(width: 8, height: 8, decoration: BoxDecoration(color: const Color(0xFFBFFFE9), shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.white.withOpacity(.7), blurRadius: 4)])),
-          const SizedBox(width: 8),
-          Flexible(child: Text(Priv.on ? '••••' : name, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14.5))),
-          const SizedBox(width: 4),
-          const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 20),
+          const SizedBox(width: 6),
+          // الاسم بيصغر لوحده لو المكان ضيق (بدل ما يتقطع)
+          Expanded(child: FittedBox(fit: BoxFit.scaleDown, alignment: AlignmentDirectional.centerStart, child: Text(Priv.on ? '••••' : name, maxLines: 1, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14.5)))),
         ]),
       ),
     );
