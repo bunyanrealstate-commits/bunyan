@@ -22,6 +22,7 @@ dependencies:
   pdf: ^3.11.1
   flutter_svg: ^2.0.10+1
   local_auth: ^2.3.0
+  image_picker: ^1.1.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

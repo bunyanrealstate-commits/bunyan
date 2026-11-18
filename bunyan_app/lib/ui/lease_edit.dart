@@ -11,7 +11,9 @@ import 'dialogs.dart';
 /// عقد مستأجر جديد / تعديل — نفس شاشة «📄 عقد مستأجر جديد» في القديم
 class LeaseEdit extends StatefulWidget {
   final Obj u; final int? k; final Obj? renew;
-  const LeaseEdit(this.u, this.k, {super.key, this.renew});
+  /// بيانات جاهزة (من «عقد العميل» ← سجّله عقد مستأجر)
+  final Map<String, dynamic>? pre;
+  const LeaseEdit(this.u, this.k, {super.key, this.renew, this.pre});
   @override
   State<LeaseEdit> createState() => _LeaseEditState();
 }
@@ -49,8 +51,18 @@ class _LeaseEditState extends State<LeaseEdit> {
         final mo = truthy(R['orig']) ? n(R['orig']) : (truthy(R['months']) ? n(R['months']) : 12);
         f..tenant = str(R['tenant'])..phone = str(R['phone'])..start = iso(Engine.lend(R))..rent = n0(R['rent'])..day = truthy(R['day']) ? str(R['day']) : ''..cmo = mo.toDouble();
       }
+      final P = widget.pre;
+      if (P != null) {
+        if (str(P['tenant']).isNotEmpty) f.tenant = str(P['tenant']);
+        if (str(P['phone']).isNotEmpty) f.phone = str(P['phone']);
+        if (str(P['start']).isNotEmpty) f.start = str(P['start']);
+        if (n0(P['rent']) > 0) f.rent = n0(P['rent']);
+        if (str(P['day']).isNotEmpty) f.day = str(P['day']);
+        if (n0(P['cmo']) > 0) f.cmo = n0(P['cmo']);
+        f..tid = str(P['tid'])..nat = str(P['nat']);
+      }
       f.m0 = LeaseB.sugM(pd(f.start), LeaseB.payDay(f.start, f.day));
-      if (R != null) _rebuild();
+      if (R != null || P != null) _rebuild();
     }
     c = {
       'tenant': TextEditingController(text: f.tenant), 'phone': TextEditingController(text: f.phone), 'tid': TextEditingController(text: f.tid), 'nat': TextEditingController(text: f.nat),

@@ -7,6 +7,7 @@ import 'groups.dart';
 import 'accounts.dart';
 import 'eye.dart';
 import 'dash.dart';
+import 'contract.dart';
 import 'hadith.dart';
 import '../core/hq.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -71,7 +72,7 @@ class _ShellState extends State<Shell> {
     // مش const: لازم الصفحة تتبني من جديد لما المجموعة أو البيانات تتغير
     final tabs = [
       [Icons.home_outlined, Tr.t('الداشبورد')], [Icons.apartment_outlined, Tr.t('الاستديوهات')], [Icons.bar_chart, Tr.t('الحسابات')],
-      [Icons.receipt_long_outlined, Tr.t('المصاريف')], [Icons.groups_outlined, Tr.t('المجموعات')], [Icons.menu, Tr.t('المزيد')],
+      [Icons.receipt_long_outlined, Tr.t('المصاريف')], [Icons.groups_outlined, Tr.t('المجموعات')], [Icons.menu, Tr.t('المزيد')], [Icons.description_outlined, Tr.t('عقد العميل')],
     ];
     return Directionality(
       textDirection: Tr.dir,
@@ -98,7 +99,7 @@ class _ShellState extends State<Shell> {
           bottom: PreferredSize(preferredSize: const Size.fromHeight(46), child: Container(
             decoration: const BoxDecoration(color: Color(0xF5FFFFFF), border: Border(bottom: BorderSide(color: Color(0xFF8D97A8), width: .6))),
             child: SingleChildScrollView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 6), child: Row(children: [
-              for (var i = 0; i < tabs.length; i++) InkWell(
+              for (final i in const [0, 1, 2, 3, 4, 6, 5]) InkWell(
                 onTap: () => setState(() => tab = i),
                 child: Container(
                   height: 46, padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -115,7 +116,7 @@ class _ShellState extends State<Shell> {
         ),
         body: RefreshIndicator(onRefresh: () async { await st.sync(); }, child: ListenableBuilder(listenable: Listenable.merge([Store.I, Ws.I]), builder: (_, __) {
           final w = Ws.I.resolve();
-          final page = [const HomePage(), const UnitsPage(), const AccountsPage(inTab: true), const ExpensesPage(), const GroupsPage(inTab: true), const MorePage()][tab];
+          final page = [const HomePage(), const UnitsPage(), const AccountsPage(inTab: true), const ExpensesPage(), const GroupsPage(inTab: true), const MorePage(), const ContractPage(inTab: true)][tab];
           return Column(children: [
             const _UpdBar(),
             Expanded(child: KeyedSubtree(key: ValueKey('$tab|$w|${Tr.lang}|${Priv.on}'), child: page)),
