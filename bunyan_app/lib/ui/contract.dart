@@ -13,6 +13,8 @@ import '../core/contract.dart';
 import '../core/ct_pdf.dart';
 import '../core/js.dart';
 import '../core/ai.dart';
+import '../core/idocr.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../core/native.dart';
 import 'theme.dart';
 import 'dialogs.dart';
@@ -116,23 +118,38 @@ class _CtState extends State<ContractPage> {
     return null;
   }
 
-  Future<Uint8List?> _pick() async {
+  Future<XFile?> _pick() async {
     final src = await showModalBottomSheet<ImageSource>(context: context, builder: (ctx) => Directionality(textDirection: Tr.dir, child: SafeArea(child: Wrap(children: [
       ListTile(leading: const Icon(Icons.photo_camera), title: const Text('📷 صوّر دلوقتي'), onTap: () => Navigator.pop(ctx, ImageSource.camera)),
       ListTile(leading: const Icon(Icons.photo_library), title: const Text('🖼 من الصور'), onTap: () => Navigator.pop(ctx, ImageSource.gallery)),
     ]))));
     if (src == null) return null;
-    final x = await ImagePicker().pickImage(source: src, maxWidth: 1700, maxHeight: 1700, imageQuality: 88);
-    return x == null ? null : await x.readAsBytes();
+    try { return await ImagePicker().pickImage(source: src, maxWidth: 1700, maxHeight: 1700, imageQuality: 90); } catch (e) { if (mounted) toast(context, '⚠️ مقدرتش أفتح الصور/الكاميرا: $e'); return null; }
   }
 
   static const _idPrompt = 'This is an ID card or passport (often UAE Emirates ID, which has Arabic and English). Return ONLY JSON {"ar":"full name in Arabic as printed (or transliterate the English name to Arabic if no Arabic)","en":"full name in English as printed","id":"ID or passport number exactly as printed (Emirates ID like 784-XXXX-XXXXXXX-X)","nat_ar":"nationality in Arabic","nat_en":"nationality in English"}. Use "" if not visible.';
+  /// بيقرأ الهوية: Gemini لو مفتاحه موجود (بيجيب الاسم بالعربي كمان)، وإلا (أو لو فشل) الموبايل نفسه بيقرأها من غير نت
+  Future<Map?> _idFrom(XFile x) async {
+    String err = '';
+    if (Ai.key().isNotEmpty) {
+      try { final o = await _gem(await x.readAsBytes(), _idPrompt); if (o != null && (str(o['en']).isNotEmpty || str(o['ar']).isNotEmpty || str(o['id']).isNotEmpty)) return o; } catch (e) { err = '$e'; }
+    }
+    if (!kIsWeb) {
+      try {
+        final o = IdOcr.parse(await IdOcr.text(x.path));
+        if ((o['en'] ?? '').isNotEmpty || (o['id'] ?? '').isNotEmpty) return {'en': o['en'] ?? '', 'ar': '', 'id': o['id'] ?? '', 'nat_en': o['nat_en'] ?? '', 'nat_ar': o['nat_ar'] ?? ''};
+      } catch (e) { err = '$e'; }
+    } else if (Ai.key().isEmpty) { err = 'في نسخة المتصفح القراية محتاجة مفتاح Gemini — جرّبها من تطبيق الموبايل'; }
+    if (err.isNotEmpty && mounted) toast(context, '⚠️ $err');
+    return null;
+  }
+
   Future<void> _readId(bool landlord) async {
-    final img = await _pick(); if (img == null || !mounted) return;
+    final x = await _pick(); if (x == null || !mounted) return;
     toast(context, landlord ? '⏳ بقرأ هوية المؤجر…' : '⏳ بقرأ هوية المستأجر…'); setState(() => busy = true);
     try {
-      final o = await _gem(img, _idPrompt);
-      if (o == null || (str(o['en']).isEmpty && str(o['ar']).isEmpty && str(o['id']).isEmpty)) { if (mounted) toast(context, '⚠️ مقدرتش أقرأ الهوية — صوّرها أوضح'); return; }
+      final o = await _idFrom(x);
+      if (o == null) { if (mounted) toast(context, '⚠️ مقدرتش أقرأ الهوية — صوّرها أوضح وفي نور كويس، والكارت مالي الصورة'); return; }
       final en = Ct.en(S); final nm = en ? (str(o['en']).isEmpty ? str(o['ar']) : str(o['en'])) : (str(o['ar']).isEmpty ? str(o['en']) : str(o['ar']));
       final alt = (c['alt'] is Map<String, dynamic>) ? c['alt'] as Map<String, dynamic> : (c['alt'] = <String, dynamic>{});
       if (landlord) { alt['ll'] = {'ar': str(o['ar']), 'en': str(o['en'])}; if (nm.isNotEmpty) f['ll'] = nm; if (str(o['id']).isNotEmpty) f['lid'] = str(o['id']); }
@@ -141,16 +158,18 @@ class _CtState extends State<ContractPage> {
         final nat = en ? (str(o['nat_en']).isEmpty ? str(o['nat_ar']) : str(o['nat_en'])) : (str(o['nat_ar']).isEmpty ? str(o['nat_en']) : str(o['nat_ar']));
         if (nm.isNotEmpty) f['tn'] = nm; if (str(o['id']).isNotEmpty) f['tid'] = str(o['id']); if (nat.isNotEmpty) f['nat'] = nat;
       }
-      _sync(); await _save();
-      if (mounted) toast(context, '✅ $nm${str(o['id']).isNotEmpty ? ' • ${o['id']}' : ''}');
+      _sync(); await _save('🪪 ${landlord ? 'هوية المؤجر' : 'هوية المستأجر'} من صورة');
+      if (mounted) toast(context, '✅ ${nm.isEmpty ? '' : nm}${str(o['id']).isNotEmpty ? ' • ${o['id']}' : ''}');
     } catch (e) { if (mounted) toast(context, '⚠️ $e'); } finally { if (mounted) setState(() => busy = false); }
   }
   Future<void> _readPhone() async {
-    final img = await _pick(); if (img == null || !mounted) return;
+    final x = await _pick(); if (x == null || !mounted) return;
     toast(context, '⏳ بدوّر على رقم الموبايل…'); setState(() => busy = true);
     try {
-      final o = await _gem(img, 'Find the main mobile phone number in this image (contact card, WhatsApp profile, screenshot, business card, or handwriting). Return ONLY JSON {"phone":"number with country code if visible, digits and + only"}.');
-      final p = str(o?['phone']); if (p.isEmpty) { if (mounted) toast(context, '⚠️ ملقيتش رقم في الصورة'); return; }
+      var p = '';
+      if (Ai.key().isNotEmpty) { try { final o = await _gem(await x.readAsBytes(), 'Find the main mobile phone number in this image (contact card, WhatsApp profile, screenshot, business card, or handwriting). Return ONLY JSON {"phone":"number with country code if visible, digits and + only"}.'); p = str(o?['phone']); } catch (_) {} }
+      if (p.isEmpty && !kIsWeb) { try { p = IdOcr.phone(await IdOcr.text(x.path)); } catch (_) {} }
+      if (p.isEmpty) { if (mounted) toast(context, '⚠️ ملقيتش رقم في الصورة'); return; }
       f['ph'] = p; _sync(); await _save(); if (mounted) toast(context, '✅ الرقم: $p');
     } catch (e) { if (mounted) toast(context, '⚠️ $e'); } finally { if (mounted) setState(() => busy = false); }
   }
@@ -320,10 +339,7 @@ class _CtState extends State<ContractPage> {
       ])),
       const SizedBox(height: 12),
       // ───── 3) العقد نفسه ─────
-      Container(
-        height: 560, clipBehavior: Clip.antiAlias, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: kBd)),
-        child: PdfPreview(key: ValueKey('ct$v'), build: (_) => _bytes(), canChangePageFormat: false, canChangeOrientation: false, canDebug: false, allowPrinting: false, allowSharing: false, useActions: false, maxPageWidth: 760, pdfFileName: _fname),
-      ),
+      CtPaper(key: ValueKey('paper$v'), build: () => _bytes()),
       const SizedBox(height: 12),
       // ───── 4) ناقص / راجع ─────
       Container(
@@ -418,4 +434,78 @@ class _Ink extends CustomPainter {
   }
   @override
   bool shouldRepaint(covariant _Ink o) => true;
+}
+
+
+/// 📄 العقد نفسه — بيتكبّر بصباعين، دوسة مرتين = تكبير/رجوع، وأزرار − ملء العرض + زي القديم، وزرار ملء الشاشة
+class CtPaper extends StatefulWidget {
+  final Future<Uint8List> Function() build;
+  final bool full;
+  const CtPaper({super.key, required this.build, this.full = false});
+  @override
+  State<CtPaper> createState() => _CtPaperState();
+}
+
+class _CtPaperState extends State<CtPaper> {
+  final tc = TransformationController();
+  List<Uint8List>? pages; String? err; double z = 1; Uint8List? pdf;
+  TapDownDetails? _dt;
+
+  @override
+  void initState() { super.initState(); _load(); }
+  Future<void> _load() async {
+    try {
+      pdf = await widget.build(); final out = <Uint8List>[];
+      await for (final p in Printing.raster(pdf!, dpi: 170)) { out.add(await p.toPng()); }
+      if (mounted) setState(() => pages = out);
+    } catch (e) { if (mounted) setState(() => err = '$e'); }
+  }
+  void _zoom(double nz, [Offset? at]) {
+    nz = nz.clamp(1.0, 4.0); final s = context.size; final c = at ?? (s == null ? Offset.zero : Offset(s.width / 2, 0));
+    final m = Matrix4.identity()..translate(c.dx * (1 - nz), at == null ? 0.0 : c.dy * (1 - nz))..scale(nz);
+    tc.value = nz == 1 ? Matrix4.identity() : m; setState(() => z = nz);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.of(context).size.width - (widget.full ? 0 : 28);
+    final h = widget.full ? MediaQuery.of(context).size.height - 150 : w * 1.414;
+    Widget body;
+    if (err != null) { body = Center(child: Padding(padding: const EdgeInsets.all(20), child: Text('⚠️ مقدرتش أعرض العقد: $err', textAlign: TextAlign.center))); }
+    else if (pages == null) { body = const Center(child: CircularProgressIndicator()); }
+    else {
+      body = GestureDetector(
+        onDoubleTapDown: (d) => _dt = d, onDoubleTap: () => _zoom(z > 1.01 ? 1 : 2.5, _dt?.localPosition),
+        child: InteractiveViewer(
+          transformationController: tc, minScale: 1, maxScale: 4, constrained: false, boundaryMargin: EdgeInsets.zero,
+          onInteractionEnd: (_) => setState(() => z = tc.value.getMaxScaleOnAxis()),
+          child: SizedBox(width: w, child: Column(children: [for (final p in pages!) Container(margin: const EdgeInsets.only(bottom: 8), color: Colors.white, child: Image.memory(p, width: w, fit: BoxFit.fitWidth, filterQuality: FilterQuality.medium))])),
+        ),
+      );
+    }
+    final bar = Padding(padding: const EdgeInsets.only(bottom: 8), child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+      _rb('−', () => _zoom(z - .5)),
+      const SizedBox(width: 8),
+      _rb(z > 1.01 ? '${(z * 100).round()}%' : 'ملء العرض', () => _zoom(1), wide: true),
+      const SizedBox(width: 8),
+      _rb('+', () => _zoom(z + .5)),
+      if (!widget.full) ...[const SizedBox(width: 8), _rb('⛶', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => Directionality(textDirection: Tr.dir, child: Scaffold(appBar: AppBar(title: const Text('📄 العقد')), body: Padding(padding: const EdgeInsets.only(top: 8), child: CtPaper(build: () async => pdf ?? await widget.build(), full: true)))))))],
+    ]));
+    return Column(children: [
+      bar,
+      Container(
+        height: h, width: double.infinity, clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(color: const Color(0xFFE9ECF1), borderRadius: BorderRadius.circular(widget.full ? 0 : 16), border: widget.full ? null : Border.all(color: kBd)),
+        child: body,
+      ),
+      if (!widget.full) const Padding(padding: EdgeInsets.only(top: 6), child: Text('كبّر بصباعين أو دوس مرتين على العقد • ⛶ ملء الشاشة', style: TextStyle(color: kMuted, fontSize: 12))),
+    ]);
+  }
+
+  Widget _rb(String t, VoidCallback on, {bool wide = false}) => InkWell(
+        borderRadius: BorderRadius.circular(99), onTap: on,
+        child: Container(height: 46, constraints: BoxConstraints(minWidth: wide ? 120 : 46), padding: const EdgeInsets.symmetric(horizontal: 14), alignment: Alignment.center,
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(99), border: Border.all(color: kBd), boxShadow: const [BoxShadow(color: Color(0x1214213D), blurRadius: 8, offset: Offset(0, 3))]),
+          child: Text(t, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17))),
+      );
 }
