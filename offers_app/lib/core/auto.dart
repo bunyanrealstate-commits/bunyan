@@ -211,6 +211,12 @@ class AutoUpd {
   static List<String> applyRows(String g, List<Obj> rows, {String img = '', List files = const [], bool same = false, String how = '', String company = ''}) {
     final out = <String>[];
     final l = (Store.I.D['log'] as List?) ?? (Store.I.D['log'] = <dynamic>[]);
+    // صورة واتساب ملهاش إشعار (الإشعار ما وصلش) → جروبها من اسم الشركة المكتوب عليها، ولو مش شركة مفعّلة نسيبها
+    if (g.isEmpty) {
+      final own = company.isEmpty ? null : groupFor(company);
+      if (own == null) return out;
+      g = own;
+    }
     // الصورة مكتوب عليها شركة ليها جروب تاني (اتنسبت للجروب الغلط بالوقت) → ترجع لجروبها
     if (company.isNotEmpty && !_sig(company).any((w) => _sig(companyOf(g)).contains(w) || _sig(g).contains(w))) {
       final own = groupFor(company);
@@ -366,6 +372,7 @@ class AutoUpd {
         'follow': groups.keys.toList(),
         'dbg': d.take(80).toList(),
       };
+      logged = true;
     } catch (_) {}
     // اللي ما اتقراش المرة اللي فاتت (Gemini كان مش رادد) نحاول تاني
     final pend = ((Store.I.D['pend'] as List?) ?? []).whereType<Map>().toList();

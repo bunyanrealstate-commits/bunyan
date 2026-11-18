@@ -187,6 +187,8 @@ object Auto {
                         if (mine != null) { val m = withPh.minByOrNull { ham(mine, it.getLong("ph")) }; if (m != null && ham(mine, m.getLong("ph")) <= 10) { if (best != m.getString("g")) dbg(c, m.getString("g"), t, "ph_fix"); best = m.getString("g") } }
                     }
                     // النهارده: صور واتساب الأعمال اللي ملهاش إشعار (وصلت قبل ما التطبيق يشتغل) — Gemini بيعرف لوحده لو مش أبديت
+                    // «اقرا النهارده»: صورة واتساب ملهاش إشعار (الإشعار ما وصلش) → تتقري، وجروبها من اسم الشركة المكتوب عليها
+                    if (best == null && today && t >= mid) best = ""
                     if (best != null) todo.add(Triple(id, t, best))
                 }
             }
@@ -215,6 +217,7 @@ object Auto {
                     notify(c, g, 0)
                     continue
                 }
+                if (g.isEmpty) { doneSet.add(id); done.put(id); continue } // من غير جروب ومش مقروءة على الموبايل → منسألش Gemini
                 if (today && k0 > 1) Thread.sleep(3500) // الحد المجاني لـ Gemini (بس لو هنسأله)
                 val txt = gemini(key, prompt, bytes) ?: run { dbg(c, g, t, "gemini_fail"); null } ?: break  // Gemini مش متاح دلوقتي → نحاول تاني بعدين
                 doneSet.add(id); done.put(id)

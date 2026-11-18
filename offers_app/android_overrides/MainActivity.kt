@@ -17,6 +17,8 @@ class MainActivity : FlutterActivity() {
     private var go: String? = null
     override fun configureFlutterEngine(engine: FlutterEngine) {
         super.configureFlutterEngine(engine)
+        // هونر/هواوي بيقفلوا خدمة الإشعارات في الخلفية — نرجّعها كل ما التطبيق يتفتح
+        try { if (Build.VERSION.SDK_INT >= 24) android.service.notification.NotificationListenerService.requestRebind(android.content.ComponentName(this, WaListener::class.java)) } catch (_: Exception) {}
         link = intent?.dataString
         go = intent?.getStringExtra("go")
         MethodChannel(engine.dartExecutor.binaryMessenger, "offers/native").setMethodCallHandler { call, res ->
