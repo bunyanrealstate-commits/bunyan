@@ -27,7 +27,8 @@ bool _money(Map x) => n0(x['amt']) != 0 && _nty.containsKey(x['ty']) && x['ty'] 
 List<Map<String, dynamic>> alertsNow(Engine e) => notifItems(e).where((x) => lst(x['offs']).map((o) => n(o).toInt()).contains(x['n'] as int)).toList()..sort((a, b) => (a['n'] as int).compareTo(b['n'] as int));
 int overdueN(Engine e) => notifItems(e).where((x) => (x['n'] as int) < 0 && ['rent', 'inst', 'debt'].contains(x['ty'])).length;
 
-String whenTxt(int n) => n < 0 ? 'متأخر ${-n} يوم' : n == 0 ? 'النهارده' : n == 1 ? 'بكره' : 'بعد $n يوم';
+/// نفس whenTxt في القديم
+String whenTxt(int n) => n < 0 ? 'متأخر ${-n} يوم' : const {0: 'اليوم', 1: 'غداً', 2: 'بعد يومين', 7: 'بعد أسبوع', 14: 'بعد أسبوعين', 21: 'بعد 3 أسابيع', 30: 'بعد شهر'}[n] ?? 'بعد $n يوم';
 
 /// شارة الأيام (زي badge في القديم)
 Widget dayBadge(int n) {
