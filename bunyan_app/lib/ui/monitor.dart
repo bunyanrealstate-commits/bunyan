@@ -59,7 +59,27 @@ class MonBanner extends StatelessWidget {
   const MonBanner({super.key});
   @override
   Widget build(BuildContext context) {
-    final r = Mon.run(Store.I.S); if (r.isEmpty) return const SizedBox.shrink();
-    return Padding(padding: const EdgeInsets.only(bottom: 10), child: Card(color: const Color(0xFFFFF7E6), child: ListTile(leading: const Text('🛡', style: TextStyle(fontSize: 22)), title: Text('المراقب لقى ${r.length} حاجة محتاجة تتصلح'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MonitorPage())))));
+    final r = Mon.run(Store.I.S); final ok = r.isEmpty;
+    // زي القديم: كارت المراقب ظاهر دايماً — أخضر لو كل حاجة سليمة
+    return Padding(padding: const EdgeInsets.only(top: 4, bottom: 10), child: InkWell(
+      borderRadius: BorderRadius.circular(20), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MonitorPage())),
+      child: Container(
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: const Color(0xFFFBF4EE), border: Border.all(color: const Color(0xFFE0CDB8)), boxShadow: const [BoxShadow(color: Color(0x1A8A5A2B), blurRadius: 16, offset: Offset(0, 6), spreadRadius: -6)]),
+        child: ClipRRect(borderRadius: BorderRadius.circular(20), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Container(height: 5, color: const Color(0xFFC2570C)),
+          Padding(padding: const EdgeInsets.fromLTRB(14, 12, 10, 14), child: Row(children: [
+            const Text('🛡️', style: TextStyle(fontSize: 24)), const SizedBox(width: 10),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text.rich(TextSpan(children: [
+                const TextSpan(text: 'المراقب: ', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15.5, color: Color(0xFF0E0F12))),
+                TextSpan(text: ok ? 'كل حاجة سليمة' : 'لقى ${r.length} حاجة محتاجة تتصلح', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15.5, color: ok ? const Color(0xFF15924A) : const Color(0xFFD93D42))),
+              ])),
+              const Text('بيفحص البيانات كل ما تفتح — اضغط للتفاصيل', style: TextStyle(fontSize: 12.5, color: Color(0xFF4A5060), fontWeight: FontWeight.w600)),
+            ])),
+            const Icon(Icons.chevron_left, color: Color(0xFF62646D)),
+          ])),
+        ])),
+      ),
+    ));
   }
 }

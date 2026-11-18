@@ -10,6 +10,7 @@ import 'dialogs.dart';
 import '../core/actions.dart';
 import 'lease_edit.dart';
 import 'monitor.dart';
+import 'dash.dart';
 
 /// 🔄 عقود قربت تخلص — هتجدد؟ (renewCard)
 class _Renew extends StatelessWidget {
@@ -41,39 +42,55 @@ class HomePage extends StatelessWidget {
     final e = Engine(Store.I.S, WS: Ws.I.resolve());
     final cash = e.cashNow(); final rp = e.rcvP(); final f = e.fpos();
     final mine = Store.I.S['pmode'] == 'me';
-    return ListView(padding: const EdgeInsets.all(14), children: [
+    final w = Ws.I.resolve(); final g = objs(Store.I.S['groups']).where((x) => x['id'] == w).firstOrNull;
+    final an = e.annW();
+    var lp = 0.0, lf = 0.0; for (final u in e.SU()) { final o = e.occ(u); lp += o['lossPast'] as double; lf += o['lossFut'] as double; }
+    return ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 90), children: [
+      const HeroScene(),
+      const SizedBox(height: 12),
       _Alert(e),
-      const _Hello(),
-      const MonBanner(),
-      Row(children: [
+      // ───── 💰 فلوسك ─────
+      SecHead(Tr.t('💰 فلوسك'), sub: Tr.t('النهارده')),
+      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Expanded(child: _Stat(Tr.t('💵 الرصيد النقدي'), cash, c: kOk)),
         const SizedBox(width: 10),
         Expanded(child: _Stat(mine ? Tr.t('📈 ربحي حتى اليوم') : Tr.t('📈 ربح المجموعة حتى اليوم'), rp['profit']!, c: const Color(0xFF2563EB), sub: 'على الإيجار المقبوض (${(rp['mo']! * 10).round() / 10} شهر)')),
       ]),
+      const SizedBox(height: 12),
+      WithdrawCard(e),
+      // ───── 🏠 الاستديوهات ─────
+      SecHead(Tr.t('🏠 الاستديوهات'), sub: '${e.SU().length} ${Tr.t('استديو')}'),
+      StatusTiles(e),
       const SizedBox(height: 10),
       Row(children: [
-        Expanded(child: _Stat(Tr.t('🏦 صافي حقوقك'), f['eq']!, c: const Color(0xFF7C3AED))),
+        Expanded(child: BStat(Tr.t('🏠 نسبة الإشغال'), 0, c: const Color(0xFF2563EB), text: '${((an['occ'] as double) * 100).round()}%')),
         const SizedBox(width: 10),
         Expanded(child: _Stat(Tr.t('🧾 الإيجار المقبوض'), rp['rev']!, c: kTeal)),
       ]),
-      const SizedBox(height: 10),
-      const SizedBox(height: 10),
-      Builder(builder: (_) { final an = e.annW(); return Row(children: [
+      if (lp + lf >= 1) Padding(padding: const EdgeInsets.only(top: 10), child: Row(children: [
+        if (lp >= 1) Expanded(child: _Stat(Tr.t('📉 خسارة أيام فاضية فاتت'), -lp)),
+        if (lp >= 1 && lf >= 1) const SizedBox(width: 10),
+        if (lf >= 1) Expanded(child: _Stat(Tr.t('⏳ أيام فاضية جاية'), -lf, sub: Tr.t('لو ما اتأجرتش'))),
+      ])),
+      // ───── 📊 الأداء والتوقعات ─────
+      SecHead(Tr.t('📊 الأداء والتوقعات')),
+      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Expanded(child: _Stat(Tr.t('🎯 الربح المتوقع على مدة العقود'), an['p'] as double, c: kOk, sub: Tr.t('بعد كل التكاليف والمصاريف'))),
         const SizedBox(width: 10),
-        Expanded(child: BStat(Tr.t('🏠 نسبة الإشغال'), 0, c: const Color(0xFF2563EB), text: '${((an['occ'] as double) * 100).round()}%')),
-      ]); }),
-      Builder(builder: (_) { var lp = 0.0, lf = 0.0; for (final u in e.SU()) { final o = e.occ(u); lp += o['lossPast'] as double; lf += o['lossFut'] as double; }
-        if (lp + lf < 1) return const SizedBox.shrink();
-        return Padding(padding: const EdgeInsets.only(top: 10), child: Row(children: [
-          if (lp >= 1) Expanded(child: _Stat(Tr.t('📉 خسارة أيام فاضية فاتت'), -lp)),
-          if (lp >= 1 && lf >= 1) const SizedBox(width: 10),
-          if (lf >= 1) Expanded(child: _Stat(Tr.t('⏳ أيام فاضية جاية'), -lf, sub: Tr.t('لو ما اتأجرتش'))),
-        ])); }),
-      _Renew(e),
+        Expanded(child: _Stat(Tr.t('🤝 فلوس الشراكة'), g == null ? 0 : e.gpMine(g), c: const Color(0xFF2563EB), sub: g == null ? null : (Priv.on ? '••••' : str(g['name'])))),
+      ]),
+      const SizedBox(height: 10),
+      _Stat(Tr.t('🏦 صافي حقوقك'), f['eq']!, c: const Color(0xFF7C3AED)),
       const SizedBox(height: 14),
+      PerUnitCard(e),
+      // ───── 📅 المواعيد ─────
+      SecHead(Tr.t('📅 المواعيد')),
+      _Renew(e),
       _Upcoming(e),
       const SizedBox(height: 10),
+      // ───── 🏦 المركز المالي ─────
+      SecHead(Tr.t('🏦 المركز المالي')),
+      const CapitalCard(),
       BCard(c: const Color(0xFF7C3AED), title: Tr.t('📊 المركز المالي'), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(Tr.t('اللي ليك'), style: TextStyle(color: kGreen, fontWeight: FontWeight.bold)),
         for (final k in [['cash', Tr.t('الكاش')], ['rcv', Tr.t('إيجارات مستحقة لسه متحصلتش')], ['accU', Tr.t('إيجار مكتسب لسه مجاش ميعاده')], ['preCo', Tr.t('إيجار شركات مدفوع مقدم')], ['preI', Tr.t('نت/راوتر مدفوع مقدم')], ['fur', Tr.t('قيمة الأثاث المتبقية')], ['depP', Tr.t('تأمينات دفعتها')], ['gpm', Tr.t('فلوس الشراكة')]])
@@ -85,6 +102,7 @@ class HomePage extends StatelessWidget {
         const Divider(),
         _row(Tr.t('صافي حقوقك'), f['eq']!, bold: true),
       ])),
+      const MonBanner(),
       const SizedBox(height: 10),
       Text(Store.I.syncMsg.isEmpty ? '' : 'المزامنة: ${Store.I.syncMsg}', style: const TextStyle(color: kMuted, fontSize: 12), textAlign: TextAlign.center),
       if (lst(Store.I.S['units']).isEmpty) Padding(padding: EdgeInsets.all(30), child: Text(Tr.t('لسه مفيش بيانات — اسحب لتحت علشان تتزامن'), textAlign: TextAlign.center)),
@@ -170,36 +188,6 @@ class _Alert extends StatelessWidget {
         Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2), decoration: BoxDecoration(color: Colors.white.withOpacity(.22), borderRadius: BorderRadius.circular(99)), child: Text('🔔 ${al.length} ${Tr.t('تنبيه')}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12))),
         const SizedBox(height: 6),
         Text('$when: ${Priv.txt(str(x['label']))}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14.5, height: 1.5)),
-      ]),
-    );
-  }
-}
-
-/// كارت الترحيب (مساء الخير…)
-class _Hello extends StatelessWidget {
-  const _Hello();
-  @override
-  Widget build(BuildContext context) {
-    final h = DateTime.now().hour; final nm = str(Store.I.cfg['u']).isEmpty ? '' : '، ${Store.I.cfg['u']}';
-    final g = h < 12 ? Tr.t('صباح الخير') : Tr.t('مساء الخير');
-    const ms = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-    const ds = ['الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'];
-    final t = DateTime.now();
-    return Container(
-      height: 104, margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(18), gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF9FD8F0), Color(0xFFD7F0FA), Color(0xFFBFE6C9)]), boxShadow: const [BoxShadow(color: Color(0x1A14213D), blurRadius: 10, offset: Offset(0, 4))]),
-      child: Stack(children: [
-        const Positioned(left: 70, top: 6, child: Text('☀️', style: TextStyle(fontSize: 34))),
-        const Positioned(left: 8, bottom: 0, child: Text('🏢🏬', style: TextStyle(fontSize: 40))),
-        const Positioned(left: 110, bottom: 0, child: Text('🏠🌴', style: TextStyle(fontSize: 30))),
-        PositionedDirectional(start: 12, top: 14, child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(color: Colors.white.withOpacity(.92), borderRadius: BorderRadius.circular(14)),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            Text('$g$nm 👋', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: kGreen)),
-            Text(Tr.en ? '${t.day}/${t.month}/${t.year}' : '${ds[t.weekday - 1]}، ${t.day} ${ms[t.month - 1]}', style: const TextStyle(color: kMuted, fontSize: 12)),
-          ]),
-        )),
       ]),
     );
   }

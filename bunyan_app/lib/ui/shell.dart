@@ -6,6 +6,7 @@ import 'theme.dart';
 import 'groups.dart';
 import 'accounts.dart';
 import 'eye.dart';
+import 'dash.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'home.dart';
 import 'units.dart';
@@ -34,16 +35,20 @@ class Ws extends ValueNotifier<String> {
 
 class Shell extends StatefulWidget {
   const Shell({super.key});
+  /// التاب المفتوح — أي صفحة تقدر تنقل لتاب تاني (مثلاً مربعات الحالة في الداشبورد ← الاستديوهات)
+  static final tabN = ValueNotifier<int>(0);
+  static void go(int i) => tabN.value = i;
   @override
   State<Shell> createState() => _ShellState();
 }
 
 class _ShellState extends State<Shell> {
-  int tab = 0;
+  int get tab => Shell.tabN.value;
+  set tab(int v) => Shell.tabN.value = v;
   @override
   void initState() {
     super.initState();
-    Store.I.addListener(_r); Ws.I.addListener(_r);
+    Store.I.addListener(_r); Ws.I.addListener(_r); Shell.tabN.addListener(_r);
     Native.init();
     Native.takeLink().then((ok) { if (!ok && Store.I.linked) Store.I.sync(); });
     Future.delayed(const Duration(seconds: 5), () => Updater.check());
@@ -53,7 +58,7 @@ class _ShellState extends State<Shell> {
   late final _life = _Life(() { Native.takeLink().then((ok) { if (!ok && Store.I.linked) Store.I.sync(); }); Updater.check(force: Updater.needPerm || Updater.state.value != null).then((m) { if (m != null && mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m))); }); });
   void _r() { if (mounted) setState(() {}); }
   @override
-  void dispose() { Store.I.removeListener(_r); Ws.I.removeListener(_r); WidgetsBinding.instance.removeObserver(_life); super.dispose(); }
+  void dispose() { Store.I.removeListener(_r); Ws.I.removeListener(_r); Shell.tabN.removeListener(_r); WidgetsBinding.instance.removeObserver(_life); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
@@ -75,9 +80,12 @@ class _ShellState extends State<Shell> {
             Column(mainAxisSize: MainAxisSize.min, children: [SvgPicture.asset('assets/logo.svg', height: 24), const Text('Furnished', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF1D4B66), letterSpacing: 1.6, height: 1.2))]),
             EyeBtn(key: ValueKey('eye${Priv.on}')),
             const SizedBox(width: 12),
-            Expanded(child: _groupPicker()),
+            const SizedBox(width: 10),
+            const Expanded(child: Align(alignment: AlignmentDirectional.centerStart, child: GroupPill())),
           ]),
           actions: [
+            const HdClock(), const SizedBox(width: 10),
+            const BellBtn(),
             IconButton(
               tooltip: Tr.t('مزامنة'),
               onPressed: st.syncing ? null : () async { final m = await st.sync(); if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m))); },
@@ -111,31 +119,6 @@ class _ShellState extends State<Shell> {
           ]);
         })),
       ),
-    );
-  }
-
-  Widget _groupPicker() {
-    final S = Store.I.S; final gs = objs(S['groups']);
-    final noG = objs(S['units']).any((u) => !truthy(u['g']));
-    if (gs.isEmpty && !noG) return const SizedBox();
-    final cur = Ws.I.resolve();
-    final items = <DropdownMenuItem<String>>[
-      for (final g in gs) DropdownMenuItem(value: str(g['id']), child: Text('📂 ${str(g['name'])}', overflow: TextOverflow.ellipsis)),
-      if (noG) DropdownMenuItem(value: '-', child: Text(Tr.t('📂 بدون مجموعة'))),
-      DropdownMenuItem(value: '__m', child: Text(Tr.t('⚙ إدارة المجموعات'))),
-    ];
-    return Container(
-      height: 40, padding: const EdgeInsets.symmetric(horizontal: 12), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF0D9488), Color(0xFF34D399)]), borderRadius: BorderRadius.circular(99), boxShadow: const [BoxShadow(color: Color(0x330D9488), blurRadius: 10, offset: Offset(0, 3))]),
-      child: DropdownButtonHideUnderline(child: DropdownButton<String>(
-        value: items.any((x) => x.value == cur) ? cur : null, isExpanded: true, dropdownColor: Colors.white, iconEnabledColor: Colors.white, style: const TextStyle(fontSize: 14, color: kInk, fontWeight: FontWeight.w700, fontFamily: 'Plex'),
-        selectedItemBuilder: (_) => [for (final it in items) Align(alignment: AlignmentDirectional.centerStart, child: Text(it.value == '-' ? Tr.t('بدون مجموعة') : it.value == '__m' ? '' : str(gs.where((g) => g['id'] == it.value).firstOrNull?['name']), overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14)))],
-        items: items,
-        onChanged: (v) {
-          if (v == null) return;
-          if (v == '__m') { Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GroupsPage())); return; }
-          Ws.I.pick(v);
-        },
-      )),
     );
   }
 }

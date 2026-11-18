@@ -27,6 +27,10 @@ class _St {
   }
 }
 
+/// للداشبورد: حالة الاستديو (rent/vac/late) والعقد الحالي
+String unitStatus(Obj u) => _St.of(u).st;
+Obj? unitLease(Obj u) => _St.of(u).L;
+
 class UnitsPage extends StatefulWidget {
   const UnitsPage({super.key});
   @override
