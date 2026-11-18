@@ -65,13 +65,21 @@ object Notify {
         am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, c.timeInMillis, p)
     }
 
-    fun post(ctx: Context, id: Int, title: String, body: String, open: String?) {
+    fun post(ctx: Context, id: Int, title: String, body: String, open: String?, listen: Boolean = open != null && open != "buddy") {
         ensure(ctx)
         val i = Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         if (open != null) i.putExtra("open", open)
         val pi = PendingIntent.getActivity(ctx, id, i, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val n = NotificationCompat.Builder(ctx, CH).setSmallIcon(android.R.drawable.ic_menu_agenda).setContentTitle(title).setContentText(body)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(body)).setAutoCancel(true).setContentIntent(pi).setPriority(NotificationCompat.PRIORITY_HIGH).build()
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body)).setAutoCancel(true).setContentIntent(pi).setPriority(NotificationCompat.PRIORITY_HIGH)
+            .also { nb ->
+                if (listen && open != null) {
+                    val si = Intent(ctx, ReadService::class.java).setAction("start").putExtra("b", open)
+                    val sp = if (Build.VERSION.SDK_INT >= 26) PendingIntent.getForegroundService(ctx, id + 50, si, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+                             else PendingIntent.getService(ctx, id + 50, si, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+                    nb.addAction(0, "🎧 اسمعه دلوقتي", sp)
+                }
+            }.build()
         try { NotificationManagerCompat.from(ctx).notify(id, n) } catch (_: SecurityException) {}
     }
 }

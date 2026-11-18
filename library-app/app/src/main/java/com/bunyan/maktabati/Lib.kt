@@ -154,6 +154,30 @@ object Lib {
     }
     fun todayPages(): Int = dayMap()[today()] ?: 0
 
+    /** ⏱ «دقيقتين بس»: الكتاب الجاي يتفتح بعدّاد دقيقتين */
+    var sprint by mutableStateOf(false)
+
+    /** أيام من آخر مرة قريت فيها (999 لو عمرك ما قريت) */
+    fun idleDays(): Int {
+        val last = dayMap().filter { it.value > 0 }.keys.maxOrNull() ?: return 999
+        val d = try { SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(last)!!.time } catch (_: Exception) { return 999 }
+        val t = SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(today())!!.time
+        return ((t - d) / 86400000L).toInt()
+    }
+
+    /** 🔁 رجوع سهل: لو بقالك 3 أيام مش بتقرا الهدف ينزل لصفحة واحدة، ولما تقرا 3 أيام ورا بعض يرجع لوحده */
+    fun comeback(): String? {
+        if (!cfg.has("goalOld") && goal > 1 && idleDays() >= 3) {
+            cfg.put("goalOld", goal); goal = 1; save()
+            return "🔁 نزّلتلك الهدف لصفحة واحدة بس لحد ما ترجع — ولا يهمك 💚"
+        }
+        if (cfg.has("goalOld") && streak() >= 3) {
+            goal = cfg.optInt("goalOld", 10); cfg.remove("goalOld"); save()
+            return "🔥 3 أيام ورا بعض! رجّعتلك هدفك $goal صفحات"
+        }
+        return null
+    }
+
     fun current(): JSONObject? {
         val now = books.filter { it.optString("sh") == "now" }
         return now.maxByOrNull { it.optLong("rd", 0) } ?: queue.mapNotNull { book(it) }.firstOrNull { it.optString("sh") == "want" }
@@ -252,7 +276,7 @@ object Lib {
             run { val keep = JSONArray(); for (i in 0 until rems.length()) { val x = rems.getJSONObject(i); if (!done.contains(x.optString("i"))) keep.put(x) }; rems = keep }
             books.filter { !seen.contains(it.optString("id")) && app.optJSONObject(it.optString("id"))?.has("nw") == true }.forEach { out.add(0, it) }
             books.clear(); books.addAll(out)
-            goal = d.optInt("bdg", goal)
+            if (cfg.has("goalOld")) cfg.put("goalOld", d.optInt("bdg", cfg.optInt("goalOld"))) else goal = d.optInt("bdg", goal)
             queue = ArrayList(arr(d.optJSONArray("bq")).map { it.toString() })
             pulledAt = System.currentTimeMillis()
             withContext(Dispatchers.Main) { save() }

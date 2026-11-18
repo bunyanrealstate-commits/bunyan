@@ -112,6 +112,11 @@ fun ReaderScreen(b: JSONObject, onClose: (Int, Int, Int) -> Unit) {
             vis.maxByOrNull { minOf(it.offset + it.size, bot) - maxOf(it.offset, top) }!!.index + 1
         }
     } }
+    /* ⏱ دقيقتين بس */
+    var sprintEnd by remember { mutableLongStateOf(if (Lib.sprint) t0 + 120000L else 0L) }
+    var sprintDone by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { Lib.sprint = false }
+    LaunchedEffect(secs) { if (sprintEnd > 0 && System.currentTimeMillis() >= sprintEnd) { sprintEnd = 0; sprintDone = true } }
     fun close() { onClose(start, cur, sess) }
     BackHandler { close() }
     suspend fun goTo(p: Int, anim: Boolean = false) { val i = (p - 1).coerceIn(0, n - 1); if (flip) { if (anim) pager.animateScrollToPage(i) else pager.scrollToPage(i) } else { if (anim) list.animateScrollToItem(i) else list.scrollToItem(i) } }
@@ -215,6 +220,10 @@ fun ReaderScreen(b: JSONObject, onClose: (Int, Int, Int) -> Unit) {
             Spacer(Modifier.width(6.dp))
             IconBtn("⋯") { showTools = true }
         }
+        if (sprintEnd > 0) {
+            val left = ((sprintEnd - System.currentTimeMillis()) / 1000).coerceAtLeast(0) + 0 * secs
+            Text("⏱ فاضل ${left / 60}:${String.format(Locale.US, "%02d", left % 60)} وتقدر تقفل — اقرا على راحتك", Modifier.fillMaxWidth().background(Color(0xFF1F7A55)).padding(8.dp), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        }
         if (flip) androidx.compose.foundation.pager.HorizontalPager(pager, Modifier.weight(1f).fillMaxWidth().onSizeChanged { widthPx = it.width }, beyondViewportPageCount = 1, userScrollEnabled = !hlMode) { i ->
             Box(Modifier.fillMaxSize().padding(vertical = 6.dp), Alignment.Center) { PageView(doc, i + 1, widthPx, night, fit = true, b = b, hlMode = hlMode, onHl = ::onHl) }
         } else Box(Modifier.weight(1f).fillMaxWidth().onSizeChanged { widthPx = it.width }
@@ -277,6 +286,11 @@ fun ReaderScreen(b: JSONObject, onClose: (Int, Int, Int) -> Unit) {
                 }
             })
     }
+    if (sprintDone) AlertDialog(onDismissRequest = { sprintDone = false },
+        confirmButton = { Button({ sprintDone = false }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1F7A55))) { Text("📖 هكمّل شوية") } },
+        dismissButton = { TextButton({ sprintDone = false; close() }) { Text("كفاية كده 👋") } },
+        title = { Text("👏 الدقيقتين خلصوا!", fontWeight = FontWeight.Bold) },
+        text = { Text("كده انت قريت النهارده — وده أهم من أي عدد صفحات 💚\nلو مستمتع كمّل، ولو لأ اقفل وارجع بكره.", fontSize = 16.sp, lineHeight = 26.sp) })
     hook?.let { h ->
         AlertDialog(onDismissRequest = { hook = null }, confirmButton = { Button({ hook = null }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1F7A55))) { Text("يلا نبدأ 📖") } },
             title = { Text("🪝 قبل ما تبدأ…", fontWeight = FontWeight.Bold) },

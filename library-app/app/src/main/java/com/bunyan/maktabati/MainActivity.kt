@@ -134,7 +134,7 @@ fun App(incoming: MutableState<Intent?>) {
             if (!linkWith(code)) toast("⚠️ كود الربط مش مظبوط") else { toast("✅ اتربط بحساب بنيان — بنزّل مكتبتك…"); Lib.msg = Lib.sync(); toast(Lib.msg); screen = "home" }
         } else if (itn.action == Intent.ACTION_VIEW) addFromUri(ctx, d)?.let { b -> reading = b }
     }
-    LaunchedEffect(Unit) { if (Lib.link != null) Lib.msg = Lib.sync() }
+    LaunchedEffect(Unit) { if (Lib.link != null) Lib.msg = Lib.sync(); Lib.comeback()?.let { toast(it) } }
     // تحديث التطبيق لوحده + ربط تلقائي لو كود الربط متنسخ (زرار بنيان بينسخه)
     val life = androidx.compose.ui.platform.LocalLifecycleOwner.current
     DisposableEffect(life) {
@@ -263,6 +263,20 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 }
             }
         }
+        // ⏱ رجوع سهل لو بقالك فترة مش بتقرا
+        if (cur != null && today == 0 && st == 0) item(span = { GridItemSpan(3) }) {
+            val idle = Lib.idleDays()
+            Surface(shape = RoundedCornerShape(22.dp), color = Color(0xFFE8F3EE)) {
+                Column(Modifier.padding(16.dp)) {
+                    Text(if (idle >= 999) "👋 أول خطوة أسهل مما تتخيل" else if (idle >= 2) "👋 وحشتنا… بقالك $idle يوم" else "👋 لسه مقرتش النهارده", fontWeight = FontWeight.Black, fontSize = 18.sp, color = Green)
+                    Text("مش مطلوب منك كتاب ولا فصل — دقيقتين بس، ولو عايز تقفل بعدها اقفل 😉\nأو اسمعه وانت سايق أو قبل ما تنام 🎧", fontSize = 14.sp, color = Ink, lineHeight = 23.sp, modifier = Modifier.padding(vertical = 8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button({ Lib.sprint = true; onOpen(cur) }, Modifier.weight(1f).height(54.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = Green)) { Text("⏱ دقيقتين بس", fontWeight = FontWeight.Black, fontSize = 16.sp) }
+                        OutlinedButton({ listenNow(hctx, cur, onFetch) }, Modifier.weight(1f).height(54.dp), shape = RoundedCornerShape(16.dp)) { Text("🎧 اسمعه", fontWeight = FontWeight.Black, fontSize = 16.sp, color = Green) }
+                    }
+                }
+            }
+        }
         // الكتاب الحالي
         if (cur != null) item(span = { GridItemSpan(3) }) {
             val pg = cur.optInt("pg", 0); val c = cur.optInt("cur", 0)
@@ -290,6 +304,10 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                     val p = dl[cur.optString("id")]
                     Button(onClick = { onOpen(cur) }, Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = Green), enabled = p == null) {
                         Text(when { p != null -> "⬇️ بنزّل… ${(p * 100).toInt()}%"; !Lib.have(cur) -> "⬇️ نزّله وابدأ"; Boost.epAt(cur, maxOf(1, c)) != null -> "▶️ كمّل الحلقة"; c > 1 -> "📖 كمّل من صفحة $c"; else -> "📖 ابدأ القراية" }, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                    }
+                    val lst = Speech.playing && Speech.bookId == cur.optString("id")
+                    OutlinedButton({ if (lst) Speech.stop(hctx) else listenNow(hctx, cur, onFetch) }, Modifier.fillMaxWidth().padding(top = 8.dp).height(46.dp), shape = RoundedCornerShape(16.dp), enabled = p == null) {
+                        Text(if (lst) "⏸ وقّف الصوت (صفحة ${Speech.page})" else "🎧 اسمعه بدل ما تقراه — والشاشة مقفولة", fontWeight = FontWeight.Bold, color = Green)
                     }
                 }
             }
@@ -478,4 +496,13 @@ fun linkWith(code: String): Boolean {
     val o = Lib.parseLink(code) ?: return false
     Lib.link = JSONObject().put("r", o.optString("r")).put("t", o.optString("t")).put("p", o.optString("p", "book.json").ifEmpty { "book.json" }).put("g", o.optString("g"))
     Lib.save(); return true
+}
+
+/** 🎧 يشغّل الكتاب بالصوت من غير ما يفتحه (والسماع بيتحسب قراية) */
+fun listenNow(ctx: android.content.Context, b: JSONObject, onFetch: (JSONObject) -> Unit) {
+    when {
+        !Net.hasGem() -> Toast.makeText(ctx, "محتاج Gemini — اربط التطبيق ببنيان الأول", Toast.LENGTH_LONG).show()
+        !Lib.have(b) -> { onFetch(b); Toast.makeText(ctx, "⬇️ بنزّل الكتاب… دوس «اسمعه» تاني لما يخلص", Toast.LENGTH_LONG).show() }
+        else -> { Speech.start(ctx, b, b.optInt("cur", 1).coerceAtLeast(1)); Toast.makeText(ctx, "🎧 بيبدأ دلوقتي… اقفل الشاشة وريّح 😌", Toast.LENGTH_SHORT).show() }
+    }
 }

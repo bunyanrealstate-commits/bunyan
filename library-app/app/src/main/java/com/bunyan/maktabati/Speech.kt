@@ -130,7 +130,10 @@ class ReadService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            "start" -> { show(); begin() }
+            "start" -> {
+                intent.getStringExtra("b")?.let { id -> Lib.book(id)?.let { bk -> Speech.bookId = id; Speech.page = bk.optInt("cur", 1).coerceAtLeast(1) } }
+                show(); begin()
+            }
             "pause" -> pause()
             "play" -> resume()
             "next" -> skip(1)
