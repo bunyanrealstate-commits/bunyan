@@ -27,8 +27,8 @@ class CtPdf {
     final h = cls.contains('en') || cls.contains('ar');
     return pw.Container(
       color: h ? shade : null,
-      padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 4),
-      child: _txt(s, bold: h, size: h ? 9 : 10, align: cls.contains('ar') ? pw.TextAlign.right : (cls.contains('en') ? pw.TextAlign.left : pw.TextAlign.center)),
+      padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 2.6),
+      child: _txt(s, bold: h, size: h ? 8.6 : 9.4, align: cls.contains('ar') ? pw.TextAlign.right : (cls.contains('en') ? pw.TextAlign.left : pw.TextAlign.center)),
     );
   }
   static pw.Widget _row(List<dom.Element> tds, List<double> w) => pw.Table(
@@ -95,7 +95,7 @@ class CtPdf {
     final rtl = rows.isNotEmpty && !RegExp('[A-Za-z]').hasMatch(_t(rows.first)) && _ar.hasMatch(_t(rows.first));
     return pw.Table(border: pw.TableBorder.all(color: line, width: .6), children: [
       for (var r = 0; r < rows.length; r++) pw.TableRow(decoration: r == 0 ? const pw.BoxDecoration(color: shade) : null, children: [
-        for (final c in (rtl ? rows[r].children.reversed : rows[r].children).where((c) => c.localName == 'td')) pw.Padding(padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 4), child: _txt(c.innerHtml.contains('<br') ? c.innerHtml.split(RegExp(r'<br\s*/?>')).map((x) => hp.parseFragment(x).text?.trim() ?? '').join('\n') : _t(c), size: r == 0 ? 8.5 : 9.5, bold: r == 0, align: pw.TextAlign.center)),
+        for (final c in (rtl ? rows[r].children.reversed : rows[r].children).where((c) => c.localName == 'td')) pw.Padding(padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 2.4), child: _txt(c.innerHtml.contains('<br') ? c.innerHtml.split(RegExp(r'<br\s*/?>')).map((x) => hp.parseFragment(x).text?.trim() ?? '').join('\n') : _t(c), size: r == 0 ? 8.2 : 9, bold: r == 0, align: pw.TextAlign.center)),
       ]),
     ]);
   }
@@ -115,7 +115,7 @@ class CtPdf {
     final rows = [for (final tr in table.querySelectorAll('tr')) tr.children.where((c) => c.localName == 'td').toList()];
     final n = rows.isEmpty ? 1 : rows.first.length;
     return pw.Table(border: pw.TableBorder.all(color: line, width: .6), columnWidths: {for (var j = 0; j < n; j++) j: const pw.FlexColumnWidth(1)}, defaultVerticalAlignment: pw.TableCellVerticalAlignment.top, children: [
-      for (final tds in rows) pw.TableRow(children: [for (final c in tds) pw.Padding(padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 4), child: _txt(_t(c), size: 8.8))]),
+      for (final tds in rows) pw.TableRow(children: [for (final c in tds) pw.Padding(padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 2.6), child: _txt(_t(c), size: 8.3))]),
     ]);
   }
 
@@ -123,7 +123,7 @@ class CtPdf {
     final ds = sg.children.where((c) => c.localName == 'div').toList();
     return pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.end, children: [
       for (final d in ds) pw.Expanded(child: pw.Padding(padding: const pw.EdgeInsets.symmetric(horizontal: 6), child: pw.Column(children: [
-        pw.SizedBox(height: 46, child: () {
+        pw.SizedBox(height: 40, child: () {
           final img = d.querySelector('img'); final src = img?.attributes['src'] ?? '';
           if (src.startsWith('data:image')) { try { return pw.Image(pw.MemoryImage(base64.decode(src.substring(src.indexOf(',') + 1))), fit: pw.BoxFit.contain); } catch (_) {} }
           return pw.SizedBox();
@@ -144,14 +144,14 @@ class CtPdf {
       switch (e.localName) {
         case 'h1': {
           final sm = e.querySelector('small'); final main = e.nodes.whereType<dom.Text>().map((t) => t.text).join(' ').trim();
-          ws.add(pw.Center(child: _txt(main.isEmpty ? _t(e) : main, size: 20, bold: true, align: pw.TextAlign.center)));
-          if (sm != null) ws.add(pw.Center(child: _txt(_t(sm), size: 13, bold: true, align: pw.TextAlign.center)));
+          ws.add(pw.Center(child: _txt(main.isEmpty ? _t(e) : main, size: 17, bold: true, align: pw.TextAlign.center)));
+          if (sm != null) ws.add(pw.Center(child: _txt(_t(sm), size: 11.5, bold: true, align: pw.TextAlign.center)));
           ws.add(pw.SizedBox(height: 4)); break;
         }
-        case 'h2': ws.add(pw.SizedBox(height: 10)); ws.add(pw.Center(child: _txt(_t(e), size: 12, bold: true, align: pw.TextAlign.center))); ws.add(pw.SizedBox(height: 4)); break;
+        case 'h2': ws.add(pw.SizedBox(height: 7)); ws.add(pw.Center(child: _txt(_t(e), size: 11, bold: true, align: pw.TextAlign.center))); ws.add(pw.SizedBox(height: 3)); break;
         case 'table': ws.add(e.classes.contains('tc2') ? _terms(e) : e.classes.contains('ptb') ? _grid(e) : e.classes.contains('kv') ? _kvTable(e) : _infoTable(e)); break;
         case 'div':
-          if (e.classes.contains('sg')) { ws.add(pw.SizedBox(height: 18)); ws.add(_sigs(e)); }
+          if (e.classes.contains('sg')) { ws.add(pw.SizedBox(height: 8)); ws.add(_sigs(e)); }
           else if (e.classes.contains('tm')) { ws.add(_tm(e)); }
           else if (e.classes.contains('nl')) { ws.add(pw.SizedBox(height: 6)); ws.add(pw.Container(height: 40, padding: const pw.EdgeInsets.all(4), decoration: pw.BoxDecoration(border: pw.Border.all(color: line, width: .6)), child: _txt(_t(e), size: 9.5, bold: true))); ws.add(pw.SizedBox(height: 6)); }
           else if (e.classes.contains('ctdate')) { ws.add(pw.Align(alignment: _ar.hasMatch(_t(e)) ? pw.Alignment.centerRight : pw.Alignment.centerLeft, child: _txt(_t(e), size: 9))); ws.add(pw.SizedBox(height: 6)); }
@@ -161,7 +161,7 @@ class CtPdf {
       }
     }
     final pdf = pw.Document();
-    pdf.addPage(pw.MultiPage(pageFormat: PdfPageFormat.a4, margin: const pw.EdgeInsets.all(26), build: (_) => ws));
+    pdf.addPage(pw.MultiPage(pageFormat: PdfPageFormat.a4, margin: const pw.EdgeInsets.symmetric(horizontal: 24, vertical: 20), build: (_) => ws));
     return pdf.save();
   }
 }
