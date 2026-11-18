@@ -217,7 +217,7 @@ object Auto {
                     notify(c, g, 0)
                     continue
                 }
-                if (g.isEmpty) { doneSet.add(id); done.put(id); continue } // من غير جروب ومش مقروءة على الموبايل → منسألش Gemini
+                if (g.isEmpty()) { doneSet.add(id); done.put(id); continue } // من غير جروب ومش مقروءة على الموبايل → منسألش Gemini
                 if (today && k0 > 1) Thread.sleep(3500) // الحد المجاني لـ Gemini (بس لو هنسأله)
                 val txt = gemini(key, prompt, bytes) ?: run { dbg(c, g, t, "gemini_fail"); null } ?: break  // Gemini مش متاح دلوقتي → نحاول تاني بعدين
                 doneSet.add(id); done.put(id)
