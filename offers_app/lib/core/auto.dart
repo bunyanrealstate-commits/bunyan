@@ -188,7 +188,7 @@ class AutoUpd {
   /// الشركة من الكلام المكتوب في الصورة نفسها (اللوجو/الاسم) — علشان صورة شركة متتحطش باسم جروب تاني
   static String companyFromText(String text, String g, [List? els]) {
     final t = ' ${text.toLowerCase().replaceAll(RegExp(r'[^a-z0-9\u0600-\u06FF ]'), ' ')} ';
-    bool has(String c) { final w = _sig(c); return w.isNotEmpty && w.every((x) => t.contains(' $x ') || t.contains(x)); }
+    bool has(String c) { final w = _sig(c); return w.isNotEmpty && w.every((x) => t.contains(' $x ') || (x.length > 3 && t.contains(x))) && w.join().length >= 4 || (w.length == 1 && w.first.length == 2 && t.contains(' ${w.first} holding ')); }
     final mine = companyOf(g);
     if (mine.isNotEmpty && has(mine)) return mine;
     final known = {for (final v in Store.I.villas) str(v['company']), ...groups.values, ...groups.keys.map(cleanGroup), ...seenNames.map(cleanGroup).map(companyOf)}.where((c) => _sig(c).isNotEmpty).toList()
