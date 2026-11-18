@@ -76,8 +76,8 @@ object Auto {
         val old = obj(c, "seen"); val out = JSONObject()
         for (k in old.keys()) {
             val ck = clean(k); val a = old.getJSONObject(k); val b = out.optJSONObject(ck)
-            if (b == null) out.put(ck, JSONObject().put("at", a.optLong("at")).put("img", a.optInt("img")))
-            else { b.put("at", maxOf(b.optLong("at"), a.optLong("at"))); b.put("img", b.optInt("img") + a.optInt("img")) }
+            if (b == null) out.put(ck, JSONObject().put("at", a.optLong("at")).put("img", a.optInt("img")).put("txt", a.optInt("txt")).put("ph", a.optInt("ph")))
+            else { b.put("at", maxOf(b.optLong("at"), a.optLong("at"))); for (f in listOf("img", "txt", "ph")) b.put(f, b.optInt(f) + a.optInt(f)) }
         }
         put(c, "seen", out)
         val last = obj(c, "last"); val l2 = JSONObject()

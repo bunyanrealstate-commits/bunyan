@@ -353,7 +353,20 @@ class AutoUpd {
     try { if (!force) await Native.ch.invokeMethod('autoRun'); items = jsonDecode(await Native.ch.invokeMethod<String>('autoTake') ?? '[]') as List; } catch (_) { return []; }
     final out = <String>[];
     var logged = false;
-    try { seenNames = (await seen()).keys.toList(); } catch (_) {}
+    try {
+      final sn = await seen();
+      seenNames = sn.keys.toList();
+      // 🩺 تشخيص بيتحفظ مع الباك أب: كل جروب (متابَع ولا لأ، آخر إشعار، كام صورة/رسالة) + آخر اللي حصل للصور
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final d = await dbg();
+      Store.I.D['diag'] = {
+        'at': DateTime.now().toIso8601String(),
+        'notif': await Native.ch.invokeMethod<bool>('notifOn'),
+        'groups': {for (final e in sn.entries.where((e) => now - ((e.value['at'] ?? 0) as num) < 2 * 86400000)) e.key: {'f': follows(e.key), 'at': e.value['at'], 'img': e.value['img'], 'txt': e.value['txt'], 'ph': e.value['ph']}},
+        'follow': groups.keys.toList(),
+        'dbg': d.take(80).toList(),
+      };
+    } catch (_) {}
     // اللي ما اتقراش المرة اللي فاتت (Gemini كان مش رادد) نحاول تاني
     final pend = ((Store.I.D['pend'] as List?) ?? []).whereType<Map>().toList();
     Store.I.D['pend'] = <dynamic>[];
