@@ -221,13 +221,58 @@ object Lib {
         return code to txt
     }
 
+    /** 🔓 مكتبتي بقت لوحدها: مفيش مزامنة مع بنيان — بس نسخة احتياطية في ملف خاص بيها (maktabati.json) */
+    fun solo() = cfg.optBoolean("solo", false)
+    private const val BK = "maktabati.json"
+
     suspend fun sync(): String = withContext(Dispatchers.IO) {
-        if (link == null) return@withContext "مش مربوط بحساب بنيان"
+        if (link == null) return@withContext "مش مربوط"
+        if (solo()) return@withContext backup()
+        // آخر مرة: ناخد آخر حاجة من بنيان علشان مفيش حاجة تضيع، وبعدها ننفصل
+        val r = pullFromBunyan()
+        if (r.startsWith("تمام")) { withContext(Dispatchers.Main) { cfg.put("solo", true); cfg.put("soloAt", today()); save() }; return@withContext backup().let { "🔓 مكتبتي بقت لوحدها — " + it } }
+        r
+    }
+
+    private fun snapshot(): JSONObject = JSONObject().put("v", 1).put("at", System.currentTimeMillis()).put("app", app).put("goal", goal).put("cfg", cfg)
+        .put("rems", rems).put("queue", JSONArray(queue)).put("books", JSONArray(books))
+
+    private suspend fun backup(): String {
+        syncing = true
+        try {
+            val (c0, t0) = gh(BK)
+            if (c0 == 401 || c0 == 403) return "مفتاح النسخة الاحتياطية مش شغال ($c0)"
+            val sha = if (c0 == 200) JSONObject(t0).optString("sha") else null
+            // موبايل جديد / التطبيق اتمسح: رجّع كتبك من النسخة الاحتياطية
+            if (books.isEmpty() && sha != null) {
+                val (c1, t1) = gh(BK, raw = true)
+                if (c1 == 200) {
+                    val j = JSONObject(t1)
+                    withContext(Dispatchers.Main) {
+                        app = j.optJSONObject("app") ?: JSONObject(); goal = j.optInt("goal", goal)
+                        cfg = (j.optJSONObject("cfg") ?: JSONObject()).put("solo", true); rems = j.optJSONArray("rems") ?: JSONArray()
+                        queue = ArrayList(arr(j.optJSONArray("queue")).map { it.toString() })
+                        books.clear(); arr(j.optJSONArray("books")).forEach { if (it is JSONObject) books.add(it) }
+                        save()
+                    }
+                    return "تمام ✅ رجّعت ${books.size} كتاب من النسخة الاحتياطية"
+                }
+            }
+            val body = JSONObject().put("message", "مكتبتي: نسخة احتياطية")
+                .put("content", Base64.encodeToString(snapshot().toString().toByteArray(), Base64.NO_WRAP))
+            if (sha != null) body.put("sha", sha)
+            val (c2, _) = gh(BK, "PUT", body.toString())
+            pulledAt = System.currentTimeMillis()
+            return if (c2 == 200 || c2 == 201) "تمام ✅ (${books.size} كتاب) — محفوظين احتياطي" else "مقدرتش أحفظ النسخة الاحتياطية ($c2)"
+        } catch (e: Exception) { return "مفيش نت؟" } finally { syncing = false }
+    }
+
+    private suspend fun pullFromBunyan(): String = withContext(Dispatchers.IO) {
         syncing = true
         try {
             try { push() } catch (_: Exception) {}
             val (code, txt) = gh(link!!.optString("p", "book.json"), raw = true)
-            if (code == 401 || code == 403) return@withContext "مفتاح الربط مش شغال ($code) — اربط تاني من بنيان"
+            if (code == 401 || code == 403) return@withContext "مفتاح الربط مش شغال ($code)"
             if (code == 404) return@withContext "ملف بياناتك مش لاقيه (404)"
             if (code != 200) return@withContext "مقدرتش أجيب البيانات ($code)"
             val d = JSONObject(txt)

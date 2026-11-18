@@ -257,7 +257,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
         if (tab == "home") {
         if (Lib.link != null && Lib.msg.isNotEmpty() && !Lib.msg.startsWith("تمام")) item(span = { GridItemSpan(3) }) {
             Surface(onClick = onSync, shape = RoundedCornerShape(14.dp), color = Color(0xFFFDECEC)) {
-                Text("⚠️ المزامنة مع بنيان: " + Lib.msg + " — دوس هنا تجرب تاني", Modifier.padding(12.dp), color = Color(0xFFB3261E), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Text((if (Lib.solo()) "⚠️ النسخة الاحتياطية: " else "⚠️ المزامنة مع بنيان: ") + Lib.msg + " — دوس هنا تجرب تاني", Modifier.padding(12.dp), color = Color(0xFFB3261E), fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
         }
         if (Lib.link == null) item(span = { GridItemSpan(3) }) {
@@ -351,7 +351,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 Action("🔎", "نزّل كتاب", Modifier.weight(1f), onSearch)
                 Action("📄", "من موبايلي", Modifier.weight(1f), onPick)
                 Action("📷", "كتاب ورق", Modifier.weight(1f)) { onMore("paper") }
-                Action(if (Lib.link == null) "🔗" else "✅", if (Lib.link == null) "اربط ببنيان" else "مربوط", Modifier.weight(1f), onLink)
+                Action(if (Lib.link == null) "🔗" else "☁️", if (Lib.link == null) "اربط" else "محفوظ احتياطي", Modifier.weight(1f), onLink)
             }
         }
         // الرفوف
@@ -504,12 +504,13 @@ fun LinkScreen(onBack: () -> Unit) {
     val ctx = LocalContext.current
     var code by remember { mutableStateOf("") }
     Column(Modifier.fillMaxSize().background(Paper).statusBarsPadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) { IconBtn("→") { onBack() }; Spacer(Modifier.width(10.dp)); Text("🔗 الربط بحساب بنيان", fontWeight = FontWeight.Black, fontSize = 19.sp, color = Ink) }
+        Row(verticalAlignment = Alignment.CenterVertically) { IconBtn("→") { onBack() }; Spacer(Modifier.width(10.dp)); Text(if (Lib.solo()) "☁️ النسخة الاحتياطية" else "🔗 الربط بحساب بنيان", fontWeight = FontWeight.Black, fontSize = 19.sp, color = Ink) }
         if (Lib.link != null) {
-            Text("✅ التطبيق مربوط بحسابك. كتبك وتقدمك بيتزامنوا مع مكتبتي في بنيان.", color = Green, fontWeight = FontWeight.Bold)
-            if (Lib.msg.isNotEmpty()) Text("آخر مزامنة: " + Lib.msg, color = Muted, fontSize = 13.sp)
-            OutlinedButton({ scope.launch { Toast.makeText(ctx, Lib.sync(), Toast.LENGTH_SHORT).show() } }, Modifier.fillMaxWidth()) { Text("🔄 زامن دلوقتي") }
-            TextButton({ Lib.link = null; Lib.save() }) { Text("فك الربط", color = Color(0xFFB3261E)) }
+            if (Lib.solo()) Text("🔓 مكتبتي تطبيق لوحده — مش مربوط ببنيان ولا بأي برنامج تاني.\nكتبك وتقدمك محفوظين على الموبايل، ونسخة احتياطية منهم في ملف خاص بمكتبتي بس (لو غيّرت الموبايل بترجع لوحدها).", color = Green, fontWeight = FontWeight.Bold, lineHeight = 24.sp)
+            else Text("✅ التطبيق مربوط بحسابك. كتبك وتقدمك بيتزامنوا مع مكتبتي في بنيان.", color = Green, fontWeight = FontWeight.Bold)
+            if (Lib.msg.isNotEmpty()) Text("آخر مرة: " + Lib.msg, color = Muted, fontSize = 13.sp)
+            OutlinedButton({ scope.launch { Toast.makeText(ctx, Lib.sync(), Toast.LENGTH_SHORT).show() } }, Modifier.fillMaxWidth()) { Text(if (Lib.solo()) "☁️ احفظ نسخة احتياطية دلوقتي" else "🔄 زامن دلوقتي") }
+            if (!Lib.solo()) TextButton({ Lib.link = null; Lib.save() }) { Text("فك الربط", color = Color(0xFFB3261E)) }
         } else {
             Text("أسهل طريقة: افتح بنيان ← مكتبتي ← دوس «📱 افتح في تطبيق مكتبتي» وهيتربط لوحده.", fontSize = 15.sp, color = Ink, lineHeight = 24.sp)
             Text("أو الصق كود الربط (BNYLINK-…) هنا:", color = Muted)
