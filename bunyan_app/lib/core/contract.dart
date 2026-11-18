@@ -28,6 +28,8 @@ class Ct {
     }
     if (k == 'mr') { final dd = n0(f['due']); if (!truthy(f['rent'])) return ''; return en ? '${nf(f['rent'])} AED${dd != 0 ? ' – ${dd >= 31 ? 'Last Day Of Every Month' : 'Day ${dd.round()} Of Every Month'}' : ''}' : '${nf(f['rent'])} درهم${dd != 0 ? ' – ${dd >= 31 ? 'آخر يوم من كل شهر' : 'يوم ${dd.round()} من كل شهر'}' : ''}'; }
     if (k == 'dep2') return en ? '${f['depT'] == 'cash' ? 'Cash' : 'Cheque'}${truthy(f['dep']) ? ' of AED ${nf(f['dep'])}' : ''}' : '${f['depT'] == 'cash' ? 'كاش' : 'شيك'}${truthy(f['dep']) ? ' بقيمة ${nf(f['dep'])} درهم' : ''}';
+    if (k == 'chq' && n0(f['cq']) > 0) return chqTxt(f, en);
+    if (k == 'pc') { final n = lst(f['pays']).length; return n == 0 ? '' : (en ? (n == 1 ? '1 Payment' : '$n Payments') : (n == 1 ? 'دفعة واحدة' : n == 2 ? 'دفعتين' : n >= 11 ? '$n دفعة' : '$n دفعات')); }
     if (k == 'mo') { final m = double.tryParse(v) ?? 0; return v.isEmpty ? '' : (en ? (m == 1 ? '1 Month' : '$v Months') : (m == 1 ? 'شهر واحد' : m == 2 ? 'شهرين' : m >= 11 ? '$v شهر' : '$v أشهر')); }
     return v;
   }
@@ -59,6 +61,14 @@ class Ct {
   static List<Map<String, dynamic>> leases(Obj S, Engine e) => [for (final u in e.SU()) for (final L in objs(u['leases'])) {'u': u, 'L': L}];
 
   /* ═════════ نفس عقد العميل في القديم بالظبط: مفروش / فاضي، 3 أشكال للفاضي، التوقيعات، المراجعة ═════════ */
+  /// طريقة الإيجار: m = شهري، p = دفعات (افتراضي: المفروش وTenant Contract شهري، الفاضي دفعات)
+  static String rm(Obj S) { final v = str(F(S)['rm']); if (v == 'm' || v == 'p') return v; return tpl(S) == 'a' || lay(S) == 'tc' ? 'm' : 'p'; }
+  /// نص الشيكات من العدد اللي انت حددته (+ شيك تأمين لو مختاره)
+  static String chqTxt(Map f, bool en) {
+    final n = n0(f['cq']).round(); final d = truthy(f['cqd']);
+    if (en) return '${n == 1 ? '1 Cheque' : '$n Cheques'}${d ? ' + 1 Security Deposit Cheque' : ''}';
+    return '${n == 1 ? 'شيك واحد' : n == 2 ? 'شيكين' : n >= 11 ? '$n شيك' : '$n شيكات'}${d ? ' + شيك تأمين' : ''}';
+  }
   static String tpl(Obj S) => ct(S)['tpl'] == 'b' ? 'b' : 'a';
   static String lay(Obj S) { final l = str(ct(S)['lay']); return l == 'one' || l == 'tc' ? l : 'bi'; }
   static bool en(Obj S) => ct(S)['lang'] == 'en';
@@ -69,7 +79,7 @@ class Ct {
     String r(String e, String k, String a) => '<tr><td class="en">$e</td><td colspan="3">${sp(S, k, f)}</td><td class="ar">$a</td></tr>';
     return '<div class="fr"><h1>Tenancy Contract<small>عقد إيجار</small></h1><table>${r('Landlord Name', 'll', 'اسم المؤجر')}${r('Landlord ID', 'lid', 'رقم هوية المؤجر')}${r('Tenant Name', 'tn', 'اسم المستأجر')}${r('Tenant ID', 'tid', 'رقم هوية المستأجر')}${r("Tenant's Nationality", 'nat', 'جنسية المستأجر')}${r('Tenant Mobile No.', 'ph', 'رقم موبايل المستأجر')}${r('Tenancy Subject', 'sub', 'موضوع الإيجار')}'
         '<tr><td class="en" rowspan="2">Tenancy Period</td><td class="en" style="width:15%">Start Date</td><td style="width:22%">${sp(S, 'st', f)}</td><td style="width:14%">من تاريخ</td><td class="ar" rowspan="2">مدة الإيجار</td></tr><tr><td class="en">End Date</td><td>${sp(S, 'en', f)}</td><td>إلى تاريخ</td></tr>'
-        '${r('Due Date', 'due', 'تاريخ استحقاق الإيجار')}${r('Monthly Rent', 'rent', 'قيمة الإيجار الشهري')}${r('Number Of Rental Months', 'mo', 'عدد أشهر الإيجار')}${r('Number Of Cheques', 'chq', 'عدد الشيكات')}</table>'
+        '${rm(S) == 'p' ? '${r('Total Rent', 'tot', 'إجمالي الإيجار')}${r('Payments', 'pc', 'الدفعات')}' : '${r('Due Date', 'due', 'تاريخ استحقاق الإيجار')}${r('Monthly Rent', 'rent', 'قيمة الإيجار الشهري')}'}${r('Number Of Rental Months', 'mo', 'عدد أشهر الإيجار')}${r('Number Of Cheques', 'chq', 'عدد الشيكات')}</table>${rm(S) == 'p' ? _ptbBi(S, f) : ''}'
         '<h2>Contract Terms &nbsp; بنود العقد</h2><div class="tm"><div><ul><li>Family Housing Only</li><li>The contract includes water, electricity, and maintenance.</li><li>If the contract is canceled before the end of its term by the tenant, one month will be deducted from it.</li><li>The tenant must notify the landlord in the event of non-renewal one month before the end of the contract.</li><li>The security deposit will be refunded if the property is returned in good condition.</li><li>Any damage or insufficient cleaning will be deducted from the security deposit or paid in cash upon check-out.</li><li>The tenant must vacate the apartment on the lease end date. A late checkout fee of AED 300 per day will apply for any delay.</li></ul></div>'
         '<div><ul><li>السكن عائلي فقط.</li><li>العقد شامل المياه والكهرباء والصيانة.</li><li>في حالة إلغاء العقد قبل انتهاء مدته من قبل المستأجر يتم خصم إيجار شهر عليه.</li><li>يجب على المستأجر إخطار المؤجر في حالة عدم التجديد قبل نهاية العقد بشهر.</li><li>يسترد المستأجر شيك التأمين في حالة تسليم السكن في حالة جيدة.</li><li>في حالة وجود أي تلفيات في الفرش أو الأجهزة أو ترك المكان بدون تنظيف تام كما تم تسليمه للعميل، تقدّر التلفيات ويخصم من شيك التأمين أو يدفع كاش في وقت الخروج من المكان.</li><li>في حالة إخلاء الشقة يتعهد المستأجر بالإخلاء في نفس يوم تاريخ الانتهاء، وفي حالة تأخر الإخلاء عن الموعد المحدد يتحمل المستأجر 300 درهم عن كل يوم غرامة تأخير.</li></ul></div></div>'
         '$_sg</div>';
@@ -86,6 +96,7 @@ class Ct {
     for (var i = 0; i < (P.isEmpty ? 1 : P.length); i++) { h += '<tr><td>${i + 1}</td><td>${sp(S, 'pay_${i}_a', f)}</td><td>${sp(S, 'pay_${i}_d', f)}</td><td>${sp(S, 'pay_${i}_m', f)}</td></tr>'; }
     return h;
   }
+  static String _ptbBi(Obj S, Map f) => '<h2>Payments Schedule &nbsp; جدول الدفعات</h2><table class="ptb">${_ptb(S, f, const {'pn': 'Payment No. / رقم الدفعة', 'pa': 'Amount / المبلغ', 'pd': 'Due Date / تاريخ الاستحقاق', 'pm': 'Payment Method / طريقة الدفع'})}</table>';
   /// 🏠 عقد فاضي (ctPaper2): عربي + English / لغة واحدة / Tenant Contract صفحة واحدة
   static String paperB(Obj S, Map f) {
     String r(String e, String k, String a) => '<tr><td class="en">$e</td><td colspan="3">${sp(S, k, f)}</td><td class="ar">$a</td></tr>';
@@ -94,14 +105,14 @@ class Ct {
       final ar = [..._ta, ..._tb].map((x) => x.replaceAll(RegExp(r'\s*\.$'), '')).toList();
       return '<div class="fr t2c"><h1>Tenant Contract</h1><table>${r('Landlord', 'll', 'المؤجر')}${r('Landlord ID', 'lid', 'رقم هوية المؤجر')}${r('Tenant Name', 'tn', 'اسم المستأجر')}${r('Tenant ID', 'tid', 'رقم هوية المستأجر')}${r('Nationality', 'nat', 'الجنسية')}${r('Mobile', 'ph', 'رقم الموبايل')}${r('Tenancy Subject', 'sub', 'مـــوضوع الإيجار')}${r('Contract Period', 'mo', 'مدة العقد')}'
           '<tr><td class="en" rowspan="2">Tenancy Dates</td><td class="en" style="width:13%">Start</td><td style="width:24%">${sp(S, 'st', f)}</td><td style="width:14%">بداية العقد</td><td class="ar" rowspan="2">تاريخ الإيجار</td></tr><tr><td class="en">End</td><td>${sp(S, 'en', f)}</td><td>نهاية العقد</td></tr>'
-          '${r('Total Rent', 'tot', 'إجمالي الإيجار')}${r('Monthly Rent', 'mr', 'الإيجار الشهري')}${r('Cheques', 'chq', 'عدد الشيكات')}</table>'
+          '${r('Total Rent', 'tot', 'إجمالي الإيجار')}${rm(S) == 'p' ? r('Payments', 'pc', 'الدفعات') : r('Monthly Rent', 'mr', 'الإيجار الشهري')}${r('Cheques', 'chq', 'عدد الشيكات')}</table>${rm(S) == 'p' ? _ptbBi(S, f) : ''}'
           '<h2>Terms &amp; Conditions &nbsp; الشروط والأحكام</h2><table class="tc2">${[for (var i = 0; i < _tcEn.length; i++) '<tr><td class="te">${i + 1}. ${_tcEn[i]}</td><td class="ta">${i + 1}. ${ar[i]}</td></tr>'].join()}</table>$_sg</div>';
     }
     if (l == 'bi') {
       return '<div class="fr t2b"><h1>Tenancy Contract<small>عقد إيجار</small></h1><table>${r('Landlord Name', 'll', 'اسم المؤجر')}${r('Landlord ID No.', 'lid', 'رقم هوية المؤجر')}${r('Tenant Name', 'tn', 'اسم المستأجر')}${r('Tenant ID No.', 'tid', 'رقم هوية المستأجر')}${r("Tenant's Nationality", 'nat', 'جنسية المستأجر')}${r('Tenant Mobile No.', 'ph', 'رقم موبايل المستأجر')}${r('Tenancy Subject', 'sub', 'موضوع الإيجار')}${r('Contract Period', 'mo', 'مدة العقد')}'
           '<tr><td class="en" rowspan="2">Tenancy Dates</td><td class="en" style="width:15%">Start Date</td><td style="width:22%">${sp(S, 'st', f)}</td><td style="width:14%">بداية العقد</td><td class="ar" rowspan="2">تاريخ الإيجار</td></tr><tr><td class="en">End Date</td><td>${sp(S, 'en', f)}</td><td>نهاية العقد</td></tr>'
-          '${r('Total Rent', 'tot', 'إجمالي الإيجار')}${r('Security Deposit', 'dep2', 'التأمين')}</table>'
-          '<h2>Payments Schedule &nbsp; جدول الدفعات</h2><table class="ptb">${_ptb(S, f, const {'pn': 'Payment No. / رقم الدفعة', 'pa': 'Amount / المبلغ', 'pd': 'Due Date / تاريخ الاستحقاق', 'pm': 'Payment Method / طريقة الدفع'})}</table>'
+          '${r('Total Rent', 'tot', 'إجمالي الإيجار')}${rm(S) == 'm' ? r('Monthly Rent', 'mr', 'الإيجار الشهري') : ''}${r('Cheques', 'chq', 'عدد الشيكات')}${r('Security Deposit', 'dep2', 'التأمين')}</table>'
+          '${rm(S) == 'p' ? _ptbBi(S, f) : ''}'
           '<h2>Contract Terms &nbsp; بنود العقد</h2><div class="tm"><div>${_ul([..._ea, ..._eb])}</div><div>${_ul([..._ta, ..._tb])}</div></div>$_sg</div>';
     }
     final e = en(S);
@@ -109,8 +120,8 @@ class Ct {
         : const {'t': 'عقـــد الإيجــــار', 'll': 'اسم المؤجر', 'lid': 'رقم هوية المؤجر', 'tn': 'اسم المستأجر', 'tid': 'رقم هوية المستأجر', 'nat': 'جنسية المستأجر', 'ph': 'رقم موبايل المستأجر', 'sub': 'مــــــوضوع الإيجار', 'mo': 'مدة العقد', 'per': 'تاريخ الإيجار', 'st': 'بداية العقد', 'en': 'نهاية العقد', 'tot': 'إجمالي الإيجار', 'dep': 'التأمين', 'pt': 'جــدول الدفعـات', 'pn': 'رقم الدفعة', 'pa': 'المبلغ', 'pd': 'تاريخ الإستحقاق', 'pm': 'طريقة الدفع', 'nl': 'ملاحظات :', 's1': 'المؤجر', 's2': 'توقيع المستأجر', 's3': 'شاهد'};
     String r1(String k, String lab) => '<tr><td class="k">$lab</td><td colspan="2">${sp(S, k, f)}</td></tr>';
     return '<div class="fr t2${e ? ' en' : ''}"><h1>${L['t']}</h1><table class="kv">${r1('ll', L['ll']!)}${r1('lid', L['lid']!)}${r1('tn', L['tn']!)}${r1('tid', L['tid']!)}${r1('nat', L['nat']!)}${r1('ph', L['ph']!)}${r1('sub', L['sub']!)}${r1('mo', L['mo']!)}'
-        '<tr><td class="k" rowspan="2">${L['per']}</td><td class="k2">${L['st']}</td><td>${sp(S, 'st', f)}</td></tr><tr><td class="k2">${L['en']}</td><td>${sp(S, 'en', f)}</td></tr>${r1('tot', L['tot']!)}${r1('dep2', L['dep']!)}</table>'
-        '<h2>${L['pt']}</h2><table class="ptb">${_ptb(S, f, L)}</table><div class="nl">${L['nl']}</div><div class="tm"><div>${_ul(e ? _ea : _ta)}</div><div>${_ul(e ? _eb : _tb)}</div></div>'
+        '<tr><td class="k" rowspan="2">${L['per']}</td><td class="k2">${L['st']}</td><td>${sp(S, 'st', f)}</td></tr><tr><td class="k2">${L['en']}</td><td>${sp(S, 'en', f)}</td></tr>${r1('tot', L['tot']!)}${rm(S) == 'm' ? r1('mr', e ? 'Monthly Rent' : 'الإيجار الشهري') : ''}${r1('chq', e ? 'Cheques' : 'عدد الشيكات')}${r1('dep2', L['dep']!)}</table>'
+        '${rm(S) == 'p' ? '<h2>${L['pt']}</h2><table class="ptb">${_ptb(S, f, L)}</table>' : ''}<div class="nl">${L['nl']}</div><div class="tm"><div>${_ul(e ? _ea : _ta)}</div><div>${_ul(e ? _eb : _tb)}</div></div>'
         '<div class="sg"><div>${L['s3']}</div><div>${L['s3']}</div><div>${L['s2']}</div><div>${L['s1']}</div></div></div>';
   }
 
@@ -121,7 +132,8 @@ class Ct {
     final bad = t == 'a' ? (bi || one || tc) : (l == 'tc' ? !tc : l == 'one' ? !one : !bi);
     // جدول الدفعات اتغير عدده؟ نعيد الورقة
     final rows = RegExp(r'data-f="pay_(\d+)_a"').allMatches(h).length, want = lst(f['pays']).isEmpty ? 1 : lst(f['pays']).length;
-    if (h.isEmpty || !h.contains('data-f=') || bad || (t == 'b' && l != 'tc' && rows != want)) { h = t == 'b' ? paperB(S, f) : paperA(S, f); c['html'] = h; }
+    final mode = '${rm(S)}|$t|$l|${en(S)}', modeOk = c['hmode'] == mode;
+    if (h.isEmpty || !h.contains('data-f=') || bad || !modeOk || (rm(S) == 'p' && rows != want)) { h = t == 'b' ? paperB(S, f) : paperA(S, f); c['html'] = h; c['hmode'] = mode; }
     return refresh(S, h);
   }
 
@@ -162,11 +174,9 @@ class Ct {
   /// ⚠️ ناقص في العقد
   static List<String> missing(Obj S) {
     final f = F(S); bool emp(String k) => str(f[k]).trim().isEmpty;
-    if (tpl(S) == 'b') {
-      if (lay(S) == 'tc') return [for (final x in _need) if (emp(x[0])) x[1], if (emp('tot')) 'إجمالي الإيجار'];
-      return [for (final x in _need) if (!['rent', 'due', 'chq'].contains(x[0]) && emp(x[0])) x[1], if (emp('tot')) 'إجمالي الإيجار', if (!lst(f['pays']).any((p) => n0(obj(p)?['a']) > 0)) 'جدول الدفعات'];
-    }
-    return [for (final x in _need) if (emp(x[0])) x[1]];
+    final base = [for (final x in _need) if (!['rent'].contains(x[0]) && emp(x[0])) x[1]];
+    if (rm(S) == 'm') return [...base, if (emp('rent')) 'الإيجار الشهري'];
+    return [...base, if (emp('tot')) 'إجمالي الإيجار', if (!lst(f['pays']).any((p) => n0(obj(p)?['a']) > 0)) 'جدول الدفعات'];
   }
 
   static bool _luhn(String s) { final d = s.replaceAll(RegExp(r'\D'), ''); if (d.length < 8) return true; var t = 0; for (var i = 0; i < d.length; i++) { var x = int.parse(d[d.length - 1 - i]); if (i % 2 == 1) { x *= 2; if (x > 9) x -= 9; } t += x; } return t % 10 == 0; }

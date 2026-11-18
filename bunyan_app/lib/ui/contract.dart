@@ -64,7 +64,7 @@ class _CtState extends State<ContractPage> {
     // نهاية العقد اتكتبت بإيدك → عدد الشهور يتحسب منها
     if (k == 'en' && str(f['st']).isNotEmpty && str(f['en']).isNotEmpty) { final sp = Ct.spanMonths(str(f['st']), str(f['en'])); if (sp > 0 && n0(f['mo']).round() != sp) f['mo'] = '$sp'; }
     // العقد الفاضي: الدفعات تتوزع لوحدها على المدة (إلا لو عدّلت دفعة بإيدك)
-    if (Ct.tpl(S) == 'b' && Ct.lay(S) != 'tc' && ['tot', 'pn', 'st', 'en', 'mo', 'rent'].contains(k) && c['paysMan'] != true && (n0(f['tot']) > 0 || n0(f['rent']) > 0)) Ct.autoPays(S);
+    if (Ct.rm(S) == 'p' && ['tot', 'pn', 'st', 'en', 'mo', 'rent'].contains(k) && c['paysMan'] != true && (n0(f['tot']) > 0 || n0(f['rent']) > 0)) Ct.autoPays(S);
     _sync(); await _save();
   }
 
@@ -223,11 +223,23 @@ class _CtState extends State<ContractPage> {
 
   /* ───────── الشكل ───────── */
   Widget _seg(List<List<String>> o, String cur, ValueChanged<String> on) => Row(children: [
-        for (var i = 0; i < o.length; i++) ...[if (i > 0) const SizedBox(width: 8), Expanded(child: cur == o[i][0]
-            ? FilledButton(onPressed: () => on(o[i][0]), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)), child: Text(o[i][1], textAlign: TextAlign.center))
-            : OutlinedButton(onPressed: () => on(o[i][0]), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)), child: Text(o[i][1], textAlign: TextAlign.center)))],
+        for (var i = 0; i < o.length; i++) ...[if (i > 0) const SizedBox(width: 8), Expanded(child: _opt(o[i][1], cur == o[i][0], () => on(o[i][0])))],
       ]);
 
+  /// زرار اختيار واضح (الكلام دايماً باين — أبيض على أزرق أو غامق على أبيض)
+  Widget _opt(String t, bool on, VoidCallback tap) => InkWell(
+        borderRadius: BorderRadius.circular(14), onTap: tap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 50), padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), alignment: Alignment.center,
+          decoration: BoxDecoration(color: on ? const Color(0xFF2563EB) : Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: on ? const Color(0xFF2563EB) : const Color(0xFFC9D2DE), width: 1.5)),
+          child: Text(t, textAlign: TextAlign.center, style: TextStyle(color: on ? Colors.white : kInk, fontWeight: FontWeight.w800, fontSize: 14.5)),
+        ),
+      );
+  Widget _mini(String t, bool on, VoidCallback tap) => InkWell(
+        borderRadius: BorderRadius.circular(99), onTap: tap,
+        child: Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8), decoration: BoxDecoration(color: on ? const Color(0xFF2563EB) : const Color(0xFFF1F4F9), borderRadius: BorderRadius.circular(99), border: Border.all(color: on ? const Color(0xFF2563EB) : const Color(0xFFD5DCE6))),
+          child: Text(t, style: TextStyle(color: on ? Colors.white : kInk, fontWeight: FontWeight.w800, fontSize: 13.5))),
+      );
   Widget _sec(String t) => Padding(padding: const EdgeInsets.only(top: 14, bottom: 8), child: Text(t, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: kNavy)));
 
   Widget _fld(String k, {String? label, bool num = false, String? hint}) {
@@ -293,33 +305,56 @@ class _CtState extends State<ContractPage> {
         OutlinedButton.icon(onPressed: _fill, icon: const Icon(Icons.person_search), label: const Text('— تعبئة من عقد مستأجر قائم (اختياري) —'), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50))),
         _sec('👤 المؤجر'), _fld('ll'), _fld('lid'),
         _sec('🧑 المستأجر'), _fld('tn'), _fld('tid'), _fld('nat'), _fld('ph', hint: 'مثال: 0501234567 — عليه هيتبعت العقد'),
-        _sec('🏠 الإيجار'), _fld('sub'), _fld('st'), _fld('mo', num: true), _fld('en'), if (t == 'a' || ly == 'tc') ...[_fld('due', num: true), _fld('rent', num: true), _fld('chq')] else _fld('rent', num: true),
+        _sec('🏠 الإيجار'), _fld('sub'), _fld('st'), _fld('mo', num: true), _fld('en'),
         if (t == 'b') ...[
-          const SizedBox(height: 6),
-          Wrap(spacing: 6, runSpacing: 6, children: [
-            for (final o in const [['bi', '🌐 عربي + English (زي المفروش)'], ['one', '📄 لغة واحدة (زي الورقة)'], ['tc', '📃 Tenant Contract — صفحة واحدة']])
-              ChoiceChip(label: Text(o[1]), selected: ly == o[0], onSelected: (_) async { c['lay'] = o[0]; c['html'] = ''; c['h_b'] = ''; await _save(); }),
-          ]),
-          _sec(ly == 'tc' ? '📃 Tenant Contract — الإجمالي' : '🏠 عقد فاضي — الإجمالي والتأمين والدفعات'),
-          _fld('tot', label: ly == 'tc' ? 'إجمالي الإيجار (بيتحسب لوحده = الإيجار × الشهور)' : 'إجمالي الإيجار', num: true),
-          if (ly != 'tc') ...[
-            Row(children: [Expanded(child: _fld('dep', label: 'التأمين (مبلغ)', num: true)), const SizedBox(width: 8), Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 10), child: SegmentedButton<String>(segments: const [ButtonSegment(value: 'chq', label: Text('شيك')), ButtonSegment(value: 'cash', label: Text('كاش'))], selected: {f['depT'] == 'cash' ? 'cash' : 'chq'}, showSelectedIcon: false, onSelectionChanged: (s) async { f['depT'] = s.first; await _save(); })))]),
-            Row(children: [Expanded(child: _fld('pn', label: 'عدد الدفعات', num: true)), const SizedBox(width: 8), Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 10), child: OutlinedButton(onPressed: () async { FocusManager.instance.primaryFocus?.unfocus(); for (final k in ['tot', 'pn']) { f[k] = _c(k).text; } c['paysMan'] = false; Ct.autoPays(S); await _save(); if (mounted) toast(context, '✅ اتوزّع ${money(n0(f['tot']))} على ${lst(f['pays']).length} دفعات من ${Ct.dm(str(f['st']))} لـ ${Ct.dm(str(f['en']))}'); }, child: const Text('🧮 وزّع الإجمالي'))))]),
-            for (var i = 0; i < lst(f['pays']).length; i++) Builder(builder: (_) {
-              final P = obj(lst(f['pays'])[i])!;
-              return Padding(padding: const EdgeInsets.only(bottom: 8), child: Row(children: [
-                SizedBox(width: 22, child: Text('${i + 1}', style: const TextStyle(fontWeight: FontWeight.w900))),
-                Expanded(flex: 3, child: TextFormField(key: ValueKey('pa$i${P['a']}$v'), initialValue: str(P['a']), keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'المبلغ', isDense: true, border: OutlineInputBorder()), onChanged: (x) { P['a'] = double.tryParse(x)?.round() ?? ''; c['paysMan'] = true; }, onTapOutside: (_) { FocusManager.instance.primaryFocus?.unfocus(); _save(); })),
-                const SizedBox(width: 6),
-                Expanded(flex: 3, child: InkWell(onTap: () async { final d = await showDatePicker(context: context, initialDate: DateTime.tryParse(str(P['d'])) ?? DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime(2040)); if (d != null) { P['d'] = iso(d); c['paysMan'] = true; await _save(); } }, child: InputDecorator(decoration: const InputDecoration(labelText: 'التاريخ', isDense: true, border: OutlineInputBorder()), child: FittedBox(fit: BoxFit.scaleDown, alignment: AlignmentDirectional.centerStart, child: Text(str(P['d']).isEmpty ? '—' : Ct.dm(str(P['d'])), maxLines: 1, style: const TextStyle(fontSize: 14)))))),
-                const SizedBox(width: 6),
-                DropdownButton<String>(value: ['تحويل', 'شيك', 'كاش'].contains(P['m']) ? P['m'] : 'شيك', items: [for (final m in ['تحويل', 'شيك', 'كاش']) DropdownMenuItem(value: m, child: Text(m))], onChanged: (m) async { P['m'] = m; await _save(); }),
-                IconButton(onPressed: () async { (f['pays'] as List).removeAt(i); f['pn'] = lst(f['pays']).length; c['paysMan'] = true; tc.remove('pn'); await _save(); }, icon: const Icon(Icons.close, color: kRed)),
-              ]));
-            }),
-            Align(alignment: AlignmentDirectional.centerStart, child: OutlinedButton(onPressed: () async { if (f['pays'] is! List) f['pays'] = []; (f['pays'] as List).add({'a': '', 'd': '', 'm': 'شيك'}); f['pn'] = lst(f['pays']).length; c['paysMan'] = true; tc.remove('pn'); await _save(); }, child: const Text('➕ دفعة'))),
-          ] else const Text('الإيجار الشهري ويوم الدفع وعدد الشيكات من الخانات اللي فوق.', style: TextStyle(color: kMuted, fontSize: 12.5)),
+          const Padding(padding: EdgeInsets.only(top: 4, bottom: 6), child: Text('شكل العقد الفاضي:', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF3D5568)))),
+          for (final o in const [['bi', '🌐 عربي + English (زي المفروش)'], ['one', '📄 لغة واحدة (زي الورقة)'], ['tc', '📃 Tenant Contract — صفحة واحدة']])
+            Padding(padding: const EdgeInsets.only(bottom: 8), child: _opt(o[1], ly == o[0], () async { c['lay'] = o[0]; await _save(); })),
         ],
+        // ───── طريقة الإيجار: شهري ولا دفعات ─────
+        _sec('💰 طريقة الإيجار'),
+        _seg([['m', '📅 إيجار شهري'], ['p', '💵 دفعات']], Ct.rm(S), (x) async { f['rm'] = x; if (x == 'p' && lst(f['pays']).isEmpty && (n0(f['tot']) > 0 || n0(f['rent']) > 0)) Ct.autoPays(S); if (x == 'm') f['pn'] = ''; tc.clear(); await _save(); }),
+        const SizedBox(height: 12),
+        if (Ct.rm(S) == 'm') ...[
+          _fld('rent', num: true), _fld('due', num: true),
+          _fld('tot', label: 'إجمالي الإيجار (بيتحسب لوحده = الإيجار × الشهور)', num: true),
+        ] else ...[
+          _fld('tot', label: 'إجمالي الإيجار', num: true),
+          Row(children: [Expanded(child: _fld('pn', label: 'عدد الدفعات', num: true)), const SizedBox(width: 8), Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 10), child: OutlinedButton(style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50)), onPressed: () async { FocusManager.instance.primaryFocus?.unfocus(); for (final k in ['tot', 'pn']) { f[k] = _c(k).text; } c['paysMan'] = false; Ct.autoPays(S); await _save(); if (mounted) toast(context, '✅ اتوزّع ${money(n0(f['tot']))} على ${lst(f['pays']).length} دفعات من ${Ct.dm(str(f['st']))} لـ ${Ct.dm(str(f['en']))}'); }, child: const Text('🧮 وزّع الإجمالي', style: TextStyle(color: kInk, fontWeight: FontWeight.w800)))))]),
+          for (var i = 0; i < lst(f['pays']).length; i++) Builder(builder: (_) {
+            final P = obj(lst(f['pays'])[i])!;
+            return Padding(padding: const EdgeInsets.only(bottom: 8), child: Row(children: [
+              SizedBox(width: 22, child: Text('${i + 1}', style: const TextStyle(fontWeight: FontWeight.w900))),
+              Expanded(flex: 3, child: TextFormField(key: ValueKey('pa$i${P['a']}$v'), initialValue: str(P['a']), keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'المبلغ', isDense: true, border: OutlineInputBorder()), onChanged: (x) { P['a'] = double.tryParse(x)?.round() ?? ''; c['paysMan'] = true; }, onTapOutside: (_) { FocusManager.instance.primaryFocus?.unfocus(); _save(); })),
+              const SizedBox(width: 6),
+              Expanded(flex: 3, child: InkWell(onTap: () async { final d = await showDatePicker(context: context, initialDate: DateTime.tryParse(str(P['d'])) ?? DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime(2040)); if (d != null) { P['d'] = iso(d); c['paysMan'] = true; await _save(); } }, child: InputDecorator(decoration: const InputDecoration(labelText: 'التاريخ', isDense: true, border: OutlineInputBorder()), child: FittedBox(fit: BoxFit.scaleDown, alignment: AlignmentDirectional.centerStart, child: Text(str(P['d']).isEmpty ? '—' : Ct.dm(str(P['d'])), maxLines: 1, style: const TextStyle(fontSize: 14)))))),
+              const SizedBox(width: 6),
+              DropdownButton<String>(value: ['تحويل', 'شيك', 'كاش'].contains(P['m']) ? P['m'] : 'شيك', items: [for (final m in ['تحويل', 'شيك', 'كاش']) DropdownMenuItem(value: m, child: Text(m))], onChanged: (m) async { P['m'] = m; await _save(); }),
+              IconButton(onPressed: () async { (f['pays'] as List).removeAt(i); f['pn'] = lst(f['pays']).length; c['paysMan'] = true; tc.remove('pn'); await _save(); }, icon: const Icon(Icons.close, color: kRed)),
+            ]));
+          }),
+          Align(alignment: AlignmentDirectional.centerStart, child: OutlinedButton(onPressed: () async { if (f['pays'] is! List) f['pays'] = []; (f['pays'] as List).add({'a': '', 'd': '', 'm': 'شيك'}); f['pn'] = lst(f['pays']).length; c['paysMan'] = true; tc.remove('pn'); await _save(); }, child: const Text('➕ دفعة', style: TextStyle(color: kInk, fontWeight: FontWeight.w800)))),
+        ],
+        // ───── الشيكات: انت بتحدد عددها ─────
+        _sec('🧾 الشيكات'),
+        Row(children: [
+          Expanded(child: _fld('cq', label: 'عدد الشيكات', num: true, hint: 'مثال: 1')),
+          const SizedBox(width: 8),
+          Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 10), child: _opt(truthy(f['cqd']) ? '✅ + شيك تأمين' : '+ شيك تأمين', truthy(f['cqd']), () async { f['cqd'] = !truthy(f['cqd']); await _save(); }))),
+        ]),
+        Wrap(spacing: 6, runSpacing: 6, children: [
+          for (final q in [1, 2, 3, 4, 6, 12]) _mini(q == 1 ? 'شيك واحد' : '$q', n0(f['cq']).round() == q, () async { f['cq'] = '$q'; tc.remove('cq'); await _save(); }),
+          if (Ct.rm(S) == 'p' && lst(f['pays']).isNotEmpty) _mini('بعدد الدفعات (${lst(f['pays']).length})', n0(f['cq']).round() == lst(f['pays']).length, () async { f['cq'] = '${lst(f['pays']).length}'; tc.remove('cq'); await _save(); }),
+          if (Ct.rm(S) == 'm' && n0(f['mo']) > 0) _mini('شيك كل شهر (${n0(f['mo']).round()})', n0(f['cq']).round() == n0(f['mo']).round(), () async { f['cq'] = '${n0(f['mo']).round()}'; tc.remove('cq'); await _save(); }),
+        ]),
+        const SizedBox(height: 8),
+        if (n0(f['cq']) > 0) Text('في العقد: ${Ct.chqTxt(f, Ct.en(S))}', style: const TextStyle(color: kMuted, fontWeight: FontWeight.w700))
+        else _fld('chq', label: 'أو اكتب الشيكات بنفسك (زي ما هتتكتب في العقد)'),
+        if (t == 'b' && ly != 'tc') ...[
+          _sec('🔐 التأمين'),
+          Row(children: [Expanded(child: _fld('dep', label: 'التأمين (مبلغ)', num: true)), const SizedBox(width: 8), Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 10), child: _seg([['chq', 'شيك'], ['cash', 'كاش']], f['depT'] == 'cash' ? 'cash' : 'chq', (x) async { f['depT'] = x; await _save(); })))]),
+        ],
+
       ])),
       const SizedBox(height: 12),
       // ───── 2) التوقيعات ─────
@@ -441,7 +476,8 @@ class _Ink extends CustomPainter {
 }
 
 
-/// 📄 العقد نفسه — بيتكبّر بصباعين، دوسة مرتين = تكبير/رجوع، وأزرار − ملء العرض + زي القديم، وزرار ملء الشاشة
+/// 📄 العقد نفسه — زي القديم: بيظهر كامل بعرض الشاشة والصفحة بتسكرول عادي؛
+/// كبّر بصباعين أو دوسة مرتين → تقدر تحرّكه بصباع واحد في كل الاتجاهات؛ − ملء العرض + ؛ ⛶ ملء الشاشة
 class CtPaper extends StatefulWidget {
   final Future<Uint8List> Function() build;
   final bool full;
@@ -454,55 +490,67 @@ class _CtPaperState extends State<CtPaper> {
   final tc = TransformationController();
   List<Uint8List>? pages; String? err; double z = 1; Uint8List? pdf;
   TapDownDetails? _dt;
+  final Map<int, Offset> _ptr = {};
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() { super.initState(); _load(); if (widget.full) z = 1.0001; }
   Future<void> _load() async {
     try {
       pdf = await widget.build(); final out = <Uint8List>[];
-      await for (final p in Printing.raster(pdf!, dpi: 170)) { out.add(await p.toPng()); }
+      await for (final p in Printing.raster(pdf!, dpi: 200)) { out.add(await p.toPng()); }
       if (mounted) setState(() => pages = out);
     } catch (e) { if (mounted) setState(() => err = '$e'); }
   }
+
+  bool get zoomed => z > 1.01 || widget.full;
   void _zoom(double nz, [Offset? at]) {
-    nz = nz.clamp(1.0, 4.0); final s = context.size; final c = at ?? (s == null ? Offset.zero : Offset(s.width / 2, 0));
-    final m = Matrix4.identity()..translate(c.dx * (1 - nz), at == null ? 0.0 : c.dy * (1 - nz))..scale(nz);
-    tc.value = nz == 1 ? Matrix4.identity() : m; setState(() => z = nz);
+    nz = nz.clamp(1.0, 4.0);
+    if (nz <= 1.01 && !widget.full) { tc.value = Matrix4.identity(); setState(() => z = 1); return; }
+    final w = MediaQuery.of(context).size.width; final c = at ?? Offset(w / 2, 0);
+    tc.value = Matrix4.identity()..translate(c.dx * (1 - nz), at == null ? 0.0 : c.dy * (1 - nz))..scale(nz);
+    setState(() => z = nz);
   }
+
+  Widget _pagesCol(double w) => SizedBox(width: w, child: Column(children: [
+        for (final p in pages!) Container(margin: const EdgeInsets.only(bottom: 6), decoration: const BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Color(0x22000000), blurRadius: 6)]), child: Image.memory(p, width: w, fit: BoxFit.fitWidth, filterQuality: FilterQuality.high, gaplessPlayback: true)),
+      ]));
 
   @override
   Widget build(BuildContext context) {
-    final w = MediaQuery.of(context).size.width - (widget.full ? 0 : 28);
-    final h = widget.full ? MediaQuery.of(context).size.height - 150 : w * 1.414;
+    final mq = MediaQuery.of(context); final w = mq.size.width - (widget.full ? 0 : 28);
     Widget body;
-    if (err != null) { body = Center(child: Padding(padding: const EdgeInsets.all(20), child: Text('⚠️ مقدرتش أعرض العقد: $err', textAlign: TextAlign.center))); }
-    else if (pages == null) { body = const Center(child: CircularProgressIndicator()); }
-    else {
-      body = GestureDetector(
-        onDoubleTapDown: (d) => _dt = d, onDoubleTap: () => _zoom(z > 1.01 ? 1 : 2.5, _dt?.localPosition),
-        child: InteractiveViewer(
-          transformationController: tc, minScale: 1, maxScale: 4, constrained: false, boundaryMargin: EdgeInsets.zero,
-          onInteractionEnd: (_) => setState(() => z = tc.value.getMaxScaleOnAxis()),
-          child: SizedBox(width: w, child: Column(children: [for (final p in pages!) Container(margin: const EdgeInsets.only(bottom: 8), color: Colors.white, child: Image.memory(p, width: w, fit: BoxFit.fitWidth, filterQuality: FilterQuality.medium))])),
-        ),
+    if (err != null) { body = Padding(padding: const EdgeInsets.all(20), child: Text('⚠️ مقدرتش أعرض العقد: $err', textAlign: TextAlign.center)); }
+    else if (pages == null) { body = SizedBox(height: widget.full ? mq.size.height - 160 : w * 1.414, child: const Center(child: CircularProgressIndicator())); }
+    else if (!zoomed) {
+      // ملء العرض: العقد كله جوه الصفحة — السكرول عادي، ودوسة مرتين أو صباعين = تكبير
+      body = Listener(
+        onPointerDown: (e) { _ptr[e.pointer] = e.localPosition; if (_ptr.length >= 2) { final a = _ptr.values.first, b = _ptr.values.last; _ptr.clear(); _zoom(1.8, Offset((a.dx + b.dx) / 2, (a.dy + b.dy) / 2)); } },
+        onPointerUp: (e) => _ptr.remove(e.pointer), onPointerCancel: (e) => _ptr.remove(e.pointer),
+        child: GestureDetector(onDoubleTapDown: (d) => _dt = d, onDoubleTap: () => _zoom(2.2, _dt?.localPosition), child: _pagesCol(w)),
       );
+    } else {
+      // متكبّر: بتحرّكه بصباع واحد في كل الاتجاهات وتكبّر/تصغّر بصباعين — لو صغّرته لآخره يرجع ملء العرض
+      body = SizedBox(height: widget.full ? mq.size.height - 160 : mq.size.height * .72, child: GestureDetector(
+        onDoubleTapDown: (d) => _dt = d, onDoubleTap: () => _zoom(widget.full && z < 1.5 ? 2.2 : 1, _dt?.localPosition),
+        child: InteractiveViewer(
+          transformationController: tc, minScale: widget.full ? 1 : .98, maxScale: 4, constrained: false, boundaryMargin: const EdgeInsets.all(40),
+          onInteractionEnd: (_) { final s = tc.value.getMaxScaleOnAxis(); if (s < 1.03 && !widget.full) { _zoom(1); } else { setState(() => z = s); } },
+          child: _pagesCol(w),
+        ),
+      ));
     }
     final bar = Padding(padding: const EdgeInsets.only(bottom: 8), child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
       _rb('−', () => _zoom(z - .5)),
       const SizedBox(width: 8),
       _rb(z > 1.01 ? '${(z * 100).round()}%' : 'ملء العرض', () => _zoom(1), wide: true),
       const SizedBox(width: 8),
-      _rb('+', () => _zoom(z + .5)),
+      _rb('+', () => _zoom((z < 1.01 ? 1 : z) + .5)),
       if (!widget.full) ...[const SizedBox(width: 8), _rb('⛶', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => Directionality(textDirection: Tr.dir, child: Scaffold(appBar: AppBar(title: const Text('📄 العقد')), body: Padding(padding: const EdgeInsets.only(top: 8), child: CtPaper(build: () async => pdf ?? await widget.build(), full: true)))))))],
     ]));
     return Column(children: [
       bar,
-      Container(
-        height: h, width: double.infinity, clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(color: const Color(0xFFE9ECF1), borderRadius: BorderRadius.circular(widget.full ? 0 : 16), border: widget.full ? null : Border.all(color: kBd)),
-        child: body,
-      ),
-      if (!widget.full) const Padding(padding: EdgeInsets.only(top: 6), child: Text('كبّر بصباعين أو دوس مرتين على العقد • ⛶ ملء الشاشة', style: TextStyle(color: kMuted, fontSize: 12))),
+      ClipRRect(borderRadius: BorderRadius.circular(widget.full ? 0 : 14), child: Container(color: const Color(0xFFE9ECF1), padding: EdgeInsets.all(widget.full ? 0 : 0), child: body)),
+      if (!widget.full) Padding(padding: const EdgeInsets.only(top: 6), child: Text(zoomed ? 'حرّك العقد بصباع واحد • صغّره بصباعين يرجع ملء العرض' : 'كبّر بصباعين أو دوس مرتين على العقد • ⛶ ملء الشاشة', style: const TextStyle(color: kMuted, fontSize: 12))),
     ]);
   }
 
@@ -510,6 +558,6 @@ class _CtPaperState extends State<CtPaper> {
         borderRadius: BorderRadius.circular(99), onTap: on,
         child: Container(height: 46, constraints: BoxConstraints(minWidth: wide ? 120 : 46), padding: const EdgeInsets.symmetric(horizontal: 14), alignment: Alignment.center,
           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(99), border: Border.all(color: kBd), boxShadow: const [BoxShadow(color: Color(0x1214213D), blurRadius: 8, offset: Offset(0, 3))]),
-          child: Text(t, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17))),
+          child: Text(t, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: kInk))),
       );
 }
