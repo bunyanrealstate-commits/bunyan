@@ -46,11 +46,16 @@ class WaListener : NotificationListenerService() {
         g = Auto.clean(g)
         if (g.isEmpty()) return
         val msgs = ArrayList<Pair<String, Long>>()
+        val phs = HashMap<Long, Long>()  // وقت الرسالة → بصمة الصورة اللي في الإشعار (لو الواتساب حاططها)
         try {
-            ex.getParcelableArray("android.messages")?.forEach { b -> if (b is android.os.Bundle) msgs.add(Pair(b.getCharSequence("text")?.toString() ?: "", b.getLong("time"))) }
+            ex.getParcelableArray("android.messages")?.forEach { b -> if (b is android.os.Bundle) {
+                val tm = b.getLong("time"); msgs.add(Pair(b.getCharSequence("text")?.toString() ?: "", tm))
+                try { (b.get("uri") as? android.net.Uri)?.let { u -> Auto.aHash(contentResolver.openInputStream(u)?.use { it.readBytes() })?.let { phs[tm] = it } } } catch (_: Exception) {}
+            } }
         } catch (_: Exception) {}
         if (msgs.isEmpty()) msgs.add(Pair(ex.getCharSequence("android.text")?.toString() ?: "", sbn.postTime))
-        Auto.seen(this, g, msgs)
+        try { (ex.get("android.picture") as? android.graphics.Bitmap)?.let { bm -> Auto.aHashBm(bm)?.let { phs[msgs.last().second] = it } } } catch (_: Exception) {}
+        Auto.seen(this, g, msgs, phs)
         Auto.updSoon(applicationContext)
     }
 }
@@ -94,7 +99,27 @@ object Auto {
 
     private val textUpd = Regex("studio|ستوديو|استديو|استوديو|غرف|غرفة|غرفه|صال|bhk|bedroom|\\broom|فيلا|villa|aed|درهم|vacant|available|booked|محجوز|متاح|شاغر|للإيجار|للايجار|for rent", RegexOption.IGNORE_CASE)
     private val mapRx = Regex("https?://(maps\\.app\\.goo\\.gl|goo\\.gl/maps|(www\\.)?google\\.[a-z.]+/maps|maps\\.google\\.[a-z.]+)\\S*", RegexOption.IGNORE_CASE)
-    @Synchronized fun seen(c: Context, g: String, msgs: List<Pair<String, Long>>) {
+    /** بصمة صغيرة للصورة (8×8) — علشان نعرف الصورة اللي في الإشعار هي أنهي صورة في الموبايل بالظبط */
+    fun aHashBm(src: android.graphics.Bitmap): Long? = try {
+        val b = android.graphics.Bitmap.createScaledBitmap(src, 8, 8, true)
+        val g = IntArray(64) { val p = b.getPixel(it % 8, it / 8); ((p shr 16 and 255) * 30 + (p shr 8 and 255) * 59 + (p and 255) * 11) / 100 }
+        val avg = g.average(); var h = 0L
+        for (i in 0 until 64) if (g[i] >= avg) h = h or (1L shl i)
+        h
+    } catch (_: Exception) { null }
+    fun aHash(bytes: ByteArray?): Long? {
+        if (bytes == null) return null
+        return try {
+            val o = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, o)
+            var s = 1; while (o.outWidth / (s * 2) >= 64 && o.outHeight / (s * 2) >= 64) s *= 2
+            val bm = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, android.graphics.BitmapFactory.Options().apply { inSampleSize = s }) ?: return null
+            aHashBm(bm)
+        } catch (_: Exception) { null }
+    }
+    fun ham(a: Long, b: Long) = java.lang.Long.bitCount(a xor b)
+
+    @Synchronized fun seen(c: Context, g: String, msgs: List<Pair<String, Long>>, phs: Map<Long, Long> = emptyMap()) {
         val seen = obj(c, "seen"); val last = obj(c, "last")
         val s = seen.optJSONObject(g) ?: JSONObject()
         s.put("at", System.currentTimeMillis())
@@ -104,7 +129,7 @@ object Auto {
             if (time <= lt) continue
             lt = maxOf(lt, time)
             mapRx.find(t)?.let { m -> val la = arr(c, "locs"); la.put(JSONObject().put("g", g).put("url", m.value).put("txt", t.take(300)).put("t", time)); while (la.length() > 300) la.remove(0); put(c, "locs", la) }
-            if (t.contains("📷") || t.contains("🖼")) { s.put("img", s.optInt("img") + 1); ev.put(JSONObject().put("g", g).put("t", time)); got = true }
+            if (t.contains("📷") || t.contains("🖼")) { s.put("img", s.optInt("img") + 1); val e = JSONObject().put("g", g).put("t", time); phs[time]?.let { e.put("ph", it); s.put("ph", s.optInt("ph") + 1) }; ev.put(e); got = true }
             else if (t.contains("📄") && t.contains("pdf", true)) { s.put("img", s.optInt("img") + 1); ev.put(JSONObject().put("g", g).put("t", time).put("doc", t.replace("📄", "").trim())); got = true }
             // ✍️ أبديت مكتوب كرسالة (من غير صورة): أسعار وأنواع شقق
             else if (t.length >= 25 && textUpd.containsMatchIn(t) && Regex("\\d{2,}").containsMatchIn(t) && follows(c, g)) {
@@ -155,6 +180,12 @@ object Auto {
                     if ((!today && id in doneSet) || !b.contains("WhatsApp", true) || b.contains("Sent", true)) continue
                     var best: String? = null; var bd = Long.MAX_VALUE
                     for (i in 0 until ev.length()) { val e = ev.getJSONObject(i); if (e.has("doc") || e.has("anchor")) continue; val d = t - e.getLong("t"); if (d > -120000 && d < 900000 && Math.abs(d) < bd) { bd = Math.abs(d); best = e.getString("g") } }
+                    // 🎯 الصورة نفسها كانت في الإشعار → نعرف جروبها بالظبط بدل الوقت
+                    val withPh = (0 until ev.length()).map { ev.getJSONObject(it) }.filter { it.has("ph") && t - it.getLong("t") > -600000 && t - it.getLong("t") < 3600000 }
+                    if (withPh.isNotEmpty()) {
+                        val mine = try { if (Build.VERSION.SDK_INT >= 29) aHashBm(c.contentResolver.loadThumbnail(ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id), android.util.Size(96, 96), null)) else null } catch (_: Exception) { null }
+                        if (mine != null) { val m = withPh.minByOrNull { ham(mine, it.getLong("ph")) }; if (m != null && ham(mine, m.getLong("ph")) <= 10) { if (best != m.getString("g")) dbg(c, m.getString("g"), t, "ph_fix"); best = m.getString("g") } }
+                    }
                     // النهارده: صور واتساب الأعمال اللي ملهاش إشعار (وصلت قبل ما التطبيق يشتغل) — Gemini بيعرف لوحده لو مش أبديت
                     if (best != null) todo.add(Triple(id, t, best))
                 }

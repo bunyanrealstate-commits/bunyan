@@ -154,8 +154,9 @@ class _GroupsState extends State<GroupsPage> with WidgetsBindingObserver {
               'gemini_fail': '⚠️ Gemini مكانش رادد — هيحاول تاني لوحده',
               'no_file': '📵 الصورة ما اتحملتش على الموبايل — افتح الجروب يتحمل، أو شغّل تحميل الصور التلقائي',
               'same_img': '♻️ نفس صورة اتقرت قبل كده',
+              'ph_fix': '🎯 الصورة اتعرف جروبها بالظبط من الإشعار (مش بالوقت)',
             }[st] ?? st;
-            final bad = !st.startsWith('read') && st != 'same_img' && st != 'not_update_ocr' && st != 'ocr';
+            final bad = !st.startsWith('read') && st != 'same_img' && st != 'ph_fix' && st != 'not_update_ocr' && st != 'ocr';
             return Card(color: bad ? const Color(0xFFFFF4E0) : null, child: ListTile(dense: true,
               title: Text('${'${d['g']}'.isEmpty ? 'واتساب الأعمال' : d['g']} • ${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}', style: const TextStyle(fontWeight: FontWeight.w700)),
               subtitle: Text(msg),
