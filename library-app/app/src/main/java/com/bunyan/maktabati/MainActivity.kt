@@ -573,6 +573,23 @@ fun listenNow(ctx: android.content.Context, b: JSONObject, onFetch: (JSONObject)
 fun DecoyScreen() {
     val ctx = LocalContext.current
     var pad by remember { mutableStateOf(false) }
+    @Suppress("UNUSED_VARIABLE") val v = Lib.ver
+    // 🎭 كتب التمويه: مكتبة منفصلة خالص عن كتبك الحقيقية
+    val list = Lib.cfg.optJSONArray("decoy") ?: JSONArray().also { Lib.cfg.put("decoy", it) }
+    val dbooks = (0 until list.length()).mapNotNull { list.optJSONObject(it) }
+    var open by remember { mutableStateOf<JSONObject?>(null) }
+    var del by remember { mutableStateOf<JSONObject?>(null) }
+    val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) try {
+            var name = "كتاب"
+            ctx.contentResolver.query(uri, null, null, null, null)?.use { c -> val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME); if (i >= 0 && c.moveToFirst()) name = c.getString(i) }
+            val b = JSONObject().put("id", "d" + System.currentTimeMillis()).put("t", name.removeSuffix(".pdf").removeSuffix(".PDF").replace('_', ' ')).put("a", "").put("sh", "now")
+            ctx.contentResolver.openInputStream(uri)!!.use { inp -> File(Lib.dir, "books/${b.optString("id")}.pdf").outputStream().use { inp.copyTo(it) } }
+            cover(b); list.put(b); Lib.save()
+        } catch (_: Exception) { Toast.makeText(ctx, "⚠️ مقدرتش أفتح الملف", Toast.LENGTH_SHORT).show() }
+    }
+    val o = open
+    if (o != null) { ReaderScreen(o) { _, _, _ -> open = null; Lib.save() }; return }
     Column(Modifier.fillMaxSize().background(Paper).statusBarsPadding().padding(16.dp)) {
         Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("📚 ", fontSize = 26.sp)
@@ -585,16 +602,38 @@ fun DecoyScreen() {
                         if (up == null) { if (Lib.hasPin() && canBio(ctx)) askBio(ctx, { Lib.revealed = true }) { pad = true } else pad = true }
                     }
                 })
+            Spacer(Modifier.weight(1f))
+            if (dbooks.isNotEmpty()) TextButton({ pick.launch(arrayOf("application/pdf")) }) { Text("➕ ضيف كتاب", color = Green, fontWeight = FontWeight.Bold) }
         }
-        Spacer(Modifier.weight(1f))
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("📖", fontSize = 64.sp)
-            Text("مكتبتك فاضية", fontWeight = FontWeight.Black, fontSize = 20.sp, color = Ink)
-            Text("لسه مضفتش أي كتاب", color = Muted)
-            OutlinedButton({ Toast.makeText(ctx, "قريباً 🙂", Toast.LENGTH_SHORT).show() }) { Text("➕ ضيف كتاب") }
+        if (dbooks.isEmpty()) {
+            Spacer(Modifier.weight(1f))
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("📖", fontSize = 64.sp)
+                Text("مكتبتك فاضية", fontWeight = FontWeight.Black, fontSize = 20.sp, color = Ink)
+                Text("لسه مضفتش أي كتاب", color = Muted)
+                OutlinedButton({ pick.launch(arrayOf("application/pdf")) }) { Text("➕ ضيف كتاب") }
+            }
+            Spacer(Modifier.weight(1.3f))
+        } else LazyVerticalGrid(GridCells.Fixed(3), Modifier.fillMaxSize().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            items(dbooks, key = { it.optString("id") }) { b ->
+                Column(Modifier.pointerInput(b.optString("id")) {
+                    androidx.compose.foundation.gestures.detectTapGestures(onTap = { open = b }, onLongPress = { del = b })
+                }) {
+                    Cover(b, Modifier.fillMaxWidth().aspectRatio(0.7f))
+                    Text(b.optString("t"), fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, color = Ink, modifier = Modifier.padding(top = 4.dp))
+                    val pg = b.optInt("pg"); val c = b.optInt("cur")
+                    if (pg > 0 && c > 1) Text("صفحة $c من $pg", fontSize = 10.sp, color = Muted)
+                }
+            }
         }
-        Spacer(Modifier.weight(1.3f))
     }
+    del?.let { b -> AlertDialog(onDismissRequest = { del = null },
+        confirmButton = { TextButton({
+            for (i in 0 until list.length()) if (list.optJSONObject(i)?.optString("id") == b.optString("id")) { list.remove(i); break }
+            Lib.files(b).forEach { it.delete() }; File(Lib.dir, "covers/${b.optString("id")}.jpg").delete(); Lib.save(); del = null
+        }) { Text("امسحه", color = Color(0xFFB3261E)) } },
+        dismissButton = { TextButton({ del = null }) { Text("لأ") } },
+        title = { Text("تمسح «${b.optString("t")}»؟") }) }
     if (pad) PinPad({ pad = false }) { pad = false; Lib.revealed = true }
 }
 
