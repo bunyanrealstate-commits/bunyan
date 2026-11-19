@@ -66,7 +66,7 @@ val Card = Color(0xFFFFFFFF)
 val Sand = Color(0xFFF1EADB)
 val Flame = Color(0xFFF0A04B)
 
-class MainActivity : ComponentActivity() {
+class MainActivity : androidx.fragment.app.FragmentActivity() {
     private val incoming = mutableStateOf<Intent?>(null)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -582,7 +582,7 @@ fun DecoyScreen() {
                     awaitEachGesture {
                         awaitFirstDown(requireUnconsumed = false)
                         val up = withTimeoutOrNull(5000L) { waitForUpOrCancellation() }
-                        if (up == null) pad = true
+                        if (up == null) { if (Lib.hasPin() && canBio(ctx)) askBio(ctx, { Lib.revealed = true }) { pad = true } else pad = true }
                     }
                 })
         }
@@ -630,4 +630,23 @@ fun PinPad(onDismiss: () -> Unit, onOk: () -> Unit) {
                 }
             }
         })
+}
+
+
+/* ───── 👆 البصمة ───── */
+fun canBio(ctx: android.content.Context): Boolean = try {
+    androidx.biometric.BiometricManager.from(ctx).canAuthenticate(androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK) == androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS
+} catch (_: Exception) { false }
+
+fun askBio(ctx: android.content.Context, onOk: () -> Unit, onPin: () -> Unit) {
+    val act = ctx as? androidx.fragment.app.FragmentActivity ?: return onPin()
+    val p = androidx.biometric.BiometricPrompt(act, androidx.core.content.ContextCompat.getMainExecutor(act), object : androidx.biometric.BiometricPrompt.AuthenticationCallback() {
+        override fun onAuthenticationSucceeded(result: androidx.biometric.BiometricPrompt.AuthenticationResult) { onOk() }
+        override fun onAuthenticationError(code: Int, msg: CharSequence) {
+            if (code == androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON || code == androidx.biometric.BiometricPrompt.ERROR_LOCKOUT ||
+                code == androidx.biometric.BiometricPrompt.ERROR_LOCKOUT_PERMANENT) onPin()
+        }
+    })
+    p.authenticate(androidx.biometric.BiometricPrompt.PromptInfo.Builder().setTitle("📚 مكتبتي").setSubtitle("حط صباعك")
+        .setNegativeButtonText("🔢 الرقم السري").setAllowedAuthenticators(androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK).build())
 }
