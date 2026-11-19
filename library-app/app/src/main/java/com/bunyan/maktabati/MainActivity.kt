@@ -581,7 +581,7 @@ fun DecoyScreen() {
                     // لازم تفضل دايس 5 ثواني من غير ما تشيل صباعك
                     awaitEachGesture {
                         awaitFirstDown(requireUnconsumed = false)
-                        val up = kotlinx.coroutines.withTimeoutOrNull(5000L) { waitForUpOrCancellation() }
+                        val up = withTimeoutOrNull(5000L) { waitForUpOrCancellation() }
                         if (up == null) pad = true
                     }
                 })
