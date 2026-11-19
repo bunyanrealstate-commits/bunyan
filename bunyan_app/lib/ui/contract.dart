@@ -338,12 +338,14 @@ class _CtState extends State<ContractPage> {
   Future<String?> _pad(String title, {String? hint, String? nameInit, ValueChanged<String>? onName}) async {
     final how = await showModalBottomSheet<String>(context: context, builder: (ctx) => Directionality(textDirection: Tr.dir, child: SafeArea(child: Wrap(children: [
       Padding(padding: const EdgeInsets.fromLTRB(16, 14, 16, 4), child: Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16))),
+      if (onName == null && Ct.sigs(S).isNotEmpty) ListTile(leading: const Text('📂', style: TextStyle(fontSize: 20)), title: const Text('من التوقيعات المحفوظة'), subtitle: Text('${Ct.sigs(S).length} توقيع محفوظ'), onTap: () => Navigator.pop(ctx, 'saved')),
       ListTile(leading: const Text('✍️', style: TextStyle(fontSize: 20)), title: const Text('أرسم التوقيع بصباعي'), onTap: () => Navigator.pop(ctx, 'draw')),
       ListTile(leading: const Text('📷', style: TextStyle(fontSize: 20)), title: const Text('صوّر التوقيع على ورقة'), subtitle: const Text('وقّع على ورقة بيضا بقلم غامق وصوّرها'), onTap: () => Navigator.pop(ctx, 'cam')),
       ListTile(leading: const Text('🖼', style: TextStyle(fontSize: 20)), title: const Text('صورة التوقيع من الصور'), onTap: () => Navigator.pop(ctx, 'gal')),
       const SizedBox(height: 8),
     ]))));
     if (how == null || !mounted) return null;
+    if (how == 'saved') return _pickSaved(title);
     if (how == 'draw') return showDialog<String>(context: context, builder: (_) => _SigPad(title: title, hint: hint, nameInit: nameInit, onName: onName));
     XFile? x;
     try { x = await ImagePicker().pickImage(source: how == 'cam' ? ImageSource.camera : ImageSource.gallery, maxWidth: 1600, maxHeight: 1600, imageQuality: 88); } catch (e) { if (mounted) toast(context, '⚠️ مقدرتش أفتح الصور/الكاميرا: $e'); return null; }
@@ -378,12 +380,51 @@ class _CtState extends State<ContractPage> {
     if (!await confirmDlg(context, 'تحذف توقيع «${str(s['n'])}»؟', ok: '🗑 احذف')) return;
     (S['sigs'] as List).removeWhere((x) => x is Map && x['id'] == s['id']); if (c['sig'] == s['id']) c['sig'] = ''; await _save('🗑 حذف توقيع');
   }
-  Future<void> _tSign() async { final img = await _pad('✍️ توقيع المستأجر', hint: 'خلي المستأجر يوقّع بصباعه في المربع.'); if (img == null) return; c['tsig'] = img; await _save(); }
+  /// 📂 اختار توقيع من المحفوظين
+  Future<String?> _pickSaved(String title) => showModalBottomSheet<String>(context: context, isScrollControlled: true, builder: (ctx) => Directionality(textDirection: Tr.dir, child: SafeArea(child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text('📂 $title — اختار توقيع', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+          const SizedBox(height: 10),
+          Flexible(child: GridView.count(crossAxisCount: 2, shrinkWrap: true, mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 1.75, children: [
+            for (final g in Ct.sigs(S)) InkWell(borderRadius: BorderRadius.circular(14), onTap: () => Navigator.pop(ctx, str(g['img'])), child: Container(
+              padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: kBd, width: 1.5)),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [Flexible(child: _b64(str(g['img']))), Text(str(g['n']), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800))]))),
+          ])),
+        ]),
+      ))));
+
+  /// 💾 تحفظ التوقيع ده في توقيعاتك؟ (عشان تستخدمه في عقود تانية)
+  Future<void> _askSave(String img, String nm0) async {
+    if (Ct.sigs(S).any((g) => g['img'] == img)) return; // محفوظ أصلاً
+    final t = TextEditingController(text: nm0);
+    final ok = await showDialog<bool>(context: context, builder: (ctx) => Directionality(textDirection: Tr.dir, child: AlertDialog(
+      title: const Text('💾 تحفظ التوقيع ده؟'),
+      content: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Text('عشان تستخدمه في العقود الجاية من غير ما يوقّع تاني.', style: TextStyle(color: kMuted, fontSize: 13)),
+        const SizedBox(height: 10),
+        SizedBox(height: 70, child: _b64(img, h: 70)),
+        const SizedBox(height: 10),
+        TextField(controller: t, decoration: const InputDecoration(labelText: 'اسم صاحب التوقيع', border: OutlineInputBorder())),
+      ]),
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('لأ')), FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('💾 احفظه'))],
+    )));
+    if (ok != true) return;
+    Ct.sigs(S); (S['sigs'] as List).add({'id': DateTime.now().microsecondsSinceEpoch.toRadixString(36), 'n': t.text.trim().isEmpty ? nm0 : t.text.trim(), 'img': img});
+    await _save('💾 حفظ توقيع'); if (mounted) toast(context, '✅ اتحفظ في التوقيعات');
+  }
+
+  Future<void> _tSign() async {
+    final img = await _pad('✍️ توقيع المستأجر', hint: 'خلي المستأجر يوقّع بصباعه في المربع.'); if (img == null) return;
+    c['tsig'] = img; await _save();
+    if (mounted) await _askSave(img, str(f['tn']).isEmpty ? 'المستأجر' : str(f['tn']).split(' ').take(2).join(' '));
+  }
   Future<void> _wSign() async {
     final w = await pickDlg(context, '✍️ توقيع الشهود', [['1', 'الشاهد الأول'], ['2', 'الشاهد التاني']], '1'); if (w == null) return;
     final img = await _pad('✍️ توقيع ${w == '1' ? 'الشاهد الأول' : 'الشاهد التاني'}'); if (img == null) return;
     final W = (c['wsig'] is Map<String, dynamic>) ? c['wsig'] as Map<String, dynamic> : (c['wsig'] = <String, dynamic>{}); W[w] = img; await _save();
     if (mounted) toast(context, '✅ توقيع الشاهد ${w == '1' ? 'الأول' : 'التاني'} اتحط على العقد');
+    if (mounted) await _askSave(img, w == '1' ? 'الشاهد الأول' : 'الشاهد التاني');
   }
 
   /* ───────── سجّله عقد مستأجر ───────── */
@@ -542,7 +583,7 @@ class _CtState extends State<ContractPage> {
       // ───── 2) التوقيعات ─────
       _editCard(),
       BCard(c: kGreen, title: '✍️ التوقيعات', child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        const Text('توقيعك كمؤجر: اختاره من تحت أو اعمل جديد. توقيع المستأجر: يوقّع بصباعه على موبايلك.', style: TextStyle(color: kMuted, fontSize: 12.5)),
+        const Text('📂 التوقيعات المحفوظة — دوس على توقيع يتحط كتوقيع المؤجر. توقيع المستأجر والشهود: يوقّعوا أو اختار من المحفوظين، وبعدها تقدر تحفظه.', style: TextStyle(color: kMuted, fontSize: 12.5)),
         const SizedBox(height: 10),
         GridView.count(crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 1.75, children: [
           for (final s in sigs) _sigTile(on: s['id'] == cur, onTap: () async { c['sig'] = s['id']; await _save(); }, onDel: () => _delSig(s), child: Column(mainAxisSize: MainAxisSize.min, children: [Flexible(child: _b64(str(s['img']))), Text(str(s['n']), style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF555B66)))])),
@@ -554,6 +595,8 @@ class _CtState extends State<ContractPage> {
         Wrap(spacing: 8, runSpacing: 8, children: [
           OutlinedButton(onPressed: _tSign, child: Text(truthy(c['tsig']) ? '✍️ المستأجر يوقّع تاني' : '✍️ توقيع المستأجر')),
           if (truthy(c['tsig'])) OutlinedButton(onPressed: () async { c['tsig'] = ''; await _save(); }, child: const Text('🗑 شيل توقيع المستأجر')),
+          if (truthy(c['tsig']) && !sigs.any((g) => g['img'] == c['tsig'])) OutlinedButton(onPressed: () => _askSave(str(c['tsig']), str(f['tn']).isEmpty ? 'المستأجر' : str(f['tn']).split(' ').take(2).join(' ')), child: const Text('💾 احفظ توقيع المستأجر')),
+          for (final w in ['1', '2']) if (truthy(W[w]) && !sigs.any((g) => g['img'] == W[w])) OutlinedButton(onPressed: () => _askSave(str(W[w]), w == '1' ? 'الشاهد الأول' : 'الشاهد التاني'), child: Text('💾 احفظ توقيع الشاهد $w')),
           OutlinedButton(onPressed: _wSign, child: const Text('✍️ توقيع الشهود')),
           if (cur.isNotEmpty) OutlinedButton(onPressed: () async { c['sig'] = ''; await _save(); }, child: const Text('🗑 شيل توقيع المؤجر')),
           for (final w in ['1', '2']) if (truthy(W[w])) OutlinedButton(onPressed: () async { (c['wsig'] as Map).remove(w); await _save(); }, child: Text('🗑 شيل توقيع الشاهد $w')),
