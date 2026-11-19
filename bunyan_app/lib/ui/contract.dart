@@ -107,13 +107,16 @@ class _CtState extends State<ContractPage> {
     _sync(); await _save('📝 عقد العميل: ${str((x['L'] as Obj)['tenant'])}');
   }
 
-  /// 📷 املا من صورة (Gemini المجاني — نفس القديم)
+  /// 📷 Gemini للصور — موديلات سريعة بس ومن غير «تفكير»، وأقصى انتظار 15 ثانية للموديل
+  static const _fastImg = ['gemini-2.5-flash-lite', 'gemini-2.0-flash', 'gemini-flash-lite-latest', 'gemini-2.0-flash-lite'];
   Future<Map?> _gem(Uint8List img, String prompt) async {
     final k = Ai.key(); if (k.isEmpty) throw 'محتاج مفتاح Gemini (بيتنقل من بنيان القديم مع الربط)';
-    for (final m in Ai.fall) {
+    final t0 = DateTime.now();
+    for (final m in _fastImg) {
+      if (DateTime.now().difference(t0).inSeconds > 25) break;
       try {
         final r = await http.post(Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$k'), headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'contents': [{'parts': [{'text': prompt}, {'inline_data': {'mime_type': 'image/jpeg', 'data': base64Encode(img)}}]}], 'generationConfig': {'temperature': 0, 'responseMimeType': 'application/json'}})).timeout(const Duration(seconds: 45));
+            body: jsonEncode({'contents': [{'parts': [{'text': prompt}, {'inline_data': {'mime_type': 'image/jpeg', 'data': base64Encode(img)}}]}], 'generationConfig': {'temperature': 0, 'responseMimeType': 'application/json', if (m.contains('2.5')) 'thinkingConfig': {'thinkingBudget': 0}}})).timeout(const Duration(seconds: 15));
         if (r.statusCode != 200) continue;
         final j = jsonDecode(utf8.decode(r.bodyBytes)); final t = ((j['candidates'] as List?)?.firstOrNull?['content']?['parts'] as List?)?.map((p) => p['text'] ?? '').join() ?? '';
         final mm = RegExp(r'\{[\s\S]*\}').firstMatch(t); if (mm != null) return jsonDecode(mm[0]!);
@@ -128,22 +131,27 @@ class _CtState extends State<ContractPage> {
       ListTile(leading: const Icon(Icons.photo_library), title: const Text('🖼 من الصور'), onTap: () => Navigator.pop(ctx, ImageSource.gallery)),
     ]))));
     if (src == null) return null;
-    try { return await ImagePicker().pickImage(source: src, maxWidth: 1700, maxHeight: 1700, imageQuality: 90); } catch (e) { if (mounted) toast(context, '⚠️ مقدرتش أفتح الصور/الكاميرا: $e'); return null; }
+    try { return await ImagePicker().pickImage(source: src, maxWidth: 1400, maxHeight: 1400, imageQuality: 78); } catch (e) { if (mounted) toast(context, '⚠️ مقدرتش أفتح الصور/الكاميرا: $e'); return null; }
   }
 
   static const _idPrompt = 'This is an ID card or passport (often UAE Emirates ID, which has Arabic and English). Return ONLY JSON {"ar":"full name in Arabic as printed (or transliterate the English name to Arabic if no Arabic)","en":"full name in English as printed","id":"ID or passport number exactly as printed (Emirates ID like 784-XXXX-XXXXXXX-X)","nat_ar":"nationality in Arabic","nat_en":"nationality in English"}. Use "" if not visible.';
-  /// بيقرأ الهوية: Gemini لو مفتاحه موجود (بيجيب الاسم بالعربي كمان)، وإلا (أو لو فشل) الموبايل نفسه بيقرأها من غير نت
-  Future<Map?> _idFrom(XFile x) async {
-    String err = '';
-    if (Ai.key().isNotEmpty) {
-      try { final o = await _gem(await x.readAsBytes(), _idPrompt); if (o != null && (str(o['en']).isNotEmpty || str(o['ar']).isNotEmpty || str(o['id']).isNotEmpty)) return o; } catch (e) { err = '$e'; }
-    }
+  /// بيقرأ الهوية: الموبايل نفسه الأول (أقل من ثانية ومن غير نت)، وGemini بس لو الموبايل ماعرفش أو محتاجين الاسم بالعربي
+  Future<Map?> _idFrom(XFile x, {void Function(Map)? later}) async {
+    String err = ''; Map<String, String>? dev;
     if (!kIsWeb) {
-      try {
-        final o = IdOcr.parse(await IdOcr.text(x.path));
-        if ((o['en'] ?? '').isNotEmpty || (o['id'] ?? '').isNotEmpty) return {'en': o['en'] ?? '', 'ar': '', 'id': o['id'] ?? '', 'nat_en': o['nat_en'] ?? '', 'nat_ar': o['nat_ar'] ?? ''};
-      } catch (e) { err = '$e'; }
-    } else if (Ai.key().isEmpty) { err = 'في نسخة المتصفح القراية محتاجة مفتاح Gemini — جرّبها من تطبيق الموبايل'; }
+      try { final o = IdOcr.parse(await IdOcr.text(x.path)); if ((o['en'] ?? '').isNotEmpty || (o['id'] ?? '').isNotEmpty) dev = {'en': o['en'] ?? '', 'ar': '', 'id': o['id'] ?? '', 'nat_en': o['nat_en'] ?? '', 'nat_ar': o['nat_ar'] ?? ''}; } catch (e) { err = '$e'; }
+    }
+    final hasKey = Ai.key().isNotEmpty;
+    if (dev != null && (dev['en'] ?? '').isNotEmpty && (dev['id'] ?? '').isNotEmpty) {
+      // الموبايل جاب الاسم والرقم: نملا على طول — والاسم العربي بييجي من Gemini في الخلفية من غير ما تستنى
+      if (hasKey && later != null) { x.readAsBytes().then((b) => _gem(b, _idPrompt)).then((o) { if (o != null) later(o); }).catchError((_) {}); }
+      return dev;
+    }
+    if (hasKey) {
+      try { final o = await _gem(await x.readAsBytes(), _idPrompt); if (o != null && (str(o['en']).isNotEmpty || str(o['ar']).isNotEmpty || str(o['id']).isNotEmpty)) return {...?dev, ...o.map((k, v) => MapEntry('$k', str(v).isEmpty ? (dev?['$k'] ?? '') : str(v)))}; } catch (e) { err = '$e'; }
+    }
+    if (dev != null) return dev;
+    if (kIsWeb && !hasKey) err = 'في نسخة المتصفح القراية محتاجة مفتاح Gemini — جرّبها من تطبيق الموبايل';
     if (err.isNotEmpty && mounted) toast(context, '⚠️ $err');
     return null;
   }
@@ -151,18 +159,25 @@ class _CtState extends State<ContractPage> {
   Future<void> _readId(bool landlord) async {
     final x = await _pick(); if (x == null || !mounted) return;
     toast(context, landlord ? '⏳ بقرأ هوية المؤجر…' : '⏳ بقرأ هوية المستأجر…'); setState(() => busy = true);
-    try {
-      final o = await _idFrom(x);
-      if (o == null) { if (mounted) toast(context, '⚠️ مقدرتش أقرأ الهوية — صوّرها أوضح وفي نور كويس، والكارت مالي الصورة'); return; }
-      final en = Ct.en(S); final nm = en ? (str(o['en']).isEmpty ? str(o['ar']) : str(o['en'])) : (str(o['ar']).isEmpty ? str(o['en']) : str(o['ar']));
-      final alt = (c['alt'] is Map<String, dynamic>) ? c['alt'] as Map<String, dynamic> : (c['alt'] = <String, dynamic>{});
-      if (landlord) { alt['ll'] = {'ar': str(o['ar']), 'en': str(o['en'])}; if (nm.isNotEmpty) f['ll'] = nm; if (str(o['id']).isNotEmpty) f['lid'] = str(o['id']); }
+    Future<String> fill(Map o, {bool quiet = false}) async {
+      final en = Ct.en(S); final alt = (c['alt'] is Map<String, dynamic>) ? c['alt'] as Map<String, dynamic> : (c['alt'] = <String, dynamic>{});
+      String pick(String a, String b) => en ? (str(o[a]).isEmpty ? str(o[b]) : str(o[a])) : (str(o[b]).isEmpty ? str(o[a]) : str(o[b]));
+      String keep(Map? m, String k, String v) => v.isNotEmpty ? v : str(m?[k]);
+      final nm = pick('en', 'ar');
+      if (landlord) { final m = obj(alt['ll']); alt['ll'] = {'ar': keep(m, 'ar', str(o['ar'])), 'en': keep(m, 'en', str(o['en']))}; if (nm.isNotEmpty) f['ll'] = nm; if (str(o['id']).isNotEmpty) f['lid'] = str(o['id']); }
       else {
-        alt['tn'] = {'ar': str(o['ar']), 'en': str(o['en'])}; alt['nat'] = {'ar': str(o['nat_ar']), 'en': str(o['nat_en'])};
-        final nat = en ? (str(o['nat_en']).isEmpty ? str(o['nat_ar']) : str(o['nat_en'])) : (str(o['nat_ar']).isEmpty ? str(o['nat_en']) : str(o['nat_ar']));
+        final m = obj(alt['tn']), mn = obj(alt['nat']);
+        alt['tn'] = {'ar': keep(m, 'ar', str(o['ar'])), 'en': keep(m, 'en', str(o['en']))}; alt['nat'] = {'ar': keep(mn, 'ar', str(o['nat_ar'])), 'en': keep(mn, 'en', str(o['nat_en']))};
+        final nat = pick('nat_en', 'nat_ar');
         if (nm.isNotEmpty) f['tn'] = nm; if (str(o['id']).isNotEmpty) f['tid'] = str(o['id']); if (nat.isNotEmpty) f['nat'] = nat;
       }
-      _sync(); await _save('🪪 ${landlord ? 'هوية المؤجر' : 'هوية المستأجر'} من صورة');
+      _sync(); await _save(quiet ? null : '🪪 ${landlord ? 'هوية المؤجر' : 'هوية المستأجر'} من صورة');
+      return nm;
+    }
+    try {
+      final o = await _idFrom(x, later: (g) async { if (!mounted) return; await fill(g, quiet: true); if (mounted && !Ct.en(S) && str(g['ar']).isNotEmpty) toast(context, '✅ الاسم بالعربي: ${g['ar']}'); });
+      if (o == null) { if (mounted) toast(context, '⚠️ مقدرتش أقرأ الهوية — صوّرها أوضح وفي نور كويس، والكارت مالي الصورة'); return; }
+      final nm = await fill(o);
       if (mounted) toast(context, '✅ ${nm.isEmpty ? '' : nm}${str(o['id']).isNotEmpty ? ' • ${o['id']}' : ''}');
     } catch (e) { if (mounted) toast(context, '⚠️ $e'); } finally { if (mounted) setState(() => busy = false); }
   }
@@ -171,8 +186,8 @@ class _CtState extends State<ContractPage> {
     toast(context, '⏳ بدوّر على رقم الموبايل…'); setState(() => busy = true);
     try {
       var p = '';
-      if (Ai.key().isNotEmpty) { try { final o = await _gem(await x.readAsBytes(), 'Find the main mobile phone number in this image (contact card, WhatsApp profile, screenshot, business card, or handwriting). Return ONLY JSON {"phone":"number with country code if visible, digits and + only"}.'); p = str(o?['phone']); } catch (_) {} }
-      if (p.isEmpty && !kIsWeb) { try { p = IdOcr.phone(await IdOcr.text(x.path)); } catch (_) {} }
+      if (!kIsWeb) { try { p = IdOcr.phone(await IdOcr.text(x.path)); } catch (_) {} }
+      if (p.isEmpty && Ai.key().isNotEmpty) { try { final o = await _gem(await x.readAsBytes(), 'Find the main mobile phone number in this image (contact card, WhatsApp profile, screenshot, business card, or handwriting). Return ONLY JSON {"phone":"number with country code if visible, digits and + only"}.'); p = str(o?['phone']); } catch (_) {} }
       if (p.isEmpty) { if (mounted) toast(context, '⚠️ ملقيتش رقم في الصورة'); return; }
       f['ph'] = p; _sync(); await _save(); if (mounted) toast(context, '✅ الرقم: $p');
     } catch (e) { if (mounted) toast(context, '⚠️ $e'); } finally { if (mounted) setState(() => busy = false); }

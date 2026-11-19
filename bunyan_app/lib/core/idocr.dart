@@ -4,10 +4,12 @@ import 'package:flutter/foundation.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 class IdOcr {
+  static TextRecognizer? _r;
   static Future<String> text(String path) async {
     if (kIsWeb || path.isEmpty) return '';
-    final r = TextRecognizer(script: TextRecognitionScript.latin);
-    try { return (await r.processImage(InputImage.fromFilePath(path))).text; } finally { r.close(); }
+    // قارئ واحد بيتفتح مرة واحدة ويفضل جاهز (أسرع في المرات الجاية)
+    final r = _r ??= TextRecognizer(script: TextRecognitionScript.latin);
+    return (await r.processImage(InputImage.fromFilePath(path))).text;
   }
 
   static const iso3 = {'NLD': 'NETHERLANDS', 'EGY': 'EGYPT', 'IND': 'INDIA', 'PAK': 'PAKISTAN', 'PHL': 'PHILIPPINES', 'BGD': 'BANGLADESH', 'SYR': 'SYRIA', 'JOR': 'JORDAN', 'SDN': 'SUDAN', 'MAR': 'MOROCCO', 'LBN': 'LEBANON', 'YEM': 'YEMEN', 'IRQ': 'IRAQ', 'PSE': 'PALESTINE', 'TUN': 'TUNISIA', 'DZA': 'ALGERIA', 'SAU': 'SAUDI ARABIA', 'OMN': 'OMAN', 'NPL': 'NEPAL', 'LKA': 'SRI LANKA', 'NGA': 'NIGERIA', 'ETH': 'ETHIOPIA', 'KEN': 'KENYA', 'UGA': 'UGANDA', 'RUS': 'RUSSIA', 'GBR': 'UNITED KINGDOM', 'CHN': 'CHINA', 'IRN': 'IRAN', 'AFG': 'AFGHANISTAN', 'SOM': 'SOMALIA', 'ERI': 'ERITREA', 'DEU': 'GERMANY', 'FRA': 'FRANCE', 'ITA': 'ITALY', 'ESP': 'SPAIN', 'USA': 'UNITED STATES', 'CAN': 'CANADA', 'AUS': 'AUSTRALIA', 'TUR': 'TURKEY', 'UKR': 'UKRAINE', 'POL': 'POLAND', 'ROU': 'ROMANIA', 'BEL': 'BELGIUM', 'SWE': 'SWEDEN', 'IRL': 'IRELAND', 'ZAF': 'SOUTH AFRICA', 'BRA': 'BRAZIL', 'IDN': 'INDONESIA', 'VNM': 'VIETNAM', 'THA': 'THAILAND', 'KAZ': 'KAZAKHSTAN', 'UZB': 'UZBEKISTAN', 'CMR': 'CAMEROON', 'GHA': 'GHANA', 'LBY': 'LIBYA', 'KWT': 'KUWAIT', 'QAT': 'QATAR', 'BHR': 'BAHRAIN', 'ARE': 'UNITED ARAB EMIRATES'};
