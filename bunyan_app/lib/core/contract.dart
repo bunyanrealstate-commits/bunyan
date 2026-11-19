@@ -90,7 +90,7 @@ class Ct {
         if (r[1] == '@dates') { b.write('<tr><td class="en" rowspan="2">${r[0]}</td><td class="en" style="width:13%">Start</td><td style="width:24%">${sp(S, 'st', f)}</td><td style="width:14%">بداية العقد</td><td class="ar" rowspan="2">${r[2]}</td></tr><tr><td class="en">End</td><td>${sp(S, 'en', f)}</td><td>نهاية العقد</td></tr>'); continue; }
         b.write('<tr><td class="en">${r[0]}</td><td colspan="3">${sp(S, r[1], f)}</td><td class="ar">${r[2]}</td></tr>');
       }
-      b.write('</table>${pay ? _ptbBi(S, f) : ''}<h2>Terms &amp; Conditions &nbsp; الشروط والأحكام</h2><table class="tc2">');
+      b.write('</table>${pay ? _ptbBi(S, f) : ''}<h2>Contract Terms &nbsp; بنود العقد</h2><table class="tc2">');
       for (var i = 0; i < termsEn.length; i++) { b.write('<tr><td class="te">${i + 1}. ${termsEn[i]}</td><td class="ta">${i + 1}. ${termsAr[i]}</td></tr>'); }
       b.write('</table>$_sg</div>');
       return b.toString();
@@ -104,7 +104,7 @@ class Ct {
     b.write('</table>');
     if (pay) b.write('<h2>${e ? 'Payments Schedule' : 'جدول الدفعات'}</h2><table class="ptb">${_ptb(S, f, e ? const {'pn': 'Payment No.', 'pa': 'Amount', 'pd': 'Due Date', 'pm': 'Payment Method'} : const {'pn': 'رقم الدفعة', 'pa': 'المبلغ', 'pd': 'تاريخ الاستحقاق', 'pm': 'طريقة الدفع'})}</table>');
     final tl = e ? termsEn : termsAr;
-    b.write('<h2>${e ? 'Terms &amp; Conditions' : 'الشروط والأحكام'}</h2><table class="tc2">');
+    b.write('<h2>${e ? 'Contract Terms' : 'بنود العقد'}</h2><table class="tc2">');
     for (var i = 0; i < tl.length; i++) { b.write('<tr><td class="${e ? 'te' : 'ta'}">${i + 1}. ${tl[i]}</td></tr>'); }
     b.write('</table><div class="sg">${e ? '<div>Witness</div><div>Witness</div><div>Tenant Signature</div><div>Landlord Signature</div>' : '<div>الشاهد</div><div>الشاهد</div><div>توقيع المستأجر</div><div>توقيع المؤجر</div>'}</div></div>');
     return b.toString();
