@@ -154,6 +154,13 @@ object Lib {
     }
     fun todayPages(): Int = dayMap()[today()] ?: 0
 
+    /** 🔒 الكتب مستخبية لحد ما تعمل الحركة السرية وتكتب الرقم السري */
+    var revealed by mutableStateOf(false)
+    fun hasPin() = cfg.optString("pin").isNotEmpty()
+    private fun hp(p: String): String = java.security.MessageDigest.getInstance("SHA-256").digest(("mktb:" + p).toByteArray()).joinToString("") { "%02x".format(it) }
+    fun checkPin(p: String) = hasPin() && cfg.optString("pin") == hp(p)
+    fun setPin(p: String) { cfg.put("pin", hp(p)); save() }
+
     /** ⏱ «دقيقتين بس»: الكتاب الجاي يتفتح بعدّاد دقيقتين */
     var sprint by mutableStateOf(false)
 

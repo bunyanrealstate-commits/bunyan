@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -67,6 +68,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         Lib.init(this)
+        if (android.os.Build.VERSION.SDK_INT >= 33) setRecentsScreenshotEnabled(false)  // 🔒 محدش يشوف الكتب من «التطبيقات الأخيرة»
         incoming.value = intent
         setContent {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
@@ -125,7 +127,8 @@ fun App(incoming: MutableState<Intent?>) {
         if (uri != null) addFromUri(ctx, uri)?.let { reading = it }
     }
 
-    LaunchedEffect(incoming.value) {
+    LaunchedEffect(incoming.value, Lib.revealed) {
+        if (!Lib.revealed) return@LaunchedEffect
         val itn = incoming.value ?: return@LaunchedEffect
         incoming.value = null
         itn.getStringExtra("open")?.let { id -> if (id == "buddy") screen = "buddy" else Lib.book(id)?.let { b -> openBook(b) }; return@LaunchedEffect }
@@ -137,9 +140,12 @@ fun App(incoming: MutableState<Intent?>) {
     }
     LaunchedEffect(Unit) { if (Lib.link != null) Lib.msg = Lib.sync(); Lib.comeback()?.let { toast(it) } }
     // تحديث التطبيق لوحده + ربط تلقائي لو كود الربط متنسخ (زرار بنيان بينسخه)
+    var hiddenAt by remember { mutableLongStateOf(0L) }
     val life = androidx.compose.ui.platform.LocalLifecycleOwner.current
     DisposableEffect(life) {
         val ob = androidx.lifecycle.LifecycleEventObserver { _, e ->
+            if (e == androidx.lifecycle.Lifecycle.Event.ON_STOP) hiddenAt = System.currentTimeMillis()
+            if (e == androidx.lifecycle.Lifecycle.Event.ON_START && hiddenAt > 0 && System.currentTimeMillis() - hiddenAt > 60_000) { Lib.revealed = false; reading = null; screen = "home"; sheet = null; notes = null }
             if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) scope.launch {
                 kotlinx.coroutines.delay(700)
                 if (Lib.link == null) try {
@@ -153,6 +159,7 @@ fun App(incoming: MutableState<Intent?>) {
         life.lifecycle.addObserver(ob); onDispose { life.lifecycle.removeObserver(ob) }
     }
 
+    if (!Lib.revealed) { DecoyScreen(); return }
     val r = reading
     if (r != null) { ReaderScreen(r) { from, to, read ->
         reading = null
@@ -552,4 +559,65 @@ fun listenNow(ctx: android.content.Context, b: JSONObject, onFetch: (JSONObject)
         !Lib.have(b) -> { onFetch(b); Toast.makeText(ctx, "⬇️ بنزّل الكتاب… دوس «اسمعه» تاني لما يخلص", Toast.LENGTH_LONG).show() }
         else -> { Speech.start(ctx, b, b.optInt("cur", 1).coerceAtLeast(1)); Toast.makeText(ctx, "🎧 بيبدأ دلوقتي… اقفل الشاشة وريّح 😌", Toast.LENGTH_SHORT).show() }
     }
+}
+
+
+/* ───── 🔒 الشاشة اللي أي حد يشوفها: مكتبة فاضية ─────
+   السر: دوسة طويلة (ثانية) على كلمة «مكتبتي» فوق ← يطلع الرقم السري */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
+fun DecoyScreen() {
+    val ctx = LocalContext.current
+    var pad by remember { mutableStateOf(false) }
+    Column(Modifier.fillMaxSize().background(Paper).statusBarsPadding().padding(16.dp)) {
+        Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("📚 ", fontSize = 26.sp)
+            Text("مكتبتي", fontSize = 26.sp, fontWeight = FontWeight.Black, color = Ink,
+                modifier = Modifier.combinedClickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null,
+                    onClick = {}, onLongClick = { pad = true }))
+        }
+        Spacer(Modifier.weight(1f))
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("📖", fontSize = 64.sp)
+            Text("مكتبتك فاضية", fontWeight = FontWeight.Black, fontSize = 20.sp, color = Ink)
+            Text("لسه مضفتش أي كتاب", color = Muted)
+            OutlinedButton({ Toast.makeText(ctx, "قريباً 🙂", Toast.LENGTH_SHORT).show() }) { Text("➕ ضيف كتاب") }
+        }
+        Spacer(Modifier.weight(1.3f))
+    }
+    if (pad) PinPad({ pad = false }) { pad = false; Lib.revealed = true }
+}
+
+@Composable
+fun PinPad(onDismiss: () -> Unit, onOk: () -> Unit) {
+    val ctx = LocalContext.current
+    val setup = !Lib.hasPin()
+    var p by remember { mutableStateOf("") }
+    var first by remember { mutableStateOf<String?>(null) }
+    var wrong by remember { mutableIntStateOf(0) }
+    var waitTill by remember { mutableLongStateOf(0L) }
+    fun done(x: String) {
+        if (setup) {
+            if (first == null) { first = x; p = "" }
+            else if (first == x) { Lib.setPin(x); Notify.schedule(ctx); try { ReadWidget.refresh(ctx) } catch (_: Exception) {}; Toast.makeText(ctx, "🔒 اتحفظ الرقم السري", Toast.LENGTH_SHORT).show(); onOk() }
+            else { Toast.makeText(ctx, "⚠️ الرقمين مش زي بعض — ابدأ تاني", Toast.LENGTH_SHORT).show(); first = null; p = "" }
+        } else if (Lib.checkPin(x)) onOk()
+        else { wrong++; p = ""; if (wrong >= 5) { waitTill = System.currentTimeMillis() + 30_000; wrong = 0; Toast.makeText(ctx, "استنى 30 ثانية", Toast.LENGTH_SHORT).show() } }
+    }
+    AlertDialog(onDismissRequest = onDismiss, confirmButton = {}, dismissButton = { TextButton(onDismiss) { Text("إلغاء") } },
+        title = { Text(if (setup) (if (first == null) "🔒 اختار رقم سري (4 أرقام)" else "🔒 اكتبه تاني للتأكيد") else "🔒", fontWeight = FontWeight.Bold) },
+        text = {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text((1..4).joinToString(" ") { if (it <= p.length) "●" else "○" }, fontSize = 28.sp, color = Ink)
+                listOf(listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9"), listOf("", "0", "⌫")).forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { row.forEach { k ->
+                        if (k.isEmpty()) Spacer(Modifier.size(64.dp))
+                        else Surface(onClick = {
+                            if (System.currentTimeMillis() < waitTill) return@Surface
+                            if (k == "⌫") p = p.dropLast(1) else if (p.length < 4) { p += k; if (p.length == 4) done(p) }
+                        }, shape = CircleShape, color = Sand, modifier = Modifier.size(64.dp)) { Box(contentAlignment = Alignment.Center) { Text(k, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Ink) } }
+                    } }
+                }
+            }
+        })
 }

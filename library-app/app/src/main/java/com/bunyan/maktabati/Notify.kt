@@ -65,8 +65,14 @@ object Notify {
         am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, c.timeInMillis, p)
     }
 
-    fun post(ctx: Context, id: Int, title: String, body: String, open: String?, listen: Boolean = open != null && open != "buddy") {
+    fun post(ctx: Context, id: Int, title0: String, body0: String, open0: String?, listen0: Boolean = open0 != null && open0 != "buddy") {
         ensure(ctx)
+        // 🔒 لو الكتب مستخبية: الإشعار ميقولش اسم أي كتاب
+        val hide = try { read(ctx).optJSONObject("cfg")?.optString("pin")?.isNotEmpty() == true } catch (_: Exception) { false }
+        val title = if (hide) "📚 مكتبتي" else title0
+        val body = if (hide) "عندك دقيقتين النهارده؟ 😉" else body0
+        val open = if (hide) null else open0
+        val listen = listen0 && !hide
         val i = Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         if (open != null) i.putExtra("open", open)
         val pi = PendingIntent.getActivity(ctx, id, i, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)

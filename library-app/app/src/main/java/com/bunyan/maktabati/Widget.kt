@@ -25,7 +25,11 @@ class ReadWidget : AppWidgetProvider() {
             val v = RemoteViews(ctx.packageName, R.layout.widget)
             val st = Lib.streak(); val today = Lib.todayPages(); val goal = Lib.goal
             v.setTextViewText(R.id.w_streak, (if (st > 0) "🔥 " else "🕯 ") + st)
-            if (b != null) {
+            val hide = Lib.hasPin()
+            if (hide) {
+                v.setTextViewText(R.id.w_kicker, "📚 مكتبتي"); v.setTextViewText(R.id.w_title, "وقت القراية")
+                v.setProgressBar(R.id.w_prog, 100, 0, false); v.setTextViewText(R.id.w_sub, "دقيقتين بس 😉"); v.setTextViewText(R.id.w_btn, "📖 افتح")
+            } else if (b != null) {
                 val pg = b.optInt("pg"); val c = b.optInt("cur")
                 v.setTextViewText(R.id.w_kicker, if (b.optString("sh") == "now") "📖 بتقرأ دلوقتي" else "📌 الكتاب الجاي")
                 v.setTextViewText(R.id.w_title, b.optString("t"))
@@ -34,7 +38,7 @@ class ReadWidget : AppWidgetProvider() {
                 v.setTextViewText(R.id.w_btn, if (c > 1) "📖 كمّل من صفحة $c" else "📖 ابدأ القراية")
             }
             val i = Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            if (b != null) i.putExtra("open", b.optString("id"))
+            if (b != null && !hide) i.putExtra("open", b.optString("id"))
             val pi = PendingIntent.getActivity(ctx, 701, i, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
             v.setOnClickPendingIntent(R.id.w_root, pi); v.setOnClickPendingIntent(R.id.w_btn, pi)
             m.updateAppWidget(ids, v)
