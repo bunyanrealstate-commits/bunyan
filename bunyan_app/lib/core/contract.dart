@@ -82,17 +82,25 @@ class Ct {
 
   /// ورقة العقد (صفحة واحدة) بلغة العقد المختارة — rows: [English, key, عربي]؛ key = '@dates' لصف التواريخ
   static String _doc(Obj S, Map f, {required String tEn, required String tAr, required List<List<String>> rows, required List<String> termsEn, required List<String> termsAr, required String cls}) {
+    rows = [...rows];
     final L = cl(S), mode = _mode(S, f);
+    // ✏️ تعديلاتك على العقد (لكل نوع عقد لوحده): العنوان، صفوف مخفية/مضافة، البنود
+    final E = ed(S); final hide = {for (final h in lst(E['hide'])) str(h)};
+    if (str(E['tEn']).isNotEmpty) tEn = str(E['tEn']); if (str(E['tAr']).isNotEmpty) tAr = str(E['tAr']);
+    if (E['terms'] is List) { final T = [for (final t in lst(E['terms'])) obj(t) ?? {}]; termsEn = [for (final t in T) str(t['en'])]; termsAr = [for (final t in T) str(t['ar'])]; }
+    final cr = [for (final x in lst(E['rows'])) obj(x) ?? {}];
+    rows = [for (final r in rows) if (!hide.contains(r[1])) r, for (var i = 0; i < cr.length; i++) [str(cr[i]['en']), '@c$i', str(cr[i]['ar'])]];
+    String val(String k) => k.startsWith('@c') ? esc(str(cr[int.parse(k.substring(2))]['v'])) : sp(S, k, f);
     final pay = rm(S) == 'p';
     final b = StringBuffer('<div class="fr t2c $cls${L == 'bi' ? '' : ' $L'}" data-m="$mode">');
     if (L == 'bi') {
       b.write('<h1>$tEn<small>$tAr</small></h1><table>');
       for (final r in rows) {
         if (r[1] == '@dates') { b.write('<tr><td class="en" rowspan="2">${r[0]}</td><td class="en" style="width:13%">Start</td><td style="width:24%">${sp(S, 'st', f)}</td><td style="width:14%">بداية العقد</td><td class="ar" rowspan="2">${r[2]}</td></tr><tr><td class="en">End</td><td>${sp(S, 'en', f)}</td><td>نهاية العقد</td></tr>'); continue; }
-        b.write('<tr><td class="en">${r[0]}</td><td colspan="3">${sp(S, r[1], f)}</td><td class="ar">${r[2]}</td></tr>');
+        b.write('<tr><td class="en">${esc(r[0])}</td><td colspan="3">${val(r[1])}</td><td class="ar">${esc(r[2])}</td></tr>');
       }
       b.write('</table>${pay ? _ptbBi(S, f) : ''}<h2>Contract Terms &nbsp; بنود العقد</h2><table class="tc2">');
-      for (var i = 0; i < termsEn.length; i++) { b.write('<tr><td class="te">${i + 1}. ${termsEn[i]}</td><td class="ta">${i + 1}. ${termsAr[i]}</td></tr>'); }
+      for (var i = 0; i < termsEn.length; i++) { b.write('<tr><td class="te">${i + 1}. ${esc(termsEn[i])}</td><td class="ta">${i + 1}. ${esc(termsAr[i])}</td></tr>'); }
       b.write('</table>$_sg</div>');
       return b.toString();
     }
@@ -100,27 +108,47 @@ class Ct {
     b.write('<h1>${e ? tEn : tAr}</h1><table class="kv">');
     for (final r in rows) {
       if (r[1] == '@dates') { b.write('<tr><td class="k" rowspan="2">${e ? r[0] : r[2]}</td><td class="k2">${e ? 'Start Date' : 'بداية العقد'}</td><td>${sp(S, 'st', f)}</td></tr><tr><td class="k2">${e ? 'End Date' : 'نهاية العقد'}</td><td>${sp(S, 'en', f)}</td></tr>'); continue; }
-      b.write('<tr><td class="k">${e ? r[0] : r[2]}</td><td colspan="2">${sp(S, r[1], f)}</td></tr>');
+      b.write('<tr><td class="k">${esc(e ? r[0] : r[2])}</td><td colspan="2">${val(r[1])}</td></tr>');
     }
     b.write('</table>');
     if (pay) b.write('<h2>${e ? 'Payments Schedule' : 'جدول الدفعات'}</h2><table class="ptb">${_ptb(S, f, e ? const {'pn': 'Payment No.', 'pa': 'Amount', 'pd': 'Due Date', 'pm': 'Payment Method'} : const {'pn': 'رقم الدفعة', 'pa': 'المبلغ', 'pd': 'تاريخ الاستحقاق', 'pm': 'طريقة الدفع'})}</table>');
     final tl = e ? termsEn : termsAr;
     b.write('<h2>${e ? 'Contract Terms' : 'بنود العقد'}</h2><table class="tc2">');
-    for (var i = 0; i < tl.length; i++) { b.write('<tr><td class="${e ? 'te' : 'ta'}">${i + 1}. ${tl[i]}</td></tr>'); }
+    for (var i = 0; i < tl.length; i++) { b.write('<tr><td class="${e ? 'te' : 'ta'}">${i + 1}. ${esc(tl[i])}</td></tr>'); }
     b.write('</table><div class="sg">${e ? '<div>Witness</div><div>Witness</div><div>Tenant Signature</div><div>Landlord Signature</div>' : '<div>الشاهد</div><div>الشاهد</div><div>توقيع المستأجر</div><div>توقيع المؤجر</div>'}</div></div>');
     return b.toString();
   }
 
-  static String _mode(Obj S, Map f) => '${rm(S)}|${tpl(S)}|${cl(S)}|${en(S)}|${lst(f['pays']).length}|${truthy(f['dep'])}';
+  /// ✏️ تعديلاتك على العقد — كل نوع عقد (مفروش/فاضي) ليه تعديلاته
+  static Map<String, dynamic> ed(Obj S) { final c = ct(S); final k = 'ed_${tpl(S)}'; if (c[k] is! Map<String, dynamic>) c[k] = <String, dynamic>{}; return c[k] as Map<String, dynamic>; }
+  /// بعد أي تعديل: العقد يتعمل من جديد
+  static void edTouch(Obj S) { final E = ed(S); E['n'] = n0(E['n']).round() + 1; ct(S)['html'] = ''; }
+  /// البنود الحالية (تعديلاتك أو الأصلية)
+  static List<Map<String, dynamic>> terms(Obj S) {
+    final E = ed(S);
+    if (E['terms'] is List) return [for (final t in lst(E['terms'])) Map<String, dynamic>.from(obj(t) ?? {})];
+    return defTerms(S);
+  }
+  static List<Map<String, dynamic>> defTerms(Obj S) {
+    final en = tpl(S) == 'b' ? _tcEn : _faEn;
+    final ar = tpl(S) == 'b' ? [..._ta, ..._tb].map((x) => x.replaceAll(RegExp(r'\s*\.$'), '')).toList() : _faAr;
+    return [for (var i = 0; i < en.length; i++) {'en': en[i], 'ar': i < ar.length ? ar[i] : ''}];
+  }
+  /// صفوف الجدول الأساسية (عشان تخفي/تظهر)
+  static List<List<String>> baseRows(Obj S) {
+    final f = F(S);
+    return tpl(S) == 'b'
+        ? [['Landlord', 'll', 'المؤجر'], ['Landlord ID', 'lid', 'رقم هوية المؤجر'], ['Tenant Name', 'tn', 'اسم المستأجر'], ['Tenant ID', 'tid', 'رقم هوية المستأجر'], ['Nationality', 'nat', 'الجنسية'], ['Mobile', 'ph', 'رقم الموبايل'], ['Tenancy Subject', 'sub', 'موضوع الإيجار'], ['Contract Period', 'mo', 'مدة العقد'], ['Tenancy Dates', '@dates', 'تاريخ الإيجار'], ..._money(S), ['Cheques', 'chq', 'عدد الشيكات'], if (truthy(f['dep'])) ['Security Deposit', 'dep2', 'التأمين']]
+        : [['Landlord Name', 'll', 'اسم المؤجر'], ['Landlord ID', 'lid', 'رقم هوية المؤجر'], ['Tenant Name', 'tn', 'اسم المستأجر'], ['Tenant ID', 'tid', 'رقم هوية المستأجر'], ["Tenant's Nationality", 'nat', 'جنسية المستأجر'], ['Tenant Mobile No.', 'ph', 'رقم موبايل المستأجر'], ['Tenancy Subject', 'sub', 'موضوع الإيجار'], ['Contract Period', 'mo', 'مدة العقد'], ['Tenancy Dates', '@dates', 'تاريخ الإيجار'], ..._money(S), ['Cheques', 'chq', 'عدد الشيكات']];
+  }
+  static String _mode(Obj S, Map f) => '${rm(S)}|${tpl(S)}|${cl(S)}|${en(S)}|${lst(f['pays']).length}|${truthy(f['dep'])}|e${n0(ed(S)['n']).round()}';
   static List<List<String>> _money(Obj S) => rm(S) == 'p'
       ? const [['Total Rent', 'tot', 'إجمالي الإيجار'], ['Payments', 'pc', 'الدفعات']]
       : const [['Total Rent', 'tot', 'إجمالي الإيجار'], ['Monthly Rent', 'mr', 'الإيجار الشهري']];
 
   /// 🛋️ عقد مفروش
-  static String paperA(Obj S, Map f) => _doc(S, f, tEn: 'Tenancy Contract', tAr: 'عقد إيجار', cls: 'fa', termsEn: _faEn, termsAr: _faAr, rows: [
-        ['Landlord Name', 'll', 'اسم المؤجر'], ['Landlord ID', 'lid', 'رقم هوية المؤجر'], ['Tenant Name', 'tn', 'اسم المستأجر'], ['Tenant ID', 'tid', 'رقم هوية المستأجر'], ["Tenant's Nationality", 'nat', 'جنسية المستأجر'], ['Tenant Mobile No.', 'ph', 'رقم موبايل المستأجر'], ['Tenancy Subject', 'sub', 'موضوع الإيجار'],
-        ['Contract Period', 'mo', 'مدة العقد'], ['Tenancy Dates', '@dates', 'تاريخ الإيجار'], ..._money(S), ['Cheques', 'chq', 'عدد الشيكات'],
-      ]);
+  static String paperA(Obj S, Map f) => _doc(S, f, tEn: 'Tenancy Contract', tAr: 'عقد إيجار', cls: 'fa', termsEn: _faEn, termsAr: _faAr, rows: baseRows(S));
+
 
   static const _sg = '<div class="sg"><div>Witness<small>الشاهد</small></div><div>Witness<small>الشاهد</small></div><div>Tenant Signature<small>توقيع المستأجر</small></div><div>Landlord Signature<small>توقيع المؤجر</small></div></div>';
   static const _ta = ['السكن عائلي فقط', 'العقد شامل المياة والكهرباء والصيانة', 'في حالة إلغاء العقد قبل انتهاء مدته من قبل المستأجر يتم خصم شهر عليه .', 'يجب علي المستأجر اخطار المؤجر في حالة عدم التجديد قبل نهاية العقد بشهر'];
@@ -134,12 +162,10 @@ class Ct {
   static String _ptbBi(Obj S, Map f) => '<h2>Payments Schedule &nbsp; جدول الدفعات</h2><table class="ptb">${_ptb(S, f, const {'pn': 'Payment No. / رقم الدفعة', 'pa': 'Amount / المبلغ', 'pd': 'Due Date / تاريخ الاستحقاق', 'pm': 'Payment Method / طريقة الدفع'})}</table>';
   /// 🏠 عقد فاضي — صفحة واحدة (Tenant Contract) بلغة العقد المختارة
   static String paperB(Obj S, Map f) {
-    final ar = [..._ta, ..._tb].map((x) => x.replaceAll(RegExp(r'\s*\.$'), '')).toList();
-    return _doc(S, f, tEn: 'Tenant Contract', tAr: 'عقد إيجار', cls: 'fb', termsEn: _tcEn, termsAr: ar, rows: [
-      ['Landlord', 'll', 'المؤجر'], ['Landlord ID', 'lid', 'رقم هوية المؤجر'], ['Tenant Name', 'tn', 'اسم المستأجر'], ['Tenant ID', 'tid', 'رقم هوية المستأجر'], ['Nationality', 'nat', 'الجنسية'], ['Mobile', 'ph', 'رقم الموبايل'], ['Tenancy Subject', 'sub', 'موضوع الإيجار'],
-      ['Contract Period', 'mo', 'مدة العقد'], ['Tenancy Dates', '@dates', 'تاريخ الإيجار'], ..._money(S), ['Cheques', 'chq', 'عدد الشيكات'], if (truthy(f['dep'])) ['Security Deposit', 'dep2', 'التأمين'],
-    ]);
+    final d = defTerms(S);
+    return _doc(S, f, tEn: 'Tenant Contract', tAr: 'عقد إيجار', cls: 'fb', termsEn: [for (final t in d) str(t['en'])], termsAr: [for (final t in d) str(t['ar'])], rows: baseRows(S));
   }
+
 
   /// الورقة الحالية: المحفوظة (بتعديلاتك من القديم) لو تنفع للشكل ده، وإلا بتتعمل من النموذج
   static String paper(Obj S) {

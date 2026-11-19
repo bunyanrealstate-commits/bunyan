@@ -221,6 +221,71 @@ class _CtState extends State<ContractPage> {
     if (mounted) toast(context, l == 'ar' ? 'العقد بالعربي' : l == 'en' ? 'Contract in English' : 'العقد عربي + English');
   }
 
+  /* ───────── ✏️ تعديل العقد: العنوان، الصفوف، البنود ───────── */
+  Future<void> _edSave([String? log]) async { Ct.edTouch(S); await _save(log); }
+
+  /// نافذة بخانتين (English + عربي) وأحياناً قيمة
+  Future<Map<String, String>?> _edDlg(String title, {String en = '', String ar = '', String? v, bool multi = false}) {
+    final a = TextEditingController(text: en), b = TextEditingController(text: ar), c0 = v == null ? null : TextEditingController(text: v);
+    return showDialog<Map<String, String>>(context: context, builder: (ctx) => Directionality(textDirection: Tr.dir, child: AlertDialog(
+      title: Text(title),
+      content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        TextField(controller: b, maxLines: multi ? 5 : 1, minLines: 1, decoration: const InputDecoration(labelText: 'بالعربي', border: OutlineInputBorder())),
+        const SizedBox(height: 10),
+        TextField(controller: a, maxLines: multi ? 5 : 1, minLines: 1, textDirection: TextDirection.ltr, decoration: const InputDecoration(labelText: 'English', border: OutlineInputBorder())),
+        if (c0 != null) ...[const SizedBox(height: 10), TextField(controller: c0, decoration: const InputDecoration(labelText: 'القيمة اللي هتتكتب في العقد', border: OutlineInputBorder()))],
+      ])),
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')), FilledButton(onPressed: () => Navigator.pop(ctx, {'en': a.text.trim(), 'ar': b.text.trim(), if (c0 != null) 'v': c0.text.trim()}), child: const Text('حفظ'))],
+    )));
+  }
+
+  Widget _edBtn(IconData ic, VoidCallback on, {Color c0 = kMuted}) => InkWell(borderRadius: BorderRadius.circular(99), onTap: on, child: Padding(padding: const EdgeInsets.all(5), child: Icon(ic, size: 19, color: c0)));
+
+  Widget _editCard() {
+    final E = Ct.ed(S); final hide = {for (final h in lst(E['hide'])) str(h)}; final cr = lst(E['rows']); final T = Ct.terms(S);
+    final custom = E['terms'] is List || cr.isNotEmpty || hide.isNotEmpty || truthy(E['tEn']) || truthy(E['tAr']);
+    List<Map<String, dynamic>> tl() { if (E['terms'] is! List) E['terms'] = Ct.defTerms(S); return (E['terms'] as List).cast<Map<String, dynamic>>(); }
+    Widget head(String t) => Padding(padding: const EdgeInsets.only(top: 10, bottom: 4), child: Text(t, style: const TextStyle(fontWeight: FontWeight.w900, color: kNavy, fontSize: 14)));
+    return BCard(c: const Color(0xFF7C3AED), title: '✏️ تعديل العقد', child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      const Text('عدّل أي حاجة في الورقة: العنوان، تخفي أو تضيف صفوف، وتعدّل أو تمسح أو تضيف بنود. التعديلات بتتحفظ لكل نوع عقد (مفروش / فاضي).', style: TextStyle(color: kMuted, fontSize: 12.5, height: 1.5)),
+      head('🏷 عنوان العقد'),
+      InkWell(onTap: () async { final r = await _edDlg('عنوان العقد', en: str(E['tEn']).isEmpty ? (Ct.tpl(S) == 'b' ? 'Tenant Contract' : 'Tenancy Contract') : str(E['tEn']), ar: str(E['tAr']).isEmpty ? 'عقد إيجار' : str(E['tAr'])); if (r == null) return; E['tEn'] = r['en']; E['tAr'] = r['ar']; await _edSave('✏️ عنوان العقد'); },
+        child: InputDecorator(decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true, suffixIcon: Icon(Icons.edit, size: 18)), child: Text('${str(E['tAr']).isEmpty ? 'عقد إيجار' : E['tAr']} • ${str(E['tEn']).isEmpty ? (Ct.tpl(S) == 'b' ? 'Tenant Contract' : 'Tenancy Contract') : E['tEn']}', maxLines: 1, overflow: TextOverflow.ellipsis))),
+      head('📋 صفوف الجدول'),
+      for (final r in Ct.baseRows(S)) Row(children: [
+        Expanded(child: Text(r[2], style: TextStyle(fontWeight: FontWeight.w700, color: hide.contains(r[1]) ? kMuted : kInk, decoration: hide.contains(r[1]) ? TextDecoration.lineThrough : null))),
+        _edBtn(hide.contains(r[1]) ? Icons.visibility_off_outlined : Icons.visibility_outlined, () async { final H = [...hide]; hide.contains(r[1]) ? H.remove(r[1]) : H.add(r[1]); E['hide'] = H; await _edSave(); }, c0: hide.contains(r[1]) ? kMuted : const Color(0xFF2563EB)),
+      ]),
+      for (var i = 0; i < cr.length; i++) Row(children: [
+        Expanded(child: Text('➕ ${str(obj(cr[i])?['ar']).isEmpty ? str(obj(cr[i])?['en']) : str(obj(cr[i])?['ar'])}: ${str(obj(cr[i])?['v'])}', style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF7C3AED)))),
+        _edBtn(Icons.edit_outlined, () async { final x = obj(cr[i])!; final r = await _edDlg('تعديل الصف', en: str(x['en']), ar: str(x['ar']), v: str(x['v'])); if (r == null) return; cr[i] = r; await _edSave('✏️ صف في العقد'); }),
+        _edBtn(Icons.delete_outline, () async { cr.removeAt(i); await _edSave('🗑 صف من العقد'); }, c0: kRed),
+      ]),
+      Align(alignment: AlignmentDirectional.centerStart, child: TextButton.icon(onPressed: () async { final r = await _edDlg('➕ صف جديد في الجدول', v: ''); if (r == null || (r['en']!.isEmpty && r['ar']!.isEmpty)) return; if (E['rows'] is! List) E['rows'] = []; (E['rows'] as List).add(r); await _edSave('➕ صف في العقد'); }, icon: const Icon(Icons.add), label: const Text('ضيف صف'))),
+      head('📜 بنود العقد'),
+      for (var i = 0; i < T.length; i++) Container(
+        margin: const EdgeInsets.only(bottom: 6), padding: const EdgeInsets.fromLTRB(8, 6, 4, 6),
+        decoration: BoxDecoration(color: const Color(0xFFF7F8FB), borderRadius: BorderRadius.circular(10), border: Border.all(color: kBd)),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('${i + 1}. ', style: const TextStyle(fontWeight: FontWeight.w900)),
+          Expanded(child: Text(str(T[i]['ar']).isEmpty ? str(T[i]['en']) : str(T[i]['ar']), style: const TextStyle(fontSize: 13, height: 1.45))),
+          Column(children: [
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              _edBtn(Icons.edit_outlined, () async { final r = await _edDlg('تعديل البند ${i + 1}', en: str(T[i]['en']), ar: str(T[i]['ar']), multi: true); if (r == null) return; tl()[i] = r; await _edSave('✏️ بند في العقد'); }),
+              _edBtn(Icons.delete_outline, () async { if (!await confirmDlg(context, 'تمسح البند ${i + 1}؟', ok: '🗑 امسح')) return; tl().removeAt(i); await _edSave('🗑 بند من العقد'); }, c0: kRed),
+            ]),
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              if (i > 0) _edBtn(Icons.arrow_upward, () async { final L = tl(); final x = L.removeAt(i); L.insert(i - 1, x); await _edSave(); }),
+              if (i < T.length - 1) _edBtn(Icons.arrow_downward, () async { final L = tl(); final x = L.removeAt(i); L.insert(i + 1, x); await _edSave(); }),
+            ]),
+          ]),
+        ]),
+      ),
+      Align(alignment: AlignmentDirectional.centerStart, child: TextButton.icon(onPressed: () async { final r = await _edDlg('➕ بند جديد', multi: true); if (r == null || (r['en']!.isEmpty && r['ar']!.isEmpty)) return; tl().add(r); await _edSave('➕ بند في العقد'); }, icon: const Icon(Icons.add), label: const Text('ضيف بند'))),
+      if (custom) OutlinedButton(onPressed: () async { if (!await confirmDlg(context, 'ترجّع العقد زي الأصل؟ (العنوان والصفوف والبنود)', ok: '↩️ رجّع')) return; Ct.ct(S).remove('ed_${Ct.tpl(S)}'); Ct.edTouch(S); await _save('↩️ العقد رجع للأصل'); }, child: const Text('↩️ رجّع العقد زي الأصل')),
+    ]));
+  }
+
   /* ───────── التوقيعات ───────── */
   /// توقيع: يا ترسمه بصباعك، يا ترفع صورته (من الكاميرا أو الصور) وأنا آخد التوقيع منها وأشيل الورقة
   Future<String?> _pad(String title, {String? hint, String? nameInit, ValueChanged<String>? onName}) async {
@@ -428,6 +493,7 @@ class _CtState extends State<ContractPage> {
       ])),
       const SizedBox(height: 12),
       // ───── 2) التوقيعات ─────
+      _editCard(),
       BCard(c: kGreen, title: '✍️ التوقيعات', child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         const Text('توقيعك كمؤجر: اختاره من تحت أو اعمل جديد. توقيع المستأجر: يوقّع بصباعه على موبايلك.', style: TextStyle(color: kMuted, fontSize: 12.5)),
         const SizedBox(height: 10),
