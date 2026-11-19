@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -37,6 +38,12 @@ class _CtState extends State<ContractPage> {
   Map<String, dynamic> get c => Ct.ct(S);
   Map<String, dynamic> get f => Ct.F(S);
   final Map<String, TextEditingController> tc = {};
+  // لو خرجت من الصفحة وانت لسه بتكتب/بتمسح → يتحفظ برضه
+  @override
+  void dispose() {
+    if (_deb?.isActive == true) { _deb!.cancel(); var ch = false; for (final e in tc.entries) { if (e.value.text != str(f[e.key])) { f[e.key] = e.value.text; ch = true; } } if (ch) Store.I.save(); }
+    super.dispose();
+  }
   int v = 0;
   bool busy = false;
 
@@ -46,22 +53,27 @@ class _CtState extends State<ContractPage> {
   TextEditingController _c(String k) => tc.putIfAbsent(k, () => TextEditingController(text: str(f[k])));
   void _sync() { for (final e in tc.entries) { if (e.value.text != str(f[e.key])) e.value.text = str(f[e.key]); } }
 
+  bool _off(String k) => obj(c['clr'])?[k] == true;
+  Timer? _deb;
   Future<void> _save([String? log]) async { await Store.I.save(log: log); if (mounted) setState(() => v++); }
 
   /// ctUpd: تغيير خانة + الحسابات التلقائية (النهاية، الشيكات، الإجمالي، التأمين)
   Future<void> _set(String k, String val) async {
     if (str(f[k]) == val) return;
-    final autoTot = !truthy(f['tot']) || n0(f['tot']).round() == (n0(f['_r']) * n0(f['_m'])).round();
+    final autoTot = !_off('tot') && (!truthy(f['tot']) || n0(f['tot']).round() == (n0(f['_r']) * n0(f['_m'])).round());
     f[k] = val;
-    if ((k == 'st' || k == 'mo') && str(f['st']).isNotEmpty && str(f['mo']).isNotEmpty) {
-      f['en'] = Ct.endOf(str(f['st']), f['mo']);
-      if (!truthy(f['chq']) || RegExp(r'^\d+ شيكات شامل').hasMatch(str(f['chq']))) f['chq'] = '${(double.tryParse(str(f['mo'])) ?? 0).round()} شيكات شامل شيك تأمين بقيمة شهر';
+    // مسحت خانة بإيدك → متتملاش لوحدها تاني (لحد ما تكتب فيها)
+    final X = (c['clr'] is Map<String, dynamic>) ? c['clr'] as Map<String, dynamic> : (c['clr'] = <String, dynamic>{});
+    if (val.trim().isEmpty) { X[k] = true; } else { X.remove(k); }
+    if ((k == 'st' || k == 'mo') && str(f['st']).isNotEmpty && str(f['mo']).isNotEmpty && !(k == 'mo' && val.isEmpty)) {
+      if (!_off('en') || k == 'st') f['en'] = Ct.endOf(str(f['st']), f['mo']);
+      if (!_off('chq') && (!truthy(f['chq']) || RegExp(r'^\d+ شيكات شامل').hasMatch(str(f['chq'])))) f['chq'] = '${(double.tryParse(str(f['mo'])) ?? 0).round()} شيكات شامل شيك تأمين بقيمة شهر';
     }
-    if (k == 'st' && str(f['st']).isNotEmpty && c['dueMan'] != true) { final sd = pd(f['st']).day; f['due'] = '${sd == 1 ? 31 : sd - 1}'; }
+    if (k == 'st' && str(f['st']).isNotEmpty && c['dueMan'] != true && !_off('due')) { final sd = pd(f['st']).day; f['due'] = '${sd == 1 ? 31 : sd - 1}'; }
     if (k == 'due') c['dueMan'] = true;
-    if (k == 'rent' && !truthy(f['cx'])) f['cx'] = f['rent'];
+    if (k == 'rent' && !truthy(f['cx']) && !_off('cx')) f['cx'] = f['rent'];
     if ((k == 'rent' || k == 'mo') && autoTot && truthy(f['rent']) && truthy(f['mo'])) { f['tot'] = (n0(f['rent']) * n0(f['mo'])).round(); f['_r'] = f['rent']; f['_m'] = f['mo']; }
-    if (k == 'rent' && Ct.tpl(S) == 'b' && !truthy(f['dep'])) f['dep'] = f['rent'];
+    if (k == 'rent' && Ct.tpl(S) == 'b' && !truthy(f['dep']) && !_off('dep')) f['dep'] = f['rent'];
     // نهاية العقد اتكتبت بإيدك → عدد الشهور يتحسب منها
     if (k == 'en' && str(f['st']).isNotEmpty && str(f['en']).isNotEmpty) { final sp = Ct.spanMonths(str(f['st']), str(f['en'])); if (sp > 0 && n0(f['mo']).round() != sp) f['mo'] = '$sp'; }
     // العقد الفاضي: الدفعات تتوزع لوحدها على المدة (إلا لو عدّلت دفعة بإيدك)
@@ -301,8 +313,13 @@ class _CtState extends State<ContractPage> {
     final t = _c(k);
     return Padding(padding: const EdgeInsets.only(bottom: 8), child: TextField(
       controller: t, keyboardType: num ? const TextInputType.numberWithOptions(decimal: true) : (k == 'ph' ? TextInputType.phone : TextInputType.text),
-      style: const TextStyle(fontSize: 14), decoration: InputDecoration(labelText: lb, hintText: hint, border: const OutlineInputBorder(), isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11)),
-      onSubmitted: (x) => _set(k, x), onTapOutside: (_) { FocusManager.instance.primaryFocus?.unfocus(); _set(k, t.text); }, onEditingComplete: () => _set(k, t.text),
+      style: const TextStyle(fontSize: 14),
+      decoration: InputDecoration(labelText: lb, hintText: hint, border: const OutlineInputBorder(), isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          suffixIcon: t.text.isEmpty ? null : IconButton(tooltip: 'امسح', visualDensity: VisualDensity.compact, icon: const Icon(Icons.close, size: 18, color: kMuted), onPressed: () { _deb?.cancel(); t.clear(); _set(k, ''); }),
+          suffixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 20)),
+      // بيتحفظ وانت بتكتب/بتمسح (من غير ما تحتاج تدوس برّه)
+      onChanged: (x) { final had = x.isNotEmpty; _deb?.cancel(); _deb = Timer(const Duration(milliseconds: 700), () => _set(k, t.text)); if (had != (str(f[k]).isNotEmpty)) setState(() {}); },
+      onSubmitted: (x) { _deb?.cancel(); _set(k, x); }, onTapOutside: (_) { FocusManager.instance.primaryFocus?.unfocus(); _deb?.cancel(); _set(k, t.text); }, onEditingComplete: () { _deb?.cancel(); _set(k, t.text); },
     ));
   }
 

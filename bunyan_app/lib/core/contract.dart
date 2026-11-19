@@ -27,6 +27,7 @@ class Ct {
       return en ? (MM[str(P['m'])] ?? str(P['m'])) : str(P['m']);
     }
     if (k == 'mr') { final dd = n0(f['due']); if (!truthy(f['rent'])) return ''; return en ? '${nf(f['rent'])} AED${dd != 0 ? ' – ${dd >= 31 ? 'Last Day Of Every Month' : 'Day ${dd.round()} Of Every Month'}' : ''}' : '${nf(f['rent'])} درهم${dd != 0 ? ' – ${dd >= 31 ? 'آخر يوم من كل شهر' : 'يوم ${dd.round()} من كل شهر'}' : ''}'; }
+    if (k == 'dep2' && !truthy(f['dep'])) return '';
     if (k == 'dep2') return en ? '${f['depT'] == 'cash' ? 'Cash' : 'Cheque'}${truthy(f['dep']) ? ' of AED ${nf(f['dep'])}' : ''}' : '${f['depT'] == 'cash' ? 'كاش' : 'شيك'}${truthy(f['dep']) ? ' بقيمة ${nf(f['dep'])} درهم' : ''}';
     if (k == 'chq' && n0(f['cq']) > 0) return chqTxt(f, en);
     if (k == 'pc') { final n = lst(f['pays']).length; return n == 0 ? '' : (en ? (n == 1 ? '1 Payment' : '$n Payments') : (n == 1 ? 'دفعة واحدة' : n == 2 ? 'دفعتين' : n >= 11 ? '$n دفعة' : '$n دفعات')); }
