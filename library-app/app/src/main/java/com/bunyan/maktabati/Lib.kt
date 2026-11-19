@@ -156,6 +156,7 @@ object Lib {
 
     /** 🔒 الكتب مستخبية لحد ما تعمل الحركة السرية وتكتب الرقم السري */
     var revealed by mutableStateOf(false)
+    var pickAt = 0L
     fun hasPin() = cfg.optString("pin").isNotEmpty()
     private fun hp(p: String): String = java.security.MessageDigest.getInstance("SHA-256").digest(("mktb:" + p).toByteArray()).joinToString("") { "%02x".format(it) }
     fun checkPin(p: String) = hasPin() && cfg.optString("pin") == hp(p)
@@ -243,6 +244,7 @@ object Lib {
 
     private fun snapshot(): JSONObject = JSONObject().put("v", 1).put("at", System.currentTimeMillis()).put("app", app).put("goal", goal).put("cfg", cfg)
         .put("rems", rems).put("queue", JSONArray(queue)).put("books", JSONArray(books))
+        .also { s -> try { val c = File(dir, "crash.txt"); if (c.exists()) s.put("crash", c.readText()) } catch (_: Exception) {} }
 
     private suspend fun backup(): String {
         syncing = true
@@ -270,6 +272,7 @@ object Lib {
             if (sha != null) body.put("sha", sha)
             val (c2, _) = gh(BK, "PUT", body.toString())
             pulledAt = System.currentTimeMillis()
+            if (c2 == 200 || c2 == 201) try { File(dir, "crash.txt").delete() } catch (_: Exception) {}
             return if (c2 == 200 || c2 == 201) "تمام ✅ (${books.size} كتاب) — محفوظين احتياطي" else "مقدرتش أحفظ النسخة الاحتياطية ($c2)"
         } catch (e: Exception) { return "مفيش نت؟" } finally { syncing = false }
     }

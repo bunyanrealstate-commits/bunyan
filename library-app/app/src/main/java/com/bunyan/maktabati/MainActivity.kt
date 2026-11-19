@@ -73,6 +73,11 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         Lib.init(this)
+        val prev = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { t, e ->
+            try { File(filesDir, "crash.txt").writeText(java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US).format(java.util.Date()) + " v" + Updater.myVersion(this) + "\n" + android.util.Log.getStackTraceString(e).take(6000)) } catch (_: Exception) {}
+            prev?.uncaughtException(t, e)
+        }
         if (android.os.Build.VERSION.SDK_INT >= 33) setRecentsScreenshotEnabled(false)  // 🔒 محدش يشوف الكتب من «التطبيقات الأخيرة»
         incoming.value = intent
         setContent {
@@ -129,7 +134,7 @@ fun App(incoming: MutableState<Intent?>) {
     fun openBook(b: JSONObject) { if (Lib.have(b)) reading = b else fetch(b, true) }
 
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-        if (uri != null) addFromUri(ctx, uri)?.let { reading = it }
+        if (uri != null) { Toast.makeText(ctx, "⏳ بضيف الكتاب…", Toast.LENGTH_SHORT).show(); scope.launch { addFromUriBg(ctx, uri)?.let { reading = it } } }
     }
 
     LaunchedEffect(incoming.value, Lib.revealed) {
@@ -150,7 +155,7 @@ fun App(incoming: MutableState<Intent?>) {
     DisposableEffect(life) {
         val ob = androidx.lifecycle.LifecycleEventObserver { _, e ->
             if (e == androidx.lifecycle.Lifecycle.Event.ON_STOP) hiddenAt = System.currentTimeMillis()
-            if (e == androidx.lifecycle.Lifecycle.Event.ON_START && hiddenAt > 0 && System.currentTimeMillis() - hiddenAt > 60_000) { Lib.revealed = false; reading = null; screen = "home"; sheet = null; notes = null }
+            if (e == androidx.lifecycle.Lifecycle.Event.ON_START && hiddenAt > 0 && System.currentTimeMillis() - hiddenAt > 60_000 && System.currentTimeMillis() - Lib.pickAt > 10 * 60_000) { Lib.revealed = false; reading = null; screen = "home"; sheet = null; notes = null }
             if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) scope.launch {
                 kotlinx.coroutines.delay(700)
                 if (Lib.link == null) try {
@@ -192,7 +197,7 @@ fun App(incoming: MutableState<Intent?>) {
         "journey" -> JourneyScreen({ screen = "home" }) { b -> screen = "home"; openBook(b) }
         "paper" -> PaperScreen { screen = "home" }
         else -> HomeScreen(dl, onOpen = { openBook(it) }, onFetch = { fetch(it, false) }, onSearch = { screen = "search" },
-            onPick = { pick.launch(arrayOf("application/pdf")) }, onLink = { screen = "link" },
+            onPick = { { Lib.pickAt = System.currentTimeMillis(); pick.launch(arrayOf("application/pdf")) } }, onLink = { screen = "link" },
             onSync = { scope.launch { Lib.msg = Lib.sync(); toast(Lib.msg) } },
             onRec = { sheet = "rec" }, onSettings = { sheet = "set" }, onNotes = { notes = it },
             onMore = { k -> if (k == "jar") sheet = "jar" else screen = k },
@@ -208,6 +213,19 @@ fun addFromUri(ctx: android.content.Context, uri: Uri): JSONObject? = try {
     ctx.contentResolver.openInputStream(uri)!!.use { inp -> File(Lib.dir, "books/${b.optString("id")}.pdf").outputStream().use { inp.copyTo(it) } }
     cover(b); Lib.save(); b
 } catch (e: Exception) { Toast.makeText(ctx, "⚠️ مقدرتش أفتح الملف", Toast.LENGTH_SHORT).show(); null }
+
+/** نفس addFromUri بس النسخ والغلاف في الخلفية علشان التطبيق ميعلقش ويقفل مع الكتب الكبيرة */
+suspend fun addFromUriBg(ctx: android.content.Context, uri: Uri): JSONObject? {
+    var name = "كتاب"
+    try { ctx.contentResolver.query(uri, null, null, null, null)?.use { c -> val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME); if (i >= 0 && c.moveToFirst()) name = c.getString(i) } } catch (_: Exception) {}
+    val title = name.removeSuffix(".pdf").removeSuffix(".PDF").replace('_', ' ')
+    val b = Lib.book(Lib.books.firstOrNull { it.optString("t") == title && !Lib.have(it) }?.optString("id") ?: "") ?: Lib.addLocal(title, "") {}
+    val ok = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        try { File(Lib.dir, "books").mkdirs(); ctx.contentResolver.openInputStream(uri)!!.use { inp -> File(Lib.dir, "books/${b.optString("id")}.pdf").outputStream().use { inp.copyTo(it) } }; cover(b); true } catch (_: Exception) { false }
+    }
+    if (!ok) { Toast.makeText(ctx, "⚠️ مقدرتش أفتح الملف", Toast.LENGTH_SHORT).show(); return null }
+    Lib.ver++; Lib.save(); return b
+}
 
 fun cover(b: JSONObject) {
     val f = File(Lib.dir, "covers/${b.optString("id")}.jpg"); if (f.exists()) return
@@ -580,14 +598,20 @@ fun DecoyScreen() {
     val dbooks = (0 until list.length()).mapNotNull { list.optJSONObject(it) }
     var open by remember { mutableStateOf<JSONObject?>(null) }
     var del by remember { mutableStateOf<JSONObject?>(null) }
+    val dscope = rememberCoroutineScope()
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-        if (uri != null) try {
+        if (uri != null) dscope.launch { try {
             var name = "كتاب"
             ctx.contentResolver.query(uri, null, null, null, null)?.use { c -> val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME); if (i >= 0 && c.moveToFirst()) name = c.getString(i) }
             val b = JSONObject().put("id", "d" + System.currentTimeMillis()).put("t", name.removeSuffix(".pdf").removeSuffix(".PDF").replace('_', ' ')).put("a", "").put("sh", "now")
-            ctx.contentResolver.openInputStream(uri)!!.use { inp -> File(Lib.dir, "books/${b.optString("id")}.pdf").outputStream().use { inp.copyTo(it) } }
-            cover(b); list.put(b); Lib.save()
-        } catch (_: Exception) { Toast.makeText(ctx, "⚠️ مقدرتش أفتح الملف", Toast.LENGTH_SHORT).show() }
+            Toast.makeText(ctx, "⏳ بضيف الكتاب…", Toast.LENGTH_SHORT).show()
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                File(Lib.dir, "books").mkdirs()
+                ctx.contentResolver.openInputStream(uri)!!.use { inp -> File(Lib.dir, "books/${b.optString("id")}.pdf").outputStream().use { inp.copyTo(it) } }
+                cover(b)
+            }
+            list.put(b); Lib.ver++; Lib.save()
+        } catch (_: Exception) { Toast.makeText(ctx, "⚠️ مقدرتش أفتح الملف", Toast.LENGTH_SHORT).show() } }
     }
     val o = open
     if (o != null) { ReaderScreen(o) { _, _, _ -> open = null; Lib.save() }; return }
@@ -604,7 +628,7 @@ fun DecoyScreen() {
                     }
                 })
             Spacer(Modifier.weight(1f))
-            if (dbooks.isNotEmpty()) TextButton({ pick.launch(arrayOf("application/pdf")) }) { Text("➕ ضيف كتاب", color = Green, fontWeight = FontWeight.Bold) }
+            if (dbooks.isNotEmpty()) TextButton({ { Lib.pickAt = System.currentTimeMillis(); pick.launch(arrayOf("application/pdf")) } }) { Text("➕ ضيف كتاب", color = Green, fontWeight = FontWeight.Bold) }
         }
         if (dbooks.isEmpty()) {
             Spacer(Modifier.weight(1f))
@@ -612,7 +636,7 @@ fun DecoyScreen() {
                 Text("📖", fontSize = 64.sp)
                 Text("مكتبتك فاضية", fontWeight = FontWeight.Black, fontSize = 20.sp, color = Ink)
                 Text("لسه مضفتش أي كتاب", color = Muted)
-                OutlinedButton({ pick.launch(arrayOf("application/pdf")) }) { Text("➕ ضيف كتاب") }
+                OutlinedButton({ { Lib.pickAt = System.currentTimeMillis(); pick.launch(arrayOf("application/pdf")) } }) { Text("➕ ضيف كتاب") }
             }
             Spacer(Modifier.weight(1.3f))
         } else LazyVerticalGrid(GridCells.Fixed(3), Modifier.fillMaxSize().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
