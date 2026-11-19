@@ -412,36 +412,38 @@ void lastEditsSheet(BuildContext context) {
   ]);
 }
 
-/* ───────── كارت-زرار (tcard) زي القديم: أيقونة + عنوان + سطر + «افتح ›» ───────── */
+/* ───────── كارت-زرار: دوسة على الكارت كله تفتح الشاشة — أيقونة ملوّنة + عنوان + سطر صغير ───────── */
 class TCard extends StatelessWidget {
   final String ic, t; final String? sub; final Color c; final VoidCallback onTap;
   const TCard(this.ic, this.t, {super.key, this.sub, this.c = const Color(0xFF3B82F6), required this.onTap});
   @override
-  Widget build(BuildContext context) => InkWell(
-        borderRadius: BorderRadius.circular(20), onTap: onTap,
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 128),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFD5E8E2)), boxShadow: const [BoxShadow(color: Color(0x1214213D), blurRadius: 14, offset: Offset(0, 5))]),
-          child: IntrinsicHeight(child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Expanded(child: Padding(padding: const EdgeInsets.fromLTRB(14, 12, 10, 10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(ic, style: const TextStyle(fontSize: 26)),
-              const SizedBox(height: 4),
-              Text(t, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15.5, height: 1.3)),
-              if (sub != null) Text(Priv.txt(sub!), maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5, color: Color(0xFF555B66), fontWeight: FontWeight.w700)),
-              const Spacer(),
-              const Text('افتح ›', style: TextStyle(color: kAc, fontWeight: FontWeight.w800)),
-            ]))),
-            Container(width: 5, margin: const EdgeInsets.symmetric(vertical: 14), decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(9))),
-            const SizedBox(width: 8),
-          ])),
+  Widget build(BuildContext context) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16), onTap: onTap,
+          child: Ink(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(begin: AlignmentDirectional.topStart, end: AlignmentDirectional.bottomEnd, colors: [Color.lerp(Colors.white, c, .10)!, Colors.white]),
+              borderRadius: BorderRadius.circular(16), border: Border.all(color: Color.lerp(Colors.white, c, .28)!),
+              boxShadow: const [BoxShadow(color: Color(0x0F14213D), blurRadius: 10, offset: Offset(0, 3))]),
+            child: Padding(padding: const EdgeInsets.fromLTRB(10, 10, 10, 10), child: Row(children: [
+              Container(width: 40, height: 40, alignment: Alignment.center, decoration: BoxDecoration(color: Color.lerp(Colors.white, c, .18), borderRadius: BorderRadius.circular(12)), child: Text(ic, style: const TextStyle(fontSize: 20))),
+              const SizedBox(width: 9),
+              Expanded(child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(t, maxLines: 2, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, height: 1.25, color: Color.lerp(kInk, c, .25))),
+                if (sub != null) Padding(padding: const EdgeInsets.only(top: 2), child: Text(Priv.txt(sub!), maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, color: kMuted, fontWeight: FontWeight.w600, height: 1.3))),
+              ])),
+              Icon(Directionality.of(context) == TextDirection.rtl ? Icons.chevron_left : Icons.chevron_right, size: 18, color: c.withOpacity(.7)),
+            ])),
+          ),
         ),
       );
 }
 
 /// صف كارتين جنب بعض
-Widget tRow(List<Widget> a) => Padding(padding: const EdgeInsets.only(bottom: 10), child: IntrinsicHeight(child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      for (var i = 0; i < a.length; i++) ...[if (i > 0) const SizedBox(width: 10), Expanded(child: a[i])],
-      if (a.length == 1) ...[const SizedBox(width: 10), const Expanded(child: SizedBox())],
+Widget tRow(List<Widget> a) => Padding(padding: const EdgeInsets.only(bottom: 8), child: IntrinsicHeight(child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      for (var i = 0; i < a.length; i++) ...[if (i > 0) const SizedBox(width: 8), Expanded(child: a[i])],
+      if (a.length == 1) ...[const SizedBox(width: 8), const Expanded(child: SizedBox())],
     ])));
 
 /* ───────── ⏰ المتأخرات ───────── */

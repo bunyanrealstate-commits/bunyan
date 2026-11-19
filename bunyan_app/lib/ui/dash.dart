@@ -20,9 +20,10 @@ class SecHead extends StatelessWidget {
   const SecHead(this.t, {super.key, this.sub});
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(4, 18, 4, 10),
+        padding: const EdgeInsets.fromLTRB(2, 14, 2, 8),
         child: Row(children: [
-          Text(t, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w900, color: kNavy)),
+          Container(width: 4, height: 18, margin: const EdgeInsetsDirectional.only(end: 7), decoration: BoxDecoration(color: kAc, borderRadius: BorderRadius.circular(9))),
+          Text(t, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: kNavy)),
           if (sub != null) Padding(padding: const EdgeInsetsDirectional.only(start: 6), child: Text(sub!, style: const TextStyle(fontSize: 12, color: kMuted, fontWeight: FontWeight.w600))),
           const SizedBox(width: 10),
           Expanded(child: Container(height: 1.4, decoration: BoxDecoration(gradient: LinearGradient(colors: [kNavy.withOpacity(.28), kNavy.withOpacity(0)])))),

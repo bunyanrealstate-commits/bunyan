@@ -87,13 +87,14 @@ class HomePage extends StatelessWidget {
       const SizedBox(height: 14),
       PerUnitCard(e),
       // ───── كروت بتفتح شاشات (زي القديم) ─────
+      SecHead(Tr.t('⚡ شاشات سريعة')),
       tRow([
-        TCard('📅', '${Tr.t('الدفعات القادمة')}', sub: Tr.t('كل دفعة شركة هتتغطى منين'), onTap: () => coverageSheet(context, e)),
-        TCard('🧭', Tr.t('خطة السحب'), c: kOk, onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ForecastPage()))),
+        TCard('📅', '${Tr.t('الدفعات القادمة')}', sub: Tr.t('كل دفعة شركة هتتغطى منين'), c: kTerra, onTap: () => coverageSheet(context, e)),
+        TCard('🧭', Tr.t('خطة السحب'), sub: Tr.t('تسحب إمتى وقد إيه'), c: kOk, onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ForecastPage()))),
       ]),
       tRow([
-        TCard('📊', Tr.t('التحليل المالي'), onTap: () => analysisSheet(context, e)),
-        TCard('🕘', Tr.t('آخر التعديلات'), c: const Color(0xFF7C3AED), onTap: () => lastEditsSheet(context)),
+        TCard('📊', Tr.t('التحليل المالي'), sub: Tr.t('الإيراد والمصاريف والربح'), c: const Color(0xFF2563EB), onTap: () => analysisSheet(context, e)),
+        TCard('🕘', Tr.t('آخر التعديلات'), sub: Tr.t('مين عدّل إيه'), c: const Color(0xFF7C3AED), onTap: () => lastEditsSheet(context)),
       ]),
       // ───── 📅 المواعيد ─────
       SecHead(Tr.t('📅 المواعيد')),
