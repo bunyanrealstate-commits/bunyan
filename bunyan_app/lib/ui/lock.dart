@@ -8,6 +8,7 @@ import 'theme.dart';
 import 'dialogs.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:local_auth/local_auth.dart';
+import 'package:flutter/services.dart' show PlatformException;
 
 /// 🔒 قفل التطبيق برقم سري — بيتقفل عند الفتح، ولو خرجت منه أكتر من دقيقتين
 class AppLock {
@@ -16,12 +17,20 @@ class AppLock {
   static bool get bio => !kIsWeb && Store.I.cfg['bio'] != false;
   static bool get on => pin || bio;
   static final _la = LocalAuthentication();
-  /// بصمة (أو قفل الشاشة بتاع الموبايل لو البصمة مش راضية) — null = الموبايل مافيهوش قفل خالص
-  static Future<bool?> finger([String? why]) async {
+  static String lastErr = '';
+  /// بصمة — true نجحت، false رفضت/اتلغت، null الموبايل مافيهوش بصمة/قفل خالص
+  /// [screen]: يسمح بقفل شاشة الموبايل (PIN/باترن) بدل البصمة
+  static Future<bool?> finger([String? why, bool screen = false]) async {
+    lastErr = '';
     try {
       if (!await _la.isDeviceSupported()) return null;
-      return await _la.authenticate(localizedReason: why ?? Tr.t('افتح بنيان بالبصمة'), options: const AuthenticationOptions(stickyAuth: true, biometricOnly: false));
-    } catch (_) { return null; }
+      try { await _la.stopAuthentication(); } catch (_) {}
+      return await _la.authenticate(localizedReason: why ?? Tr.t('افتح بنيان بالبصمة'), options: AuthenticationOptions(stickyAuth: false, biometricOnly: !screen, useErrorDialogs: true)).timeout(const Duration(seconds: 60), onTimeout: () { lastErr = 'timeout'; return false; });
+    } on PlatformException catch (e) {
+      lastErr = '${e.code}${e.message == null ? '' : ': ${e.message}'}';
+      if (['NotAvailable', 'NotEnrolled', 'no_fragment_activity', 'PasscodeNotSet'].contains(e.code)) return null;
+      return false;
+    } catch (e) { lastErr = '$e'; return null; }
   }
   static String _h(String p, String s) => sha256.convert(utf8.encode('$s:$p')).toString();
   static bool check(String p) { final c = obj(Store.I.cfg['pin']); return c != null && _h(p, str(c['s'])) == str(c['h']); }
@@ -41,24 +50,28 @@ class LockGate extends StatefulWidget {
 class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
   bool locked = AppLock.on; DateTime? _away; final c = TextEditingController(); String err = '';
   @override
-  void initState() { super.initState(); WidgetsBinding.instance.addObserver(this); if (locked) _bio(); }
-  bool _asking = false;
-  Future<void> _bio() async {
+  void initState() { super.initState(); WidgetsBinding.instance.addObserver(this); if (locked) WidgetsBinding.instance.addPostFrameCallback((_) => Future.delayed(const Duration(milliseconds: 500), _bio)); }
+  bool _asking = false; int _fails = 0;
+  void _open() { if (mounted) setState(() { locked = false; err = ''; _fails = 0; }); }
+  Future<void> _bio({bool screen = false}) async {
     if (!AppLock.bio || _asking) return;
-    _asking = true;
-    await Future.delayed(const Duration(milliseconds: 350));
-    final ok = await AppLock.finger();
+    _asking = true; if (mounted) setState(() => err = '');
+    final ok = await AppLock.finger(null, screen);
     _asking = false;
     if (!mounted) return;
-    // البصمة نجحت، أو الموبايل مافيهوش بصمة ولا قفل شاشة (ومفيش رقم سري) → يفتح
-    if (ok == true || (ok == null && !AppLock.pin)) setState(() { locked = false; err = ''; });
+    if (ok == true) { _open(); return; }
+    if (ok == null && !AppLock.pin) { _open(); return; } // الموبايل مافيهوش بصمة ولا قفل
+    _fails++;
+    // أمان: لو البصمة مش راضية تشتغل على الموبايل ده خالص ومفيش رقم سري → مانقفلش عليك البرنامج
+    if (_fails >= 4 && !AppLock.pin) { Store.I.cfg['bio'] = false; await Store.I.saveCfg(); _open(); return; }
+    setState(() => err = AppLock.lastErr.isEmpty ? Tr.t('البصمة ماتمّتش — جرّب تاني') : '${Tr.t('البصمة ماتمّتش')} (${AppLock.lastErr})');
   }
   @override
   void dispose() { WidgetsBinding.instance.removeObserver(this); super.dispose(); }
   @override
   void didChangeAppLifecycleState(AppLifecycleState s) {
     if (s == AppLifecycleState.paused) _away = DateTime.now();
-    if (s == AppLifecycleState.resumed && _away != null && AppLock.on && !_asking && DateTime.now().difference(_away!).inSeconds > 120) { setState(() { locked = true; c.clear(); err = ''; }); _bio(); }
+    if (s == AppLifecycleState.resumed && _away != null && AppLock.on && !_asking && DateTime.now().difference(_away!).inSeconds > 120) { setState(() { locked = true; c.clear(); err = ''; }); Future.delayed(const Duration(milliseconds: 400), _bio); }
   }
   void _try() { if (AppLock.check(c.text.trim())) { setState(() { locked = false; err = ''; }); } else { setState(() { err = Tr.t('الرقم غلط'); c.clear(); }); } }
   @override
@@ -69,7 +82,10 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
       Text(Tr.t('بنيان مقفول'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
       const SizedBox(height: 16),
       if (AppLock.bio) ...[
-        FilledButton.icon(onPressed: _bio, icon: const Icon(Icons.fingerprint, size: 30), label: Text(Tr.t('افتح بالبصمة'), style: const TextStyle(fontSize: 16)), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52))),
+        FilledButton.icon(onPressed: () { _asking = false; _bio(); }, icon: const Icon(Icons.fingerprint, size: 30), label: Text(Tr.t('افتح بالبصمة'), style: const TextStyle(fontSize: 16)), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52))),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(onPressed: () { _asking = false; _bio(screen: true); }, icon: const Icon(Icons.pin_outlined), label: Text(Tr.t('افتح بقفل شاشة الموبايل (PIN / باترن)'))),
+        if (err.isNotEmpty && !AppLock.pin) Padding(padding: const EdgeInsets.only(top: 10), child: Text(err, textAlign: TextAlign.center, style: const TextStyle(color: kRed, fontSize: 12.5))),
         if (AppLock.pin) Padding(padding: const EdgeInsets.symmetric(vertical: 14), child: Text(Tr.t('أو بالرقم السري'), style: const TextStyle(color: kMuted))),
       ],
       if (AppLock.pin) ...[
