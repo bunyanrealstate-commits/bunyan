@@ -26,6 +26,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -563,7 +567,7 @@ fun listenNow(ctx: android.content.Context, b: JSONObject, onFetch: (JSONObject)
 
 
 /* ───── 🔒 الشاشة اللي أي حد يشوفها: مكتبة فاضية ─────
-   السر: دوسة طويلة (ثانية) على كلمة «مكتبتي» فوق ← يطلع الرقم السري */
+   السر: دوسة طويلة (5 ثواني) على كلمة «مكتبتي» فوق ← يطلع الرقم السري */
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun DecoyScreen() {
@@ -573,8 +577,14 @@ fun DecoyScreen() {
         Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("📚 ", fontSize = 26.sp)
             Text("مكتبتي", fontSize = 26.sp, fontWeight = FontWeight.Black, color = Ink,
-                modifier = Modifier.combinedClickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null,
-                    onClick = {}, onLongClick = { pad = true }))
+                modifier = Modifier.pointerInput(Unit) {
+                    // لازم تفضل دايس 5 ثواني من غير ما تشيل صباعك
+                    awaitEachGesture {
+                        awaitFirstDown(requireUnconsumed = false)
+                        val up = kotlinx.coroutines.withTimeoutOrNull(5000L) { waitForUpOrCancellation() }
+                        if (up == null) pad = true
+                    }
+                })
         }
         Spacer(Modifier.weight(1f))
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
