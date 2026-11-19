@@ -4,6 +4,7 @@ import 'dart:io' show File;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'build.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'js.dart';
 import 'hist.dart';
@@ -107,8 +108,8 @@ class Store extends ChangeNotifier {
     try {
       final o = jsonDecode(utf8.decode(base64.decode(s))) as Map;
       if (!truthy(o['t']) || !truthy(o['r'])) return false;
-      final same = cfg['repo'] == o['r'] && (cfg['path'] ?? 'book.json') == (o['p'] ?? 'book.json');
-      cfg = {'repo': o['r'], 'token': o['t'], 'path': truthy(o['p']) ? o['p'] : 'book.json', 'g': o['g'] ?? '', 'u': o['u'] ?? '',
+      final same = cfg['repo'] == o['r'] && (kHakim || (cfg['path'] ?? 'book.json') == (o['p'] ?? 'book.json'));
+      cfg = {'repo': o['r'], 'token': o['t'], 'path': kHakim ? 'hakim.json' : truthy(o['p']) ? o['p'] : 'book.json', 'g': o['g'] ?? '', 'u': o['u'] ?? '',
         'sha': same ? (cfg['sha'] ?? '') : '', 'dirty': same ? (cfg['dirty'] ?? false) : false, 'last': ''};
       _saveCfg(); notifyListeners(); return true;
     } catch (_) { return false; }
@@ -133,6 +134,7 @@ class Store extends ChangeNotifier {
   Future<String> sync() async {
     if (!linked) return 'مش مربوط';
     if (syncing) return '…';
+    if (kHakim) return _pullHakim();
     syncing = true; notifyListeners();
     try {
       final r = await http.get(_u(get: true), headers: _h());
@@ -175,10 +177,84 @@ class Store extends ChangeNotifier {
     final r = await http.put(_u(), headers: {..._h(), 'Content-Type': 'application/json'}, body: jsonEncode(body));
     if (r.statusCode == 200 || r.statusCode == 201) {
       cfg['sha'] = (jsonDecode(r.body) as Map)['content']['sha']; cfg['dirty'] = false; await _saveBase(src);
+      exportHakim();
       return syncMsg = '✓ اترفعت ${_now()}';
     }
     if (r.statusCode == 409 || r.statusCode == 422) { cfg['dirty'] = true; syncing = false; return await sync(); }
     return syncMsg = '✗ ${r.statusCode}';
+  }
+
+  /* ───── نسخة حكيم ───── */
+  /// نسخة حكيم: بتنزّل hakim.json وبس (اللي برنامج أسامه بيبعته) — مفيش رفع
+  Future<String> _pullHakim() async {
+    syncing = true; notifyListeners();
+    try {
+      final r = await http.get(_u(get: true), headers: _h());
+      if (r.statusCode == 404) return syncMsg = '⏳ أسامه لسه مابعتش الأرقام';
+      if (r.statusCode == 401 || r.statusCode == 403) return syncMsg = '✗ الكود مش شغال — اطلب كود جديد من أسامه';
+      if (r.statusCode != 200) return syncMsg = '✗ ${r.statusCode}';
+      final j = jsonDecode(r.body) as Map; final sha = str(j['sha']);
+      if (sha == cfg['sha'] && !(lst(S['units']).isEmpty)) return syncMsg = '✓ ${_now()}';
+      Map<String, dynamic> rem;
+      if ((j['content'] == null || str(j['content']).isEmpty) && n0(j['size']) > 0) {
+        final rr = await http.get(_u(get: true), headers: _h(acc: 'application/vnd.github.raw'));
+        if (rr.statusCode != 200) return syncMsg = '✗ ${rr.statusCode}';
+        rem = jsonDecode(utf8.decode(rr.bodyBytes));
+      } else { rem = jsonDecode(utf8.decode(base64.decode(str(j['content']).replaceAll(RegExp(r'\s'), '')))); }
+      // اللي حكيم ضافه عنده (تذكيرات، إعدادات) يفضل — الأرقام بتيجي من أسامه
+      for (final k in ['rem', 'set', 'lang', 'flutLinked']) { if (S[k] != null && rem[k] == null) rem[k] = S[k]; }
+      await _adopt(rem, sha);
+      return syncMsg = '✓ نزلت آخر أرقام من أسامه ${_now()}';
+    } catch (_) { return syncMsg = '✗ مفيش نت؟'; }
+    finally { syncing = false; await _saveCfg(); notifyListeners(); }
+  }
+
+  static final _hk = RegExp(r'عبد\s*الحكيم|حكيم');
+  /// برنامج أسامه: بيبعت مجموعة حكيم بس لنسخة حكيم (hakim.json) — نفس اللي بنيان القديم بيعمله
+  Future<void> exportHakim() async {
+    if (kHakim || !linked || _hkBusy) return;
+    final gs = [for (final g in objs(S['groups'])) if (_hk.hasMatch(str(g['name']))) g];
+    if (gs.isEmpty) return;
+    _hkBusy = true;
+    try {
+      final gid = {for (final g in gs) str(g['id'])};
+      final U = [for (final u in objs(S['units'])) if (gid.contains(str(u['g']))) u];
+      final ids = {for (final u in U) str(u['id'])};
+      final gp = <String, dynamic>{}, gc = <String, dynamic>{};
+      for (final g in gs) { final id = str(g['id']); gp[id] = obj(S['gp'])?[id] ?? []; gc[id] = obj(S['gc'])?[id] ?? 0; }
+      final o = <String, dynamic>{
+        'units': U, 'groups': gs,
+        'exp': [for (final x in objs(S['exp'])) if (truthy(x['u']) ? ids.contains(str(x['u'])) : gid.contains(str(x['g']))) x],
+        'dep': [for (final x in objs(S['dep'])) if (ids.contains(str(x['uid']))) x],
+        'gp': gp, 'gc': gc, 'cos': S['cos'] ?? [], 'cash': 0, 'res': S['res'] ?? 0, 'tp': S['tp'], 'pmode': S['pmode'], 'debts': [], 'recv': [], 'tx': [],
+        'adj': [for (final a in objs(S['adj'])) if (gid.contains(str(a['g']))) a],
+        'ct': S['ct'],
+      };
+      final key = jsonOut([o['units'], o['gp'], o['exp'], o['dep'], o['adj'], [for (final g in gs) [g['id'], g['name'], g['n'], g['share']]], o['gc'], o['cos'], o['ct']]);
+      final kh = '${key.length}:${key.hashCode}';
+      if (_p.getString('bny_hkexp_k') == kh) return;
+      final u = Uri.parse('https://api.github.com/repos/${cfg['repo']}/contents/hakim.json');
+      final r = await http.get(Uri.parse('$u?t=${DateTime.now().millisecondsSinceEpoch}'), headers: _h());
+      var sha = '';
+      if (r.statusCode == 200) {
+        final j = jsonDecode(r.body) as Map; sha = str(j['sha']);
+        try { final old = jsonDecode(utf8.decode(base64.decode(str(j['content']).replaceAll(RegExp(r'\s'), '')))) as Map; if (old['updx'] != null) o['updx'] = old['updx']; } catch (_) {}
+      }
+      o['hist'] = [{'id': 'exp${DateTime.now().millisecondsSinceEpoch}', 't': DateTime.now().millisecondsSinceEpoch, 'by': 'owner', 'd': 'تحديث من برنامج المالك', 'ch': '[]', 'rev': false, 'ev': false}];
+      o['from'] = 'owner'; o['at'] = DateTime.now().millisecondsSinceEpoch;
+      final b = {'message': 'hakim ${DateTime.now().toUtc().toIso8601String()}', 'content': base64.encode(utf8.encode(jsonOut(o)))};
+      if (sha.isNotEmpty) b['sha'] = sha;
+      final w = await http.put(u, headers: {..._h(), 'Content-Type': 'application/json'}, body: jsonEncode(b));
+      if (w.statusCode == 200 || w.statusCode == 201) await _p.setString('bny_hkexp_k', kh);
+    } catch (_) {} finally { _hkBusy = false; }
+  }
+  bool _hkBusy = false;
+
+  /// كود ربط لنسخة حكيم (أسامه بيبعته لحكيم مرة واحدة)
+  String hakimCode() {
+    if (!linked) return '';
+    final j = jsonOut({'r': cfg['repo'], 't': cfg['token'], 'p': 'hakim.json', 'g': cfg['g'] ?? '', 'u': 'hakim'});
+    return 'BNYLINK-${base64Url.encode(utf8.encode(j)).replaceAll('=', '')}';
   }
 
   String _now() { final d = DateTime.now(); return '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}'; }

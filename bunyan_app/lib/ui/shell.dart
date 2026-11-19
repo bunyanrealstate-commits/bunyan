@@ -18,6 +18,8 @@ import 'more.dart';
 import 'expenses.dart';
 import '../core/native.dart';
 import '../core/updater.dart';
+import '../core/build.dart';
+import 'dart:async';
 import '../core/reminders.dart';
 
 /// المجموعة المختارة (زي WS في بنيان القديم)
@@ -58,11 +60,14 @@ class _ShellState extends State<Shell> {
     Future.delayed(const Duration(seconds: 3), () => Rem.schedule());
     Future.delayed(const Duration(seconds: 4), () => HQ.maybeShow());
     WidgetsBinding.instance.addObserver(_life);
+    // نسخة حكيم: بتشوف أرقام أسامه الجديدة كل دقيقة
+    if (kHakim) _hkT = Timer.periodic(const Duration(seconds: 60), (_) { if (Store.I.linked && WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) Store.I.sync(); });
   }
+  Timer? _hkT;
   late final _life = _Life(() { HQ.maybeShow(); Native.takeLink().then((ok) { if (!ok && Store.I.linked) Store.I.sync(); }); Updater.check(force: Updater.needPerm || Updater.state.value != null).then((m) { if (m != null && mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m))); }); });
   void _r() { if (mounted) setState(() {}); }
   @override
-  void dispose() { Store.I.removeListener(_r); Ws.I.removeListener(_r); Shell.tabN.removeListener(_r); WidgetsBinding.instance.removeObserver(_life); super.dispose(); }
+  void dispose() { Store.I.removeListener(_r); Ws.I.removeListener(_r); Shell.tabN.removeListener(_r); WidgetsBinding.instance.removeObserver(_life); _hkT?.cancel(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +88,7 @@ class _ShellState extends State<Shell> {
           titleSpacing: 10,
           // الهيدر زي القديم: اللوجو • العين • المجموعة • الساعة • الجرس • المزامنة
           title: Row(children: [
-            Column(mainAxisSize: MainAxisSize.min, children: [SvgPicture.asset('assets/logo.svg', height: 21), const Text('Furnished', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF1D4B66), letterSpacing: 1.4, height: 1.2))]),
+            Column(mainAxisSize: MainAxisSize.min, children: [SvgPicture.asset('assets/logo.svg', height: 21), kHakim ? Container(margin: const EdgeInsets.only(top: 2), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1), decoration: BoxDecoration(color: const Color(0xFF2A9D5C), borderRadius: BorderRadius.circular(99)), child: const Text('حكيم', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: Colors.white, height: 1.3))) : const Text('Furnished', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF1D4B66), letterSpacing: 1.4, height: 1.2))]),
             EyeBtn(key: ValueKey('eye${Priv.on}')),
             const SizedBox(width: 8),
             const Expanded(child: GroupPill()),

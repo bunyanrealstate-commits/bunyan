@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'build.dart';
 
 class Updater {
   static const _ch = MethodChannel('bny/link');
@@ -35,7 +36,7 @@ class Updater {
       if (!can) { needPerm = true; state.value = 'perm'; return null; }
       needPerm = false;
       state.value = 'dl';
-      final a = await http.get(Uri.parse('${_base}Bunyan.apk?t=${DateTime.now().millisecondsSinceEpoch}')).timeout(const Duration(minutes: 4));
+      final a = await http.get(Uri.parse('$_base${kHakim ? 'Hakim' : 'Bunyan'}.apk?t=${DateTime.now().millisecondsSinceEpoch}')).timeout(const Duration(minutes: 4));
       if (a.statusCode != 200 || a.bodyBytes.length < 1000000) { state.value = 'new'; return null; }
       final f = File('${(await getTemporaryDirectory()).path}/upd.apk');
       await f.writeAsBytes(a.bodyBytes, flush: true);

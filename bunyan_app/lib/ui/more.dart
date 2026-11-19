@@ -19,6 +19,9 @@ import 'contract.dart';
 import 'ai.dart';
 import 'monitor.dart';
 import 'upd.dart';
+import '../core/build.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
@@ -33,6 +36,8 @@ class MorePage extends StatelessWidget {
         subtitle: Text('${st.cfg['repo'] ?? ''}\n${st.syncMsg}'),
         isThreeLine: true,
       )),
+      if (kHakim) Card(color: const Color(0xFFE8F6EE), child: ListTile(leading: const Text('🤝', style: TextStyle(fontSize: 18)), title: const Text('نسخة حكيم', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('الأرقام بتيجي لوحدها من برنامج أسامه — مجموعتكم بس')))
+      else if (st.linked) Card(child: ListTile(leading: const Text('🤝', style: TextStyle(fontSize: 18)), title: const Text('نسخة حكيم (بنيان الجديد)'), subtitle: const Text('ابعتله التطبيق وكود الربط مرة واحدة'), trailing: const Icon(Icons.chevron_left), onTap: () => _hakim(context))),
       Card(child: ListTile(leading: const Text('🤖', style: TextStyle(fontSize: 18)), title: Text(Tr.t('اسأل بنيان (المساعد)')), subtitle: Text(Tr.t('Gemini المجاني — بيجاوب من أرقامك')), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AiPage())))),
       Card(child: ListTile(leading: const Text('📒', style: TextStyle(fontSize: 18)), title: Text(Tr.t('الحسابات')), subtitle: Text(Tr.t('الرصيد، التأمينات، قفل الشهور، الدفتر')), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AccountsPage())))),
       Card(child: ListTile(leading: const Text('📑', style: TextStyle(fontSize: 18)), title: Text(Tr.t('الشيكات اللي معايا')), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChequesPage())))),
@@ -61,4 +66,25 @@ class MorePage extends StatelessWidget {
       )),
     ]);
   }
+}
+
+const _hkApk = 'https://raw.githubusercontent.com/bunyanrealstate-commits/bunyan/apk-flutter/Hakim.apk';
+
+/// أسامه بيبعت لحكيم: لينك التطبيق + كود الربط (مرة واحدة) — وبعدها الأرقام بتوصله لوحدها
+void _hakim(BuildContext context) {
+  final code = Store.I.hakimCode();
+  Store.I.exportHakim();
+  final msg = 'السلام عليكم يا حكيم 👋\nده تطبيق «بنيان حكيم» — فيه مجموعتنا وأرقامها بتتحدّث لوحدها:\n\n1) نزّل التطبيق من هنا وسطّبه:\n$_hkApk\n\n2) افتحه والصق الكود ده:\n$code';
+  showModalBottomSheet(context: context, isScrollControlled: true, builder: (_) => Directionality(textDirection: Tr.dir, child: Padding(
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+    child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      const Text('🤝 نسخة حكيم', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+      const SizedBox(height: 6),
+      const Text('تطبيق منفصل لحكيم: بيعرض مجموعتكم بس، والأرقام بتوصله لوحدها كل ما تعدّل عندك. حكيم مابيقدرش يغيّر أرقامك.', style: TextStyle(color: kMuted, height: 1.6)),
+      const SizedBox(height: 12),
+      FilledButton.icon(onPressed: () => Share.share(msg), icon: const Icon(Icons.share), label: const Text('ابعتله التطبيق والكود (واتساب)')),
+      const SizedBox(height: 8),
+      OutlinedButton(onPressed: () { Clipboard.setData(ClipboardData(text: code)); toast(context, '✅ اتنسخ الكود'); }, child: const Text('انسخ كود الربط بس')),
+    ]),
+  )));
 }
