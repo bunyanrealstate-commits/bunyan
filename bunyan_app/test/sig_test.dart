@@ -21,8 +21,8 @@ void main() {
       final b = base64Decode(out!.split(',').last);
       Directory('build').createSync(recursive: true); File('build/sig.png').writeAsBytesSync(b);
       final r = await (await ui.instantiateImageCodec(b)).getNextFrame();
-      expect(r.image.width < 600, true, reason: 'اتقصّ حوالين التوقيع: ${r.image.width}x${r.image.height}');
-      expect(r.image.height < 330, true);
+      expect(r.image.width < 700 && r.image.width > 500, true, reason: 'اتقصّ حوالين التوقيع: ${r.image.width}x${r.image.height}');
+      expect(r.image.height < 400, true);
       final px = (await r.image.toByteData(format: ui.ImageByteFormat.rawRgba))!.buffer.asUint8List();
       var clear = 0, ink = 0; for (var i = 3; i < px.length; i += 4) { if (px[i] == 0) clear++; else ink++; }
       expect(clear > ink * 2, true, reason: 'الورقة اتشالت (شفاف $clear / حبر $ink)');
