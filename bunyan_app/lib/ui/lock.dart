@@ -15,7 +15,8 @@ import 'package:flutter/services.dart' show PlatformException;
 class AppLock {
   static bool get pin => obj(Store.I.cfg['pin']) != null;
   /// 👆 البصمة: شغّالة من الأول على الموبايل (تقدر تقفلها من «المزيد ← قفل التطبيق»)
-  static bool get bio => !kIsWeb && Store.I.cfg['bio'] != false;
+  /// 👆 البصمة بتشتغل بس لو انت فعّلتها بنفسك وجرّبتها نجحت (مش أوتوماتيك)
+  static bool get bio => !kIsWeb && Store.I.cfg['bio'] == true;
   static bool get on => pin || bio;
   static final _la = LocalAuthentication();
   static String lastErr = '';
@@ -64,7 +65,7 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
     if (ok == null && !AppLock.pin) { _open(); return; } // الموبايل مافيهوش بصمة ولا قفل
     _fails++;
     // أمان: لو البصمة مش راضية تشتغل على الموبايل ده خالص ومفيش رقم سري → مانقفلش عليك البرنامج
-    if (_fails >= 4 && !AppLock.pin) { Store.I.cfg['bio'] = false; await Store.I.saveCfg(); _open(); return; }
+    if (_fails >= 2 && !AppLock.pin) { Store.I.cfg['bio'] = false; await Store.I.saveCfg(); _open(); return; }
     setState(() => err = AppLock.lastErr.isEmpty ? Tr.t('البصمة ماتمّتش — جرّب تاني') : '${Tr.t('البصمة ماتمّتش')} (${AppLock.lastErr})');
   }
   @override
