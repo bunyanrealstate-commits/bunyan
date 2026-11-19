@@ -224,19 +224,66 @@ class _CtState extends State<ContractPage> {
   /* ───────── ✏️ تعديل العقد: العنوان، الصفوف، البنود ───────── */
   Future<void> _edSave([String? log]) async { Ct.edTouch(S); await _save(log); }
 
+  /// 🌐 ترجمة بـ Gemini المجاني (موديلات سريعة) — للعقود: صياغة قانونية بسيطة
+  Future<String?> _tr(String text, {required bool toEn}) async {
+    final k = Ai.key(); if (k.isEmpty || text.trim().isEmpty) return null;
+    final prompt = toEn
+        ? 'Translate this Arabic tenancy-contract text to clear, formal English (UAE rental contract style). Return ONLY the translation, no quotes, no notes.\n\n$text'
+        : 'ترجم النص ده من عقد إيجار للعربي الفصحى الرسمي البسيط (أسلوب عقود الإيجار في الإمارات). رجّع الترجمة بس من غير علامات تنصيص ولا ملاحظات.\n\n$text';
+    for (final m in _fastImg) {
+      try {
+        final r = await http.post(Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$k'), headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'contents': [{'parts': [{'text': prompt}]}], 'generationConfig': {'temperature': 0.1, if (m.contains('2.5')) 'thinkingConfig': {'thinkingBudget': 0}}})).timeout(const Duration(seconds: 12));
+        if (r.statusCode != 200) continue;
+        final j = jsonDecode(utf8.decode(r.bodyBytes)); final t = ((j['candidates'] as List?)?.firstOrNull?['content']?['parts'] as List?)?.map((p) => p['text'] ?? '').join().trim() ?? '';
+        if (t.isNotEmpty) return t.replaceAll(RegExp(r'^["«“]+|["»”]+$'), '').trim();
+      } catch (_) {}
+    }
+    return null;
+  }
+
   /// نافذة بخانتين (English + عربي) وأحياناً قيمة
-  Future<Map<String, String>?> _edDlg(String title, {String en = '', String ar = '', String? v, bool multi = false}) {
+  Future<Map<String, String>?> _edDlg(String title, {String en = '', String ar = '', String? v, bool multi = false}) async {
     final a = TextEditingController(text: en), b = TextEditingController(text: ar), c0 = v == null ? null : TextEditingController(text: v);
-    return showDialog<Map<String, String>>(context: context, builder: (ctx) => Directionality(textDirection: Tr.dir, child: AlertDialog(
-      title: Text(title),
-      content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
-        TextField(controller: b, maxLines: multi ? 5 : 1, minLines: 1, decoration: const InputDecoration(labelText: 'بالعربي', border: OutlineInputBorder())),
-        const SizedBox(height: 10),
-        TextField(controller: a, maxLines: multi ? 5 : 1, minLines: 1, textDirection: TextDirection.ltr, decoration: const InputDecoration(labelText: 'English', border: OutlineInputBorder())),
-        if (c0 != null) ...[const SizedBox(height: 10), TextField(controller: c0, decoration: const InputDecoration(labelText: 'القيمة اللي هتتكتب في العقد', border: OutlineInputBorder()))],
-      ])),
-      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')), FilledButton(onPressed: () => Navigator.pop(ctx, {'en': a.text.trim(), 'ar': b.text.trim(), if (c0 != null) 'v': c0.text.trim()}), child: const Text('حفظ'))],
-    )));
+    var auto = true, busyT = false; String? note;
+    final r = await showDialog<Map<String, String>>(context: context, builder: (ctx) => Directionality(textDirection: Tr.dir, child: StatefulBuilder(builder: (ctx, ss) {
+      Future<void> go(bool toEn) async {
+        final src = toEn ? b.text : a.text; if (src.trim().isEmpty) return;
+        ss(() { busyT = true; note = null; });
+        final t = await _tr(src, toEn: toEn);
+        if (!ctx.mounted) return;
+        ss(() { busyT = false; if (t != null) { (toEn ? a : b).text = t; } else { note = Ai.key().isEmpty ? 'الترجمة محتاجة مفتاح Gemini' : 'مقدرتش أترجم دلوقتي (النت؟) — اكتبها بإيدك'; } });
+      }
+      return AlertDialog(
+        title: Text(title),
+        content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          TextField(controller: b, maxLines: multi ? 5 : 1, minLines: 1, decoration: const InputDecoration(labelText: 'بالعربي', border: OutlineInputBorder())),
+          Row(children: [
+            Expanded(child: InkWell(onTap: () => ss(() => auto = !auto), child: Row(children: [Checkbox(value: auto, visualDensity: VisualDensity.compact, onChanged: (x) => ss(() => auto = x ?? true)), const Flexible(child: Text('ترجم للإنجليزي لوحده', style: TextStyle(fontSize: 12.5)))]))),
+            if (busyT) const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+            else ...[
+              TextButton(onPressed: () => go(true), child: const Text('عربي ← EN')),
+              TextButton(onPressed: () => go(false), child: const Text('EN ← عربي')),
+            ],
+          ]),
+          TextField(controller: a, maxLines: multi ? 5 : 1, minLines: 1, textDirection: TextDirection.ltr, decoration: const InputDecoration(labelText: 'English', border: OutlineInputBorder())),
+          if (note != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text('⚠️ $note', style: const TextStyle(color: kRed, fontSize: 12))),
+          if (c0 != null) ...[const SizedBox(height: 10), TextField(controller: c0, decoration: const InputDecoration(labelText: 'القيمة اللي هتتكتب في العقد', border: OutlineInputBorder()))],
+        ])),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
+          FilledButton(onPressed: busyT ? null : () async {
+            // عدّلت العربي ولسه الإنجليزي زي ما هو → يترجم لوحده (والعكس)
+            final arCh = b.text.trim() != ar.trim(), enCh = a.text.trim() != en.trim();
+            if (auto && arCh && !enCh && b.text.trim().isNotEmpty) await go(true);
+            else if (auto && enCh && !arCh && a.text.trim().isNotEmpty) await go(false);
+            if (note != null && (arCh != enCh)) { ss(() => note = '$note — دوس حفظ تاني لو عايز تحفظ من غير ترجمة'); auto = false; return; } // الترجمة ماشتغلتش: مانقفلش من غير ما تعرف
+            if (ctx.mounted) Navigator.pop(ctx, {'en': a.text.trim(), 'ar': b.text.trim(), if (c0 != null) 'v': c0.text.trim()});
+          }, child: const Text('حفظ')),
+        ],
+      );
+    })));
+    return r;
   }
 
   Widget _edBtn(IconData ic, VoidCallback on, {Color c0 = kMuted}) => InkWell(borderRadius: BorderRadius.circular(99), onTap: on, child: Padding(padding: const EdgeInsets.all(5), child: Icon(ic, size: 19, color: c0)));
