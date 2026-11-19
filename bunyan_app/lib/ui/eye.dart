@@ -19,7 +19,7 @@ class EyeBtn extends StatelessWidget {
         }
       } catch (_) {}
     }
-    if (AppLock.on && context.mounted) {
+    if (AppLock.pin && context.mounted) {
       final o = await formDlg(context, Tr.t('اكتب الرقم السري'), [FieldSpec('p', Tr.t('الرقم السري'), type: 'n')]);
       return o != null && AppLock.check(o['p'] ?? '');
     }
