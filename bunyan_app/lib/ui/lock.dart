@@ -3,6 +3,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'i18n.dart';
 import '../core/store.dart';
+import '../core/updater.dart';
 import '../core/js.dart';
 import 'theme.dart';
 import 'dialogs.dart';
@@ -50,7 +51,7 @@ class LockGate extends StatefulWidget {
 class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
   bool locked = AppLock.on; DateTime? _away; final c = TextEditingController(); String err = '';
   @override
-  void initState() { super.initState(); WidgetsBinding.instance.addObserver(this); if (locked) WidgetsBinding.instance.addPostFrameCallback((_) => Future.delayed(const Duration(milliseconds: 500), _bio)); }
+  void initState() { super.initState(); WidgetsBinding.instance.addObserver(this); Future.delayed(const Duration(seconds: 4), () => Updater.check()); /* التحديث يوصل حتى لو البرنامج مقفول */ if (locked) WidgetsBinding.instance.addPostFrameCallback((_) => Future.delayed(const Duration(milliseconds: 500), _bio)); }
   bool _asking = false; int _fails = 0;
   void _open() { if (mounted) setState(() { locked = false; err = ''; _fails = 0; }); }
   Future<void> _bio({bool screen = false}) async {
