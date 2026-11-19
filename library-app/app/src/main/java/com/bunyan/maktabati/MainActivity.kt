@@ -221,9 +221,11 @@ suspend fun addFromUriBg(ctx: android.content.Context, uri: Uri): JSONObject? {
     val title = name.removeSuffix(".pdf").removeSuffix(".PDF").replace('_', ' ')
     val b = Lib.book(Lib.books.firstOrNull { it.optString("t") == title && !Lib.have(it) }?.optString("id") ?: "") ?: Lib.addLocal(title, "") {}
     val ok = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-        try { File(Lib.dir, "books").mkdirs(); ctx.contentResolver.openInputStream(uri)!!.use { inp -> File(Lib.dir, "books/${b.optString("id")}.pdf").outputStream().use { inp.copyTo(it) } }; cover(b); true } catch (_: Exception) { false }
+        try { File(Lib.dir, "books").mkdirs(); ctx.contentResolver.openInputStream(uri)!!.use { inp -> File(Lib.dir, "books/${b.optString("id")}.pdf").outputStream().use { inp.copyTo(it) } }; cover(b); "" } catch (e: Exception) { e.message ?: "خطأ" }
     }
-    if (!ok) { Toast.makeText(ctx, "⚠️ مقدرتش أفتح الملف", Toast.LENGTH_SHORT).show(); return null }
+    if (ok.isNotEmpty()) { Toast.makeText(ctx, "⚠️ مقدرتش أضيف الكتاب: $ok", Toast.LENGTH_LONG).show(); return null }
+    if (b.optString("sh", "want") == "want") Lib.setShelf(b, "now")
+    Toast.makeText(ctx, "✅ اتضاف «$title» في «بقراه»", Toast.LENGTH_SHORT).show()
     Lib.ver++; Lib.save(); return b
 }
 
@@ -610,8 +612,9 @@ fun DecoyScreen() {
                 ctx.contentResolver.openInputStream(uri)!!.use { inp -> File(Lib.dir, "books/${b.optString("id")}.pdf").outputStream().use { inp.copyTo(it) } }
                 cover(b)
             }
-            list.put(b); Lib.ver++; Lib.save()
-        } catch (_: Exception) { Toast.makeText(ctx, "⚠️ مقدرتش أفتح الملف", Toast.LENGTH_SHORT).show() } }
+            (Lib.cfg.optJSONArray("decoy") ?: JSONArray().also { Lib.cfg.put("decoy", it) }).put(b); Lib.ver++; Lib.save()
+            Toast.makeText(ctx, "✅ اتضاف «${b.optString("t")}»", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) { Toast.makeText(ctx, "⚠️ مقدرتش أضيف الكتاب: ${e.message}", Toast.LENGTH_LONG).show() } }
     }
     val o = open
     if (o != null) { ReaderScreen(o) { _, _, _ -> open = null; Lib.save() }; return }
