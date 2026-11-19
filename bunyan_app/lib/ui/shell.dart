@@ -15,6 +15,7 @@ import 'home.dart';
 import 'units.dart';
 import 'link.dart';
 import 'more.dart';
+import 'ai.dart';
 import 'expenses.dart';
 import '../core/native.dart';
 import '../core/updater.dart';
@@ -83,6 +84,8 @@ class _ShellState extends State<Shell> {
       textDirection: Tr.dir,
       // 📖 كارت الحديث الأخضر بيطلع فوق كل حاجة (زي القديم)
       child: Stack(children: [Scaffold(
+        // 🤖 نموذج بنيان: زرار عائم في كل الصفحات
+        floatingActionButton: kHakim ? null : FloatingActionButton.small(heroTag: 'ai', tooltip: 'نموذج بنيان', backgroundColor: const Color(0xFF6D28D9), foregroundColor: Colors.white, onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AiPage())), child: const Text('🤖', style: TextStyle(fontSize: 18))),
         appBar: AppBar(
           toolbarHeight: 62,
           titleSpacing: 10,
