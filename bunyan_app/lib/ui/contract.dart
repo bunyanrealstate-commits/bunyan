@@ -51,7 +51,14 @@ class _CtState extends State<ContractPage> {
   void initState() { super.initState(); CtPdf.loader ??= rootBundle.load; if (!truthy(c['d'])) c['d'] = Ct.dmy(); }
 
   TextEditingController _c(String k) => tc.putIfAbsent(k, () => TextEditingController(text: str(f[k])));
-  void _sync() { for (final e in tc.entries) { if (e.value.text != str(f[e.key])) e.value.text = str(f[e.key]); } }
+  String? _editing; // الخانة اللي انت بتكتب فيها دلوقتي — مانلمسهاش عشان المؤشر مايتنقلش
+  void _sync() {
+    for (final e in tc.entries) {
+      if (e.key == _editing) continue;
+      final v = str(f[e.key]);
+      if (e.value.text != v) e.value.value = TextEditingValue(text: v, selection: TextSelection.collapsed(offset: v.length));
+    }
+  }
 
   bool _off(String k) => obj(c['clr'])?[k] == true;
   Timer? _deb;
@@ -310,9 +317,15 @@ class _CtState extends State<ContractPage> {
         if (k == 'st') Align(alignment: AlignmentDirectional.centerStart, child: TextButton(style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 6), tapTargetSize: MaterialTapTargetSize.shrinkWrap), onPressed: () { c['d'] = Ct.dmy(); _set('st', iso(DateTime.now())); toast(context, '📅 تاريخ العقد: ${c['d']}'); }, child: const Text('📅 العقد بتاريخ النهارده'))),
       ]));
     }
-    final t = _c(k);
-    return Padding(padding: const EdgeInsets.only(bottom: 8), child: TextField(
-      controller: t, keyboardType: num ? const TextInputType.numberWithOptions(decimal: true) : (k == 'ph' ? TextInputType.phone : TextInputType.text),
+    final t = _c(k); final ltr = num || k == 'ph' || k == 'tid' || k == 'lid' || k == 'cq';
+    return Padding(padding: const EdgeInsets.only(bottom: 8), child: Focus(
+      onFocusChange: (on) {
+        if (on) { _editing = k; if (t.selection.baseOffset <= 0) t.selection = TextSelection.collapsed(offset: t.text.length); } // المؤشر في آخر الكلام
+        else if (_editing == k) { _editing = null; }
+      },
+      child: TextField(
+      controller: t, textDirection: ltr ? TextDirection.ltr : null, textAlign: ltr ? TextAlign.right : TextAlign.start,
+      onTap: () { if (t.selection.isCollapsed && t.selection.baseOffset == 0 && t.text.isNotEmpty) t.selection = TextSelection.collapsed(offset: t.text.length); }, keyboardType: num ? const TextInputType.numberWithOptions(decimal: true) : (k == 'ph' ? TextInputType.phone : TextInputType.text),
       style: const TextStyle(fontSize: 14),
       decoration: InputDecoration(labelText: lb, hintText: hint, border: const OutlineInputBorder(), isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           suffixIcon: t.text.isEmpty ? null : IconButton(tooltip: 'امسح', visualDensity: VisualDensity.compact, icon: const Icon(Icons.close, size: 18, color: kMuted), onPressed: () { _deb?.cancel(); t.clear(); _set(k, ''); }),
@@ -320,7 +333,7 @@ class _CtState extends State<ContractPage> {
       // بيتحفظ وانت بتكتب/بتمسح (من غير ما تحتاج تدوس برّه)
       onChanged: (x) { final had = x.isNotEmpty; _deb?.cancel(); _deb = Timer(const Duration(milliseconds: 700), () => _set(k, t.text)); if (had != (str(f[k]).isNotEmpty)) setState(() {}); },
       onSubmitted: (x) { _deb?.cancel(); _set(k, x); }, onTapOutside: (_) { FocusManager.instance.primaryFocus?.unfocus(); _deb?.cancel(); _set(k, t.text); }, onEditingComplete: () { _deb?.cancel(); _set(k, t.text); },
-    ));
+    )));
   }
 
   Widget _chip(String t, Color c0, VoidCallback on) => Expanded(child: InkWell(borderRadius: BorderRadius.circular(99), onTap: busy ? null : on, child: Container(
@@ -382,7 +395,7 @@ class _CtState extends State<ContractPage> {
             final P = obj(lst(f['pays'])[i])!;
             return Padding(padding: const EdgeInsets.only(bottom: 8), child: Row(children: [
               SizedBox(width: 22, child: Text('${i + 1}', style: const TextStyle(fontWeight: FontWeight.w900))),
-              Expanded(flex: 3, child: TextFormField(key: ValueKey('pa$i${P['a']}$v'), initialValue: str(P['a']), keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'المبلغ', isDense: true, border: OutlineInputBorder()), onChanged: (x) { P['a'] = double.tryParse(x)?.round() ?? ''; c['paysMan'] = true; }, onTapOutside: (_) { FocusManager.instance.primaryFocus?.unfocus(); _save(); })),
+              Expanded(flex: 3, child: TextFormField(key: ValueKey('pa$i${P['a']}$v'), initialValue: str(P['a']), keyboardType: TextInputType.number, textDirection: TextDirection.ltr, textAlign: TextAlign.right, decoration: const InputDecoration(labelText: 'المبلغ', isDense: true, border: OutlineInputBorder()), onChanged: (x) { P['a'] = double.tryParse(x)?.round() ?? ''; c['paysMan'] = true; }, onTapOutside: (_) { FocusManager.instance.primaryFocus?.unfocus(); _save(); })),
               const SizedBox(width: 6),
               Expanded(flex: 3, child: InkWell(onTap: () async { final d = await showDatePicker(context: context, initialDate: DateTime.tryParse(str(P['d'])) ?? DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime(2040)); if (d != null) { P['d'] = iso(d); c['paysMan'] = true; await _save(); } }, child: InputDecorator(decoration: const InputDecoration(labelText: 'التاريخ', isDense: true, border: OutlineInputBorder()), child: FittedBox(fit: BoxFit.scaleDown, alignment: AlignmentDirectional.centerStart, child: Text(str(P['d']).isEmpty ? '—' : Ct.dm(str(P['d'])), maxLines: 1, style: const TextStyle(fontSize: 14)))))),
               const SizedBox(width: 6),
