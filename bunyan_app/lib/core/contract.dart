@@ -215,7 +215,7 @@ class Ct {
   static String finalHtml(Obj S, {bool withSig = true}) {
     var h = paper(S); final c = ct(S);
     if (!truthy(c['d'])) c['d'] = dmy();
-    if (!h.contains('class="ctdate"')) h = h.replaceFirst(RegExp(r'</h1>'), '</h1><div class="ctdate">${cl(S) == 'en' ? 'Date: ' : cl(S) == 'ar' ? 'تاريخ العقد: ' : 'Date / تاريخ العقد:  '}${c['d']}</div>');
+    h = h.replaceAll(RegExp(r'<div class="ctdate">.*?</div>'), ''); // تاريخ العقد اتشال من الورقة (أسامه: «امسح دي»)
     h = h.replaceAll(RegExp(r'<img class="ct[tw]?sig\d?"[^>]*>'), '');
     if (!withSig) return h;
     final W = obj(c['wsig']) ?? {}; final imgs = [str(W['1']), str(W['2']), str(c['tsig']), landlordSig(S) ?? ''];
