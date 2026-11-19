@@ -85,7 +85,7 @@ class _ShellState extends State<Shell> {
       // 📖 كارت الحديث الأخضر بيطلع فوق كل حاجة (زي القديم)
       child: Stack(children: [Scaffold(
         // 🤖 نموذج بنيان: زرار عائم في كل الصفحات
-        floatingActionButton: kHakim ? null : FloatingActionButton.small(heroTag: 'ai', tooltip: 'نموذج بنيان', backgroundColor: const Color(0xFF6D28D9), foregroundColor: Colors.white, onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AiPage())), child: const Text('🤖', style: TextStyle(fontSize: 18))),
+        floatingActionButton: kHakim ? null : FloatingActionButton.small(heroTag: 'ai', tooltip: 'نموذج بنيان', backgroundColor: kNavy, foregroundColor: Colors.white, onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AiPage())), child: const Text('🤖', style: TextStyle(fontSize: 18))),
         appBar: AppBar(
           toolbarHeight: 62,
           titleSpacing: 10,
@@ -104,21 +104,22 @@ class _ShellState extends State<Shell> {
               icon: st.syncing ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(Icons.sync, color: st.cfg['dirty'] == true ? kTerra : kAc),
             )),
           ]),
-          bottom: PreferredSize(preferredSize: const Size.fromHeight(40), child: Container(
-            decoration: const BoxDecoration(color: Color(0xF5FFFFFF), border: Border(bottom: BorderSide(color: Color(0xFF8D97A8), width: .6))),
-            child: SingleChildScrollView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 6), child: Row(children: [
-              for (final i in const [0, 1, 2, 3, 4, 6, 5]) InkWell(
-                onTap: () => setState(() => tab = i),
-                child: Container(
-                  height: 46, padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(border: Border(bottom: BorderSide(color: tab == i ? kAcD : Colors.transparent, width: 3))),
+          // التبويبات: كبسولات — المختار كحلي وكلامه أبيض
+          bottom: PreferredSize(preferredSize: const Size.fromHeight(50), child: Container(
+            height: 50, decoration: const BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: kBd))),
+            child: SingleChildScrollView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.fromLTRB(8, 6, 8, 8), child: Row(children: [
+              for (final i in const [0, 1, 2, 3, 4, 6, 5]) Padding(padding: const EdgeInsetsDirectional.only(end: 6), child: InkWell(
+                borderRadius: BorderRadius.circular(99), onTap: () => setState(() => tab = i),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180), padding: const EdgeInsets.symmetric(horizontal: 13),
+                  decoration: BoxDecoration(color: tab == i ? kNavy : const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(99)),
                   child: Row(children: [
-                    Icon(tabs[i][0] as IconData, size: 18, color: tab == i ? kAcD : const Color(0xFF454852)),
+                    Icon(tabs[i][0] as IconData, size: 17, color: tab == i ? const Color(0xFF5EEAD4) : kMuted),
                     const SizedBox(width: 6),
-                    Text(tabs[i][1] as String, style: TextStyle(fontSize: 14, fontWeight: tab == i ? FontWeight.w800 : FontWeight.w600, color: tab == i ? kAcD : const Color(0xFF454852))),
+                    Text(tabs[i][1] as String, style: TextStyle(fontSize: 13.5, fontWeight: tab == i ? FontWeight.w800 : FontWeight.w600, color: tab == i ? Colors.white : const Color(0xFF334155))),
                   ]),
                 ),
-              ),
+              )),
             ])),
           )),
         ),

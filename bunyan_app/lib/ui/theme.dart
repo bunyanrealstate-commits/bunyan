@@ -3,14 +3,14 @@ import 'package:intl/intl.dart';
 import '../core/store.dart';
 import '../core/js.dart';
 
-/// ألوان بنيان (نفس البرنامج القديم)
-const kAc = Color(0xFF1473E6), kAcD = Color(0xFF126AD3), kInk = Color(0xFF0E0F12), kMuted = Color(0xFF62646D), kBg = Color(0xFFEAF6F3), kBd = Color(0xFFD6D7DD),
-    kOk = Color(0xFF16A34A), kGreen = Color(0xFF15924A), kRed = Color(0xFFD93D42), kTeal = Color(0xFF0D9488), kNavy = Color(0xFF1B4764);
+/// 🎨 ألوان بنيان الجديدة: كحلي غامق + تيل (أخضر مزرق) + دهبي — هادية وفخمة ومريحة للعين
+const kAc = Color(0xFF0F766E), kAcD = Color(0xFF115E59), kInk = Color(0xFF0F172A), kMuted = Color(0xFF64748B), kBg = Color(0xFFF3F5F8), kBd = Color(0xFFE2E8F0),
+    kOk = Color(0xFF059669), kGreen = Color(0xFF047857), kRed = Color(0xFFDC2626), kTeal = Color(0xFF0D9488), kNavy = Color(0xFF14304A);
 // أسماء قديمة لسه مستخدمة
-const kPaper = kBg, kSand = Color(0xFFF1F3F7), kTerra = Color(0xFFEA580C);
+const kPaper = kBg, kSand = Color(0xFFF1F5F9), kTerra = Color(0xFFD97706), kGold = Color(0xFFC08A2E);
 
-/// ألوان الكروت (كل كارت لونه)
-const kCC = [Color(0xFF2563EB), Color(0xFF16A34A), Color(0xFF7C3AED), Color(0xFFEA580C), Color(0xFF0D9488), Color(0xFFDB2777), Color(0xFFB45309), Color(0xFF0891B2)];
+/// ألوان الكروت (متناسقة مع بعض)
+const kCC = [Color(0xFF0F766E), Color(0xFF4F46E5), Color(0xFFD97706), Color(0xFF0284C7), Color(0xFF7C3AED), Color(0xFFE11D48), Color(0xFF059669), Color(0xFF475569)];
 
 ThemeData bunyanTheme() => ThemeData(
       useMaterial3: true,
@@ -19,14 +19,18 @@ ThemeData bunyanTheme() => ThemeData(
       fontFamily: 'Plex',
       colorScheme: ColorScheme.fromSeed(seedColor: kAc, primary: kAc, secondary: kTeal, surface: Colors.white),
       scaffoldBackgroundColor: kBg,
-      appBarTheme: const AppBarTheme(backgroundColor: Colors.white, foregroundColor: kInk, elevation: 0, scrolledUnderElevation: 1, centerTitle: false, surfaceTintColor: Colors.white, titleTextStyle: TextStyle(fontFamily: 'Plex', fontSize: 18, fontWeight: FontWeight.w700, color: kInk)),
-      cardTheme: CardTheme(color: Colors.white, elevation: 0, margin: const EdgeInsets.symmetric(vertical: 5), shadowColor: const Color(0x1A14213D), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Color(0xFFE3E6EC)))),
+      appBarTheme: const AppBarTheme(backgroundColor: Colors.white, shadowColor: Color(0x1414304A), foregroundColor: kInk, elevation: 0, scrolledUnderElevation: 1, centerTitle: false, surfaceTintColor: Colors.white, titleTextStyle: TextStyle(fontFamily: 'Plex', fontSize: 18, fontWeight: FontWeight.w700, color: kInk)),
+      cardTheme: CardTheme(color: Colors.white, elevation: 0, margin: const EdgeInsets.symmetric(vertical: 5), shadowColor: const Color(0x1414304A), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Color(0xFFE3E6EC)))),
       filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(backgroundColor: kAc, minimumSize: const Size(0, 40), padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)), textStyle: const TextStyle(fontFamily: 'Plex', fontWeight: FontWeight.w700, fontSize: 14))),
       outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(foregroundColor: kInk, minimumSize: const Size(0, 38), padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7), side: const BorderSide(color: kBd), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)), textStyle: const TextStyle(fontFamily: 'Plex', fontWeight: FontWeight.w700))),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: kAc, foregroundColor: Colors.white),
       inputDecorationTheme: InputDecorationTheme(filled: true, fillColor: Colors.white, isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kBd)), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kBd))),
       chipTheme: ChipThemeData(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)), side: const BorderSide(color: kBd), selectedColor: kAc, labelStyle: const TextStyle(fontFamily: 'Plex', fontWeight: FontWeight.w700)),
-      dividerTheme: const DividerThemeData(color: Color(0xFFE3E6EC)),
+      dividerTheme: const DividerThemeData(color: Color(0xFFE5EAF0)),
+      snackBarTheme: SnackBarThemeData(behavior: SnackBarBehavior.floating, backgroundColor: kNavy, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), contentTextStyle: const TextStyle(fontFamily: 'Plex', color: Colors.white, fontWeight: FontWeight.w600)),
+      dialogTheme: DialogTheme(backgroundColor: Colors.white, surfaceTintColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
+      bottomSheetTheme: const BottomSheetThemeData(backgroundColor: Colors.white, surfaceTintColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(22)))),
+      switchTheme: SwitchThemeData(thumbColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? Colors.white : null), trackColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? kAc : null)),
     );
 
 final _nf = NumberFormat('#,##0', 'en');
@@ -54,11 +58,11 @@ class BCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         margin: const EdgeInsets.only(bottom: 10),
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: c.withOpacity(.22), blurRadius: 22, offset: const Offset(0, 8), spreadRadius: -8), const BoxShadow(color: Color(0x0F0F2742), blurRadius: 2, offset: Offset(0, 1))]),
-        child: ClipRRect(borderRadius: BorderRadius.circular(16), child: Container(
-          decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color.alphaBlend(c.withOpacity(.09), Colors.white), Colors.white], stops: const [0, .35]), border: Border.all(color: Color.alphaBlend(c.withOpacity(.30), kBd), width: 1.2)),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(18), boxShadow: [BoxShadow(color: kNavy.withOpacity(.07), blurRadius: 18, offset: const Offset(0, 6), spreadRadius: -4), const BoxShadow(color: Color(0x0A0F2742), blurRadius: 2, offset: Offset(0, 1))]),
+        child: ClipRRect(borderRadius: BorderRadius.circular(18), child: Container(
+          decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color.alphaBlend(c.withOpacity(.06), Colors.white), Colors.white], stops: const [0, .3]), border: Border.all(color: kBd, width: 1)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Container(height: 4, color: c),
+            Container(height: 3, decoration: BoxDecoration(gradient: LinearGradient(colors: [c, c.withOpacity(.35)]))),
             Padding(padding: pad, child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               if (title != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Row(children: [
                 Container(width: 4, height: 18, decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(2))), const SizedBox(width: 8),
@@ -82,11 +86,11 @@ class BStat extends StatelessWidget {
   Widget build(BuildContext context) {
     final col = c ?? (v < 0 ? kRed : kOk);
     final w = Container(
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), boxShadow: [BoxShadow(color: col.withOpacity(.35), blurRadius: 16, offset: const Offset(0, 6), spreadRadius: -8)]),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), border: Border.all(color: Color.alphaBlend(col.withOpacity(.18), kBd)), boxShadow: [BoxShadow(color: kNavy.withOpacity(.06), blurRadius: 14, offset: const Offset(0, 5), spreadRadius: -4)]),
       child: ClipRRect(borderRadius: BorderRadius.circular(14), child: Container(
-        color: Color.alphaBlend(col.withOpacity(.08), Colors.white),
+        color: Color.alphaBlend(col.withOpacity(.05), Colors.white),
         child: IntrinsicHeight(child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Container(width: 6, color: col),
+          Container(width: 4, color: col),
           Expanded(child: Padding(padding: const EdgeInsets.fromLTRB(10, 8, 10, 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(l, style: const TextStyle(color: kMuted, fontSize: 12, fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),

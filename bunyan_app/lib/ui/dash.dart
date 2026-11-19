@@ -50,7 +50,7 @@ class HeroScene extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(14, 9, 14, 10),
           decoration: BoxDecoration(color: Colors.white.withOpacity(.80), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withOpacity(.9))),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            Text('$g${nm.isEmpty ? '' : '، $nm'} 👋', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: Color(0xFF0F7A4F))),
+            Text('$g${nm.isEmpty ? '' : '، $nm'} 👋', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: kNavy)),
             const SizedBox(height: 2),
             Text(Tr.en ? '${t.day}/${t.month}/${t.year}' : '${ds[t.weekday - 1]}، ${t.day} ${ms[t.month - 1]}', style: const TextStyle(color: Color(0xFF3B4250), fontSize: 13, fontWeight: FontWeight.w700)),
           ]),
@@ -65,7 +65,7 @@ class _Scene extends CustomPainter {
   void paint(Canvas c, Size s) {
     final W = s.width, H = s.height, gy = H - 12;
     // السما
-    c.drawRect(Offset.zero & s, Paint()..shader = const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF45B4D6), Color(0xFF8DD3E6), Color(0xFFE7F1E4)], stops: [0, .55, 1]).createShader(Offset.zero & s));
+    c.drawRect(Offset.zero & s, Paint()..shader = const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF2E6F8E), Color(0xFF7DBBD0), Color(0xFFEAF2EE)], stops: [0, .55, 1]).createShader(Offset.zero & s));
     // الشمس + هالة
     final sc = Offset(W * .36, H * .30);
     c.drawCircle(sc, 46, Paint()..shader = RadialGradient(colors: [const Color(0xFFFFE07A).withOpacity(.85), const Color(0xFFFFE07A).withOpacity(0)]).createShader(Rect.fromCircle(center: sc, radius: 46)));
