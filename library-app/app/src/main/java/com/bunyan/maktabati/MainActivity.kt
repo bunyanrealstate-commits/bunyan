@@ -29,6 +29,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -617,7 +618,7 @@ fun DecoyScreen() {
         } else LazyVerticalGrid(GridCells.Fixed(3), Modifier.fillMaxSize().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             items(dbooks, key = { it.optString("id") }) { b ->
                 Column(Modifier.pointerInput(b.optString("id")) {
-                    androidx.compose.foundation.gestures.detectTapGestures(onTap = { open = b }, onLongPress = { del = b })
+                    detectTapGestures(onTap = { open = b }, onLongPress = { del = b })
                 }) {
                     Cover(b, Modifier.fillMaxWidth().aspectRatio(0.7f))
                     Text(b.optString("t"), fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, color = Ink, modifier = Modifier.padding(top = 4.dp))
