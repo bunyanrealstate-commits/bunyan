@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import '../core/sigimg.dart';
 import 'package:printing/printing.dart';
 import 'i18n.dart';
 import '../core/store.dart';
@@ -202,7 +203,38 @@ class _CtState extends State<ContractPage> {
   }
 
   /* ───────── التوقيعات ───────── */
-  Future<String?> _pad(String title, {String? hint, String? nameInit, ValueChanged<String>? onName}) => showDialog<String>(context: context, builder: (_) => _SigPad(title: title, hint: hint, nameInit: nameInit, onName: onName));
+  /// توقيع: يا ترسمه بصباعك، يا ترفع صورته (من الكاميرا أو الصور) وأنا آخد التوقيع منها وأشيل الورقة
+  Future<String?> _pad(String title, {String? hint, String? nameInit, ValueChanged<String>? onName}) async {
+    final how = await showModalBottomSheet<String>(context: context, builder: (ctx) => Directionality(textDirection: Tr.dir, child: SafeArea(child: Wrap(children: [
+      Padding(padding: const EdgeInsets.fromLTRB(16, 14, 16, 4), child: Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16))),
+      ListTile(leading: const Text('✍️', style: TextStyle(fontSize: 20)), title: const Text('أرسم التوقيع بصباعي'), onTap: () => Navigator.pop(ctx, 'draw')),
+      ListTile(leading: const Text('📷', style: TextStyle(fontSize: 20)), title: const Text('صوّر التوقيع على ورقة'), subtitle: const Text('وقّع على ورقة بيضا بقلم غامق وصوّرها'), onTap: () => Navigator.pop(ctx, 'cam')),
+      ListTile(leading: const Text('🖼', style: TextStyle(fontSize: 20)), title: const Text('صورة التوقيع من الصور'), onTap: () => Navigator.pop(ctx, 'gal')),
+      const SizedBox(height: 8),
+    ]))));
+    if (how == null || !mounted) return null;
+    if (how == 'draw') return showDialog<String>(context: context, builder: (_) => _SigPad(title: title, hint: hint, nameInit: nameInit, onName: onName));
+    XFile? x;
+    try { x = await ImagePicker().pickImage(source: how == 'cam' ? ImageSource.camera : ImageSource.gallery, maxWidth: 1600, maxHeight: 1600, imageQuality: 88); } catch (e) { if (mounted) toast(context, '⚠️ مقدرتش أفتح الصور/الكاميرا: $e'); return null; }
+    if (x == null || !mounted) return null;
+    setState(() => busy = true);
+    String? img;
+    try { img = await SigImg.extract(await x.readAsBytes()); } catch (_) {} finally { if (mounted) setState(() => busy = false); }
+    if (!mounted) return null;
+    if (img == null) { toast(context, '⚠️ ملقيتش توقيع واضح في الصورة — وقّع بقلم غامق على ورقة بيضا وصوّرها قريب'); return null; }
+    final nm = TextEditingController(text: nameInit ?? '');
+    final ok = await showDialog<bool>(context: context, builder: (ctx) => Directionality(textDirection: Tr.dir, child: AlertDialog(
+      title: const Text('✅ ده التوقيع اللي أخدته من الصورة'),
+      content: Column(mainAxisSize: MainAxisSize.min, children: [
+        Container(height: 150, width: double.infinity, padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: kBd)), child: Image.memory(base64Decode(img!.split(',').last), fit: BoxFit.contain)),
+        if (onName != null) Padding(padding: const EdgeInsets.only(top: 10), child: TextField(controller: nm, decoration: const InputDecoration(labelText: 'اسم التوقيع', border: OutlineInputBorder()))),
+      ]),
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء')), FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('حطه على العقد'))],
+    )));
+    if (ok != true) return null;
+    onName?.call(nm.text);
+    return img;
+  }
 
   Future<void> _newSig() async {
     var nm = str(f['ll']).split(' ').take(2).join(' '); if (nm.isEmpty) nm = 'المؤجر';

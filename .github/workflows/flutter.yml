@@ -72,7 +72,7 @@ jobs:
         run: flutter analyze --no-fatal-infos --no-fatal-warnings lib 2>&1 | tee /tmp/an.log || true
       - name: Test (كل الصفحات + عقد PDF)
         working-directory: bunyan_app
-        run: mkdir -p build && flutter test test/ct_pdf_test.dart test/ct_tpl_test.dart test/pages_test.dart > /tmp/test.log 2>&1; R=$?; tail -40 /tmp/test.log; test $R -eq 0
+        run: mkdir -p build && flutter test test/ct_pdf_test.dart test/ct_tpl_test.dart test/pages_test.dart test/sig_test.dart > /tmp/test.log 2>&1; R=$?; tail -40 /tmp/test.log; test $R -eq 0
       - name: Build APK
         working-directory: bunyan_app
         run: flutter build apk --release --build-number=${{ github.run_number }} 2>&1 | tee /tmp/build.log; test ${PIPESTATUS[0]} -eq 0
@@ -100,7 +100,7 @@ jobs:
         run: |
           mkdir /tmp/out && (cp /tmp/main.apk /tmp/out/Bunyan.apk 2>/dev/null || cp bunyan_app/build/app/outputs/flutter-apk/app-release.apk /tmp/out/Bunyan.apk); cp /tmp/hakim.apk /tmp/out/Hakim.apk 2>/dev/null || true
           BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1); $BT/apksigner verify --print-certs /tmp/out/Bunyan.apk | head -5 > /tmp/out/cert.txt || true; $BT/aapt dump badging /tmp/out/Bunyan.apk | head -2 >> /tmp/out/cert.txt || true; $BT/aapt dump badging /tmp/out/Hakim.apk | head -2 >> /tmp/out/cert.txt || true && echo "{\"code\":${{ github.run_number }}}" > /tmp/out/version.json
-          cp /tmp/an.log /tmp/out/analyze.log || true; cp bunyan_app/build/ct_test.pdf /tmp/out/ct_test.pdf || true; cp bunyan_app/build/ct_ar.pdf bunyan_app/build/ct_en.pdf bunyan_app/build/ct_bi.pdf /tmp/out/ || true; cp /tmp/test.log /tmp/out/test.log || true
+          cp /tmp/an.log /tmp/out/analyze.log || true; cp bunyan_app/build/ct_test.pdf /tmp/out/ct_test.pdf || true; cp bunyan_app/build/ct_ar.pdf bunyan_app/build/ct_en.pdf bunyan_app/build/ct_bi.pdf bunyan_app/build/sig.png /tmp/out/ || true; cp /tmp/test.log /tmp/out/test.log || true
           cd /tmp/out && git init -q -b apk-flutter && git config user.name gh && git config user.email gh@github.com
           git add . && git commit -q -m "Bunyan Flutter APK" && git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git apk-flutter
       - name: Build web (للآيفون والكمبيوتر)
