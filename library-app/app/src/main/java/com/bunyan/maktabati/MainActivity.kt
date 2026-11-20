@@ -183,7 +183,11 @@ fun App(incoming: MutableState<Intent?>) {
             if (!linkWith(code)) toast("⚠️ كود الربط مش مظبوط") else { toast("✅ اتربط بحساب بنيان — بنزّل مكتبتك…"); Lib.msg = Lib.sync(); toast(Lib.msg); screen = "home" }
         } else if (itn.action == Intent.ACTION_VIEW) addFromUri(ctx, d)?.let { b -> reading = b }
     }
-    LaunchedEffect(Unit) { if (Lib.link != null) Lib.msg = Lib.sync(); Lib.comeback()?.let { toast(it) } }
+    LaunchedEffect(Unit) {
+        if (Lib.link != null) Lib.msg = Lib.sync(); Lib.comeback()?.let { toast(it) }
+        // 📗 طلب أسامه: ضيف كتب الإمام البخاري (مرة واحدة)
+        if (!Lib.cfg.optBoolean("addBukhari")) { val n = Ready.addAll(Ready.bukhari); Lib.cfg.put("addBukhari", true); Lib.save(); if (n > 0) toast("📗 اتضاف $n كتاب للإمام البخاري في «عايز أقراه»") }
+    }
     // تحديث التطبيق لوحده + ربط تلقائي لو كود الربط متنسخ (زرار بنيان بينسخه)
     var hiddenAt by remember { mutableLongStateOf(0L) }
     val life = androidx.compose.ui.platform.LocalLifecycleOwner.current

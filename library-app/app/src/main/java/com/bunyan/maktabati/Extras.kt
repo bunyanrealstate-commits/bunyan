@@ -598,15 +598,21 @@ fun ExploreBody(onSearch: (String) -> Unit) {
             Modifier.fillMaxWidth().height(46.dp), enabled = ok && !Explore.busy, shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = Green)) {
             Text(if (Explore.busy) "⏳ بدوّر…" else if (sel.size > 1) "🔎 دوّر في ${sel.size} تصنيفات" else "🔎 دوّر", fontWeight = FontWeight.Bold, fontSize = 15.sp)
         }
-        OutlinedButton({ val o = Explore.state(); o.put("r", org.json.JSONArray(PEOPLE_LIST)).put("g", org.json.JSONArray()).put("q", "📚 قايمة جاهزة: فهم الناس والتعامل معاهم"); q = ""; sel = emptySet(); Lib.save(); Lib.ver++ },
-            Modifier.fillMaxWidth().height(40.dp), shape = RoundedCornerShape(50), contentPadding = PaddingValues(horizontal = 12.dp)) { Text("📚 قايمة جاهزة: فهم الناس", color = Green, fontWeight = FontWeight.Bold, fontSize = 13.sp) }
+        Text("📚 قوايم جاهزة", color = Muted, fontSize = 12.sp)
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Ready.lists.forEach { (name, get) -> Chip(name, false) {
+                val o = Explore.state(); o.put("r", org.json.JSONArray(get())).put("g", org.json.JSONArray()).put("q", "").put("ready", name); q = ""; sel = emptySet(); Lib.save(); Lib.ver++ } }
+        }
         if (Explore.busy) Text("⏳ بدوّر على أحسن كتب… تقدر تقفل التطبيق خالص، وهبعتلك إشعار أول ما أخلص 🔔", color = Muted, fontSize = 13.sp, lineHeight = 21.sp)
         if (Explore.err.isNotEmpty()) Text(Explore.err, color = Color(0xFFB3261E), fontSize = 13.sp)
         if (res.isNotEmpty()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("📚 لقيتلك ${res.size} كتاب", fontWeight = FontWeight.Black, color = Ink, modifier = Modifier.weight(1f))
-                TextButton({ Explore.state().remove("r"); Lib.save(); Lib.ver++ }) { Text("🗑 امسح", color = Muted) }
+                TextButton({ Explore.state().remove("r"); Explore.state().remove("ready"); Lib.save(); Lib.ver++ }) { Text("🗑 امسح", color = Muted) }
             }
+            val missing = res.count { r -> Lib.books.none { it.optString("t").trim() == r.optString("t").trim() } }
+            if (missing > 0) Button({ val n = Ready.addAll(res); Lib.save(); Toast.makeText(ctx, "📌 اتضاف $n كتاب لـ«عايز أقراه»", Toast.LENGTH_SHORT).show() },
+                Modifier.fillMaxWidth().height(42.dp), shape = RoundedCornerShape(50), colors = ButtonDefaults.buttonColors(containerColor = Green)) { Text("📌 ضيف الـ$missing كلهم لـ«عايز أقراه»", fontWeight = FontWeight.Bold, fontSize = 13.sp) }
             res.forEach { r ->
                 val mine = Lib.books.firstOrNull { it.optString("t") == r.optString("t") }
                 Surface(shape = RoundedCornerShape(16.dp), color = Card) { Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
