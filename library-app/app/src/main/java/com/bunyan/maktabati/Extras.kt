@@ -631,8 +631,8 @@ fun ExploreBody(onSearch: (String) -> Unit) {
                     Column(Modifier.clickable { open = if (open == t) null else t }.padding(horizontal = 12.dp, vertical = 8.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text(t, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text(listOf(r.optString("a"), if (r.optInt("pg") > 0) "${r.optInt("pg")} ص" else "").filter { it.isNotBlank() }.joinToString(" • "), color = Muted, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(t, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Ink, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                                Text(listOf(r.optString("a"), if (r.optInt("pg") > 0) "${r.optInt("pg")} ص" else "").filter { it.isNotBlank() }.joinToString(" • "), color = Muted, fontSize = 11.sp, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                             }
                             Text(if (mine) "✅" else "📌", Modifier.clip(CircleShape).clickable(enabled = !mine) { Lib.addLocal(t, r.optString("a")) {}; Lib.ver++; Toast.makeText(ctx, "📌 اتضاف لـ«عايز أقراه»", Toast.LENGTH_SHORT).show() }.padding(8.dp), fontSize = 16.sp)
                             Text("⬇️", Modifier.clip(CircleShape).clickable { onSearch(t) }.padding(8.dp), fontSize = 16.sp)
