@@ -575,6 +575,12 @@ fun ExploreBody(onSearch: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         OutlinedTextField(q, { q = it }, Modifier.fillMaxWidth(), placeholder = { Text("اكتب أي حاجة: موضوع، كاتب، كتاب شبه…") }, shape = RoundedCornerShape(14.dp), maxLines = 3,
             leadingIcon = { Text("🔎") }, trailingIcon = { if (q.isNotEmpty()) Text("✕", Modifier.clickable { q = "" }.padding(8.dp), color = Muted) })
+        var flt by remember { mutableStateOf(Lib.cfg.optString("expF", "islamic")) }
+        Text("الكتب تكون:", color = Muted, fontSize = 13.sp)
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf("islamic" to "🕌 إسلامي وعربي بس", "arabic" to "🇪🇬 عربي بس", "all" to "🌍 الكل (ومترجم)").forEach { (k, t) ->
+                Chip(t, flt == k) { flt = k; Lib.cfg.put("expF", k); Lib.save() } }
+        }
         Text("أو اختار تصنيف أو أكتر:", color = Muted, fontSize = 13.sp)
         androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             GENRES.forEach { x -> Chip((if (x in sel) "✓ " else "") + x, x in sel) { sel = if (x in sel) sel - x else sel + x } }

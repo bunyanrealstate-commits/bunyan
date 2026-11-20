@@ -35,9 +35,15 @@ object Explore {
         val old = if (more) results() else emptyList()
         val have = (Lib.books.map { it.optString("t") } + old.map { it.optString("t") }).filter { it.isNotBlank() }.take(150)
         val topic = buildList { addAll(genres.map { it.substringAfter(' ') }); if (text.isNotBlank()) add("«${text.trim()}»") }.joinToString(" + ")
-        val j = Net.askJson("زي قوائم Goodreads الأعلى تقييماً: رشّح 15 كتاب حقيقي ومشهور ومتقيّم عالي في: $topic" +
+        val flt = Lib.cfg.optString("expF", "islamic")
+        val cond = when (flt) {
+            "islamic" -> " شرط أساسي: كل الكتب لازم تكون من تأليف مؤلفين عرب أو مسلمين (علماء ودعاة ومفكرين ومؤلفين عرب) ومن منظور إسلامي، وممكن كتب تراث، وممنوع أي كتاب مترجم من مؤلف أجنبي غير مسلم."
+            "arabic" -> " شرط أساسي: كل الكتب لازم تكون من تأليف مؤلفين عرب (مكتوبة بالعربي أصلاً)، وممنوع أي كتاب مترجم."
+            else -> ""
+        }
+        val j = Net.askJson("زي قوائم Goodreads الأعلى تقييماً: رشّح 15 كتاب حقيقي ومشهور ومتقيّم عالي في: $topic." + cond +
             (if (genres.size + (if (text.isNotBlank()) 1 else 0) > 1) " (نوّع بينهم، ولو فيه كتب بتجمع أكتر من حاجة منهم قدّمها)" else "") +
-            ". يفضّل عربي أو مترجم للعربي ومتاح، والأسهل الأول لواحد لسه بيتعوّد على القراية." +
+            (if (flt == "all") " يفضّل عربي أو مترجم للعربي ومتاح،" else "") + " الأسهل الأول لواحد لسه بيتعوّد على القراية، ومتألّفش أي كتاب مش موجود." +
             (if (have.isNotEmpty()) " متكررش أي كتاب من دول: " + have.joinToString("، ") else "") +
             " رجّع JSON بس: {\"r\":[{\"t\":\"اسم الكتاب بالعربي\",\"a\":\"المؤلف\",\"pg\":عدد الصفحات التقريبي,\"cat\":\"التصنيف\",\"why\":\"بيتكلم عن إيه — سطر بالمصري\"}]}")
             ?: return -1
