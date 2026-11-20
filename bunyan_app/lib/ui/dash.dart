@@ -301,7 +301,7 @@ class _HdClockState extends State<HdClock> {
 }
 
 /* ───────── 📂 زرار المجموعة + القايمة المودرن ───────── */
-const _gCol = [[Color(0xFF3B82F6), Color(0xFF1D4ED8)], [Color(0xFF10B981), Color(0xFF047857)], [Color(0xFFF59E0B), Color(0xFFD97706)], [Color(0xFF8B5CF6), Color(0xFF6D28D9)], [Color(0xFFEC4899), Color(0xFFBE185D)], [Color(0xFF06B6D4), Color(0xFF0E7490)]];
+const _gCol = [[Color(0xFF14B8A6), Color(0xFF0F766E)], [Color(0xFF334E68), Color(0xFF14304A)], [Color(0xFFE0A84A), Color(0xFFB7791F)], [Color(0xFF6366F1), Color(0xFF4338CA)], [Color(0xFF0EA5E9), Color(0xFF0369A1)], [Color(0xFFF43F5E), Color(0xFFBE123C)]];
 String _ini(String n) {
   final w = n.replaceFirst(RegExp(r'^مع\s+'), '').trim().split(RegExp(r'\s+')).where((x) => x.isNotEmpty).toList();
   final o = <String>[]; for (var i = 0; i < w.length && o.length < 2; i++) { var x = w[i]; if (i > 0 && x.length > 1 && x.startsWith('و')) x = x.substring(1); o.add(x.characters.first); }
@@ -342,28 +342,28 @@ Future<void> openGroups(BuildContext context) async {
     context: context, barrierDismissible: true, barrierLabel: 'x', barrierColor: const Color(0x470F172A), transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (ctx, _, __) => Directionality(textDirection: Tr.dir, child: SafeArea(child: Align(alignment: Alignment.topCenter, child: Padding(
       padding: const EdgeInsets.only(top: 60, left: 14, right: 14),
-      child: Material(color: Colors.transparent, child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 340), child: Container(
-        padding: const EdgeInsets.all(8),
+      child: Material(color: Colors.transparent, child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 320), child: Container(
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), border: Border.all(color: const Color(0x40949FB8)), boxShadow: const [BoxShadow(color: Color(0x590F172A), blurRadius: 50, offset: Offset(0, 22), spreadRadius: -12)]),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Padding(padding: const EdgeInsets.fromLTRB(12, 6, 12, 8), child: Text(Tr.t('المجموعات'), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: Color(0xFF94A3B8)))),
+          Padding(padding: const EdgeInsets.fromLTRB(10, 6, 10, 10), child: Row(children: [const Icon(Icons.groups_2_outlined, size: 18, color: kAc), const SizedBox(width: 6), Text(Tr.t('اختار المجموعة'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: kNavy))])),
           for (var i = 0; i < opts.length; i++) Builder(builder: (_) {
             final o = opts[i]; final on = o[0] == cur; final c = _gCol[i % _gCol.length];
             final nUnits = us.where((u) => o[0] == '-' ? !truthy(u['g']) : u['g'] == o[0]).length;
             return InkWell(
               borderRadius: BorderRadius.circular(15), onTap: () => Navigator.of(ctx).pop(o[0]),
               child: Container(
-                padding: const EdgeInsets.all(10), margin: const EdgeInsets.only(bottom: 2),
-                decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), gradient: on ? const LinearGradient(colors: [Color(0x1A2563EB), Color(0x1410B981)]) : null),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), margin: const EdgeInsets.only(bottom: 4),
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), color: on ? const Color(0xFFE6F4F1) : null, border: Border.all(color: on ? const Color(0xFF99D5CB) : Colors.transparent)),
                 child: Row(children: [
-                  Container(width: 42, height: 42, alignment: Alignment.center, decoration: BoxDecoration(borderRadius: BorderRadius.circular(13), gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: o[0] == '-' ? const [Color(0xFF94A3B8), Color(0xFF64748B)] : c), boxShadow: [BoxShadow(color: c[1].withOpacity(.35), blurRadius: 10, offset: const Offset(0, 4), spreadRadius: -3)]),
-                    child: Text(Priv.on ? '•' : _ini(o[1]), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 17))),
+                  Container(width: 36, height: 36, alignment: Alignment.center, decoration: BoxDecoration(borderRadius: BorderRadius.circular(11), gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: o[0] == '-' ? const [Color(0xFF94A3B8), Color(0xFF64748B)] : c), boxShadow: [BoxShadow(color: c[1].withOpacity(.35), blurRadius: 10, offset: const Offset(0, 4), spreadRadius: -3)]),
+                    child: Text(Priv.on ? '•' : _ini(o[1]), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15))),
                   const SizedBox(width: 12),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(Priv.on ? '••••' : o[1], overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF0F172A))),
-                    Text('$nUnits ${Tr.t('استديو')}', style: const TextStyle(fontSize: 12.5, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+                    Text(Priv.on ? '••••' : o[1], overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: on ? kAcD : kNavy)),
+                    Text('$nUnits ${Tr.t('استديو')}', style: const TextStyle(fontSize: 12, color: kMuted, fontWeight: FontWeight.w600)),
                   ])),
-                  if (on) Container(width: 24, height: 24, decoration: const BoxDecoration(color: Color(0xFF2563EB), shape: BoxShape.circle), child: const Icon(Icons.check_rounded, color: Colors.white, size: 16)),
+                  if (on) Container(width: 22, height: 22, decoration: const BoxDecoration(color: kAc, shape: BoxShape.circle), child: const Icon(Icons.check_rounded, color: Colors.white, size: 16)),
                 ]),
               ),
             );
@@ -371,10 +371,10 @@ Future<void> openGroups(BuildContext context) async {
           const Padding(padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6), child: Divider(height: 1)),
           InkWell(
             borderRadius: BorderRadius.circular(15), onTap: () => Navigator.of(ctx).pop('__m'),
-            child: Padding(padding: const EdgeInsets.all(10), child: Row(children: [
-              Container(width: 42, height: 42, decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(13)), child: const Icon(Icons.settings_rounded, color: Color(0xFF475569))),
+            child: Padding(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), child: Row(children: [
+              Container(width: 36, height: 36, decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(11)), child: const Icon(Icons.tune_rounded, size: 20, color: kMuted)),
               const SizedBox(width: 12),
-              Text(Tr.t('إدارة المجموعات'), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Color(0xFF334155))),
+              Text(Tr.t('إدارة المجموعات'), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: kMuted)),
             ])),
           ),
         ]),
@@ -400,20 +400,20 @@ class Ticker extends StatefulWidget {
 }
 
 class _TickerState extends State<Ticker> with SingleTickerProviderStateMixin {
-  late final AnimationController a = AnimationController(vsync: this, duration: const Duration(seconds: 6))..repeat();
+  late final AnimationController a = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat();
   @override
   void dispose() { a.dispose(); super.dispose(); }
   @override
-  Widget build(BuildContext context) {
-    final tp = TextPainter(text: TextSpan(text: widget.text, style: widget.style), textDirection: Directionality.of(context), maxLines: 1)..layout();
-    const gap = 28.0; final w = tp.width + gap;
-    a.duration = Duration(milliseconds: (w * 45).round().clamp(2500, 15000));
-    return ClipRect(child: AnimatedBuilder(animation: a, builder: (_, __) {
-      final rtl = Directionality.of(context) == TextDirection.rtl;
-      final dx = a.value * w * (rtl ? 1 : -1);
-      return OverflowBox(alignment: AlignmentDirectional.centerStart, maxWidth: double.infinity, child: Transform.translate(offset: Offset(dx, 0), child: Row(mainAxisSize: MainAxisSize.min, children: [
-        for (var i = 0; i < 4; i++) Padding(padding: const EdgeInsetsDirectional.only(end: gap), child: Text(widget.text, maxLines: 1, softWrap: false, style: widget.style)),
-      ])));
-    }));
-  }
+  Widget build(BuildContext context) => LayoutBuilder(builder: (context, bc) {
+        final tp = TextPainter(text: TextSpan(text: widget.text, style: widget.style), textDirection: Directionality.of(context), maxLines: 1)..layout();
+        final W = bc.maxWidth, tw = tp.width, travel = W + tw;
+        final d = Duration(milliseconds: (travel * 16).round().clamp(1600, 9000)); // ~60 بكسل في الثانية
+        if (a.duration != d) { a.duration = d; a.repeat(); }
+        final rtl = Directionality.of(context) == TextDirection.rtl;
+        // نسخة واحدة بس: بتدخل من ناحية وتطلع من الناحية التانية
+        return ClipRect(child: AnimatedBuilder(animation: a, builder: (_, __) {
+          final x = rtl ? -tw + a.value * travel : W - a.value * travel;
+          return Stack(clipBehavior: Clip.hardEdge, children: [Positioned(left: x, top: 0, bottom: 0, child: Center(child: Text(widget.text, maxLines: 1, softWrap: false, style: widget.style)))]);
+        }));
+      });
 }
