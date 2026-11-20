@@ -296,7 +296,7 @@ object Lib {
                 val cv = rb.optString("cv")
                 if (cv.startsWith("data:image")) { val cf = File(dir, "covers/$id.jpg"); if (!cf.exists()) try { cf.writeBytes(Base64.decode(cv.substringAfter(","), Base64.DEFAULT)) } catch (_: Exception) {} }
                 rb.remove("cv")
-                if (loc != null) for (k in listOf("spd", "nx", "eps", "hook", "ch", "hl", "paper", "r", "rv")) if (loc.has(k)) rb.put(k, loc.get(k))
+                if (loc != null) for (k in listOf("spd", "nx", "eps", "hook", "ch", "hl", "paper", "r", "rv", "bk")) if (loc.has(k)) rb.put(k, loc.get(k))
                 val r = app.optJSONObject(id)
                 if (r != null && r.optLong("rd") > rb.optLong("rd", 0)) {
                     for (k in listOf("cur", "maxp", "sh", "sd", "fd", "pg", "rd")) if (r.has(k)) rb.put(k, r.get(k))

@@ -26,6 +26,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -133,8 +135,9 @@ fun App(incoming: MutableState<Intent?>) {
 
     fun openBook(b: JSONObject) { if (Lib.have(b)) reading = b else fetch(b, true) }
 
-    val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-        if (uri != null) { Toast.makeText(ctx, "⏳ بضيف الكتاب…", Toast.LENGTH_SHORT).show(); scope.launch { addFromUriBg(ctx, uri)?.let { reading = it } } }
+    val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris: List<Uri> ->
+        if (uris.isNotEmpty()) { Toast.makeText(ctx, "⏳ بضيف ${if (uris.size > 1) "${uris.size} كتب" else "الكتاب"}…", Toast.LENGTH_SHORT).show()
+            scope.launch { val added = uris.mapNotNull { addFromUriBg(ctx, it) }; if (added.size == 1) reading = added[0] else if (added.size > 1) toast("✅ اتضاف ${added.size} كتب في «بقراه»") } }
     }
 
     LaunchedEffect(incoming.value, Lib.revealed) {
@@ -197,7 +200,7 @@ fun App(incoming: MutableState<Intent?>) {
         "journey" -> JourneyScreen({ screen = "home" }) { b -> screen = "home"; openBook(b) }
         "paper" -> PaperScreen { screen = "home" }
         else -> HomeScreen(dl, onOpen = { openBook(it) }, onFetch = { fetch(it, false) }, onSearch = { screen = "search" },
-            onPick = { { Lib.pickAt = System.currentTimeMillis(); pick.launch(arrayOf("application/pdf")) } }, onLink = { screen = "link" },
+            onPick = { Lib.pickAt = System.currentTimeMillis(); pick.launch(arrayOf("application/pdf")) }, onLink = { screen = "link" },
             onSync = { scope.launch { Lib.msg = Lib.sync(); toast(Lib.msg) } },
             onRec = { sheet = "rec" }, onSettings = { sheet = "set" }, onNotes = { notes = it },
             onMore = { k -> if (k == "jar") sheet = "jar" else screen = k },
@@ -272,7 +275,16 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
     var about by remember { mutableStateOf<JSONObject?>(null) }
     val cur = Lib.current()
     val today = Lib.todayPages(); val goal = Lib.goal; val st = Lib.streak()
-    val list = Lib.books.filter { it.optString("sh", "want") == shelf && (q.isBlank() || it.optString("t").contains(q) || it.optString("a").contains(q)) }
+    var sort by remember { mutableStateOf(Lib.cfg.optString("sort", "new")) }
+    val list = Lib.books.filter { it.optString("sh", "want") == shelf && (q.isBlank() || it.optString("t").contains(q) || it.optString("a").contains(q)) }.let { l ->
+        when (sort) {
+            "name" -> l.sortedBy { it.optString("t") }
+            "prog" -> l.sortedByDescending { val pg = it.optInt("pg"); if (pg > 0) it.optInt("cur").toFloat() / pg else 0f }
+            "short" -> l.sortedBy { it.optInt("pg").takeIf { p -> p > 0 } ?: 99999 }
+            "have" -> l.sortedByDescending { Lib.have(it) }
+            else -> l
+        }
+    }
         .let { l -> if (shelf == "want") l.sortedBy { b -> Lib.queue.indexOf(b.optString("id")).let { if (it < 0) 9999 else it } } else l.sortedByDescending { it.optLong("rd", 0) } }
 
     Column(Modifier.fillMaxSize().background(Paper)) {
@@ -398,6 +410,10 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                     }
                 }
                 OutlinedTextField(q, { q = it }, Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("🔎 دوّر في كتبك") }, singleLine = true, shape = RoundedCornerShape(14.dp))
+                Row(Modifier.padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf("new" to "🕒 الأحدث", "have" to "📥 المتنزّل الأول", "short" to "📏 الأقصر", "prog" to "📊 الأكتر تقدّم", "name" to "🔤 بالاسم").forEach { (k, t) ->
+                        Chip(t, sort == k) { sort = k; Lib.cfg.put("sort", k); Lib.save() } }
+                }
             }
         }
         if (list.isEmpty()) item(span = { GridItemSpan(3) }) { Text(if (shelf == "dnf") "الكتاب اللي مش عاجبك سيبه من غير ذنب — زي Goodreads «Did not finish» 🙂" else "مفيش كتب هنا", Modifier.fillMaxWidth().padding(30.dp), textAlign = TextAlign.Center, color = Muted) }
@@ -601,11 +617,11 @@ fun DecoyScreen() {
     var open by remember { mutableStateOf<JSONObject?>(null) }
     var del by remember { mutableStateOf<JSONObject?>(null) }
     val dscope = rememberCoroutineScope()
-    val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-        if (uri != null) dscope.launch { try {
+    val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris: List<Uri> ->
+        uris.forEachIndexed { k, uri -> dscope.launch { try {
             var name = "كتاب"
             ctx.contentResolver.query(uri, null, null, null, null)?.use { c -> val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME); if (i >= 0 && c.moveToFirst()) name = c.getString(i) }
-            val b = JSONObject().put("id", "d" + System.currentTimeMillis()).put("t", name.removeSuffix(".pdf").removeSuffix(".PDF").replace('_', ' ')).put("a", "").put("sh", "now")
+            val b = JSONObject().put("id", "d" + System.currentTimeMillis() + k).put("t", name.removeSuffix(".pdf").removeSuffix(".PDF").replace('_', ' ')).put("a", "").put("sh", "now")
             Toast.makeText(ctx, "⏳ بضيف الكتاب…", Toast.LENGTH_SHORT).show()
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 File(Lib.dir, "books").mkdirs()
@@ -614,7 +630,7 @@ fun DecoyScreen() {
             }
             (Lib.cfg.optJSONArray("decoy") ?: JSONArray().also { Lib.cfg.put("decoy", it) }).put(b); Lib.ver++; Lib.save()
             Toast.makeText(ctx, "✅ اتضاف «${b.optString("t")}»", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) { Toast.makeText(ctx, "⚠️ مقدرتش أضيف الكتاب: ${e.message}", Toast.LENGTH_LONG).show() } }
+        } catch (e: Exception) { Toast.makeText(ctx, "⚠️ مقدرتش أضيف الكتاب: ${e.message}", Toast.LENGTH_LONG).show() } } }
     }
     val o = open
     if (o != null) { ReaderScreen(o) { _, _, _ -> open = null; Lib.save() }; return }
@@ -631,7 +647,7 @@ fun DecoyScreen() {
                     }
                 })
             Spacer(Modifier.weight(1f))
-            if (dbooks.isNotEmpty()) TextButton({ { Lib.pickAt = System.currentTimeMillis(); pick.launch(arrayOf("application/pdf")) } }) { Text("➕ ضيف كتاب", color = Green, fontWeight = FontWeight.Bold) }
+            if (dbooks.isNotEmpty()) TextButton({ Lib.pickAt = System.currentTimeMillis(); pick.launch(arrayOf("application/pdf")) }) { Text("➕ ضيف كتاب", color = Green, fontWeight = FontWeight.Bold) }
         }
         if (dbooks.isEmpty()) {
             Spacer(Modifier.weight(1f))
@@ -639,7 +655,7 @@ fun DecoyScreen() {
                 Text("📖", fontSize = 64.sp)
                 Text("مكتبتك فاضية", fontWeight = FontWeight.Black, fontSize = 20.sp, color = Ink)
                 Text("لسه مضفتش أي كتاب", color = Muted)
-                OutlinedButton({ { Lib.pickAt = System.currentTimeMillis(); pick.launch(arrayOf("application/pdf")) } }) { Text("➕ ضيف كتاب") }
+                OutlinedButton({ Lib.pickAt = System.currentTimeMillis(); pick.launch(arrayOf("application/pdf")) }) { Text("➕ ضيف كتاب") }
             }
             Spacer(Modifier.weight(1.3f))
         } else LazyVerticalGrid(GridCells.Fixed(3), Modifier.fillMaxSize().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {

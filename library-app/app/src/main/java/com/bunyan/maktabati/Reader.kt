@@ -12,6 +12,9 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
@@ -95,7 +98,8 @@ fun ReaderScreen(b: JSONObject, onClose: (Int, Int, Int) -> Unit) {
     var flip by remember { mutableStateOf(Lib.cfg.optString("mode") == "flip") }
     val pager = androidx.compose.foundation.pager.rememberPagerState(initialPage = start - 1) { n }
     var widthPx by remember { mutableIntStateOf(1080) }
-    var night by remember { mutableStateOf(false) }
+    var bkVer by remember { mutableIntStateOf(0) }
+    var night by remember { mutableStateOf(Lib.cfg.optBoolean("night", false)) }
     var zoom by remember { mutableFloatStateOf(1f) }
     var panX by remember { mutableFloatStateOf(0f) }
     var sess by remember { mutableIntStateOf(0) }
@@ -249,7 +253,18 @@ fun ReaderScreen(b: JSONObject, onClose: (Int, Int, Int) -> Unit) {
     if (showTools) {
         AlertDialog(onDismissRequest = { showTools = false }, confirmButton = { TextButton({ showTools = false }) { Text("قفل") } },
             title = { Text("⚙️ أدوات القراية") }, text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("🔖 العلامات", fontWeight = FontWeight.Bold)
+                    @Suppress("UNUSED_EXPRESSION") bkVer
+                    val bks = (0 until (b.optJSONArray("bk")?.length() ?: 0)).map { b.optJSONArray("bk")!!.optInt(it) }.sorted()
+                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        val has = bks.contains(cur)
+                        Chip(if (has) "🔖 شيل علامة ص $cur" else "🔖 علّم صفحة $cur", has) {
+                            val a = org.json.JSONArray(); (if (has) bks - cur else bks + cur).sorted().forEach { a.put(it) }
+                            b.put("bk", a); Lib.touch(b, "bk"); Lib.save(); bkVer++
+                        }
+                        bks.filter { it != cur }.forEach { p -> Chip("ص $p", false) { showTools = false; scope.launch { goTo(p, true) } } }
+                    }
                     Text("📖 شكل القراية", fontWeight = FontWeight.Bold)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Chip("↕️ اسكرول", !flip) { if (flip) { val c = cur; flip = false; Lib.cfg.put("mode", "scroll"); Lib.save(); scope.launch { list.scrollToItem(c - 1) } } }
@@ -277,7 +292,7 @@ fun ReaderScreen(b: JSONObject, onClose: (Int, Int, Int) -> Unit) {
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Chip(if (night) "☀️ نهاري" else "🌙 ليلي", night) { night = !night }
+                        Chip(if (night) "☀️ نهاري" else "🌙 ليلي", night) { night = !night; Lib.cfg.put("night", night); Lib.save() }
                         Chip("🔍 ترجيع الحجم", false) { zoom = 1f; panX = 0f }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
