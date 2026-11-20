@@ -176,7 +176,7 @@ fun App(incoming: MutableState<Intent?>) {
         if (!Lib.revealed) return@LaunchedEffect
         val itn = incoming.value ?: return@LaunchedEffect
         incoming.value = null
-        itn.getStringExtra("open")?.let { id -> if (id == "buddy") screen = "buddy" else Lib.book(id)?.let { b -> openBook(b) }; return@LaunchedEffect }
+        itn.getStringExtra("open")?.let { id -> if (id == "explore") { screen = "home"; Lib.wantTab = "find" } else if (id == "buddy") screen = "buddy" else Lib.book(id)?.let { b -> openBook(b) }; return@LaunchedEffect }
         val d = itn.data ?: return@LaunchedEffect
         if (d.scheme == "bnylib") {
             val code = d.getQueryParameter("c") ?: d.fragment ?: ""
@@ -299,6 +299,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
     var shelf by remember { mutableStateOf("now") }
     var tab by rememberSaveable { mutableStateOf("home") }
     BackHandler(tab != "home") { tab = "home" }
+    LaunchedEffect(Lib.wantTab) { Lib.wantTab?.let { tab = it; Lib.wantTab = null } }
     var q by remember { mutableStateOf("") }
     var menu by remember { mutableStateOf<JSONObject?>(null) }
     var goalDlg by remember { mutableStateOf(false) }

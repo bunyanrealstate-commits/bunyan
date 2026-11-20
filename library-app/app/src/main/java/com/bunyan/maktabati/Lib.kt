@@ -157,6 +157,7 @@ object Lib {
     /** 🔒 الكتب مستخبية لحد ما تعمل الحركة السرية وتكتب الرقم السري */
     var revealed by mutableStateOf(false)
     var pickAt = 0L
+    var wantTab by mutableStateOf<String?>(null)
     fun hasPin() = cfg.optString("pin").isNotEmpty()
     private fun hp(p: String): String = java.security.MessageDigest.getInstance("SHA-256").digest(("mktb:" + p).toByteArray()).joinToString("") { "%02x".format(it) }
     fun checkPin(p: String) = hasPin() && cfg.optString("pin") == hp(p)
