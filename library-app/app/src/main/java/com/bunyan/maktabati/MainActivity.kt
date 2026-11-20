@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -293,6 +294,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
     val cur = Lib.current()
     val today = Lib.todayPages(); val goal = Lib.goal; val st = Lib.streak()
     var sort by remember { mutableStateOf(Lib.cfg.optString("sort", "new")) }
+    var style by remember { mutableStateOf(Lib.cfg.optString("look", "grid")) }
     val list = Lib.books.filter { it.optString("sh", "want") == shelf && (q.isBlank() || it.optString("t").contains(q) || it.optString("a").contains(q)) }.let { l ->
         when (sort) {
             "name" -> l.sortedBy { it.optString("t") }
@@ -305,9 +307,10 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
         .let { l -> if (shelf == "want") l.sortedBy { b -> Lib.queue.indexOf(b.optString("id")).let { if (it < 0) 9999 else it } } else l.sortedByDescending { it.optLong("rd", 0) } }
 
     Column(Modifier.fillMaxSize().background(Paper)) {
-    LazyVerticalGrid(GridCells.Fixed(3), Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 0.dp, bottom = 40.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item(span = { GridItemSpan(3) }) {
+    val look = if (tab == "books") style else "grid"
+    LazyVerticalGrid(GridCells.Fixed(when (look) { "list" -> 1; "cards" -> 2; else -> 3 }), Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 0.dp, bottom = 40.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (look == "shelf") 0.dp else 10.dp), verticalArrangement = Arrangement.spacedBy(if (look == "shelf") 4.dp else 12.dp)) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
             Row(Modifier.statusBarsPadding().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(when (tab) { "books" -> "📚 كتبي"; "find" -> "🧭 اكتشف"; "me" -> "🏅 إنجازاتي"; else -> "📚 مكتبتي" }, fontSize = 26.sp, fontWeight = FontWeight.Black, color = Ink, modifier = Modifier.weight(1f))
                 if (Lib.syncing) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
@@ -316,12 +319,12 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
             }
         }
         if (tab == "home") {
-        if (Lib.link != null && Lib.msg.isNotEmpty() && !Lib.msg.startsWith("تمام")) item(span = { GridItemSpan(3) }) {
+        if (Lib.link != null && Lib.msg.isNotEmpty() && !Lib.msg.startsWith("تمام")) item(span = { GridItemSpan(maxLineSpan) }) {
             Surface(onClick = onSync, shape = RoundedCornerShape(14.dp), color = Color(0xFFFDECEC)) {
                 Text((if (Lib.solo()) "⚠️ النسخة الاحتياطية: " else "⚠️ المزامنة مع بنيان: ") + Lib.msg + " — دوس هنا تجرب تاني", Modifier.padding(12.dp), color = Color(0xFFB3261E), fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
         }
-        if (Lib.link == null) item(span = { GridItemSpan(3) }) {
+        if (Lib.link == null) item(span = { GridItemSpan(maxLineSpan) }) {
             Surface(onClick = onLink, shape = RoundedCornerShape(18.dp), color = Color(0xFFE8F3EE)) {
                 Column(Modifier.padding(14.dp)) {
                     Text("🔗 كتبك لسه منزلتش — التطبيق مش مربوط ببنيان", fontWeight = FontWeight.Black, color = Green, fontSize = 16.sp)
@@ -335,7 +338,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
             }
         }
         // ⏱ رجوع سهل لو بقالك فترة مش بتقرا
-        if (cur != null && today == 0 && st == 0) item(span = { GridItemSpan(3) }) {
+        if (cur != null && today == 0 && st == 0) item(span = { GridItemSpan(maxLineSpan) }) {
             val idle = Lib.idleDays()
             Surface(shape = RoundedCornerShape(22.dp), color = Color(0xFFE8F3EE)) {
                 Column(Modifier.padding(16.dp)) {
@@ -349,7 +352,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
             }
         }
         // الكتاب الحالي
-        if (cur != null) item(span = { GridItemSpan(3) }) {
+        if (cur != null) item(span = { GridItemSpan(maxLineSpan) }) {
             val pg = cur.optInt("pg", 0); val c = cur.optInt("cur", 0)
             Surface(shape = RoundedCornerShape(22.dp), color = Color(0xFFFFF4E0), modifier = Modifier.border(1.dp, Color(0xFFF0D9B5), RoundedCornerShape(22.dp))) {
                 Column(Modifier.padding(16.dp)) {
@@ -384,7 +387,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
             }
         }
         // هدف اليوم + الشمعة
-        item(span = { GridItemSpan(3) }) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
             Surface(onClick = { onSettings() }, shape = RoundedCornerShape(20.dp), color = Card) {
                 Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(64.dp), Alignment.Center) {
@@ -403,11 +406,11 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 }
             }
         }
-        item(span = { GridItemSpan(3) }) { MotivationCards { onMore("jar") } }
-        item(span = { GridItemSpan(3) }) { ReviewCard() }
+        item(span = { GridItemSpan(maxLineSpan) }) { MotivationCards { onMore("jar") } }
+        item(span = { GridItemSpan(maxLineSpan) }) { ReviewCard() }
         }
         if (tab == "books") {
-        item(span = { GridItemSpan(3) }) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Action("🔎", "نزّل كتاب", Modifier.weight(1f), onSearch)
                 Action("📄", "من موبايلي", Modifier.weight(1f), onPick)
@@ -416,7 +419,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
             }
         }
         // الرفوف
-        item(span = { GridItemSpan(3) }) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
             Column {
                 Row(Modifier.clip(RoundedCornerShape(14.dp)).background(Sand).padding(4.dp)) {
                     listOf("now" to "📖 بقراه", "want" to "📌 عايز", "done" to "✅ خلصته", "dnf" to "🚫 سبته").forEach { (k, t) ->
@@ -428,47 +431,91 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 }
                 OutlinedTextField(q, { q = it }, Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("🔎 دوّر في كتبك") }, singleLine = true, shape = RoundedCornerShape(14.dp))
                 Row(Modifier.padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf("grid" to "🖼 شبكة", "shelf" to "🪵 رف خشب", "list" to "📋 قائمة", "cards" to "🃏 كروت كبيرة").forEach { (k, t) ->
+                        Chip(t, style == k) { style = k; Lib.cfg.put("look", k); Lib.save() } }
+                }
+                Row(Modifier.padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     listOf("new" to "🕒 الأحدث", "have" to "📥 المتنزّل الأول", "short" to "📏 الأقصر", "prog" to "📊 الأكتر تقدّم", "name" to "🔤 بالاسم").forEach { (k, t) ->
                         Chip(t, sort == k) { sort = k; Lib.cfg.put("sort", k); Lib.save() } }
                 }
             }
         }
-        if (list.isEmpty()) item(span = { GridItemSpan(3) }) { Text(if (shelf == "dnf") "الكتاب اللي مش عاجبك سيبه من غير ذنب — زي Goodreads «Did not finish» 🙂" else "مفيش كتب هنا", Modifier.fillMaxWidth().padding(30.dp), textAlign = TextAlign.Center, color = Muted) }
+        if (list.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) { Text(if (shelf == "dnf") "الكتاب اللي مش عاجبك سيبه من غير ذنب — زي Goodreads «Did not finish» 🙂" else "مفيش كتب هنا", Modifier.fillMaxWidth().padding(30.dp), textAlign = TextAlign.Center, color = Muted) }
         items(list, key = { it.optString("id") }) { b ->
             val p = dl[b.optString("id")]; val have = Lib.have(b)
-            Column(Modifier.clickable { menu = b }) {
-                Box {
-                    Cover(b, Modifier.fillMaxWidth().aspectRatio(0.7f))
-                    if (!have && p == null) Text("⬇️", Modifier.align(Alignment.TopStart).padding(4.dp).clip(CircleShape).background(Color(0xCCFFFFFF)).padding(4.dp), fontSize = 12.sp)
-                    if (p != null) CircularProgressIndicator(progress = { p }, Modifier.align(Alignment.Center).size(36.dp), color = Color.White, trackColor = Color(0x55FFFFFF))
+            val pg = b.optInt("pg"); val cu = b.optInt("cur")
+            val prog = if (pg > 0 && cu > 0) (cu.toFloat() / pg).coerceIn(0f, 1f) else 0f
+            @Composable fun Badges(bx: androidx.compose.foundation.layout.BoxScope) = with(bx) {
+                if (!have && p == null) Text("⬇️", Modifier.align(Alignment.TopStart).padding(4.dp).clip(CircleShape).background(Color(0xCCFFFFFF)).padding(4.dp), fontSize = 12.sp)
+                if (p != null) CircularProgressIndicator(progress = { p }, Modifier.align(Alignment.Center).size(36.dp), color = Color.White, trackColor = Color(0x55FFFFFF))
+            }
+            when (look) {
+                "list" -> Surface(onClick = { menu = b }, shape = RoundedCornerShape(16.dp), color = Card) {
+                    Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box { Cover(b, Modifier.width(58.dp).height(84.dp)); Badges(this) }
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            Text(b.optString("t"), fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, color = Ink)
+                            if (b.optString("a").isNotEmpty()) Text(b.optString("a"), fontSize = 12.sp, color = Muted, maxLines = 1)
+                            if (prog > 0f) {
+                                LinearProgressIndicator(progress = { prog }, Modifier.fillMaxWidth().height(5.dp).clip(CircleShape), color = Green, trackColor = Sand)
+                                Text("صفحة $cu من $pg • ${(prog * 100).toInt()}%", fontSize = 11.sp, color = Muted)
+                            } else if (pg > 0) Text("$pg صفحة", fontSize = 11.sp, color = Muted)
+                            if (b.optInt("r") > 0) Stars(b.optInt("r"), 13)
+                        }
+                    }
                 }
-                val pg = b.optInt("pg"); if (pg > 0 && b.optInt("cur") > 0) LinearProgressIndicator(progress = { (b.optInt("cur").toFloat() / pg).coerceIn(0f, 1f) }, Modifier.fillMaxWidth().padding(top = 4.dp).height(4.dp).clip(CircleShape), color = Green, trackColor = Sand)
-                Text(b.optString("t"), fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, color = Ink, modifier = Modifier.padding(top = 4.dp))
-                if (b.optInt("r") > 0) Stars(b.optInt("r"), 12)
+                "cards" -> Surface(onClick = { menu = b }, shape = RoundedCornerShape(20.dp), color = Card, shadowElevation = 2.dp) {
+                    Column {
+                        Box { Cover(b, Modifier.fillMaxWidth().aspectRatio(0.72f)); Badges(this)
+                            if (prog > 0f) Text("${(prog * 100).toInt()}%", Modifier.align(Alignment.BottomEnd).padding(8.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xCC000000)).padding(horizontal = 8.dp, vertical = 3.dp), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                        Column(Modifier.padding(10.dp)) {
+                            Text(b.optString("t"), fontWeight = FontWeight.Black, fontSize = 14.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, color = Ink)
+                            if (b.optString("a").isNotEmpty()) Text(b.optString("a"), fontSize = 11.sp, color = Muted, maxLines = 1)
+                            if (b.optInt("r") > 0) Stars(b.optInt("r"), 13)
+                        }
+                    }
+                }
+                "shelf" -> Column(Modifier.clickable { menu = b }) {
+                    Box(Modifier.padding(horizontal = 7.dp).padding(top = 10.dp)) {
+                        Box(Modifier.shadow(6.dp, RoundedCornerShape(4.dp))) { Cover(b, Modifier.fillMaxWidth().aspectRatio(0.68f)) }
+                        Badges(this)
+                        if (prog > 0f) Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(4.dp).background(Color(0x55000000))) { Box(Modifier.fillMaxWidth(prog).fillMaxHeight().background(Color(0xFFF0A04B))) }
+                    }
+                    // اللوح الخشب
+                    Box(Modifier.fillMaxWidth().height(12.dp).background(Brush.verticalGradient(listOf(Color(0xFFB07A4A), Color(0xFF7A4E2A)))))
+                    Box(Modifier.fillMaxWidth().height(6.dp).background(Brush.verticalGradient(listOf(Color(0x55000000), Color.Transparent))))
+                }
+                else -> Column(Modifier.clickable { menu = b }) {
+                    Box { Cover(b, Modifier.fillMaxWidth().aspectRatio(0.7f)); Badges(this) }
+                    if (prog > 0f) LinearProgressIndicator(progress = { prog }, Modifier.fillMaxWidth().padding(top = 4.dp).height(4.dp).clip(CircleShape), color = Green, trackColor = Sand)
+                    Text(b.optString("t"), fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, color = Ink, modifier = Modifier.padding(top = 4.dp))
+                    if (b.optInt("r") > 0) Stars(b.optInt("r"), 12)
+                }
             }
         }
         }
         if (tab == "find") {
-        item(span = { GridItemSpan(3) }) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Action("✨", "أقرا إيه بعد كده؟", Modifier.weight(1f), onRec)
                 Action("💬", "رفيق القراية", Modifier.weight(1f)) { onMore("buddy") }
             }
         }
-        item(span = { GridItemSpan(3) }) { Text("🧭 استكشف بالتصنيف", fontWeight = FontWeight.Black, fontSize = 17.sp, color = Ink) }
-        item(span = { GridItemSpan(3) }) { ExploreBody { q -> onSearchQ(q) } }
+        item(span = { GridItemSpan(maxLineSpan) }) { Text("🧭 استكشف بالتصنيف", fontWeight = FontWeight.Black, fontSize = 17.sp, color = Ink) }
+        item(span = { GridItemSpan(maxLineSpan) }) { ExploreBody { q -> onSearchQ(q) } }
         }
         if (tab == "me") {
-        item(span = { GridItemSpan(3) }) { ChallengeCard { year = true } }
-        item(span = { GridItemSpan(3) }) {
+        item(span = { GridItemSpan(maxLineSpan) }) { ChallengeCard { year = true } }
+        item(span = { GridItemSpan(maxLineSpan) }) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Action("📖", "سنتي في القراية", Modifier.weight(1f)) { year = true }
                 Action("🗺", "رحلتي", Modifier.weight(1f)) { onMore("journey") }
             }
         }
-        item(span = { GridItemSpan(3) }) { Column(Modifier.padding(top = 10.dp)) { StatsAndBadges() } }
-        item(span = { GridItemSpan(3) }) { Text("«عشر صفحات كل يوم = حوالي 12 كتاب في السنة»", Modifier.fillMaxWidth().padding(top = 16.dp), textAlign = TextAlign.Center, color = Muted, fontSize = 13.sp) }
-        item(span = { GridItemSpan(3) }) { Surface(shape = RoundedCornerShape(20.dp), color = Card) { Column(Modifier.padding(14.dp)) { StatsBody() } } }
+        item(span = { GridItemSpan(maxLineSpan) }) { Column(Modifier.padding(top = 10.dp)) { StatsAndBadges() } }
+        item(span = { GridItemSpan(maxLineSpan) }) { Text("«عشر صفحات كل يوم = حوالي 12 كتاب في السنة»", Modifier.fillMaxWidth().padding(top = 16.dp), textAlign = TextAlign.Center, color = Muted, fontSize = 13.sp) }
+        item(span = { GridItemSpan(maxLineSpan) }) { Surface(shape = RoundedCornerShape(20.dp), color = Card) { Column(Modifier.padding(14.dp)) { StatsBody() } } }
         }
     }
     NavigationBar(containerColor = Card, tonalElevation = 0.dp) {
