@@ -561,7 +561,15 @@ fun YearSheet(onDismiss: () -> Unit, onOpen: (JSONObject) -> Unit) {
 
 
 /* ───── 🧭 استكشف (زي Explore / Lists في Goodreads) ───── */
-val GENRES = listOf("📏 كتب قصيرة (أقل من 150 صفحة)", "📖 روايات عربية مشهورة", "🌍 روايات عالمية مترجمة", "💪 تطوير الذات", "💰 فلوس وبيزنس", "📊 إدارة وقيادة", "🕌 إسلاميات سهلة", "📜 سيرة وقصص الأنبياء والصحابة", "🏛 تاريخ بأسلوب قصصي", "🤝 فهم الناس والتعامل معاهم", "🧠 علم نفس", "🤔 فلسفة مبسطة", "🔬 علوم مبسطة", "👤 سير ذاتية", "🔍 غموض وتشويق", "🐉 فانتازيا ومغامرات", "😂 كتب خفيفة وساخرة", "👨‍👧 تربية وأسرة", "🥗 صحة وتغذية", "🇬🇧 كتب إنجليزي سهلة", "🏆 أحسن كتب 2025-2026")
+/** التصنيفات: اسم قصير يبان + اللي بيتبعت للبحث */
+val GENRE_Q = linkedMapOf(
+    "📏 قصيرة" to "كتب قصيرة (أقل من 150 صفحة)", "📖 روايات عربية" to "روايات عربية مشهورة", "🌍 روايات مترجمة" to "روايات عالمية مترجمة",
+    "💪 تطوير الذات" to "تطوير الذات", "💰 فلوس وبيزنس" to "فلوس وبيزنس", "📊 إدارة وقيادة" to "إدارة وقيادة", "🕌 إسلاميات" to "إسلاميات سهلة",
+    "📜 الأنبياء والصحابة" to "سيرة وقصص الأنبياء والصحابة", "🏛 تاريخ" to "تاريخ بأسلوب قصصي", "🤝 فهم الناس" to "فهم الناس وشخصياتهم والتعامل معاهم",
+    "🧠 علم نفس" to "علم نفس", "🤔 فلسفة" to "فلسفة مبسطة", "🔬 علوم" to "علوم مبسطة", "👤 سير ذاتية" to "سير ذاتية", "🔍 غموض" to "غموض وتشويق",
+    "🐉 فانتازيا" to "فانتازيا ومغامرات", "😂 خفيفة" to "كتب خفيفة وساخرة", "👨‍👧 تربية وأسرة" to "تربية وأسرة", "🥗 صحة" to "صحة وتغذية",
+    "🇬🇧 إنجليزي سهل" to "كتب إنجليزي سهلة", "🏆 الأحدث" to "أحسن كتب 2025-2026")
+val GENRES = GENRE_Q.keys.toList()
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
@@ -569,29 +577,29 @@ fun ExploreBody(onSearch: (String) -> Unit) {
     val ctx = LocalContext.current
     @Suppress("UNUSED_VARIABLE") val v = Lib.ver
     val st = Explore.state()
-    var sel by remember { mutableStateOf(st.optJSONArray("g")?.let { a -> (0 until a.length()).map { a.getString(it) }.toSet() } ?: emptySet()) }
+    var sel by remember { mutableStateOf(st.optJSONArray("g")?.let { a -> (0 until a.length()).mapNotNull { i -> val g = a.getString(i); GENRE_Q.entries.firstOrNull { it.value == g }?.key } .toSet() } ?: emptySet()) }
     var q by remember { mutableStateOf(st.optString("q")) }
     val res = Explore.results()
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         OutlinedTextField(q, { q = it }, Modifier.fillMaxWidth(), placeholder = { Text("اكتب أي حاجة: موضوع، كاتب، كتاب شبه…") }, shape = RoundedCornerShape(14.dp), maxLines = 3,
             leadingIcon = { Text("🔎") }, trailingIcon = { if (q.isNotEmpty()) Text("✕", Modifier.clickable { q = "" }.padding(8.dp), color = Muted) })
         var flt by remember { mutableStateOf(Lib.cfg.optString("expF", "islamic")) }
-        Text("الكتب تكون:", color = Muted, fontSize = 13.sp)
+        Text("الكتب تكون", color = Muted, fontSize = 12.sp)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf("islamic" to "🕌 إسلامي وعربي بس", "arabic" to "🇪🇬 عربي بس", "all" to "🌍 الكل (ومترجم)").forEach { (k, t) ->
+            listOf("islamic" to "🕌 إسلامي وعربي", "arabic" to "🇪🇬 عربي", "all" to "🌍 الكل").forEach { (k, t) ->
                 Chip(t, flt == k) { flt = k; Lib.cfg.put("expF", k); Lib.save() } }
         }
-        Text("أو اختار تصنيف أو أكتر:", color = Muted, fontSize = 13.sp)
+        Text("اختار تصنيف أو أكتر", color = Muted, fontSize = 12.sp)
         androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            GENRES.forEach { x -> Chip((if (x in sel) "✓ " else "") + x, x in sel) { sel = if (x in sel) sel - x else sel + x } }
+            GENRES.forEach { x -> Chip(x, x in sel) { sel = if (x in sel) sel - x else sel + x } }
         }
         val ok = sel.isNotEmpty() || q.isNotBlank()
-        Button({ if (!Net.hasGem()) Toast.makeText(ctx, "محتاج Gemini — اربط التطبيق الأول", Toast.LENGTH_LONG).show() else Explore.start(ctx, sel.toList(), q, false) },
-            Modifier.fillMaxWidth().height(52.dp), enabled = ok && !Explore.busy, shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = Green)) {
-            Text(if (Explore.busy) "⏳ بدوّر…" else if (sel.size > 1) "🔎 دوّر في ${sel.size} تصنيفات" else "🔎 دوّر", fontWeight = FontWeight.Black, fontSize = 16.sp)
+        Button({ if (!Net.hasGem()) Toast.makeText(ctx, "محتاج Gemini — اربط التطبيق الأول", Toast.LENGTH_LONG).show() else Explore.start(ctx, sel.map { GENRE_Q[it] ?: it }, q, false) },
+            Modifier.fillMaxWidth().height(46.dp), enabled = ok && !Explore.busy, shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = Green)) {
+            Text(if (Explore.busy) "⏳ بدوّر…" else if (sel.size > 1) "🔎 دوّر في ${sel.size} تصنيفات" else "🔎 دوّر", fontWeight = FontWeight.Bold, fontSize = 15.sp)
         }
         OutlinedButton({ val o = Explore.state(); o.put("r", org.json.JSONArray(PEOPLE_LIST)).put("g", org.json.JSONArray()).put("q", "📚 قايمة جاهزة: فهم الناس والتعامل معاهم"); q = ""; sel = emptySet(); Lib.save(); Lib.ver++ },
-            Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) { Text("📚 قايمة جاهزة: فهم الناس (إسلامي وعربي وتراث)", color = Green, fontWeight = FontWeight.Bold) }
+            Modifier.fillMaxWidth().height(40.dp), shape = RoundedCornerShape(50), contentPadding = PaddingValues(horizontal = 12.dp)) { Text("📚 قايمة جاهزة: فهم الناس", color = Green, fontWeight = FontWeight.Bold, fontSize = 13.sp) }
         if (Explore.busy) Text("⏳ بدوّر على أحسن كتب… تقدر تقفل التطبيق خالص، وهبعتلك إشعار أول ما أخلص 🔔", color = Muted, fontSize = 13.sp, lineHeight = 21.sp)
         if (Explore.err.isNotEmpty()) Text(Explore.err, color = Color(0xFFB3261E), fontSize = 13.sp)
         if (res.isNotEmpty()) {
@@ -612,7 +620,7 @@ fun ExploreBody(onSearch: (String) -> Unit) {
                     }
                 } }
             }
-            OutlinedButton({ Explore.start(ctx, sel.toList(), q, true) }, Modifier.fillMaxWidth().height(48.dp), enabled = !Explore.busy && ok, shape = RoundedCornerShape(16.dp)) {
+            OutlinedButton({ Explore.start(ctx, sel.map { GENRE_Q[it] ?: it }, q, true) }, Modifier.fillMaxWidth().height(48.dp), enabled = !Explore.busy && ok, shape = RoundedCornerShape(16.dp)) {
                 Text(if (Explore.busy) "⏳ بجيب كمان…" else "➕ هات كتب تانية", fontWeight = FontWeight.Bold, color = Green) }
         }
     }

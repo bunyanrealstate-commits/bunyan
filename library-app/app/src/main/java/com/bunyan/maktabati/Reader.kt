@@ -380,7 +380,10 @@ fun IconBtn(t: String, on: Boolean = false, click: () -> Unit) {
 
 @Composable
 fun Chip(t: String, on: Boolean, click: () -> Unit) {
-    Surface(onClick = click, shape = RoundedCornerShape(12.dp), color = if (on) Color(0xFF1F7A55) else Color(0xFFF1EADB)) {
-        Text(t, Modifier.padding(horizontal = 12.dp, vertical = 9.dp), fontWeight = FontWeight.Bold, fontSize = 13.sp, color = if (on) Color.White else Color(0xFF1D2733))
+    // شكل حبّة صغيرة مودرن، وبيمشي مع شكل/لون التطبيق
+    Surface(onClick = click, shape = RoundedCornerShape(50), color = if (on) Green else Card,
+        border = if (on) null else androidx.compose.foundation.BorderStroke(1.dp, Sand)) {
+        Text(t, Modifier.padding(horizontal = 11.dp, vertical = 5.dp), fontWeight = if (on) FontWeight.Bold else FontWeight.Medium, fontSize = 12.sp, maxLines = 1,
+            color = if (on) (if (Themes.cur.dark) Paper else Color.White) else Ink)
     }
 }

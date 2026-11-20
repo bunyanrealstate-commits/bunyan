@@ -34,7 +34,7 @@ object Explore {
         val st = state()
         val old = if (more) results() else emptyList()
         val have = (Lib.books.map { it.optString("t") } + old.map { it.optString("t") }).filter { it.isNotBlank() }.take(150)
-        val topic = buildList { addAll(genres.map { it.substringAfter(' ') }); if (text.isNotBlank()) add("«${text.trim()}»") }.joinToString(" + ")
+        val topic = buildList { addAll(genres); if (text.isNotBlank()) add("«${text.trim()}»") }.joinToString(" + ")
         val flt = Lib.cfg.optString("expF", "islamic")
         val cond = when (flt) {
             "islamic" -> " شرط أساسي: كل الكتب لازم تكون من تأليف مؤلفين عرب أو مسلمين (علماء ودعاة ومفكرين ومؤلفين عرب) ومن منظور إسلامي، وممكن كتب تراث، وممنوع أي كتاب مترجم من مؤلف أجنبي غير مسلم."

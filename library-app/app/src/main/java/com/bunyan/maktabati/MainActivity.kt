@@ -583,8 +583,8 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
 @Composable
 fun Action(ic: String, t: String, m: Modifier, click: () -> Unit) {
     Surface(onClick = click, shape = RoundedCornerShape(16.dp), color = Card, modifier = m.border(1.dp, soft(0xFFEADFCA), RoundedCornerShape(16.dp))) {
-        Column(Modifier.padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(ic, fontSize = 22.sp); Text(t, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Ink)
+        Column(Modifier.padding(vertical = 9.dp, horizontal = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(ic, fontSize = 18.sp); Text(t, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Ink, maxLines = 1)
         }
     }
 }
