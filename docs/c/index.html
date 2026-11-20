@@ -4038,7 +4038,7 @@ function draw(scroll){var d=document.getElementById('aix');if(!d)return;var L=d.
  [].forEach.call(L.querySelectorAll('.card3:not([data-anim])'),function(){});
  H.forEach(function(m,ix3){if(m.role!=='user'&&!m.typed&&!L.querySelector("[data-anim='"+ix3+"']"))m.typed=1})}
 window.aiOpen=function(){var d=document.getElementById('aix');if(d)d.remove();d=document.createElement('div');d.id='aix';d.className='ov';
- d.innerHTML="<div class='ai3'><div class='a3top'><div class='orb'></div><b>بنيان<small>مساعدك الشخصي</small></b>"+"<button class='a3x' title='ذاكرة بنيان' onclick='aiBrain()'>🧠</button><button class='a3x' title='قراءة الإجابات بالصوت' onclick='aiVoice(this)'>"+(VO?'🔊':'🔈')+"</button>"+(H.length?"<button class='a3x' title='محادثة جديدة' onclick='aiClear()'>＋</button>":"")+"<button class='a3x' onclick=\"this.closest('.ov').remove();try{speechSynthesis.cancel()}catch(e){}\">✕</button></div><div class='a3body'></div><div class='live3' id='ailive'></div><div class='bar3'><button class='mic3' id='aimic' onclick='aiMic()'>🎙️</button><textarea id='aiin' rows='1' placeholder='اسأل بنيان أي حاجة…' onkeydown=\"if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiAsk()}\"></textarea><button class='snd3' onclick='aiAsk()'>➤</button></div></div>";
+ d.innerHTML="<div class='ai3'><div class='a3top'><div class='orb'></div><b>بنيان<small>مساعدك الشخصي</small></b>"+"<button class='a3x' title='شكل المساعد' onclick='fabPick()'>🎨</button><button class='a3x' title='ذاكرة بنيان' onclick='aiBrain()'>🧠</button><button class='a3x' title='قراءة الإجابات بالصوت' onclick='aiVoice(this)'>"+(VO?'🔊':'🔈')+"</button>"+(H.length?"<button class='a3x' title='محادثة جديدة' onclick='aiClear()'>＋</button>":"")+"<button class='a3x' onclick=\"this.closest('.ov').remove();try{speechSynthesis.cancel()}catch(e){}\">✕</button></div><div class='a3body'></div><div class='live3' id='ailive'></div><div class='bar3'><button class='mic3' id='aimic' onclick='aiMic()'>🎙️</button><textarea id='aiin' rows='1' placeholder='اسأل بنيان أي حاجة…' onkeydown=\"if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiAsk()}\"></textarea><button class='snd3' onclick='aiAsk()'>➤</button></div></div>";
  document.body.appendChild(d);draw()};
 window.aiVoice=function(b){VO=!VO;try{localStorage.setItem('bny_ai_voice',VO?'1':'0')}catch(e){}b.textContent=VO?'🔊':'🔈';toast(VO?'هقرالك الإجابات بالصوت':'القراءة بالصوت اتقفلت');if(!VO)try{speechSynthesis.cancel()}catch(e){}};
 window.aiSay=function(ix){var m=H[ix];if(!m)return;var o=VO;VO=true;window.__bnyExp=1;speak(m.content);window.__bnyExp=0;VO=o};
@@ -4755,8 +4755,8 @@ function pickModels(list){var ok=list.filter(function(m){var n=m.name.replace('m
  ok.sort(function(a,b){var la=/lite/.test(a),lb=/lite/.test(b);if(la!==lb)return la?1:-1;var pa=/preview/.test(a),pb=/preview/.test(b);if(pa!==pb)return pa?1:-1;var ta=/latest/.test(a),tb=/latest/.test(b);if(ta!==tb)return ta?-1:1;return vnum(b)-vnum(a)});
  return ok.concat(FALL.filter(function(f){return ok.indexOf(f)<0})).slice(0,8)}
 async function listModels(key){var r=await fetch(BASE+'models?pageSize=200',{headers:{'x-goog-api-key':key}});var j=await r.json().catch(function(){return {}});if(!r.ok)throw new Error((j.error&&j.error.message)||('HTTP '+r.status));return pickModels(j.models||[])}
-function think(model){return /gemini-3|flash-latest|lite-latest/.test(model)?{thinkingLevel:'minimal'}:/2\.5/.test(model)?{thinkingBudget:0}:null}
-async function call(model,key,body,o){o=o||{};var b2=JSON.parse(JSON.stringify(body)),tc=o.noT?null:think(model);if(tc)b2.generationConfig.thinkingConfig=tc;
+function think(model,deep){if(deep)return /gemini-3|flash-latest/.test(model)?{thinkingLevel:'low'}:/2\.5-flash(?!-lite)/.test(model)?{thinkingBudget:768}:/2\.5/.test(model)?{thinkingBudget:0}:/lite-latest/.test(model)?{thinkingLevel:'minimal'}:null;return /gemini-3|flash-latest|lite-latest/.test(model)?{thinkingLevel:'minimal'}:/2\.5/.test(model)?{thinkingBudget:0}:null}
+async function call(model,key,body,o){o=o||{};var b2=JSON.parse(JSON.stringify(body)),tc=o.noT?null:think(model,o.deep);if(tc)b2.generationConfig.thinkingConfig=tc;
  var ac=typeof AbortController!=='undefined'?new AbortController():null,timed=false,to=setTimeout(function(){timed=true;try{ac&&ac.abort()}catch(e){}},o.ms||12000);
  function tErr(){var e=new Error('timeout');e.code='timeout';return e}
  try{var r;try{r=await fetch(BASE+'models/'+model+(o.stream?':streamGenerateContent?alt=sse':':generateContent'),{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(b2),signal:ac?ac.signal:undefined})}catch(x){if(timed)throw tErr();var ne=new Error(String(x&&x.message||x));ne.code='net';throw ne}
@@ -4778,19 +4778,19 @@ function ctx0(){var o=[];try{o.push('تاريخ النهارده: '+new Date().t
   if(F.length)o.push('— معلومات قالها المستخدم للمساعد (اعتبرها صحيحة) —\n'+F.join('\n'));if(A.length)o.push('— إجابات علّمها المستخدم للمساعد (التزم بيها لو اتسأل نفس السؤال) —\n'+A.join('\n'))}catch(e){}
  return o.join('\n\n').replace(/\*\*/g,'').slice(0,14000)}
 function sys(){var nm='';try{nm=(typeof A!=='undefined'&&A&&A.u)||''}catch(e){}
- return 'إنت "بنيان"، المساعد الذكي جوّه برنامج Bunyan Furnished لإدارة تأجير الاستديوهات المفروشة (بنأجر من شركات وبنفرش ونأجر شهري للمستأجرين، ومعانا شركاء). اسم المستخدم اللي بيكلمك: '+(nm||'صاحب البرنامج')+'. اتكلم معاه كصاحب ودود ومحترم، ومتعرّفش بنفسك ولا تعدّد إنت بتعمل إيه غير لو سألك. لو كلام ودّي أو سلام رد بجملة أو اتنين طبيعيين. رد بالعامية المصرية، باختصار شديد (غالبًا من 2 لـ 6 سطور إلا لو طلب رسالة أو تفصيل) ووضوح، ومن غير عناوين كبيرة. استخدم **عريض** للأرقام المهمة وسطور قصيرة أو نقاط بـ •. لو السؤال عن أرقام البرنامج اعتمد على البيانات اللي تحت بس (دي محسوبة بدقة من البرنامج)، واحسب منها لو محتاج (جمع/طرح/نسب/أيام/سيناريوهات) ووضّح الحسبة في سطر. لو المعلومة مش موجودة قول كده ومتألفش أرقام. لو سؤال عام (فلوس، عقود، قانون، كتابة رسالة، نصيحة) جاوب من معرفتك ونبّه لو محتاج متخصص. العملة الأساسية في البرنامج هي اللي ظاهرة في الأرقام.\n\n=== بيانات البرنامج دلوقتي ===\n'+ctx()}
-async function gem(q,local,onT,quick,noHist){var c=cfg();var models=(c.models&&c.models.length?c.models:FALL);var cont=GH.slice(-6).concat([{role:'user',parts:[{text:q+(local?'\n\n(رد المساعد المحلي على نفس السؤال كان: '+String(local).replace(/\*\*/g,'').slice(0,1200)+')':'')}]}]);
- var body={systemInstruction:{parts:[{text:sys()}]},contents:cont,generationConfig:{temperature:0.6,maxOutputTokens:quick?350:900}};
+ return 'إنت "بنيان"، المساعد الذكي جوّه برنامج Bunyan Furnished لإدارة تأجير الاستديوهات المفروشة (بنأجر من شركات وبنفرش ونأجر شهري للمستأجرين، ومعانا شركاء). اسم المستخدم اللي بيكلمك: '+(nm||'صاحب البرنامج')+'. اتكلم معاه كصاحب ودود ومحترم، ومتعرّفش بنفسك ولا تعدّد إنت بتعمل إيه غير لو سألك. لو كلام ودّي أو سلام رد بجملة أو اتنين طبيعيين. افهم قصده حتى لو السؤال مكتوب بعامية أو فيه غلط إملائي أو كلمة ناقصة أو مختصر، ولو فيه اسم مستأجر/استديو/شركة قريب من اسم موجود في البيانات اعتبره هو. الكلام زي «ده» و«هو» و«الشهر ده» و«وكمان» بيرجع على آخر حاجة اتكلمنا فيها في المحادثة. لو السؤال يحتمل معنيين جاوب على الأرجح وقول في سطر صغير إنك فهمته كده. ابدأ بالإجابة نفسها في أول سطر من غير مقدمات. رد بالعامية المصرية، باختصار شديد (غالبًا من 2 لـ 6 سطور إلا لو طلب رسالة أو تفصيل) ووضوح، ومن غير عناوين كبيرة. استخدم **عريض** للأرقام المهمة وسطور قصيرة أو نقاط بـ •. لو السؤال عن أرقام البرنامج اعتمد على البيانات اللي تحت بس (دي محسوبة بدقة من البرنامج)، واحسب منها لو محتاج (جمع/طرح/نسب/أيام/سيناريوهات) ووضّح الحسبة في سطر. لو المعلومة مش موجودة قول كده ومتألفش أرقام. لو سؤال عام (فلوس، عقود، قانون، كتابة رسالة، نصيحة) جاوب من معرفتك ونبّه لو محتاج متخصص. العملة الأساسية في البرنامج هي اللي ظاهرة في الأرقام.\n\n=== بيانات البرنامج دلوقتي ===\n'+ctx()}
+async function gem(q,local,onT,quick,noHist){var c=cfg();var models=(c.models&&c.models.length?c.models:FALL);var deep=!quick&&(DEEP.test(q)||String(q).length>90);var cont=GH.slice(-10).concat([{role:'user',parts:[{text:q+(local?'\n\n(رد المساعد المحلي على نفس السؤال كان: '+String(local).replace(/\*\*/g,'').slice(0,1200)+')':'')}]}]);
+ var body={systemInstruction:{parts:[{text:sys()}]},contents:cont,generationConfig:{temperature:0.5,maxOutputTokens:quick?450:(deep?1600:1100)}};
  var lite=models.filter(function(m){return /lite/.test(m)})[0]||'gemini-flash-lite-latest',m0=models[0];
- var plan=c.mode==='plain'?[{m:m0,stream:false,ms:quick?8000:14000},{m:lite,stream:false,ms:10000}]:[{m:m0,stream:true,ms:quick?7000:10000},{m:m0,stream:false,ms:quick?7000:12000},{m:lite,stream:false,ms:10000}];
+ var dx=deep?8000:0;var plan=c.mode==='plain'?[{m:m0,stream:false,ms:(quick?8000:14000)+dx},{m:lite,stream:false,ms:10000}]:[{m:m0,stream:true,ms:(quick?7000:10000)+dx},{m:m0,stream:false,ms:(quick?7000:12000)+dx},{m:lite,stream:false,ms:10000}];
  var last=null,t0=Date.now();
  for(var i=0;i<plan.length;i++){var P=plan[i];if(i>0&&plan[i-1].m===P.m&&last&&last.code===429)continue;
-  try{var t=await call(P.m,c.key,body,{stream:P.stream,ms:P.ms,onT:onT});var c2=cfg();c2.lastMs=Date.now()-t0;c2.lastModel=P.m;c2.lastErr='';if(!P.stream&&i>0&&P.m===m0)c2.mode='plain';if(P.m!==m0&&c2.models){c2.models=[P.m].concat(c2.models.filter(function(x){return x!==P.m}))}setCfg(c2);
-   window.__gemRaw=t;if(!noHist){GH.push({role:'user',parts:[{text:q}]},{role:'model',parts:[{text:t}]});GH=GH.slice(-10)}return tidy(t)}
+  try{var t=await call(P.m,c.key,body,{stream:P.stream,ms:P.ms,onT:onT,deep:deep&&P.m===m0});var c2=cfg();c2.lastMs=Date.now()-t0;c2.lastModel=P.m;c2.lastErr='';if(!P.stream&&i>0&&P.m===m0)c2.mode='plain';if(P.m!==m0&&c2.models){c2.models=[P.m].concat(c2.models.filter(function(x){return x!==P.m}))}setCfg(c2);
+   window.__gemRaw=t;if(!noHist){GH.push({role:'user',parts:[{text:q}]},{role:'model',parts:[{text:t}]});GH=GH.slice(-16)}return tidy(t)}
   catch(e){last=e;if(e.code===401||e.code===403||(e.code===400&&/API key|API_KEY/i.test(e.message)))break}}
  try{var c3=cfg();c3.lastErr=String(last&&last.message||'');c3.lastMs=Date.now()-t0;setCfg(c3)}catch(x){}
- try{var ok=localStorage.getItem('bny_oai');if(ok){var msgs=[{role:'system',content:sys()}].concat(GH.slice(-6).map(function(h){return {role:h.role==='model'?'assistant':'user',content:(h.parts||[]).map(function(p){return p.text||''}).join('')}})).concat([{role:'user',content:cont[cont.length-1].parts[0].text}]);
-  var ac2=new AbortController(),tm2=setTimeout(function(){ac2.abort()},15000);var r2=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ok},body:JSON.stringify({model:'gpt-4o-mini',messages:msgs,temperature:0.6,max_tokens:quick?350:900}),signal:ac2.signal});clearTimeout(tm2);var j2=await r2.json();var t2=j2&&j2.choices&&j2.choices[0]&&j2.choices[0].message&&j2.choices[0].message.content;
+ try{var ok=localStorage.getItem('bny_oai');if(ok){var msgs=[{role:'system',content:sys()}].concat(GH.slice(-10).map(function(h){return {role:h.role==='model'?'assistant':'user',content:(h.parts||[]).map(function(p){return p.text||''}).join('')}})).concat([{role:'user',content:cont[cont.length-1].parts[0].text}]);
+  var ac2=new AbortController(),tm2=setTimeout(function(){ac2.abort()},15000);var r2=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ok},body:JSON.stringify({model:'gpt-4o-mini',messages:msgs,temperature:0.6,max_tokens:quick?450:1100}),signal:ac2.signal});clearTimeout(tm2);var j2=await r2.json();var t2=j2&&j2.choices&&j2.choices[0]&&j2.choices[0].message&&j2.choices[0].message.content;
   if(t2){window.__gemRaw=t2;try{onT&&onT(t2)}catch(x){}if(!noHist){GH.push({role:'user',parts:[{text:q}]},{role:'model',parts:[{text:t2}]});GH=GH.slice(-10)}return tidy(t2)}}}catch(x){}
  throw last||new Error('فشل')}
 function tidy(t){return String(t).replace(/\s*\[(حفظ|ثابت)\]\s*/g,' ').replace(/^#{1,6}\s*/gm,'').replace(/^\s*[\*\-]\s+/gm,'• ').replace(/\n{3,}/g,'\n\n').trim()}
@@ -4850,7 +4850,7 @@ function upd(){var b=document.getElementById('gemb');if(b){b.classList.toggle('o
 function inject(){var top=document.querySelector('#aix .a3top');if(!top||document.getElementById('gemb'))return;var b=document.createElement('button');b.id='gemb';b.className='a3x gem';b.textContent='✨';b.onclick=function(){gemSetup()};var br=top.querySelector('.a3x');if(br)top.insertBefore(b,br);else top.appendChild(b);upd()}
 var ao=window.aiOpen;if(ao)window.aiOpen=function(){var x=ao.apply(this,arguments);try{inject()}catch(e){}return x};
 new MutationObserver(function(){if(document.getElementById('aix')&&!document.getElementById('gemb'))inject()}).observe(document.body,{childList:true});
-window.bnyGem={on:on,cfg:cfg,ask:gem};
+window.bnyGem={on:on,cfg:cfg,ask:gem};window.bnyGemWarm=function(){try{if(on())setTimeout(function(){try{ctx()}catch(e){}},30)}catch(e){}};
 setTimeout(function(){try{if(!AUTH||!S.aiMem||!S.aiMem.f)return;var n0=S.aiMem.f.length;S.aiMem.f=S.aiMem.f.filter(function(f){return !(f&&f.t&&CHAT.test(String(f.t).trim()))});if(S.aiMem.f.length!==n0)save()}catch(e){}},5000);
 function trimAI(){document.querySelectorAll('#aix .a3body .card3').forEach(function(c){if(c.__ai)return;var t=c.querySelector('.tx');if(!t||!/^\s*✨/.test(t.textContent))return;c.__ai=1;c.classList.add('aiG');c.querySelectorAll('.act3 button').forEach(function(b){if(!/🔊/.test(b.textContent))b.remove()});c.querySelectorAll('.chips3').forEach(function(x){if(x.querySelector('.tch3'))x.remove()})})}
 new MutationObserver(function(){if(document.getElementById('aix'))trimAI()}).observe(document.body,{childList:true,subtree:true});
@@ -8293,5 +8293,64 @@ body.dark #wsm .wi.mg b{color:#cbd5e1}
  window.grpbOpen=function(){if(document.getElementById('wsm')){close();return}open(document.getElementById('grpb'))};addEventListener('resize',close);addEventListener('keydown',e=>{if(e.key==='Escape')close()});
 })();
 </script>
+<style id="fabx">
+#aifab.mv{left:var(--fx)!important;top:var(--fy)!important;right:auto!important;bottom:auto!important}
+#aifab.drag{animation:none!important;transform:scale(1.12)!important;opacity:.9}
+#aifab[data-ic]::after{content:attr(data-ic)!important;text-shadow:none!important}
+#aifab[data-th=gold]{background:radial-gradient(circle at 30% 30%,#fff0c2,#e9b872 45%,#6b4310 100%)!important;box-shadow:0 8px 26px rgba(233,184,114,.55),0 0 0 4px rgba(255,255,255,.65)!important}
+#aifab[data-th=purple]{background:radial-gradient(circle at 30% 30%,#e4d6ff,#8b5cf6 45%,#2e1065 100%)!important;box-shadow:0 8px 26px rgba(139,92,246,.5),0 0 0 4px rgba(255,255,255,.65)!important}
+#aifab[data-th=blue]{background:radial-gradient(circle at 30% 30%,#c4e4ff,#3b82f6 45%,#0b2a5b 100%)!important;box-shadow:0 8px 26px rgba(59,130,246,.5),0 0 0 4px rgba(255,255,255,.65)!important}
+#aifab[data-th=rose]{background:radial-gradient(circle at 30% 30%,#ffd1df,#e11d74 45%,#5a0b2b 100%)!important;box-shadow:0 8px 26px rgba(225,29,116,.45),0 0 0 4px rgba(255,255,255,.65)!important}
+#aifab[data-th=dark]{background:radial-gradient(circle at 30% 30%,#9ca3af,#1f2937 50%,#000 100%)!important;box-shadow:0 8px 26px rgba(0,0,0,.45),0 0 0 4px rgba(255,255,255,.65)!important}
+#aifab[data-th=glass]{background:rgba(255,255,255,.55)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 8px 22px rgba(0,0,0,.18),0 0 0 1px rgba(255,255,255,.8)!important}
+#aifab[data-th=glass]::after{color:#0d6f5e!important}
+#aifab[data-sz=s]{width:46px!important;height:46px!important}#aifab[data-sz=s]::after{font-size:20px!important}
+#aifab[data-sz=l]{width:68px!important;height:68px!important}#aifab[data-sz=l]::after{font-size:31px!important}
+#fabpk .fp{background:var(--card,#fff);border-radius:22px;padding:16px;max-width:380px;margin:auto;direction:rtl}
+#fabpk h4{margin:4px 0 10px;font-size:16px}#fabpk .lb{font-size:12px;opacity:.65;margin:10px 0 6px}
+#fabpk .rw{display:flex;flex-wrap:wrap;gap:8px}
+#fabpk .rw button{border:1.5px solid rgba(0,0,0,.08);background:rgba(0,0,0,.03);border-radius:14px;min-width:44px;height:44px;font-size:20px;cursor:pointer;padding:0 10px}
+#fabpk .rw button.on{border-color:#14b8a6;background:rgba(20,184,166,.12)}
+#fabpk .sw{width:44px;border-radius:50%!important}
+#fabpk .rw button.t{font-size:13px;font-weight:700}
+#fabpk .ft{display:flex;gap:8px;margin-top:14px}#fabpk .ft button{flex:1;height:42px;border-radius:12px;border:0;font-weight:700;cursor:pointer}
+</style>
+<script id="fabxjs">(function(){
+var K='bny_fab';
+function g(){try{return JSON.parse(localStorage.getItem(K)||'{}')||{}}catch(e){return {}}}
+function s(o){try{localStorage.setItem(K,JSON.stringify(o))}catch(e){}}
+function apply(){var b=document.getElementById('aifab');if(!b)return;var o=g();
+ if(o.ic&&o.ic!=='✦')b.setAttribute('data-ic',o.ic);else b.removeAttribute('data-ic');
+ if(o.th&&o.th!=='teal')b.setAttribute('data-th',o.th);else b.removeAttribute('data-th');
+ if(o.sz&&o.sz!=='m')b.setAttribute('data-sz',o.sz);else b.removeAttribute('data-sz');
+ if(o.x!=null&&o.y!=null){var W=innerWidth,H=innerHeight,w=b.offsetWidth||58;var x=Math.min(Math.max(8,o.x*W),W-w-8),y=Math.min(Math.max(60,o.y*H),H-w-12);b.style.setProperty('--fx',x+'px');b.style.setProperty('--fy',y+'px');b.classList.add('mv')}else b.classList.remove('mv');
+ if(!b.__dr)bind(b)}
+function bind(b){b.__dr=1;b.style.touchAction='none';var sx=0,sy=0,ox=0,oy=0,st=0,pid=null,tm=null,blk=0;
+ var orig=b.onclick;b.onclick=function(e){if(Date.now()<blk)return;try{window.bnyGemWarm&&bnyGemWarm()}catch(x){}return orig&&orig.call(this,e)};
+ b.addEventListener('pointerdown',function(e){pid=e.pointerId;sx=e.clientX;sy=e.clientY;var r=b.getBoundingClientRect();ox=sx-r.left;oy=sy-r.top;st=0;b.style.transition='';
+  clearTimeout(tm);tm=setTimeout(function(){if(st===0){st=2;blk=Date.now()+700;try{navigator.vibrate&&navigator.vibrate(15)}catch(x){}pick()}},650)});
+ b.addEventListener('pointermove',function(e){if(pid!==e.pointerId||st===2)return;
+  if(st===0&&Math.hypot(e.clientX-sx,e.clientY-sy)>8){st=1;clearTimeout(tm);try{b.setPointerCapture(pid)}catch(x){}b.classList.add('drag','mv')}
+  if(st===1){e.preventDefault();b.style.setProperty('--fx',(e.clientX-ox)+'px');b.style.setProperty('--fy',(e.clientY-oy)+'px')}});
+ function end(e){if(pid===null)return;clearTimeout(tm);
+  if(st===1){var r=b.getBoundingClientRect(),W=innerWidth,H=innerHeight;var x=(r.left+r.width/2<W/2)?12:W-r.width-12;var y=Math.min(Math.max(70,r.top),H-r.height-16);
+   b.classList.remove('drag');b.style.transition='left .25s ease, top .25s ease';b.style.setProperty('--fx',x+'px');b.style.setProperty('--fy',y+'px');var o=g();o.x=x/W;o.y=y/H;s(o);blk=Date.now()+400}
+  pid=null;st=0}
+ b.addEventListener('pointerup',end);b.addEventListener('pointercancel',end);b.addEventListener('contextmenu',function(e){e.preventDefault()})}
+var ICS=['✦','🤖','💬','🧠','🏠','⭐','🦉','⚡','🌙','🤍','👤','🔑'],THS=[['teal','#14b8a6'],['gold','#e9b872'],['purple','#8b5cf6'],['blue','#3b82f6'],['rose','#e11d74'],['dark','#1f2937'],['glass','#e5e7eb']],SZ=[['s','صغير'],['m','عادي'],['l','كبير']];
+function pick(){var old=document.getElementById('fabpk');if(old)old.remove();var o=g();var d=document.createElement('div');d.id='fabpk';d.className='ov';
+ d.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.35);display:flex;align-items:flex-end;padding:12px';
+ function btn(h,on,f,cls){return "<button class='"+(cls||'')+(on?' on':'')+"' onclick=\"fabSet("+f+")\">"+h+"</button>"}
+ d.innerHTML="<div class='fp'><h4>🎨 شكل المساعد</h4><div class='lb'>الأيقونة</div><div class='rw'>"+ICS.map(function(i){return btn(i,(o.ic||'✦')===i,"'ic','"+i+"'")}).join('')+"</div>"+
+  "<div class='lb'>اللون</div><div class='rw'>"+THS.map(function(t){return btn('',(o.th||'teal')===t[0],"'th','"+t[0]+"'","sw' style='background:"+t[1])}).join('')+"</div>"+
+  "<div class='lb'>الحجم</div><div class='rw'>"+SZ.map(function(z){return btn(z[1],(o.sz||'m')===z[0],"'sz','"+z[0]+"'",'t')}).join('')+"</div>"+
+  "<div class='lb'>💡 اسحبه بصباعك لأي مكان على الشاشة وسيبه — وهيفضل هناك. دوسة طويلة عليه تفتح الشاشة دي.</div>"+
+  "<div class='ft'><button style='background:rgba(0,0,0,.06)' onclick=\"fabSet('x',null)\">↩️ رجّعه مكانه</button><button style='background:#14b8a6;color:#fff' onclick=\"document.getElementById('fabpk').remove()\">تمام</button></div></div>";
+ d.onclick=function(e){if(e.target===d)d.remove()};document.body.appendChild(d)}
+window.fabSet=function(k,v){var o=g();if(k==='x'){delete o.x;delete o.y}else o[k]=v;s(o);var b=document.getElementById('aifab');if(b)b.style.transition='';apply();pick()};
+window.fabPick=pick;
+addEventListener('resize',function(){apply()});
+setInterval(function(){var b=document.getElementById('aifab');if(b&&!b.__dr)apply()},700);
+})();</script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body>
 </html>
