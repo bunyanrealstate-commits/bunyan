@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/engine.dart';
+import '../core/actions.dart';
+import 'dialogs.dart';
 import '../core/js.dart';
 import '../core/store.dart';
 import 'ai.dart';
@@ -157,9 +159,9 @@ class SkinHero extends StatelessWidget {
           ])),
           Transform.translate(offset: const Offset(0, -30), child: Container(margin: const EdgeInsets.symmetric(horizontal: 10), padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: kBd), boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 14, offset: Offset(0, 4))]), child: _quick(context, const Color(0xFF1E3A8A)))),
           Transform.translate(offset: const Offset(0, -18), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            const Padding(padding: EdgeInsets.only(bottom: 6, right: 4, left: 4), child: Text('الحركات الجاية', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5))),
+            const Padding(padding: EdgeInsets.only(bottom: 6, right: 4, left: 4), child: Row(children: [Text('الحركات الجاية', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5)), Spacer(), Text('دوس على الحركة تسجّلها', style: TextStyle(color: kMuted, fontSize: 11.5))])),
             Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: kBd)), child: Column(children: [
-              for (final x in up.take(5)) ListTile(dense: true,
+              for (final x in up.take(6)) ListTile(dense: true, onTap: () => recordEv(context, x),
                 leading: Container(width: 34, height: 34, decoration: BoxDecoration(color: (x['a'] as num) >= 0 ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2), borderRadius: BorderRadius.circular(10)), child: Icon((x['a'] as num) >= 0 ? Icons.south_west : Icons.north_east, size: 18, color: (x['a'] as num) >= 0 ? const Color(0xFF15803D) : const Color(0xFFB91C1C))),
                 title: Text(Priv.on ? '••••' : str(x['l']), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
                 subtitle: Text(iso(x['d'] as DateTime), style: const TextStyle(fontSize: 11.5)),
@@ -216,4 +218,49 @@ class SkinHero extends StatelessWidget {
       if (L != null) Text.rich(TextSpan(children: [TextSpan(text: _m(n0(L['rent'])), style: const TextStyle(fontWeight: FontWeight.w900)), const TextSpan(text: ' درهم / شهر')]), style: const TextStyle(fontSize: 13.5)),
     ])));
   }
+}
+
+
+/// دوسة على حركة جاية → تتسجّل إنها اتدفعت (إيجار مستأجر أو قسط شركة)
+Future<void> recordEv(BuildContext context, Map x) async {
+  final t = x['_t']; final u = x['_u'];
+  if (t == null || u is! Map<String, dynamic>) { toast(context, 'الحركة دي بتتسجّل من صفحتها'); return; }
+  final amt = (x['a'] as num).abs();
+  if (t == 'rent') {
+    final ok = await confirmDlg(context, '✅ تسجّل إنك استلمت\n${str(x['l'])}\n${_m(amt)} درهم؟', ok: '✅ استلمت');
+    if (!ok) return;
+    await Act.rentPaid(u, x['_k'] as int, x['_i'] as int);
+    if (context.mounted) toast(context, '✅ اتسجّل استلام ${_m(amt)}');
+  } else if (t == 'inst') {
+    final src = await pickDlg(context, '💳 دفعت ${str(x['l'])} (${_m(amt)}) منين؟', [['cash', 'من الرصيد'], ['gp', 'من فلوس الشراكة'], ['', 'من بره البرنامج']], 'cash');
+    if (src == null) return;
+    await Act.instPay(u, x['_i'] as int, src);
+    if (context.mounted) toast(context, '✅ اتسجّلت دفعة الشركة');
+  }
+}
+
+/// «كل التفاصيل»: باقي الداشبورد مقفول في زرار عشان الصفحة تبقى قصيرة
+class MoreDetails extends StatefulWidget {
+  final List<Widget> children;
+  const MoreDetails({super.key, required this.children});
+  @override
+  State<MoreDetails> createState() => _MoreDetailsState();
+}
+
+class _MoreDetailsState extends State<MoreDetails> {
+  static bool open = false;
+  @override
+  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        InkWell(borderRadius: BorderRadius.circular(14), onTap: () => setState(() => open = !open), child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: kBd)),
+          child: Row(children: [
+            const Icon(Icons.insights_rounded, color: kAc, size: 20), const SizedBox(width: 8),
+            Text(open ? 'اقفل التفاصيل' : 'كل التفاصيل والتحليلات', style: const TextStyle(fontWeight: FontWeight.w800, color: kNavy)),
+            const Spacer(),
+            AnimatedRotation(turns: open ? .5 : 0, duration: const Duration(milliseconds: 180), child: const Icon(Icons.expand_more, color: kMuted)),
+          ]),
+        )),
+        if (open) ...[const SizedBox(height: 6), ...widget.children],
+      ]);
 }

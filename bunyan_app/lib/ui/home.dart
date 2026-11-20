@@ -49,11 +49,7 @@ class HomePage extends StatelessWidget {
     final w = Ws.I.resolve(); final g = objs(Store.I.S['groups']).where((x) => x['id'] == w).firstOrNull;
     final an = e.annW();
     var lp = 0.0, lf = 0.0; for (final u in e.SU()) { final o = e.occ(u); lp += o['lossPast'] as double; lf += o['lossFut'] as double; }
-    final rest = <Widget>[
-      // 🎨 تجربة الأشكال: زرار سريع في أول الداشبورد
-      Align(alignment: AlignmentDirectional.centerStart, child: TextButton.icon(onPressed: () => skinPicker(context), icon: const Icon(Icons.palette_outlined, size: 18), label: Text('🎨 الشكل: ${Skin.all.firstWhere((x) => x[0] == Skin.id)[1]} — غيّره'))),
-      NtBar(e),
-      // ───── 💰 فلوسك ─────
+    final money = <Widget>[
       SecHead(Tr.t('💰 فلوسك'), sub: Tr.t('النهارده')),
       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Expanded(child: _Stat(Tr.t('💵 الرصيد النقدي'), cash, c: kOk, onTap: () => eqCash(context, e))),
@@ -62,6 +58,12 @@ class HomePage extends StatelessWidget {
       ]),
       const SizedBox(height: 12),
       WithdrawCard(e),
+    ];
+    final rest = <Widget>[
+      // 🎨 تجربة الأشكال: زرار سريع في أول الداشبورد
+      Align(alignment: AlignmentDirectional.centerStart, child: TextButton.icon(onPressed: () => skinPicker(context), icon: const Icon(Icons.palette_outlined, size: 18), label: Text('🎨 الشكل: ${Skin.all.firstWhere((x) => x[0] == Skin.id)[1]} — غيّره'))),
+      NtBar(e),
+      // ───── 💰 فلوسك ─────
       // ───── 🏠 الاستديوهات ─────
       SecHead(Tr.t('🏠 الاستديوهات'), sub: '${e.SU().length} ${Tr.t('استديو')}'),
       StatusTiles(e),
@@ -125,13 +127,24 @@ class HomePage extends StatelessWidget {
     if (Skin.id == 'ps') {
       return ListView(padding: const EdgeInsets.only(bottom: 90), children: [
         Padding(padding: const EdgeInsets.fromLTRB(12, 8, 12, 14), child: SkinHero(e)),
-        Container(padding: const EdgeInsets.fromLTRB(10, 14, 14, 0), decoration: const BoxDecoration(color: kBg, borderRadius: BorderRadius.vertical(top: Radius.circular(26))), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: rest)),
+        Container(padding: const EdgeInsets.fromLTRB(10, 14, 14, 0), decoration: const BoxDecoration(color: kBg, borderRadius: BorderRadius.vertical(top: Radius.circular(26))), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [MoreDetails(children: [...money, ...rest.skip(1)]), rest.first])),
+      ]);
+    }
+    if (!Skin.classic) {
+      // الأشكال الجديدة: الصفحة قصيرة — الأرقام فوق في الكارت، والباقي في «كل التفاصيل»
+      return ListView(padding: const EdgeInsets.fromLTRB(10, 10, 14, 90), children: [
+        SkinHero(e),
+        const SizedBox(height: 10),
+        MoreDetails(children: [...money, ...rest.skip(1)]),
+        rest.first,
       ]);
     }
     return ListView(padding: const EdgeInsets.fromLTRB(10, 10, 14, 90), children: [
-      Skin.classic ? const HeroScene() : SkinHero(e),
+      const HeroScene(),
       const SizedBox(height: 12),
-      ...rest,
+      rest.first,
+      ...money,
+      ...rest.skip(1),
 
     ]);
   }

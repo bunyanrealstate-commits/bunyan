@@ -306,13 +306,15 @@ class Engine {
     DateTime cl(dynamic d) { final x = pd(d); return x.isBefore(t) ? t : x; }
     for (final u in SU()) {
       const f = 1.0;
-      for (final i in objs(u['inst'])) { if (!truthy(i['p']) && truthy(i['a']) && truthy(i['d'])) ev.add({'d': cl(i['d']), 'a': -n(i['a']) * f, 'l': '${str(u['name'])} – دفعة ${str(u['company']).isEmpty ? 'الشركة' : str(u['company'])}'}); }
+      final ins = objs(u['inst']);
+      for (var j = 0; j < ins.length; j++) { final i = ins[j]; if (!truthy(i['p']) && truthy(i['a']) && truthy(i['d'])) ev.add({'d': cl(i['d']), 'a': -n(i['a']) * f, 'l': '${str(u['name'])} – دفعة ${str(u['company']).isEmpty ? 'الشركة' : str(u['company'])}', '_t': 'inst', '_u': u, '_i': j}); }
       if (!truthy(u['fp']) && truthy(u['furn'])) ev.add({'d': t, 'a': -n(u['furn']) * f, 'l': '${str(u['name'])} – أثاث'});
       if (truthy(u['salv'])) { final d = addM(pd(u['start']), n(u['cm'])); if (!d.isBefore(t)) ev.add({'d': d, 'a': n(u['salv']) * f, 'l': '${str(u['name'])} – استرداد الأثاث'}); }
-      for (final L in objs(u['leases'])) {
-        final rc = rcv(L);
+      final ls = objs(u['leases']);
+      for (var k = 0; k < ls.length; k++) {
+        final L = ls[k]; final rc = rcv(L);
         for (var i = 0; i < months(L); i++) {
-          if (!rc.contains(i)) ev.add({'d': cl(iso(payD(L, i))), 'a': la(L, i) * f, 'l': '${str(u['name'])} – إيجار ${str(L['tenant']).isEmpty ? 'مستأجر' : str(L['tenant'])}'});
+          if (!rc.contains(i)) ev.add({'d': cl(iso(payD(L, i))), 'a': la(L, i) * f, 'l': '${str(u['name'])} – إيجار ${str(L['tenant']).isEmpty ? 'مستأجر' : str(L['tenant'])}', '_t': 'rent', '_u': u, '_k': k, '_i': i});
           if (truthy(L['icost']) && payD(L, i).isAfter(t)) ev.add({'d': cl(iso(payD(L, i))), 'a': -n(L['icost']) * lf(L, i) * f, 'l': '${str(u['name'])} – إنترنت'});
         }
         if (truthy(L['rme']) && truthy(L['router']) && pd(L['start']).isAfter(t)) ev.add({'d': cl(L['start']), 'a': -n(L['router']) * f, 'l': '${str(u['name'])} – راوتر'});
