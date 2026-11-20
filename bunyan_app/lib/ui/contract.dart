@@ -293,16 +293,19 @@ class _CtState extends State<ContractPage> {
     final custom = E['terms'] is List || cr.isNotEmpty || hide.isNotEmpty || truthy(E['tEn']) || truthy(E['tAr']);
     List<Map<String, dynamic>> tl() { if (E['terms'] is! List) E['terms'] = Ct.defTerms(S); return (E['terms'] as List).cast<Map<String, dynamic>>(); }
     Widget head(String t) => Padding(padding: const EdgeInsets.only(top: 10, bottom: 4), child: Text(t, style: const TextStyle(fontWeight: FontWeight.w900, color: kNavy, fontSize: 14)));
-    return BCard(c: const Color(0xFF7C3AED), title: '✏️ تعديل العقد', child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const Text('عدّل أي حاجة في الورقة: العنوان، تخفي أو تضيف صفوف، وتعدّل أو تمسح أو تضيف بنود. التعديلات بتتحفظ لكل نوع عقد (مفروش / فاضي).', style: TextStyle(color: kMuted, fontSize: 12.5, height: 1.5)),
+    return _fold('ed', '✏️ تعديل العقد', _j([custom ? 'فيه تعديلات' : 'زي الأصل', '${T.length} بند', hide.isEmpty ? '' : '${hide.length} صف مخفي', cr.isEmpty ? '' : '${cr.length} صف مضاف']), [
       head('🏷 عنوان العقد'),
       InkWell(onTap: () async { final r = await _edDlg('عنوان العقد', en: str(E['tEn']).isEmpty ? (Ct.tpl(S) == 'b' ? 'Tenant Contract' : 'Tenancy Contract') : str(E['tEn']), ar: str(E['tAr']).isEmpty ? 'عقد إيجار' : str(E['tAr'])); if (r == null) return; E['tEn'] = r['en']; E['tAr'] = r['ar']; await _edSave('✏️ عنوان العقد'); },
         child: InputDecorator(decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true, suffixIcon: Icon(Icons.edit, size: 18)), child: Text('${str(E['tAr']).isEmpty ? 'عقد إيجار' : E['tAr']} • ${str(E['tEn']).isEmpty ? (Ct.tpl(S) == 'b' ? 'Tenant Contract' : 'Tenancy Contract') : E['tEn']}', maxLines: 1, overflow: TextOverflow.ellipsis))),
       head('📋 صفوف الجدول'),
-      for (final r in Ct.baseRows(S)) Row(children: [
-        Expanded(child: Text(r[2], style: TextStyle(fontWeight: FontWeight.w700, color: hide.contains(r[1]) ? kMuted : kInk, decoration: hide.contains(r[1]) ? TextDecoration.lineThrough : null))),
-        _edBtn(hide.contains(r[1]) ? Icons.visibility_off_outlined : Icons.visibility_outlined, () async { final H = [...hide]; hide.contains(r[1]) ? H.remove(r[1]) : H.add(r[1]); E['hide'] = H; await _edSave(); }, c0: hide.contains(r[1]) ? kMuted : const Color(0xFF2563EB)),
+      const Text('دوس على الصف يخفيه أو يظهره', style: TextStyle(color: kMuted, fontSize: 11.5)),
+      const SizedBox(height: 4),
+      Wrap(spacing: 6, runSpacing: 6, children: [
+        for (final r in Ct.baseRows(S)) InkWell(borderRadius: BorderRadius.circular(99), onTap: () async { final H = [...hide]; hide.contains(r[1]) ? H.remove(r[1]) : H.add(r[1]); E['hide'] = H; await _edSave(); },
+          child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), decoration: BoxDecoration(color: hide.contains(r[1]) ? const Color(0xFFF1F5F9) : const Color(0xFFE6F4F1), borderRadius: BorderRadius.circular(99), border: Border.all(color: hide.contains(r[1]) ? kBd : kAc.withOpacity(.4))),
+            child: Text(hide.contains(r[1]) ? '⊘ ${r[2]}' : r[2], style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: hide.contains(r[1]) ? kMuted : kAcD, decoration: hide.contains(r[1]) ? TextDecoration.lineThrough : null)))),
       ]),
+      const SizedBox(height: 6),
       for (var i = 0; i < cr.length; i++) Row(children: [
         Expanded(child: Text('➕ ${str(obj(cr[i])?['ar']).isEmpty ? str(obj(cr[i])?['en']) : str(obj(cr[i])?['ar'])}: ${str(obj(cr[i])?['v'])}', style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF7C3AED)))),
         _edBtn(Icons.edit_outlined, () async { final x = obj(cr[i])!; final r = await _edDlg('تعديل الصف', en: str(x['en']), ar: str(x['ar']), v: str(x['v'])); if (r == null) return; cr[i] = r; await _edSave('✏️ صف في العقد'); }),
@@ -310,27 +313,35 @@ class _CtState extends State<ContractPage> {
       ]),
       Align(alignment: AlignmentDirectional.centerStart, child: TextButton.icon(onPressed: () async { final r = await _edDlg('➕ صف جديد في الجدول', v: ''); if (r == null || (r['en']!.isEmpty && r['ar']!.isEmpty)) return; if (E['rows'] is! List) E['rows'] = []; (E['rows'] as List).add(r); await _edSave('➕ صف في العقد'); }, icon: const Icon(Icons.add), label: const Text('ضيف صف'))),
       head('📜 بنود العقد'),
-      for (var i = 0; i < T.length; i++) Container(
-        margin: const EdgeInsets.only(bottom: 6), padding: const EdgeInsets.fromLTRB(8, 6, 4, 6),
-        decoration: BoxDecoration(color: const Color(0xFFF7F8FB), borderRadius: BorderRadius.circular(10), border: Border.all(color: kBd)),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('${i + 1}. ', style: const TextStyle(fontWeight: FontWeight.w900)),
-          Expanded(child: Text(str(T[i]['ar']).isEmpty ? str(T[i]['en']) : str(T[i]['ar']), style: const TextStyle(fontSize: 13, height: 1.45))),
-          Column(children: [
-            Row(mainAxisSize: MainAxisSize.min, children: [
-              _edBtn(Icons.edit_outlined, () async { final r = await _edDlg('تعديل البند ${i + 1}', en: str(T[i]['en']), ar: str(T[i]['ar']), multi: true); if (r == null) return; tl()[i] = r; await _edSave('✏️ بند في العقد'); }),
-              _edBtn(Icons.delete_outline, () async { if (!await confirmDlg(context, 'تمسح البند ${i + 1}؟', ok: '🗑 امسح')) return; tl().removeAt(i); await _edSave('🗑 بند من العقد'); }, c0: kRed),
-            ]),
-            Row(mainAxisSize: MainAxisSize.min, children: [
-              if (i > 0) _edBtn(Icons.arrow_upward, () async { final L = tl(); final x = L.removeAt(i); L.insert(i - 1, x); await _edSave(); }),
-              if (i < T.length - 1) _edBtn(Icons.arrow_downward, () async { final L = tl(); final x = L.removeAt(i); L.insert(i + 1, x); await _edSave(); }),
-            ]),
+      for (var i = 0; i < T.length; i++) InkWell(
+        onTap: () async { final r = await _edDlg('تعديل البند ${i + 1}', en: str(T[i]['en']), ar: str(T[i]['ar']), multi: true); if (r == null) return; tl()[i] = r; await _edSave('✏️ بند في العقد'); },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 6), decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: kBd))),
+          child: Row(children: [
+            Text('${i + 1}. ', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12.5)),
+            Expanded(child: Text(str(T[i]['ar']).isEmpty ? str(T[i]['en']) : str(T[i]['ar']), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5))),
+            PopupMenuButton<String>(
+              padding: EdgeInsets.zero, iconSize: 20, icon: const Icon(Icons.more_vert, size: 20, color: kMuted),
+              onSelected: (v) async {
+                final L = tl();
+                if (v == 'up' && i > 0) { final x = L.removeAt(i); L.insert(i - 1, x); }
+                if (v == 'dn' && i < L.length - 1) { final x = L.removeAt(i); L.insert(i + 1, x); }
+                if (v == 'del') { if (!await confirmDlg(context, 'تمسح البند ${i + 1}؟', ok: '🗑 امسح')) return; L.removeAt(i); }
+                await _edSave();
+              },
+              itemBuilder: (_) => [
+                if (i > 0) const PopupMenuItem(value: 'up', child: Text('⬆️ لفوق')),
+                if (i < T.length - 1) const PopupMenuItem(value: 'dn', child: Text('⬇️ لتحت')),
+                const PopupMenuItem(value: 'del', child: Text('🗑 امسح', style: TextStyle(color: kRed))),
+              ],
+            ),
           ]),
-        ]),
+        ),
       ),
+      const Text('دوس على البند تعدّله', style: TextStyle(color: kMuted, fontSize: 11.5)),
       Align(alignment: AlignmentDirectional.centerStart, child: TextButton.icon(onPressed: () async { final r = await _edDlg('➕ بند جديد', multi: true); if (r == null || (r['en']!.isEmpty && r['ar']!.isEmpty)) return; tl().add(r); await _edSave('➕ بند في العقد'); }, icon: const Icon(Icons.add), label: const Text('ضيف بند'))),
       if (custom) OutlinedButton(onPressed: () async { if (!await confirmDlg(context, 'ترجّع العقد زي الأصل؟ (العنوان والصفوف والبنود)', ok: '↩️ رجّع')) return; Ct.ct(S).remove('ed_${Ct.tpl(S)}'); Ct.edTouch(S); await _save('↩️ العقد رجع للأصل'); }, child: const Text('↩️ رجّع العقد زي الأصل')),
-    ]));
+    ]);
   }
 
   /* ───────── التوقيعات ───────── */
@@ -459,6 +470,27 @@ class _CtState extends State<ContractPage> {
         child: Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5), decoration: BoxDecoration(color: on ? const Color(0xFF2563EB) : const Color(0xFFF1F4F9), borderRadius: BorderRadius.circular(99), border: Border.all(color: on ? const Color(0xFF2563EB) : const Color(0xFFD5DCE6))),
           child: Text(t, style: TextStyle(color: on ? Colors.white : kInk, fontWeight: FontWeight.w800, fontSize: 12.5))),
       );
+  /// قسم بيتطوي: سطر واحد فيه ملخصه، ويتفتح لما تدوس عليه
+  final Set<String> _open = {};
+  Widget _fold(String id, String title, String sum, List<Widget> kids) {
+    final on = _open.contains(id);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(color: on ? Colors.white : const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(14), border: Border.all(color: on ? kAc.withOpacity(.45) : kBd)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        InkWell(borderRadius: BorderRadius.circular(14), onTap: () => setState(() => on ? _open.remove(id) : _open.add(id)), child: Padding(padding: const EdgeInsets.fromLTRB(12, 10, 8, 10), child: Row(children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: kNavy)),
+          const SizedBox(width: 8),
+          Expanded(child: Text(on ? '' : sum, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: kMuted, fontSize: 12.5, fontWeight: FontWeight.w600))),
+          AnimatedRotation(turns: on ? .5 : 0, duration: const Duration(milliseconds: 180), child: const Icon(Icons.expand_more, size: 20, color: kMuted)),
+        ]))),
+        if (on) Padding(padding: const EdgeInsets.fromLTRB(10, 0, 10, 4), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: kids)),
+      ]),
+    );
+  }
+  Widget _pair(Widget a, Widget b) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Expanded(child: a), const SizedBox(width: 8), Expanded(child: b)]);
+  String _j(List<String> l) => l.where((x) => x.trim().isNotEmpty).join(' • ');
+
   Widget _sec(String t) => Padding(padding: const EdgeInsets.only(top: 8, bottom: 6), child: Text(t, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: kNavy)));
 
   Widget _fld(String k, {String? label, bool num = false, String? hint}) {
@@ -531,16 +563,17 @@ class _CtState extends State<ContractPage> {
         ),
         const SizedBox(height: 10),
         OutlinedButton.icon(onPressed: _fill, icon: const Icon(Icons.person_search), label: const Text('— تعبئة من عقد مستأجر قائم (اختياري) —'), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(40))),
-        _sec('👤 المؤجر'), _fld('ll'), _fld('lid'),
-        _sec('🧑 المستأجر'), _fld('tn'), _fld('tid'), _fld('nat'), _fld('ph', hint: 'مثال: 0501234567 — عليه هيتبعت العقد'),
-        _sec('🏠 الإيجار'), _fld('sub'), _fld('st'), _fld('mo', num: true), _fld('en'),
+        const SizedBox(height: 8),
+        _fold('ll', '👤 المؤجر', _j([str(f['ll']), str(f['lid'])]), [_fld('ll'), _fld('lid')]),
+        _fold('tn', '🧑 المستأجر', _j([str(f['tn']), str(f['nat']), str(f['ph'])]), [_fld('tn'), _pair(_fld('tid'), _fld('nat')), _fld('ph', hint: 'مثال: 0501234567')]),
+        _fold('rent', '🏠 الإيجار', _j([str(f['sub']), '${Ct.dm(str(f['st']))} ← ${Ct.dm(str(f['en']))}', str(f['mo']).isEmpty ? '' : '${f['mo']} شهر']), [_fld('sub'), _pair(_fld('st'), _fld('en')), _fld('mo', num: true)]),
         // ───── طريقة الإيجار: شهري ولا دفعات ─────
-        _sec('💰 طريقة الإيجار'),
+        _fold('pay', '💰 طريقة الإيجار', Ct.rm(S) == 'm' ? _j(['شهري', str(f['rent']).isEmpty ? '' : '${f['rent']} درهم', str(f['due']).isEmpty ? '' : 'يوم ${f['due']}']) : _j(['دفعات', '${lst(f['pays']).length} دفعة', str(f['tot']).isEmpty ? '' : 'إجمالي ${f['tot']}']), [
         _seg([['m', '📅 إيجار شهري'], ['p', '💵 دفعات']], Ct.rm(S), (x) async { f['rm'] = x; if (x == 'p' && lst(f['pays']).isEmpty && (n0(f['tot']) > 0 || n0(f['rent']) > 0)) Ct.autoPays(S); if (x == 'm') f['pn'] = ''; tc.clear(); await _save(); }),
         const SizedBox(height: 12),
         if (Ct.rm(S) == 'm') ...[
-          _fld('rent', num: true), _fld('due', num: true),
-          _fld('tot', label: 'إجمالي الإيجار (بيتحسب لوحده = الإيجار × الشهور)', num: true),
+          _pair(_fld('rent', num: true), _fld('due', num: true)),
+          _fld('tot', label: 'إجمالي الإيجار (الإيجار × الشهور)', num: true),
         ] else ...[
           _fld('tot', label: 'إجمالي الإيجار', num: true),
           Row(children: [Expanded(child: _fld('pn', label: 'عدد الدفعات', num: true)), const SizedBox(width: 8), Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 8), child: OutlinedButton(style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(40)), onPressed: () async { FocusManager.instance.primaryFocus?.unfocus(); for (final k in ['tot', 'pn']) { f[k] = _c(k).text; } c['paysMan'] = false; Ct.autoPays(S); await _save(); if (mounted) toast(context, '✅ اتوزّع ${money(n0(f['tot']))} على ${lst(f['pays']).length} دفعات من ${Ct.dm(str(f['st']))} لـ ${Ct.dm(str(f['en']))}'); }, child: const Text('🧮 وزّع الإجمالي', style: TextStyle(color: kInk, fontWeight: FontWeight.w800)))))]),
@@ -558,8 +591,9 @@ class _CtState extends State<ContractPage> {
           }),
           Align(alignment: AlignmentDirectional.centerStart, child: OutlinedButton(onPressed: () async { if (f['pays'] is! List) f['pays'] = []; (f['pays'] as List).add({'a': '', 'd': '', 'm': 'شيك'}); f['pn'] = lst(f['pays']).length; c['paysMan'] = true; tc.remove('pn'); await _save(); }, child: const Text('➕ دفعة', style: TextStyle(color: kInk, fontWeight: FontWeight.w800)))),
         ],
+        ]),
         // ───── الشيكات: انت بتحدد عددها ─────
-        _sec('🧾 الشيكات'),
+        _fold('chq', '🧾 الشيكات', n0(f['cq']) > 0 ? Ct.chqTxt(f, false) : str(f['chq']), [
         Row(children: [
           Expanded(child: _fld('cq', label: 'عدد الشيكات', num: true, hint: 'مثال: 1')),
           const SizedBox(width: 8),
@@ -573,19 +607,19 @@ class _CtState extends State<ContractPage> {
         const SizedBox(height: 8),
         if (n0(f['cq']) > 0) Text('في العقد: ${Ct.chqTxt(f, Ct.en(S))}', style: const TextStyle(color: kMuted, fontWeight: FontWeight.w700))
         else _fld('chq', label: 'أو اكتب الشيكات بنفسك (زي ما هتتكتب في العقد)'),
-        if (t == 'b') ...[
-          _sec('🔐 التأمين'),
+        ]),
+        if (t == 'b') _fold('dep', '🔐 التأمين', str(f['dep']).isEmpty ? 'مفيش' : '${f['dep']} • ${f['depT'] == 'cash' ? 'كاش' : 'شيك'}', [
           Row(children: [Expanded(child: _fld('dep', label: 'التأمين (مبلغ)', num: true)), const SizedBox(width: 8), Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 8), child: _seg([['chq', 'شيك'], ['cash', 'كاش']], f['depT'] == 'cash' ? 'cash' : 'chq', (x) async { f['depT'] = x; await _save(); })))]),
-        ],
+        ]),
 
       ])),
       const SizedBox(height: 12),
       // ───── 2) التوقيعات ─────
       _editCard(),
-      BCard(c: kGreen, title: '✍️ التوقيعات', child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      _fold('sig', '✍️ التوقيعات', _j(['المؤجر ${Ct.landlordSig(S) != null ? '✓' : '✗'}', 'المستأجر ${truthy(c['tsig']) ? '✓' : '✗'}', 'الشهود ${[for (final w in ['1', '2']) if (truthy(obj(c['wsig'])?[w])) w].length}/2']), [
         const Text('📂 التوقيعات المحفوظة — دوس على توقيع يتحط كتوقيع المؤجر. توقيع المستأجر والشهود: يوقّعوا أو اختار من المحفوظين، وبعدها تقدر تحفظه.', style: TextStyle(color: kMuted, fontSize: 12.5)),
         const SizedBox(height: 10),
-        GridView.count(crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 1.75, children: [
+        GridView.count(crossAxisCount: 3, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 1.5, children: [
           for (final s in sigs) _sigTile(on: s['id'] == cur, onTap: () async { c['sig'] = s['id']; await _save(); }, onDel: () => _delSig(s), child: Column(mainAxisSize: MainAxisSize.min, children: [Flexible(child: _b64(str(s['img']))), Text(str(s['n']), style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF555B66)))])),
           _sigTile(onTap: _newSig, child: const Text('➕ توقيع جديد', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Color(0xFF1473E6)))),
           if (cur.isNotEmpty) _sigTile(onTap: () async { c['sig'] = ''; await _save(); }, child: const Text('بدون توقيع', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Color(0xFF667080)))),
@@ -601,7 +635,7 @@ class _CtState extends State<ContractPage> {
           if (cur.isNotEmpty) OutlinedButton(onPressed: () async { c['sig'] = ''; await _save(); }, child: const Text('🗑 شيل توقيع المؤجر')),
           for (final w in ['1', '2']) if (truthy(W[w])) OutlinedButton(onPressed: () async { (c['wsig'] as Map).remove(w); await _save(); }, child: Text('🗑 شيل توقيع الشاهد $w')),
         ]),
-      ])),
+      ]),
       const SizedBox(height: 12),
       // ───── 3) العقد نفسه ─────
       CtPaper(key: ValueKey('paper$v'), build: () => _bytes()),
