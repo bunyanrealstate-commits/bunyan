@@ -3,6 +3,7 @@ package com.bunyan.maktabati
 import android.graphics.Bitmap
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -429,6 +430,22 @@ fun SettingsSheet(onDismiss: () -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Lib.ver
     fun set(k: String, x: Any) { Lib.cfg.put(k, x); Lib.save(); Notify.schedule(ctx) }
     Sheet("🎯 هدفك والتذكيرات", onDismiss) {
+        Text("🎨 شكل التطبيق", fontWeight = FontWeight.Bold, color = Ink)
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Themes.all.forEach { t -> val on = Themes.id == t.id
+                Column(Modifier.clickable { Themes.set(t.id) }.width(78.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(Modifier.size(58.dp).clip(RoundedCornerShape(16.dp)).background(Color(t.paper))
+                        .border(if (on) 3.dp else 1.dp, if (on) Color(t.main) else Color(0x22000000), RoundedCornerShape(16.dp)), Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Box(Modifier.size(30.dp, 9.dp).clip(CircleShape).background(Color(t.main)))
+                            Box(Modifier.size(22.dp, 6.dp).clip(CircleShape).background(Color(t.sand)))
+                            if (on) Text("✓", color = Color(t.main), fontWeight = FontWeight.Black, fontSize = 12.sp)
+                        }
+                    }
+                    Text(t.name, fontSize = 11.sp, color = Ink, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
+                }
+            }
+        }
         val uctx = LocalContext.current; val uscope = rememberCoroutineScope()
         OutlinedButton({ uscope.launch { Toast.makeText(uctx, Updater.check(uctx, true) ?: "", Toast.LENGTH_LONG).show() } }, Modifier.fillMaxWidth()) { Text("⬆️ شوف لو فيه تحديث للتطبيق (نسختك ${Updater.myVersion(uctx)})") }
         Text("هدفك كل يوم (صفحات)", fontWeight = FontWeight.Bold)

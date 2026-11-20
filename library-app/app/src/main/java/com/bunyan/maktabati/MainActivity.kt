@@ -61,12 +61,28 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 
-val Green = Color(0xFF1F7A55)
-val Ink = Color(0xFF1D2733)
-val Muted = Color(0xFF7A6A55)
-val Paper = Color(0xFFFBF6EC)
-val Card = Color(0xFFFFFFFF)
-val Sand = Color(0xFFF1EADB)
+/* ───── 🎨 أشكال التطبيق ───── */
+class Th(val id: String, val name: String, val main: Long, val ink: Long, val muted: Long, val paper: Long, val card: Long, val sand: Long)
+object Themes {
+    val all = listOf(
+        Th("green", "🌿 أخضر", 0xFF1F7A55, 0xFF1D2733, 0xFF7A6A55, 0xFFFBF6EC, 0xFFFFFFFF, 0xFFF1EADB),
+        Th("blue", "🌊 أزرق بحري", 0xFF1E5A8A, 0xFF16222E, 0xFF5C6B7A, 0xFFF3F7FB, 0xFFFFFFFF, 0xFFE3ECF5),
+        Th("coffee", "☕ قهوة", 0xFF7A4B2A, 0xFF2A1E16, 0xFF7A6450, 0xFFF8F1E7, 0xFFFFFCF7, 0xFFEDE0CF),
+        Th("purple", "💜 بنفسجي", 0xFF6B3FA0, 0xFF221A2E, 0xFF6E6380, 0xFFF7F3FB, 0xFFFFFFFF, 0xFFEAE2F4),
+        Th("rose", "🌸 وردي هادي", 0xFFB04A6E, 0xFF2E1A22, 0xFF806470, 0xFFFBF4F6, 0xFFFFFFFF, 0xFFF3E3E8),
+        Th("gray", "🩶 رمادي أنيق", 0xFF37474F, 0xFF1C2226, 0xFF6B7378, 0xFFF5F6F7, 0xFFFFFFFF, 0xFFE6E9EB),
+        Th("orange", "🍊 برتقالي دافي", 0xFFC0622B, 0xFF2B1D14, 0xFF85695A, 0xFFFDF6EF, 0xFFFFFFFF, 0xFFF5E5D6),
+    )
+    var id by mutableStateOf("green")
+    val cur: Th get() = all.firstOrNull { it.id == id } ?: all[0]
+    fun set(x: String) { id = x; Lib.cfg.put("theme", x); Lib.save(); Lib.ver++ }
+}
+val Green: Color get() = Color(Themes.cur.main)
+val Ink: Color get() = Color(Themes.cur.ink)
+val Muted: Color get() = Color(Themes.cur.muted)
+val Paper: Color get() = Color(Themes.cur.paper)
+val Card: Color get() = Color(Themes.cur.card)
+val Sand: Color get() = Color(Themes.cur.sand)
 val Flame = Color(0xFFF0A04B)
 
 class MainActivity : androidx.fragment.app.FragmentActivity() {
@@ -75,6 +91,7 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         Lib.init(this)
+        Themes.id = Lib.cfg.optString("theme", "green")
         val prev = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { t, e ->
             try { File(filesDir, "crash.txt").writeText(java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US).format(java.util.Date()) + " v" + Updater.myVersion(this) + "\n" + android.util.Log.getStackTraceString(e).take(6000)) } catch (_: Exception) {}
