@@ -94,7 +94,8 @@ class _ShellState extends State<Shell> {
             Column(mainAxisSize: MainAxisSize.min, children: [SvgPicture.asset('assets/logo.svg', height: 21), kHakim ? Container(margin: const EdgeInsets.only(top: 2), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1), decoration: BoxDecoration(color: const Color(0xFF2A9D5C), borderRadius: BorderRadius.circular(99)), child: const Text('حكيم', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: Colors.white, height: 1.3))) : const Text('Furnished', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF1D4B66), letterSpacing: 1.4, height: 1.2))]),
             EyeBtn(key: ValueKey('eye${Priv.on}')),
             const SizedBox(width: 8),
-            const Expanded(child: GroupPill()),
+            const SizedBox(width: 118, child: GroupPill()),
+            const Spacer(),
             const SizedBox(width: 8),
             const BellBtn(),
             SizedBox(width: 36, child: IconButton(

@@ -320,14 +320,14 @@ class GroupPill extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(99), onTap: () => openGroups(context),
       child: Container(
-        height: 38, padding: const EdgeInsets.symmetric(horizontal: 10),
+        height: 32, padding: const EdgeInsets.symmetric(horizontal: 9),
         decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF0D8A74), Color(0xFF14B8A6)]), borderRadius: BorderRadius.circular(99), boxShadow: const [BoxShadow(color: Color(0x4014B8A6), blurRadius: 12, offset: Offset(0, 4))]),
         child: Row(children: [
-          Container(width: 8, height: 8, decoration: BoxDecoration(color: const Color(0xFFBFFFE9), shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.white.withOpacity(.7), blurRadius: 4)])),
+          Container(width: 7, height: 7, decoration: BoxDecoration(color: const Color(0xFFBFFFE9), shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.white.withOpacity(.7), blurRadius: 4)])),
           const SizedBox(width: 6),
           // الاسم بيصغر لوحده لو المكان ضيق (بدل ما يتقطع)
-          Flexible(child: Text(Priv.on ? '••••' : name, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14))),
-          const SizedBox(width: 4), const Icon(Icons.expand_more, color: Colors.white, size: 18),
+          Expanded(child: Ticker(Priv.on ? '••••' : name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12.5))),
+          const SizedBox(width: 2), const Icon(Icons.expand_more, color: Colors.white, size: 16),
         ]),
       ),
     );
@@ -388,4 +388,32 @@ Future<void> openGroups(BuildContext context) async {
   if (v == null || !context.mounted) return;
   if (v == '__m') { Shell.go(4); return; }
   Ws.I.pick(v);
+}
+
+
+/// اسم بيمشي جوه مكانه (شريط متحرك) — بيلف على طول بهدوء
+class Ticker extends StatefulWidget {
+  final String text; final TextStyle style;
+  const Ticker(this.text, {super.key, required this.style});
+  @override
+  State<Ticker> createState() => _TickerState();
+}
+
+class _TickerState extends State<Ticker> with SingleTickerProviderStateMixin {
+  late final AnimationController a = AnimationController(vsync: this, duration: const Duration(seconds: 6))..repeat();
+  @override
+  void dispose() { a.dispose(); super.dispose(); }
+  @override
+  Widget build(BuildContext context) {
+    final tp = TextPainter(text: TextSpan(text: widget.text, style: widget.style), textDirection: Directionality.of(context), maxLines: 1)..layout();
+    const gap = 28.0; final w = tp.width + gap;
+    a.duration = Duration(milliseconds: (w * 45).round().clamp(2500, 15000));
+    return ClipRect(child: AnimatedBuilder(animation: a, builder: (_, __) {
+      final rtl = Directionality.of(context) == TextDirection.rtl;
+      final dx = a.value * w * (rtl ? 1 : -1);
+      return OverflowBox(alignment: AlignmentDirectional.centerStart, maxWidth: double.infinity, child: Transform.translate(offset: Offset(dx, 0), child: Row(mainAxisSize: MainAxisSize.min, children: [
+        for (var i = 0; i < 4; i++) Padding(padding: const EdgeInsetsDirectional.only(end: gap), child: Text(widget.text, maxLines: 1, softWrap: false, style: widget.style)),
+      ])));
+    }));
+  }
 }
