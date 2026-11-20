@@ -571,63 +571,77 @@ val GENRE_Q = linkedMapOf(
     "🇬🇧 إنجليزي سهل" to "كتب إنجليزي سهلة", "🏆 الأحدث" to "أحسن كتب 2025-2026")
 val GENRES = GENRE_Q.keys.toList()
 
-@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun ExploreBody(onSearch: (String) -> Unit) {
     val ctx = LocalContext.current
     @Suppress("UNUSED_VARIABLE") val v = Lib.ver
     val st = Explore.state()
-    var sel by remember { mutableStateOf(st.optJSONArray("g")?.let { a -> (0 until a.length()).mapNotNull { i -> val g = a.getString(i); GENRE_Q.entries.firstOrNull { it.value == g }?.key } .toSet() } ?: emptySet()) }
-    var q by remember { mutableStateOf(st.optString("q")) }
+    var sel by remember { mutableStateOf(st.optJSONArray("g")?.let { a -> (0 until a.length()).mapNotNull { i -> val g = a.getString(i); GENRE_Q.entries.firstOrNull { it.value == g }?.key }.toSet() } ?: emptySet()) }
+    var q by remember { mutableStateOf(st.optString("q").takeUnless { it.startsWith("📚") } ?: "") }
+    var flt by remember { mutableStateOf(Lib.cfg.optString("expF", "islamic")) }
+    var open by remember { mutableStateOf<String?>(null) }
     val res = Explore.results()
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        OutlinedTextField(q, { q = it }, Modifier.fillMaxWidth(), placeholder = { Text("اكتب أي حاجة: موضوع، كاتب، كتاب شبه…") }, shape = RoundedCornerShape(14.dp), maxLines = 3,
-            leadingIcon = { Text("🔎") }, trailingIcon = { if (q.isNotEmpty()) Text("✕", Modifier.clickable { q = "" }.padding(8.dp), color = Muted) })
-        var flt by remember { mutableStateOf(Lib.cfg.optString("expF", "islamic")) }
-        Text("الكتب تكون", color = Muted, fontSize = 12.sp)
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf("islamic" to "🕌 إسلامي وعربي", "arabic" to "🇪🇬 عربي", "all" to "🌍 الكل").forEach { (k, t) ->
-                Chip(t, flt == k) { flt = k; Lib.cfg.put("expF", k); Lib.save() } }
+    val ok = sel.isNotEmpty() || q.isNotBlank()
+    fun go(more: Boolean) {
+        if (!Net.hasGem()) Toast.makeText(ctx, "محتاج Gemini — اربط التطبيق الأول", Toast.LENGTH_LONG).show()
+        else if (ok) { Explore.state().remove("ready"); Explore.start(ctx, sel.map { GENRE_Q[it] ?: it }, q, more) }
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // 🔎 البحث: سطر واحد وزرار صغير جواه
+        Surface(shape = RoundedCornerShape(50), color = Card, border = androidx.compose.foundation.BorderStroke(1.dp, Sand)) {
+            Row(Modifier.padding(start = 14.dp, end = 4.dp).height(46.dp), verticalAlignment = Alignment.CenterVertically) {
+                androidx.compose.foundation.text.BasicTextField(q, { q = it }, Modifier.weight(1f), singleLine = true,
+                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp, color = Ink),
+                    cursorBrush = androidx.compose.ui.graphics.SolidColor(Green),
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { go(false) }),
+                    decorationBox = { inner -> if (q.isEmpty()) Text("موضوع، كاتب، أو كتاب شبه…", color = Muted, fontSize = 14.sp); inner() })
+                if (q.isNotEmpty()) Text("✕", Modifier.clickable { q = "" }.padding(8.dp), color = Muted)
+                Surface(onClick = { go(false) }, shape = CircleShape, color = if (ok && !Explore.busy) Green else Sand, modifier = Modifier.size(38.dp)) {
+                    Box(contentAlignment = Alignment.Center) { if (Explore.busy) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = Paper) else Text("🔎", fontSize = 16.sp) }
+                }
+            }
         }
-        Text("اختار تصنيف أو أكتر", color = Muted, fontSize = 12.sp)
-        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        // الشرط + القوايم الجاهزة في سطر واحد
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            listOf("islamic" to "🕌 إسلامي وعربي", "arabic" to "🇪🇬 عربي", "all" to "🌍 الكل").forEach { (k, t) -> Chip(t, flt == k) { flt = k; Lib.cfg.put("expF", k); Lib.save() } }
+            Box(Modifier.width(1.dp).height(18.dp).background(Sand))
+            Ready.lists.forEach { (name, get) -> Chip(name, st.optString("ready") == name) {
+                Explore.state().put("r", org.json.JSONArray(get())).put("g", org.json.JSONArray()).put("q", "").put("ready", name); q = ""; sel = emptySet(); Lib.save(); Lib.ver++ } }
+        }
+        // التصنيفات في سطر واحد بيتسحب
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             GENRES.forEach { x -> Chip(x, x in sel) { sel = if (x in sel) sel - x else sel + x } }
         }
-        val ok = sel.isNotEmpty() || q.isNotBlank()
-        Button({ if (!Net.hasGem()) Toast.makeText(ctx, "محتاج Gemini — اربط التطبيق الأول", Toast.LENGTH_LONG).show() else Explore.start(ctx, sel.map { GENRE_Q[it] ?: it }, q, false) },
-            Modifier.fillMaxWidth().height(46.dp), enabled = ok && !Explore.busy, shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = Green)) {
-            Text(if (Explore.busy) "⏳ بدوّر…" else if (sel.size > 1) "🔎 دوّر في ${sel.size} تصنيفات" else "🔎 دوّر", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-        }
-        Text("📚 قوايم جاهزة", color = Muted, fontSize = 12.sp)
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Ready.lists.forEach { (name, get) -> Chip(name, false) {
-                val o = Explore.state(); o.put("r", org.json.JSONArray(get())).put("g", org.json.JSONArray()).put("q", "").put("ready", name); q = ""; sel = emptySet(); Lib.save(); Lib.ver++ } }
-        }
-        if (Explore.busy) Text("⏳ بدوّر على أحسن كتب… تقدر تقفل التطبيق خالص، وهبعتلك إشعار أول ما أخلص 🔔", color = Muted, fontSize = 13.sp, lineHeight = 21.sp)
-        if (Explore.err.isNotEmpty()) Text(Explore.err, color = Color(0xFFB3261E), fontSize = 13.sp)
+        if (sel.isNotEmpty() && !Explore.busy) Text("🔎 دوّر في ${sel.size} تصنيف" + (if (q.isNotBlank()) " + كلامك" else ""), Modifier.clickable { go(false) }.padding(vertical = 2.dp), color = Green, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        if (Explore.busy) Text("⏳ بدوّر… تقدر تقفل التطبيق وهبعتلك إشعار", color = Muted, fontSize = 12.sp)
+        if (Explore.err.isNotEmpty()) Text(Explore.err, color = Color(0xFFB3261E), fontSize = 12.sp)
         if (res.isNotEmpty()) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("📚 لقيتلك ${res.size} كتاب", fontWeight = FontWeight.Black, color = Ink, modifier = Modifier.weight(1f))
-                TextButton({ Explore.state().remove("r"); Explore.state().remove("ready"); Lib.save(); Lib.ver++ }) { Text("🗑 امسح", color = Muted) }
-            }
             val missing = res.count { r -> Lib.books.none { it.optString("t").trim() == r.optString("t").trim() } }
-            if (missing > 0) Button({ val n = Ready.addAll(res); Lib.save(); Toast.makeText(ctx, "📌 اتضاف $n كتاب لـ«عايز أقراه»", Toast.LENGTH_SHORT).show() },
-                Modifier.fillMaxWidth().height(42.dp), shape = RoundedCornerShape(50), colors = ButtonDefaults.buttonColors(containerColor = Green)) { Text("📌 ضيف الـ$missing كلهم لـ«عايز أقراه»", fontWeight = FontWeight.Bold, fontSize = 13.sp) }
-            res.forEach { r ->
-                val mine = Lib.books.firstOrNull { it.optString("t") == r.optString("t") }
-                Surface(shape = RoundedCornerShape(16.dp), color = Card) { Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(r.optString("t"), fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Ink)
-                    Text(listOf(r.optString("a"), if (r.optInt("pg") > 0) "~${r.optInt("pg")} صفحة" else "", r.optString("cat")).filter { it.isNotBlank() }.joinToString(" • "), color = Muted, fontSize = 12.sp)
-                    Text(r.optString("why"), fontSize = 13.sp, color = Ink, lineHeight = 21.sp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        if (mine == null) Chip("📌 عايز أقراه", false) { Lib.addLocal(r.optString("t"), r.optString("a")) {}; Lib.ver++; Toast.makeText(ctx, "📌 اتضاف لـ«عايز أقراه»", Toast.LENGTH_SHORT).show() }
-                        else Chip("✅ عندك", true) {}
-                        Chip("⬇️ نزّله", false) { onSearch(r.optString("t")) }
-                    }
-                } }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("${res.size} كتاب", fontWeight = FontWeight.Black, color = Ink, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                if (missing > 0) Chip("📌 ضيف الـ$missing", false) { val n = Ready.addAll(res); Lib.save(); Toast.makeText(ctx, "📌 اتضاف $n كتاب لـ«عايز أقراه»", Toast.LENGTH_SHORT).show() }
+                Text("🗑", Modifier.clickable { Explore.state().remove("r"); Explore.state().remove("ready"); Lib.save(); Lib.ver++ }.padding(8.dp), fontSize = 15.sp)
             }
-            OutlinedButton({ Explore.start(ctx, sel.map { GENRE_Q[it] ?: it }, q, true) }, Modifier.fillMaxWidth().height(48.dp), enabled = !Explore.busy && ok, shape = RoundedCornerShape(16.dp)) {
-                Text(if (Explore.busy) "⏳ بجيب كمان…" else "➕ هات كتب تانية", fontWeight = FontWeight.Bold, color = Green) }
+            Surface(shape = RoundedCornerShape(16.dp), color = Card) { Column {
+                res.forEachIndexed { i, r ->
+                    val t = r.optString("t")
+                    val mine = Lib.books.any { it.optString("t").trim() == t.trim() }
+                    if (i > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(Sand))
+                    Column(Modifier.clickable { open = if (open == t) null else t }.padding(horizontal = 12.dp, vertical = 8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(t, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(listOf(r.optString("a"), if (r.optInt("pg") > 0) "${r.optInt("pg")} ص" else "").filter { it.isNotBlank() }.joinToString(" • "), color = Muted, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                            Text(if (mine) "✅" else "📌", Modifier.clip(CircleShape).clickable(enabled = !mine) { Lib.addLocal(t, r.optString("a")) {}; Lib.ver++; Toast.makeText(ctx, "📌 اتضاف لـ«عايز أقراه»", Toast.LENGTH_SHORT).show() }.padding(8.dp), fontSize = 16.sp)
+                            Text("⬇️", Modifier.clip(CircleShape).clickable { onSearch(t) }.padding(8.dp), fontSize = 16.sp)
+                        }
+                        if (open == t && r.optString("why").isNotEmpty()) Text(r.optString("why"), color = Ink, fontSize = 12.sp, lineHeight = 19.sp, modifier = Modifier.padding(top = 4.dp))
+                    }
+                }
+            } }
+            if (ok && st.optString("ready").isEmpty()) Text(if (Explore.busy) "⏳ بجيب كمان…" else "➕ هات كتب تانية", Modifier.align(Alignment.CenterHorizontally).clickable(enabled = !Explore.busy) { go(true) }.padding(8.dp), color = Green, fontWeight = FontWeight.Bold, fontSize = 13.sp)
         }
     }
 }

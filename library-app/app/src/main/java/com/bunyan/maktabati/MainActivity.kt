@@ -525,7 +525,6 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 Action("💬", "رفيق القراية", Modifier.weight(1f)) { onMore("buddy") }
             }
         }
-        item(span = { GridItemSpan(maxLineSpan) }) { Text("🧭 استكشف بالتصنيف", fontWeight = FontWeight.Black, fontSize = 17.sp, color = Ink) }
         item(span = { GridItemSpan(maxLineSpan) }) { ExploreBody { q -> onSearchQ(q) } }
         }
         if (tab == "me") {
