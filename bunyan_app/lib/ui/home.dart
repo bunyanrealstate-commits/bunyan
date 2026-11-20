@@ -4,6 +4,7 @@ import '../core/store.dart';
 import '../core/engine.dart';
 import '../core/js.dart';
 import 'theme.dart';
+import 'skins.dart';
 import 'shell.dart';
 import 'units.dart';
 import 'dialogs.dart';
@@ -48,9 +49,9 @@ class HomePage extends StatelessWidget {
     final w = Ws.I.resolve(); final g = objs(Store.I.S['groups']).where((x) => x['id'] == w).firstOrNull;
     final an = e.annW();
     var lp = 0.0, lf = 0.0; for (final u in e.SU()) { final o = e.occ(u); lp += o['lossPast'] as double; lf += o['lossFut'] as double; }
-    return ListView(padding: const EdgeInsets.fromLTRB(10, 10, 14, 90), children: [
-      const HeroScene(),
-      const SizedBox(height: 12),
+    final rest = <Widget>[
+      // 🎨 تجربة الأشكال: زرار سريع في أول الداشبورد
+      Align(alignment: AlignmentDirectional.centerStart, child: TextButton.icon(onPressed: () => skinPicker(context), icon: const Icon(Icons.palette_outlined, size: 18), label: Text('🎨 الشكل: ${Skin.all.firstWhere((x) => x[0] == Skin.id)[1]} — غيّره'))),
       NtBar(e),
       // ───── 💰 فلوسك ─────
       SecHead(Tr.t('💰 فلوسك'), sub: Tr.t('النهارده')),
@@ -119,6 +120,19 @@ class HomePage extends StatelessWidget {
       const SizedBox(height: 10),
       Text(Store.I.syncMsg.isEmpty ? '' : 'المزامنة: ${Store.I.syncMsg}', style: const TextStyle(color: kMuted, fontSize: 12), textAlign: TextAlign.center),
       if (lst(Store.I.S['units']).isEmpty) Padding(padding: EdgeInsets.all(30), child: Text(Tr.t('لسه مفيش بيانات — اسحب لتحت علشان تتزامن'), textAlign: TextAlign.center)),
+    ];
+    // 🎨 أول الشاشة حسب الشكل المختار
+    if (Skin.id == 'ps') {
+      return ListView(padding: const EdgeInsets.only(bottom: 90), children: [
+        Padding(padding: const EdgeInsets.fromLTRB(12, 8, 12, 14), child: SkinHero(e)),
+        Container(padding: const EdgeInsets.fromLTRB(10, 14, 14, 0), decoration: const BoxDecoration(color: kBg, borderRadius: BorderRadius.vertical(top: Radius.circular(26))), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: rest)),
+      ]);
+    }
+    return ListView(padding: const EdgeInsets.fromLTRB(10, 10, 14, 90), children: [
+      Skin.classic ? const HeroScene() : SkinHero(e),
+      const SizedBox(height: 12),
+      ...rest,
+
     ]);
   }
 

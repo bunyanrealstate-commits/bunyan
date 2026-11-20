@@ -14,6 +14,7 @@ import 'dialogs.dart';
 import '../core/updater.dart';
 import 'cheques.dart';
 import 'lock.dart';
+import 'skins.dart';
 import 'sim.dart';
 import 'contract.dart';
 import 'ai.dart';
@@ -38,6 +39,7 @@ class MorePage extends StatelessWidget {
       )),
       if (kHakim) Card(color: const Color(0xFFE8F6EE), child: ListTile(leading: const Text('🤝', style: TextStyle(fontSize: 18)), title: const Text('نسخة حكيم', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('الأرقام بتيجي لوحدها من برنامج أسامه — مجموعتكم بس')))
       else if (st.linked) Card(child: ListTile(leading: const Text('🤝', style: TextStyle(fontSize: 18)), title: const Text('نسخة حكيم (بنيان الجديد)'), subtitle: const Text('ابعتله التطبيق وكود الربط مرة واحدة'), trailing: const Icon(Icons.chevron_left), onTap: () => _hakim(context))),
+      Card(color: const Color(0xFFE6F4F1), child: ListTile(leading: const Text('🎨', style: TextStyle(fontSize: 18)), title: const Text('شكل البرنامج', style: TextStyle(fontWeight: FontWeight.w800)), subtitle: Text('دلوقتي: ${Skin.all.firstWhere((x) => x[0] == Skin.id)[1]} — جرّب الأشكال كلها'), trailing: const Icon(Icons.chevron_left), onTap: () => skinPicker(context))),
       Card(child: ListTile(leading: const Text('🤖', style: TextStyle(fontSize: 18)), title: const Text('نموذج بنيان (الذكاء الاصطناعي)'), subtitle: const Text('بيجاوب، يكتب واتساب، ينصح، وينفّذ بعد موافقتك'), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AiPage())))),
       Card(child: ListTile(leading: const Text('📒', style: TextStyle(fontSize: 18)), title: Text(Tr.t('الحسابات')), subtitle: Text(Tr.t('الرصيد، التأمينات، قفل الشهور، الدفتر')), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AccountsPage())))),
       Card(child: ListTile(leading: const Text('📑', style: TextStyle(fontSize: 18)), title: Text(Tr.t('الشيكات اللي معايا')), trailing: const Icon(Icons.chevron_left), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChequesPage())))),

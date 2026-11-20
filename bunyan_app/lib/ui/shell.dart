@@ -16,6 +16,7 @@ import 'units.dart';
 import 'link.dart';
 import 'more.dart';
 import 'ai.dart';
+import 'skins.dart';
 import 'expenses.dart';
 import '../core/native.dart';
 import '../core/updater.dart';
@@ -84,14 +85,17 @@ class _ShellState extends State<Shell> {
       textDirection: Tr.dir,
       // 📖 كارت الحديث الأخضر بيطلع فوق كل حاجة (زي القديم)
       child: Stack(children: [Scaffold(
+        backgroundColor: Skin.dark && tab == 0 ? Skin.bg : (Skin.classic ? null : (tab == 0 ? Skin.bg : kBg)),
+        bottomNavigationBar: Skin.classic ? null : SkinNav(tab, (i) => setState(() => tab = i)),
         // 🤖 نموذج بنيان: زرار عائم في كل الصفحات
-        floatingActionButton: kHakim ? null : FloatingActionButton.small(heroTag: 'ai', tooltip: 'نموذج بنيان', backgroundColor: kNavy, foregroundColor: Colors.white, onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AiPage())), child: const Text('🤖', style: TextStyle(fontSize: 18))),
+        floatingActionButton: kHakim || Skin.id == 'ps' ? null : FloatingActionButton.small(heroTag: 'ai', tooltip: 'نموذج بنيان', backgroundColor: kNavy, foregroundColor: Colors.white, onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AiPage())), child: const Text('🤖', style: TextStyle(fontSize: 18))),
         appBar: AppBar(
+          backgroundColor: Skin.bar, surfaceTintColor: Skin.bar,
           toolbarHeight: 62,
           titleSpacing: 10,
           // الهيدر زي القديم: اللوجو • العين • المجموعة • الساعة • الجرس • المزامنة
           title: Row(children: [
-            Column(mainAxisSize: MainAxisSize.min, children: [SvgPicture.asset('assets/logo.svg', height: 21), kHakim ? Container(margin: const EdgeInsets.only(top: 2), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1), decoration: BoxDecoration(color: const Color(0xFF2A9D5C), borderRadius: BorderRadius.circular(99)), child: const Text('حكيم', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: Colors.white, height: 1.3))) : const Text('Furnished', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF1D4B66), letterSpacing: 1.4, height: 1.2))]),
+            Column(mainAxisSize: MainAxisSize.min, children: [(Skin.id == 'ps' || Skin.id == 'bank') ? Text('بنيان', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 21, color: Skin.id == 'ps' ? const Color(0xFF5EEAD4) : Colors.white)) : SvgPicture.asset('assets/logo.svg', height: 21), kHakim ? Container(margin: const EdgeInsets.only(top: 2), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1), decoration: BoxDecoration(color: const Color(0xFF2A9D5C), borderRadius: BorderRadius.circular(99)), child: const Text('حكيم', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: Colors.white, height: 1.3))) : const Text('Furnished', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF1D4B66), letterSpacing: 1.4, height: 1.2))]),
             EyeBtn(key: ValueKey('eye${Priv.on}')),
             const SizedBox(width: 8),
             const SizedBox(width: 118, child: GroupPill()),
@@ -105,7 +109,7 @@ class _ShellState extends State<Shell> {
             )),
           ]),
           // التبويبات: كبسولات — المختار كحلي وكلامه أبيض
-          bottom: PreferredSize(preferredSize: const Size.fromHeight(50), child: Container(
+          bottom: !Skin.classic ? null : PreferredSize(preferredSize: const Size.fromHeight(50), child: Container(
             height: 50, decoration: const BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: kBd))),
             child: SingleChildScrollView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.fromLTRB(8, 6, 8, 8), child: Row(children: [
               for (final i in const [0, 1, 2, 3, 4, 6, 5]) Padding(padding: const EdgeInsetsDirectional.only(end: 6), child: InkWell(
@@ -128,7 +132,7 @@ class _ShellState extends State<Shell> {
           final page = [const HomePage(), const UnitsPage(), const AccountsPage(inTab: true), const ExpensesPage(), const GroupsPage(inTab: true), const MorePage(), const ContractPage(inTab: true)][tab];
           return Column(children: [
             const _UpdBar(),
-            Expanded(child: KeyedSubtree(key: ValueKey('$tab|$w|${Tr.lang}|${Priv.on}'), child: page)),
+            Expanded(child: KeyedSubtree(key: ValueKey('$tab|$w|${Tr.lang}|${Priv.on}|${Skin.id}'), child: page)),
           ]);
         })),
       ), const HadithOverlay()]),
