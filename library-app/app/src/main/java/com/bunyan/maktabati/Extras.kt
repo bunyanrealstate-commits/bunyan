@@ -165,7 +165,7 @@ fun AiSheet(kind: String, b: JSONObject, doc: Doc, cur: Int, onGo: (Int) -> Unit
                     if (l.isEmpty()) Text("⚠️ مقدرتش أقرا الصفحة دي دلوقتي", color = Muted)
                     l.forEach { s ->
                         val done = saved.contains(s)
-                        Surface(onClick = { if (!done) { Lib.addQuote(b, s, cur); saved.add(s) } }, shape = RoundedCornerShape(14.dp), color = if (done) Color(0xFFE8F3EE) else Card) {
+                        Surface(onClick = { if (!done) { Lib.addQuote(b, s, cur); saved.add(s) } }, shape = RoundedCornerShape(14.dp), color = if (done) soft(0xFFE8F3EE) else Card) {
                             Column(Modifier.padding(12.dp)) {
                                 Text((if (done) "✅ " else "💾 ") + "«$s»", color = Ink, lineHeight = 24.sp)
                                 if (done) Chip("📸 شاركه صورة", false) { Boost.shareQuote(ctx, s, b) }
@@ -207,13 +207,13 @@ fun RecapSheet(b: JSONObject, from: Int, to: Int, onDismiss: () -> Unit) {
             fail -> Text("⚠️ مقدرتش أعمل الملخص دلوقتي", color = Muted)
             sum == null -> Busy("⏳ بجهّزلك ملخص صغير…")
             else -> {
-                Surface(shape = RoundedCornerShape(14.dp), color = Color(0xFFFFF4E0)) { Text(sum!!, Modifier.padding(12.dp), fontWeight = FontWeight.Bold, lineHeight = 26.sp, color = Ink) }
+                Surface(shape = RoundedCornerShape(14.dp), color = soft(0xFFFFF4E0)) { Text(sum!!, Modifier.padding(12.dp), fontWeight = FontWeight.Bold, lineHeight = 26.sp, color = Ink) }
                 if (qs.isNotEmpty()) {
                     if (qi < qs.size) {
                         val x = qs[qi]; val o = x.optJSONArray("o")!!; val ans = x.optInt("a")
                         Text("❓ سؤال ${qi + 1} من ${qs.size}: " + x.optString("q"), fontWeight = FontWeight.Bold, color = Ink, lineHeight = 24.sp)
                         for (i in 0 until o.length()) {
-                            val col = when { picked < 0 -> Card; i == ans -> Color(0xFFE9F7EF); i == picked -> Color(0xFFFDECEC); else -> Card }
+                            val col = when { picked < 0 -> Card; i == ans -> soft(0xFFE9F7EF); i == picked -> soft(0xFFFDECEC); else -> Card }
                             Surface(onClick = { if (picked < 0) { picked = i; if (i == ans) ok++ } }, shape = RoundedCornerShape(12.dp), color = col, modifier = Modifier.fillMaxWidth()) { Text(o.getString(i), Modifier.padding(12.dp), fontWeight = FontWeight.Bold, color = Ink) }
                         }
                         if (picked >= 0) Button({ picked = -1; qi++ }, Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Green)) { Text(if (qi + 1 < qs.size) "السؤال اللي بعده" else "النتيجة") }
@@ -262,14 +262,14 @@ fun ReviewCard() {
     val x = due[0]
     var picked by remember(x.k) { mutableIntStateOf(-1) }
     val ctx = LocalContext.current
-    Surface(shape = RoundedCornerShape(20.dp), color = Color(0xFFFFF7E8), modifier = Modifier.border(1.dp, Color(0xFFF0D9B5), RoundedCornerShape(20.dp))) {
+    Surface(shape = RoundedCornerShape(20.dp), color = soft(0xFFFFF7E8), modifier = Modifier.border(1.dp, soft(0xFFF0D9B5), RoundedCornerShape(20.dp))) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row { Text("🧠 افتكر اللي قريته", fontWeight = FontWeight.Bold, color = Ink, modifier = Modifier.weight(1f)); Text("${due.size} للمراجعة", color = Muted, fontSize = 11.sp) }
             if (x.kind == "s" && x.q != null) {
                 Text(x.t, fontWeight = FontWeight.Bold, color = Ink, lineHeight = 24.sp)
                 val o = x.q.optJSONArray("o")!!; val ans = x.q.optInt("a")
                 for (i in 0 until o.length()) {
-                    val col = when { picked < 0 -> Card; i == ans -> Color(0xFFE9F7EF); i == picked -> Color(0xFFFDECEC); else -> Card }
+                    val col = when { picked < 0 -> Card; i == ans -> soft(0xFFE9F7EF); i == picked -> soft(0xFFFDECEC); else -> Card }
                     Surface(onClick = { if (picked < 0) { picked = i; Lib.bg.launch { kotlinx.coroutines.delay(if (i == ans) 700 else 1600); revMark(x, i == ans) } } }, shape = RoundedCornerShape(12.dp), color = col, modifier = Modifier.fillMaxWidth()) { Text(o.getString(i), Modifier.padding(10.dp), color = Ink) }
                 }
             } else {
@@ -332,7 +332,7 @@ fun StatsAndBadges() {
                 Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                     row.forEach { bd -> val on = got.has(bd.k)
                         Column(Modifier.weight(1f).alpha(if (on) 1f else 0.3f), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Box(Modifier.size(44.dp).clip(CircleShape).background(if (on) Color(0xFFFFE7C2) else Sand), Alignment.Center) { Text(bd.ic, fontSize = 22.sp) }
+                            Box(Modifier.size(44.dp).clip(CircleShape).background(if (on) soft(0xFFFFE7C2) else Sand), Alignment.Center) { Text(bd.ic, fontSize = 22.sp) }
                             Text(bd.t, fontSize = 9.sp, textAlign = TextAlign.Center, color = Muted, fontWeight = FontWeight.Bold, lineHeight = 12.sp)
                         }
                     }
@@ -364,7 +364,7 @@ fun WeeklyReport() {
         title = { Text("📊 تقرير الأسبوع", fontWeight = FontWeight.Black) },
         text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("$pg" to "صفحة", "$days/7" to "أيام قريت فيها").forEach { (n, l) -> Surface(shape = RoundedCornerShape(12.dp), color = Color(0xFFFFF4E0), modifier = Modifier.weight(1f)) { Column(Modifier.padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) { Text(n, fontWeight = FontWeight.Black, fontSize = 22.sp); Text(l, fontSize = 11.sp, color = Muted) } } }
+                listOf("$pg" to "صفحة", "$days/7" to "أيام قريت فيها").forEach { (n, l) -> Surface(shape = RoundedCornerShape(12.dp), color = soft(0xFFFFF4E0), modifier = Modifier.weight(1f)) { Column(Modifier.padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) { Text(n, fontWeight = FontWeight.Black, fontSize = 22.sp); Text(l, fontSize = 11.sp, color = Muted) } } }
             }
             Text(if (prev == 0) "بداية حلوة 👏" else if (pg >= prev) "📈 قريت أكتر من الأسبوع اللي فات ($prev صفحة) — عاش!" else "📉 الأسبوع اللي فات قريت $prev صفحة — يلا نعوّضها", fontWeight = FontWeight.Bold, lineHeight = 24.sp)
             bd?.let { Text("⭐ أحسن يوم: " + java.text.SimpleDateFormat("EEEE", java.util.Locale("ar")).format(it) + " ($bp صفحة)") }
@@ -430,10 +430,11 @@ fun SettingsSheet(onDismiss: () -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Lib.ver
     fun set(k: String, x: Any) { Lib.cfg.put(k, x); Lib.save(); Notify.schedule(ctx) }
     Sheet("🎯 هدفك والتذكيرات", onDismiss) {
-        Text("🎨 شكل التطبيق", fontWeight = FontWeight.Bold, color = Ink)
+        listOf(true to "🖼 شكل التطبيق", false to "🎨 أو لون بس").forEach { (sk, lbl) ->
+        Text(lbl, fontWeight = FontWeight.Bold, color = Ink)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Themes.all.forEach { t -> val on = Themes.id == t.id
-                Column(Modifier.clickable { Themes.set(t.id) }.width(78.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Themes.all.filter { it.skin == sk }.forEach { t -> val on = Themes.id == t.id
+                Column(Modifier.clickable { Themes.set(t.id) }.width(if (sk) 96.dp else 78.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(Modifier.size(58.dp).clip(RoundedCornerShape(16.dp)).background(Color(t.paper))
                         .border(if (on) 3.dp else 1.dp, if (on) Color(t.main) else Color(0x22000000), RoundedCornerShape(16.dp)), Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -442,9 +443,10 @@ fun SettingsSheet(onDismiss: () -> Unit) {
                             if (on) Text("✓", color = Color(t.main), fontWeight = FontWeight.Black, fontSize = 12.sp)
                         }
                     }
-                    Text(t.name, fontSize = 11.sp, color = Ink, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
+                    Text(t.name, fontSize = 11.sp, color = Ink, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal, maxLines = 2, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 4.dp))
                 }
             }
+        }
         }
         val uctx = LocalContext.current; val uscope = rememberCoroutineScope()
         OutlinedButton({ uscope.launch { Toast.makeText(uctx, Updater.check(uctx, true) ?: "", Toast.LENGTH_LONG).show() } }, Modifier.fillMaxWidth()) { Text("⬆️ شوف لو فيه تحديث للتطبيق (نسختك ${Updater.myVersion(uctx)})") }
@@ -495,10 +497,10 @@ fun ChallengeCard(onYear: () -> Unit) {
     val yr = yearKey(); val g = challengeGoal()
     val done = Lib.books.count { it.optString("sh") == "done" && it.optString("fd").startsWith(yr) }
     var pick by remember { mutableStateOf(false) }
-    Surface(onClick = { if (g == 0) pick = true else onYear() }, shape = RoundedCornerShape(20.dp), color = Color(0xFFF3ECFA)) {
+    Surface(onClick = { if (g == 0) pick = true else onYear() }, shape = RoundedCornerShape(20.dp), color = soft(0xFFF3ECFA)) {
         Column(Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("🎯 تحدي $yr", fontWeight = FontWeight.Black, color = Color(0xFF5B2C83), fontSize = 16.sp, modifier = Modifier.weight(1f))
+                Text("🎯 تحدي $yr", fontWeight = FontWeight.Black, color = deep(0xFF5B2C83), fontSize = 16.sp, modifier = Modifier.weight(1f))
                 if (g > 0) Text("✏️", Modifier.clickable { pick = true }.padding(4.dp))
             }
             if (g == 0) Text("حدد كام كتاب ناوي تخلّص السنة دي — زي تحدي Goodreads 📚", color = Ink, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
@@ -507,10 +509,10 @@ fun ChallengeCard(onYear: () -> Unit) {
                 val exp = g * c.get(Calendar.DAY_OF_YEAR).toFloat() / c.getActualMaximum(Calendar.DAY_OF_YEAR)
                 val diff = Math.round(done - exp)
                 Text("$done من $g كتب", fontWeight = FontWeight.Black, fontSize = 20.sp, color = Ink, modifier = Modifier.padding(top = 4.dp))
-                LinearProgressIndicator(progress = { (done.toFloat() / g).coerceIn(0f, 1f) }, Modifier.fillMaxWidth().padding(vertical = 6.dp).height(10.dp).clip(CircleShape), color = Color(0xFF7B3FA0), trackColor = Sand)
+                LinearProgressIndicator(progress = { (done.toFloat() / g).coerceIn(0f, 1f) }, Modifier.fillMaxWidth().padding(vertical = 6.dp).height(10.dp).clip(CircleShape), color = deep(0xFF7B3FA0), trackColor = Sand)
                 Text(when { done >= g -> "🏆 خلّصت التحدي! أي كتاب زيادة بونص"; diff > 0 -> "📈 متقدّم عن الجدول بـ $diff كتاب"; diff < 0 -> "⏳ متأخر ${-diff} كتاب عن الجدول — كتاب صغير يعوّضها"; else -> "✅ ماشي في الجدول بالظبط" },
                     fontSize = 13.sp, color = Muted, fontWeight = FontWeight.Bold)
-                Text("دوس تشوف «سنتي في القراية» 📖", fontSize = 12.sp, color = Color(0xFF7B3FA0), modifier = Modifier.padding(top = 4.dp))
+                Text("دوس تشوف «سنتي في القراية» 📖", fontSize = 12.sp, color = deep(0xFF7B3FA0), modifier = Modifier.padding(top = 4.dp))
             }
         }
     }
@@ -535,7 +537,7 @@ fun YearSheet(onDismiss: () -> Unit, onOpen: (JSONObject) -> Unit) {
     Sheet("📖 سنتي في القراية $yr", onDismiss) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf("${bs.size}" to "كتاب", "$pages" to "صفحة", "$days" to "يوم قريت").forEach { (n, l) ->
-                Surface(shape = RoundedCornerShape(14.dp), color = Color(0xFFF3ECFA), modifier = Modifier.weight(1f)) {
+                Surface(shape = RoundedCornerShape(14.dp), color = soft(0xFFF3ECFA), modifier = Modifier.weight(1f)) {
                     Column(Modifier.padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) { Text(n, fontWeight = FontWeight.Black, fontSize = 22.sp, color = Ink); Text(l, fontSize = 11.sp, color = Muted) } } }
         }
         if (bs.isEmpty()) Text("لسه مخلّصتش كتاب السنة دي — أول كتاب هيظهر هنا 🌱", color = Muted)
@@ -643,7 +645,7 @@ fun StatsBody() {
         Row(Modifier.fillMaxWidth().height(80.dp), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             per.forEachIndexed { i, v -> Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                 if (v > 0) Text("$v", fontSize = 10.sp, color = Ink)
-                Box(Modifier.fillMaxWidth().height((60f * maxOf(0.05f, v.toFloat() / pmx)).dp).clip(RoundedCornerShape(3.dp)).background(if (v > 0) Color(0xFF7B3FA0) else Sand))
+                Box(Modifier.fillMaxWidth().height((60f * maxOf(0.05f, v.toFloat() / pmx)).dp).clip(RoundedCornerShape(3.dp)).background(if (v > 0) deep(0xFF7B3FA0) else Sand))
                 Text("${i + 1}", fontSize = 9.sp, color = Muted)
             } }
         }

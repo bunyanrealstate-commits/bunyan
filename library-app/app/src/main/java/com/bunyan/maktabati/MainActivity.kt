@@ -63,9 +63,17 @@ import org.json.JSONObject
 import java.io.File
 
 /* ───── 🎨 أشكال التطبيق ───── */
-class Th(val id: String, val name: String, val main: Long, val ink: Long, val muted: Long, val paper: Long, val card: Long, val sand: Long)
+class Th(val id: String, val name: String, val main: Long, val ink: Long, val muted: Long, val paper: Long, val card: Long, val sand: Long,
+         val hero: String = "kindle", val dark: Boolean = false, val look: String? = null, val skin: Boolean = false)
 object Themes {
     val all = listOf(
+        // 🖼 أشكال كاملة للتطبيق
+        Th("kindle", "📖 هادي زي Kindle", 0xFF2E6B52, 0xFF1D2733, 0xFF8A7A62, 0xFFFBF8F2, 0xFFFFFFFF, 0xFFEEE4D3, "kindle", skin = true),
+        Th("audible", "🎧 داكن فخم", 0xFFE9B872, 0xFFECEAE4, 0xFF9A9890, 0xFF12151C, 0xFF1E232E, 0xFF2A303C, "audible", dark = true, skin = true),
+        Th("wood", "🪵 رف خشب", 0xFF7A4E2A, 0xFF3B2A1A, 0xFF8A6A4A, 0xFFF3E6D3, 0xFFFFF8EE, 0xFFE9D6BB, "wood", look = "shelf", skin = true),
+        Th("apple", "🍎 زي Apple Books", 0xFFD0702B, 0xFF111111, 0xFF888888, 0xFFFFFFFF, 0xFFF2F2F4, 0xFFEAEAEC, "apple", look = "cards", skin = true),
+        Th("goodreads", "⭐ زي Goodreads", 0xFF409D69, 0xFF382110, 0xFF767676, 0xFFF4F1EA, 0xFFFFFFFF, 0xFFE8E2D4, "gr", look = "list", skin = true),
+        // 🎨 ألوان
         Th("green", "🌿 أخضر", 0xFF1F7A55, 0xFF1D2733, 0xFF7A6A55, 0xFFFBF6EC, 0xFFFFFFFF, 0xFFF1EADB),
         Th("blue", "🌊 أزرق بحري", 0xFF1E5A8A, 0xFF16222E, 0xFF5C6B7A, 0xFFF3F7FB, 0xFFFFFFFF, 0xFFE3ECF5),
         Th("coffee", "☕ قهوة", 0xFF7A4B2A, 0xFF2A1E16, 0xFF7A6450, 0xFFF8F1E7, 0xFFFFFCF7, 0xFFEDE0CF),
@@ -76,7 +84,7 @@ object Themes {
     )
     var id by mutableStateOf("green")
     val cur: Th get() = all.firstOrNull { it.id == id } ?: all[0]
-    fun set(x: String) { id = x; Lib.cfg.put("theme", x); Lib.save(); Lib.ver++ }
+    fun set(x: String) { id = x; Lib.cfg.put("theme", x); cur.look?.let { Lib.cfg.put("look", it) }; Lib.save(); Lib.ver++ }
 }
 val Green: Color get() = Color(Themes.cur.main)
 val Ink: Color get() = Color(Themes.cur.ink)
@@ -85,6 +93,9 @@ val Paper: Color get() = Color(Themes.cur.paper)
 val Card: Color get() = Color(Themes.cur.card)
 val Sand: Color get() = Color(Themes.cur.sand)
 val Flame = Color(0xFFF0A04B)
+/** خلفيات الكروت الفاتحة تتظبط لوحدها في الشكل الغامق */
+fun soft(c: Long): Color = if (Themes.cur.dark) androidx.compose.ui.graphics.lerp(Color(c), Color(Themes.cur.card), 0.86f) else Color(c)
+fun deep(c: Long): Color = if (Themes.cur.dark) androidx.compose.ui.graphics.lerp(Color(c), Color.White, 0.5f) else Color(c)
 
 class MainActivity : androidx.fragment.app.FragmentActivity() {
     private val incoming = mutableStateOf<Intent?>(null)
@@ -102,7 +113,10 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         incoming.value = intent
         setContent {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                MaterialTheme(colorScheme = lightColorScheme(primary = Green, background = Paper, surface = Card)) {
+                MaterialTheme(colorScheme = if (Themes.cur.dark) darkColorScheme(primary = Green, onPrimary = Paper, background = Paper, surface = Card, onSurface = Ink, onBackground = Ink, surfaceVariant = Sand, onSurfaceVariant = Muted, secondaryContainer = Sand)
+                    else lightColorScheme(primary = Green, background = Paper, surface = Card, onSurface = Ink)) {
+                    val sv = androidx.compose.ui.platform.LocalView.current
+                    SideEffect { try { androidx.core.view.WindowCompat.getInsetsController(window, sv).isAppearanceLightStatusBars = !Themes.cur.dark } catch (_: Exception) {} }
                     App(incoming)
                 }
             }
@@ -294,7 +308,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
     val cur = Lib.current()
     val today = Lib.todayPages(); val goal = Lib.goal; val st = Lib.streak()
     var sort by remember { mutableStateOf(Lib.cfg.optString("sort", "new")) }
-    var style by remember { mutableStateOf(Lib.cfg.optString("look", "grid")) }
+    var style by remember(Themes.id) { mutableStateOf(Lib.cfg.optString("look", "grid")) }
     val list = Lib.books.filter { it.optString("sh", "want") == shelf && (q.isBlank() || it.optString("t").contains(q) || it.optString("a").contains(q)) }.let { l ->
         when (sort) {
             "name" -> l.sortedBy { it.optString("t") }
@@ -312,7 +326,8 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
         horizontalArrangement = Arrangement.spacedBy(if (look == "shelf") 0.dp else 10.dp), verticalArrangement = Arrangement.spacedBy(if (look == "shelf") 4.dp else 12.dp)) {
         item(span = { GridItemSpan(maxLineSpan) }) {
             Row(Modifier.statusBarsPadding().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(when (tab) { "books" -> "📚 كتبي"; "find" -> "🧭 اكتشف"; "me" -> "🏅 إنجازاتي"; else -> "📚 مكتبتي" }, fontSize = 26.sp, fontWeight = FontWeight.Black, color = Ink, modifier = Modifier.weight(1f))
+                Text(when (tab) { "books" -> "📚 كتبي"; "find" -> "🧭 اكتشف"; "me" -> "🏅 إنجازاتي"; else -> if (Themes.cur.hero == "apple") "النهارده" else "📚 مكتبتي" }, fontSize = 26.sp, fontWeight = FontWeight.Black,
+                    color = if (Themes.cur.hero == "audible" && tab == "home") Green else Ink, fontFamily = if (Themes.cur.hero == "gr") androidx.compose.ui.text.font.FontFamily.Serif else null, modifier = Modifier.weight(1f))
                 if (Lib.syncing) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                 else if (Lib.link != null) Text("🔄", fontSize = 20.sp, modifier = Modifier.clickable { onSync() }.padding(8.dp))
                 Text("⚙️", fontSize = 20.sp, modifier = Modifier.clickable { onSettings() }.padding(8.dp))
@@ -320,12 +335,12 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
         }
         if (tab == "home") {
         if (Lib.link != null && Lib.msg.isNotEmpty() && !Lib.msg.startsWith("تمام")) item(span = { GridItemSpan(maxLineSpan) }) {
-            Surface(onClick = onSync, shape = RoundedCornerShape(14.dp), color = Color(0xFFFDECEC)) {
+            Surface(onClick = onSync, shape = RoundedCornerShape(14.dp), color = soft(0xFFFDECEC)) {
                 Text((if (Lib.solo()) "⚠️ النسخة الاحتياطية: " else "⚠️ المزامنة مع بنيان: ") + Lib.msg + " — دوس هنا تجرب تاني", Modifier.padding(12.dp), color = Color(0xFFB3261E), fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
         }
         if (Lib.link == null) item(span = { GridItemSpan(maxLineSpan) }) {
-            Surface(onClick = onLink, shape = RoundedCornerShape(18.dp), color = Color(0xFFE8F3EE)) {
+            Surface(onClick = onLink, shape = RoundedCornerShape(18.dp), color = soft(0xFFE8F3EE)) {
                 Column(Modifier.padding(14.dp)) {
                     Text("🔗 كتبك لسه منزلتش — التطبيق مش مربوط ببنيان", fontWeight = FontWeight.Black, color = Green, fontSize = 16.sp)
                     Text("1) دوس الزرار ده هيفتحلك بنيان\n2) في بنيان ادخل «مكتبتي» ودوس «📱 افتح في تطبيق مكتبتي»\n3) هيرجعك هنا وكتبك تنزل لوحدها", fontSize = 14.sp, color = Ink, lineHeight = 24.sp, modifier = Modifier.padding(vertical = 8.dp))
@@ -340,7 +355,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
         // ⏱ رجوع سهل لو بقالك فترة مش بتقرا
         if (cur != null && today == 0 && st == 0) item(span = { GridItemSpan(maxLineSpan) }) {
             val idle = Lib.idleDays()
-            Surface(shape = RoundedCornerShape(22.dp), color = Color(0xFFE8F3EE)) {
+            Surface(shape = RoundedCornerShape(22.dp), color = soft(0xFFE8F3EE)) {
                 Column(Modifier.padding(16.dp)) {
                     Text(if (idle >= 999) "👋 أول خطوة أسهل مما تتخيل" else if (idle >= 2) "👋 وحشتنا… بقالك $idle يوم" else "👋 لسه مقرتش النهارده", fontWeight = FontWeight.Black, fontSize = 18.sp, color = Green)
                     Text("مش مطلوب منك كتاب ولا فصل — دقيقتين بس، ولو عايز تقفل بعدها اقفل 😉\nأو اسمعه وانت سايق أو قبل ما تنام 🎧", fontSize = 14.sp, color = Ink, lineHeight = 23.sp, modifier = Modifier.padding(vertical = 8.dp))
@@ -351,10 +366,13 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                 }
             }
         }
-        // الكتاب الحالي
-        if (cur != null) item(span = { GridItemSpan(maxLineSpan) }) {
+        // الكتاب الحالي — حسب شكل التطبيق
+        if (cur != null && Themes.cur.hero != "kindle") item(span = { GridItemSpan(maxLineSpan) }) {
+            HeroAlt(Themes.cur.hero, cur, dl[cur.optString("id")], today, goal, onOpen = onOpen, onListen = { listenNow(hctx, cur, onFetch) }, onBooks = { tab = "books" })
+        }
+        if (cur != null && Themes.cur.hero == "kindle") item(span = { GridItemSpan(maxLineSpan) }) {
             val pg = cur.optInt("pg", 0); val c = cur.optInt("cur", 0)
-            Surface(shape = RoundedCornerShape(22.dp), color = Color(0xFFFFF4E0), modifier = Modifier.border(1.dp, Color(0xFFF0D9B5), RoundedCornerShape(22.dp))) {
+            Surface(shape = RoundedCornerShape(22.dp), color = soft(0xFFFFF4E0), modifier = Modifier.border(1.dp, soft(0xFFF0D9B5), RoundedCornerShape(22.dp))) {
                 Column(Modifier.padding(16.dp)) {
                     Row {
                         Column(Modifier.weight(1f)) {
@@ -367,8 +385,8 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
                                 Text("صفحة $c من $pg • ${c * 100 / pg}%" + remain(cur, pg - c), fontSize = 12.sp, color = Muted, modifier = Modifier.padding(top = 4.dp))
                             }
                             val ep = Boost.epAt(cur, maxOf(1, c))
-                            if (ep != null) Text("📺 الحلقة ${ep.first + 1} من ${Boost.eps(cur).size}: «${ep.second.optString("n")}»", fontSize = 13.sp, color = Color(0xFF7B3FA0), fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp), maxLines = 2)
-                            else if (Lib.have(cur) && pg > 0) Text(if (epBusy.isNotEmpty()) epBusy else "📺 قسّمه حلقات قصيرة زي المسلسل", fontSize = 13.sp, color = Color(0xFF7B3FA0), fontWeight = FontWeight.Bold,
+                            if (ep != null) Text("📺 الحلقة ${ep.first + 1} من ${Boost.eps(cur).size}: «${ep.second.optString("n")}»", fontSize = 13.sp, color = deep(0xFF7B3FA0), fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp), maxLines = 2)
+                            else if (Lib.have(cur) && pg > 0) Text(if (epBusy.isNotEmpty()) epBusy else "📺 قسّمه حلقات قصيرة زي المسلسل", fontSize = 13.sp, color = deep(0xFF7B3FA0), fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(top = 6.dp).clickable { if (epBusy.isEmpty()) hscope.launch { epBusy = "⏳ بجهّز الحلقات…"; Boost.genEpisodes(cur) { epBusy = it }; epBusy = "" } })
                         }
                         Spacer(Modifier.width(12.dp))
@@ -521,7 +539,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
     NavigationBar(containerColor = Card, tonalElevation = 0.dp) {
         listOf(Triple("home", "🏠", "الرئيسية"), Triple("books", "📚", "كتبي"), Triple("find", "🧭", "اكتشف"), Triple("me", "🏅", "إنجازاتي")).forEach { (k, ic, t) ->
             NavigationBarItem(selected = tab == k, onClick = { tab = k }, icon = { Text(ic, fontSize = 22.sp) }, label = { Text(t, fontWeight = FontWeight.Bold, fontSize = 12.sp) },
-                colors = NavigationBarItemDefaults.colors(indicatorColor = Color(0xFFE8F3EE), selectedTextColor = Green, unselectedTextColor = Muted))
+                colors = NavigationBarItemDefaults.colors(indicatorColor = soft(0xFFE8F3EE), selectedTextColor = Green, unselectedTextColor = Muted))
         }
     }
     }
@@ -563,7 +581,7 @@ fun HomeScreen(dl: Map<String, Float>, onOpen: (JSONObject) -> Unit, onFetch: (J
 
 @Composable
 fun Action(ic: String, t: String, m: Modifier, click: () -> Unit) {
-    Surface(onClick = click, shape = RoundedCornerShape(16.dp), color = Card, modifier = m.border(1.dp, Color(0xFFEADFCA), RoundedCornerShape(16.dp))) {
+    Surface(onClick = click, shape = RoundedCornerShape(16.dp), color = Card, modifier = m.border(1.dp, soft(0xFFEADFCA), RoundedCornerShape(16.dp))) {
         Column(Modifier.padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(ic, fontSize = 22.sp); Text(t, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Ink)
         }
@@ -796,4 +814,97 @@ fun askBio(ctx: android.content.Context, onOk: () -> Unit, onPin: () -> Unit) {
     })
     p.authenticate(androidx.biometric.BiometricPrompt.PromptInfo.Builder().setTitle("📚 مكتبتي").setSubtitle("حط صباعك")
         .setNegativeButtonText("🔢 الرقم السري").setAllowedAuthenticators(androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK).build())
+}
+
+
+/* ───── 🖼 الكتاب الحالي بأشكال التطبيق المختلفة ───── */
+@Composable
+fun HeroAlt(hero: String, cur: JSONObject, p: Float?, today: Int, goal: Int, onOpen: (JSONObject) -> Unit, onListen: () -> Unit, onBooks: () -> Unit) {
+    val pg = cur.optInt("pg", 0); val c = cur.optInt("cur", 0)
+    val prog = if (pg > 0) (c.toFloat() / pg).coerceIn(0f, 1f) else 0f
+    val openTxt = when { p != null -> "⬇️ ${(p * 100).toInt()}%"; !Lib.have(cur) -> "⬇️ نزّله"; c > 1 -> "📖 كمّل"; else -> "📖 اقرا" }
+    val listening = Speech.playing && Speech.bookId == cur.optString("id")
+    val ctx = LocalContext.current
+    when (hero) {
+        "audible" -> Surface(shape = RoundedCornerShape(24.dp), color = Card) {
+            Column(Modifier.fillMaxWidth().padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(Modifier.shadow(10.dp, RoundedCornerShape(8.dp))) { Cover(cur, Modifier.width(140.dp).height(200.dp)) }
+                Text(cur.optString("t"), fontWeight = FontWeight.Black, fontSize = 20.sp, color = Ink, textAlign = TextAlign.Center, maxLines = 2, modifier = Modifier.padding(top = 12.dp))
+                if (cur.optString("a").isNotEmpty()) Text(cur.optString("a"), color = Muted, fontSize = 13.sp)
+                if (pg > 0) Text("${(prog * 100).toInt()}% • فاضل ${pg - c} صفحة", color = Muted, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
+                if (pg > 0) LinearProgressIndicator(progress = { prog }, Modifier.fillMaxWidth(0.7f).padding(top = 8.dp).height(4.dp).clip(CircleShape), color = Green, trackColor = Sand)
+                Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Button({ onOpen(cur) }, Modifier.height(48.dp), shape = CircleShape, enabled = p == null, colors = ButtonDefaults.buttonColors(containerColor = Green)) { Text(openTxt, fontWeight = FontWeight.Bold, fontSize = 16.sp) }
+                    OutlinedButton({ if (listening) Speech.stop(ctx) else onListen() }, Modifier.height(48.dp), shape = CircleShape, border = androidx.compose.foundation.BorderStroke(1.5.dp, Green)) {
+                        Text(if (listening) "⏸ وقّف" else "🎧 اسمع", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Green) }
+                }
+            }
+        }
+        "wood" -> Column {
+            Surface(onClick = { onOpen(cur) }, shape = RoundedCornerShape(14.dp), color = Card) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("📖 بتقرا: ${cur.optString("t")}", Modifier.weight(1f), color = Ink, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(if (c > 1) "صفحة $c" else openTxt, color = Green, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                }
+            }
+            val shelfBooks = (listOf(cur) + Lib.books.filter { it.optString("sh") == "now" && it !== cur } + Lib.books.filter { it.optString("sh") == "want" }).distinctBy { it.optString("id") }.take(8)
+            shelfBooks.chunked(4).forEach { row ->
+                Row(Modifier.fillMaxWidth().padding(top = 14.dp, start = 8.dp, end = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
+                    row.forEach { b -> Box(Modifier.weight(1f).shadow(5.dp, RoundedCornerShape(3.dp)).clickable { onOpen(b) }) { Cover(b, Modifier.fillMaxWidth().aspectRatio(0.66f)) } }
+                    repeat(4 - row.size) { Spacer(Modifier.weight(1f)) }
+                }
+                Box(Modifier.fillMaxWidth().height(13.dp).background(Brush.verticalGradient(listOf(Color(0xFFB07A4A), Color(0xFF7A4E2A)))))
+                Box(Modifier.fillMaxWidth().height(6.dp).background(Brush.verticalGradient(listOf(Color(0x55000000), Color.Transparent))))
+            }
+            TextButton(onBooks, Modifier.align(Alignment.CenterHorizontally)) { Text("كل الرفوف ←", color = Green, fontWeight = FontWeight.Bold) }
+        }
+        "apple" -> Column {
+            Text("هدفك $goal صفحات • قريت $today", color = Muted, fontSize = 14.sp)
+            val list = (listOf(cur) + Lib.books.filter { it.optString("sh") == "now" && it !== cur } + Lib.books.filter { it.optString("sh") == "want" && Lib.have(it) }).distinctBy { it.optString("id") }.take(8)
+            Row(Modifier.horizontalScroll(rememberScrollState()).padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                list.forEach { b ->
+                    val bp = b.optInt("pg"); val bc = b.optInt("cur")
+                    Surface(onClick = { onOpen(b) }, shape = RoundedCornerShape(18.dp), color = Card, modifier = Modifier.width(160.dp)) {
+                        Column(Modifier.padding(12.dp)) {
+                            Box(Modifier.shadow(6.dp, RoundedCornerShape(6.dp))) { Cover(b, Modifier.fillMaxWidth().aspectRatio(0.68f)) }
+                            Text(b.optString("t"), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Ink, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.dp))
+                            Text(if (bp > 0 && bc > 1) "${bc * 100 / bp}%" else "جديد", color = Muted, fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
+            Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton({ if (listening) Speech.stop(ctx) else onListen() }, shape = CircleShape) { Text(if (listening) "⏸ وقّف الصوت" else "🎧 اسمع «${cur.optString("t").take(18)}»", color = Green, fontWeight = FontWeight.Bold, maxLines = 1) }
+            }
+        }
+        else -> Column(verticalArrangement = Arrangement.spacedBy(10.dp)) { // Goodreads
+            Surface(shape = RoundedCornerShape(6.dp), color = Card, modifier = Modifier.border(1.dp, Sand, RoundedCornerShape(6.dp))) {
+                Column(Modifier.fillMaxWidth().padding(12.dp)) {
+                    Text("بتقرا دلوقتي", color = Muted, fontSize = 12.sp)
+                    Row(Modifier.padding(top = 8.dp)) {
+                        Cover(cur, Modifier.width(64.dp).height(94.dp)); Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(cur.optString("t"), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Ink, maxLines = 2, fontFamily = androidx.compose.ui.text.font.FontFamily.Serif)
+                            if (cur.optString("a").isNotEmpty()) Text("لـ " + cur.optString("a"), color = Muted, fontSize = 12.sp)
+                            if (pg > 0) {
+                                LinearProgressIndicator(progress = { prog }, Modifier.fillMaxWidth().padding(vertical = 6.dp).height(6.dp), color = Green, trackColor = Sand)
+                                Text("صفحة $c من $pg (${(prog * 100).toInt()}%)", color = Muted, fontSize = 11.sp)
+                            }
+                            Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Button({ onOpen(cur) }, shape = RoundedCornerShape(4.dp), enabled = p == null, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp), colors = ButtonDefaults.buttonColors(containerColor = Green)) { Text(if (c > 1) "حدّث تقدّمك" else openTxt, fontSize = 13.sp) }
+                                OutlinedButton({ if (listening) Speech.stop(ctx) else onListen() }, shape = RoundedCornerShape(4.dp), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)) { Text(if (listening) "⏸" else "🎧 اسمع", fontSize = 13.sp, color = Green) }
+                            }
+                        }
+                    }
+                }
+            }
+            Surface(onClick = onBooks, shape = RoundedCornerShape(6.dp), color = Card, modifier = Modifier.border(1.dp, Sand, RoundedCornerShape(6.dp))) {
+                Row(Modifier.fillMaxWidth().padding(12.dp)) {
+                    Text("رفوفي", fontWeight = FontWeight.Bold, color = Ink, modifier = Modifier.weight(1f))
+                    val cnt = { k: String -> Lib.books.count { it.optString("sh", "want") == k } }
+                    Text("عايز ${cnt("want")} • بقرا ${cnt("now")} • خلصت ${cnt("done")}", color = Color(0xFF00635D), fontSize = 13.sp)
+                }
+            }
+        }
+    }
 }
