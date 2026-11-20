@@ -284,51 +284,62 @@ class _BankMovesState extends State<BankMoves> {
     return L;
   }
 
-  Widget _pill(String t, Color bg, Color fg) => Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(99)), child: Text(t, style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: fg)));
+  static const _mn = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+  static int _days(DateTime d) { final t = DateTime.now(); return DateTime(d.year, d.month, d.day).difference(DateTime(t.year, t.month, t.day)).inDays; }
+  static (String, Color) _bucket(int nd) => nd <= 0 ? ('النهارده', const Color(0xFFB91C1C)) : nd <= 7 ? ('الأسبوع ده', const Color(0xFFC2410C)) : nd <= 14 ? ('الأسبوع الجاي', const Color(0xFF15803D)) : nd <= 31 ? ('الشهر ده', const Color(0xFF1E3A8A)) : ('بعد كده', const Color(0xFF64748B));
 
   Widget _row(BuildContext context, Map<String, dynamic> x) {
-    final t = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-    final d = x['d'] as DateTime; final nd = DateTime(d.year, d.month, d.day).difference(t).inDays;
+    final d = x['d'] as DateTime; final nd = _days(d);
     final ty = x['_t']; final a = x['a'] as num?;
     final info = ty == 'cren' || ty == 'lend';
     final c = info ? (ty == 'cren' ? const Color(0xFF7C3AED) : const Color(0xFFD97706)) : (a! >= 0 ? const Color(0xFF15803D) : const Color(0xFFB91C1C));
-    final ic = ty == 'cren' ? Icons.autorenew_rounded : ty == 'lend' ? Icons.event_busy_rounded : (a! >= 0 ? Icons.south_west : Icons.north_east);
-    final (String dl, Color dbg, Color dfg) = nd < 0 ? ('فات ${-nd} يوم', const Color(0xFFFEE2E2), const Color(0xFFB91C1C)) : nd == 0 ? ('النهارده', const Color(0xFFFEE2E2), const Color(0xFFB91C1C)) : nd <= 7 ? ('باقي $nd يوم', const Color(0xFFFFEDD5), const Color(0xFFC2410C)) : ('باقي $nd يوم', const Color(0xFFDCFCE7), const Color(0xFF15803D));
+    final (_, bc) = _bucket(nd);
     return InkWell(
       onTap: () {
         if (ty == 'cren') { Shell.go(1); return; }
         if (ty == 'lend') { Navigator.of(context).push(MaterialPageRoute(builder: (_) => LeaseEdit(x['_u'] as Obj, null, renew: x['_L'] as Obj))); return; }
         recordEv(context, x);
       },
-      child: Padding(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), child: Row(children: [
-        Container(width: 34, height: 34, decoration: BoxDecoration(color: c.withOpacity(.12), borderRadius: BorderRadius.circular(10)), child: Icon(ic, size: 18, color: c)),
+      child: Padding(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9), child: Row(children: [
+        // التاريخ زي النتيجة: اليوم كبير والشهر تحته
+        Container(width: 44, padding: const EdgeInsets.symmetric(vertical: 4), decoration: BoxDecoration(color: bc.withOpacity(.09), borderRadius: BorderRadius.circular(10)), child: Column(children: [
+          Text('${d.day}', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: bc, height: 1.1)),
+          Text(_mn[d.month - 1], style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: bc)),
+        ])),
         const SizedBox(width: 10),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(Priv.on ? '••••' : str(x['l']), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-          const SizedBox(height: 3),
-          Row(children: [_pill(iso(d), const Color(0xFFEEF2FF), const Color(0xFF3730A3)), const SizedBox(width: 6), _pill(dl, dbg, dfg)]),
+          Text(Priv.on ? '••••' : str(x['l']).split(' – ').last, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: info ? c : kInk)),
+          Text(Priv.on ? '••' : '${str(x['l']).split(' – ').first}${nd > 0 ? ' • باقي $nd يوم' : nd == 0 ? ' • النهارده' : ' • فات ${-nd} يوم'}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, color: kMuted)),
         ])),
         const SizedBox(width: 6),
-        info ? Text(ty == 'cren' ? 'جدّد' : 'جدّد/خروج', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: c))
-            : Text('${a! >= 0 ? '+' : '-'}${_m(a.abs())}', style: TextStyle(fontWeight: FontWeight.w900, color: c)),
+        info ? Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: c.withOpacity(.1), borderRadius: BorderRadius.circular(99)), child: Text('جدّد', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: c)))
+            : Text('${a! >= 0 ? '+' : '-'}${_m(a.abs())}', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: c)),
       ])),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final L = _list(); const first = 4;
+    final L = _list(); const first = 5;
     final shown = all ? L : L.take(first).toList();
+    // تجميع بالأسابيع
+    final groups = <String, List<Map<String, dynamic>>>{}; final gc = <String, Color>{};
+    for (final x in shown) { final (g, c) = _bucket(_days(x['d'] as DateTime)); groups.putIfAbsent(g, () => []).add(x); gc[g] = c; }
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const Padding(padding: EdgeInsets.only(bottom: 6, right: 4, left: 4), child: Row(children: [Text('الحركات الجاية', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5)), Spacer(), Text('دوس على الحركة تسجّلها', style: TextStyle(color: kMuted, fontSize: 11.5))])),
-      Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: kBd)), child: Column(children: [
-        for (var i = 0; i < shown.length; i++) ...[if (i > 0) const Divider(height: 1, indent: 54), _row(context, shown[i])],
-        if (L.isEmpty) const Padding(padding: EdgeInsets.all(14), child: Text('مفيش حركات جاية', style: TextStyle(color: kMuted))),
-        if (L.length > first) InkWell(onTap: () => setState(() => all = !all), child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10), decoration: const BoxDecoration(border: Border(top: BorderSide(color: kBd))),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text(all ? 'اخفي الباقي' : 'شوف باقي الحركات (${L.length - first})', style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF1E3A8A))), Icon(all ? Icons.expand_less : Icons.expand_more, color: const Color(0xFF1E3A8A))]),
-        )),
-      ])),
+      const Padding(padding: EdgeInsets.only(bottom: 4, right: 4, left: 4), child: Row(children: [Text('الحركات الجاية', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)), Spacer(), Text('دوس على الحركة تسجّلها', style: TextStyle(color: kMuted, fontSize: 11.5))])),
+      if (L.isEmpty) Container(padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: kBd)), child: const Text('مفيش حركات جاية', style: TextStyle(color: kMuted))),
+      for (final g in groups.entries) ...[
+        Padding(padding: const EdgeInsets.fromLTRB(6, 8, 6, 5), child: Row(children: [
+          Container(width: 8, height: 8, decoration: BoxDecoration(color: gc[g.key], shape: BoxShape.circle)), const SizedBox(width: 6),
+          Text(g.key, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12.5, color: gc[g.key])),
+          const SizedBox(width: 6), Text('(${g.value.length})', style: const TextStyle(fontSize: 11.5, color: kMuted)),
+        ])),
+        Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: kBd)), child: Column(children: [
+          for (var i = 0; i < g.value.length; i++) ...[if (i > 0) const Divider(height: 1, indent: 64), _row(context, g.value[i])],
+        ])),
+      ],
+      if (L.length > first) Padding(padding: const EdgeInsets.only(top: 8), child: InkWell(borderRadius: BorderRadius.circular(12), onTap: () => setState(() => all = !all), child: Padding(padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text(all ? 'اخفي الباقي' : 'شوف باقي الحركات (${L.length - first})', style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF1E3A8A))), Icon(all ? Icons.expand_less : Icons.expand_more, color: const Color(0xFF1E3A8A))])))),
     ]);
   }
 }
