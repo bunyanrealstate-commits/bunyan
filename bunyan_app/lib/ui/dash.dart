@@ -326,7 +326,8 @@ class GroupPill extends StatelessWidget {
           Container(width: 8, height: 8, decoration: BoxDecoration(color: const Color(0xFFBFFFE9), shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.white.withOpacity(.7), blurRadius: 4)])),
           const SizedBox(width: 6),
           // الاسم بيصغر لوحده لو المكان ضيق (بدل ما يتقطع)
-          Expanded(child: FittedBox(fit: BoxFit.scaleDown, alignment: AlignmentDirectional.centerStart, child: Text(Priv.on ? '••••' : name, maxLines: 1, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14.5)))),
+          Flexible(child: Text(Priv.on ? '••••' : name, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14))),
+          const SizedBox(width: 4), const Icon(Icons.expand_more, color: Colors.white, size: 18),
         ]),
       ),
     );

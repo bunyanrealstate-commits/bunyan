@@ -96,7 +96,6 @@ class _ShellState extends State<Shell> {
             const SizedBox(width: 8),
             const Expanded(child: GroupPill()),
             const SizedBox(width: 8),
-            const HdClock(), const SizedBox(width: 8),
             const BellBtn(),
             SizedBox(width: 36, child: IconButton(
               padding: EdgeInsets.zero, tooltip: Tr.t('مزامنة'),
