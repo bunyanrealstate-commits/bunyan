@@ -10,6 +10,7 @@ import 'i18n.dart';
 import 'shell.dart';
 import 'theme.dart';
 import 'units.dart';
+import 'lease_edit.dart';
 
 /// 🎨 أشكال البرنامج — تجرّبهم كلهم وتختار اللي ترتاحله (المزيد ← شكل البرنامج)
 class Skin {
@@ -150,7 +151,6 @@ class SkinHero extends StatelessWidget {
           ]),
         ]);
       case 'bank':
-        final up = [...ev]..sort((a, b) => (a['d'] as DateTime).compareTo(b['d'] as DateTime));
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Container(padding: const EdgeInsets.fromLTRB(16, 16, 16, 44), decoration: BoxDecoration(color: const Color(0xFF1E3A8A), borderRadius: BorderRadius.circular(20)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('الرصيد المتاح • ${Priv.on ? '••' : str(gs.where((g) => g['id'] == cur).firstOrNull?['name'])}', style: const TextStyle(color: Color(0xFFBFDBFE), fontSize: 12.5)),
@@ -158,17 +158,7 @@ class SkinHero extends StatelessWidget {
             Text('ربح ${_m(rp['profit']!)} • تقدر تسحب ${_m(wd)}', style: const TextStyle(color: Color(0xFFBFDBFE), fontSize: 12)),
           ])),
           Transform.translate(offset: const Offset(0, -30), child: Container(margin: const EdgeInsets.symmetric(horizontal: 10), padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: kBd), boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 14, offset: Offset(0, 4))]), child: _quick(context, const Color(0xFF1E3A8A)))),
-          Transform.translate(offset: const Offset(0, -18), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            const Padding(padding: EdgeInsets.only(bottom: 6, right: 4, left: 4), child: Row(children: [Text('الحركات الجاية', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5)), Spacer(), Text('دوس على الحركة تسجّلها', style: TextStyle(color: kMuted, fontSize: 11.5))])),
-            Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: kBd)), child: Column(children: [
-              for (final x in up.take(6)) ListTile(dense: true, onTap: () => recordEv(context, x),
-                leading: Container(width: 34, height: 34, decoration: BoxDecoration(color: (x['a'] as num) >= 0 ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2), borderRadius: BorderRadius.circular(10)), child: Icon((x['a'] as num) >= 0 ? Icons.south_west : Icons.north_east, size: 18, color: (x['a'] as num) >= 0 ? const Color(0xFF15803D) : const Color(0xFFB91C1C))),
-                title: Text(Priv.on ? '••••' : str(x['l']), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                subtitle: Text(iso(x['d'] as DateTime), style: const TextStyle(fontSize: 11.5)),
-                trailing: Text('${(x['a'] as num) >= 0 ? '+' : '-'}${_m((x['a'] as num).abs())}', style: TextStyle(fontWeight: FontWeight.w900, color: (x['a'] as num) >= 0 ? const Color(0xFF15803D) : const Color(0xFFB91C1C)))),
-              if (up.isEmpty) const Padding(padding: EdgeInsets.all(14), child: Text('مفيش حركات جاية', style: TextStyle(color: kMuted))),
-            ])),
-          ])),
+          Transform.translate(offset: const Offset(0, -18), child: BankMoves(e)),
         ]);
       case 'bnb':
         final us = e.SU();
@@ -263,4 +253,82 @@ class _MoreDetailsState extends State<MoreDetails> {
         )),
         if (open) ...[const SizedBox(height: 6), ...widget.children],
       ]);
+}
+
+
+/// 🏦 الحركات الجاية: فلوس داخلة/خارجة + تجديد عقد شركة قرّب + عقد عميل بيخلص — بباقي كام يوم
+class BankMoves extends StatefulWidget {
+  final Engine e;
+  const BankMoves(this.e, {super.key});
+  @override
+  State<BankMoves> createState() => _BankMovesState();
+}
+
+class _BankMovesState extends State<BankMoves> {
+  static bool all = false;
+  List<Map<String, dynamic>> _list() {
+    final t = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final L = <Map<String, dynamic>>[...widget.e.events()];
+    for (final u in widget.e.SU()) {
+      final ce = addM(pd(u['start']), n0(u['cm']));
+      final nd = ce.difference(t).inDays;
+      if (u['ren'] != 'no' && nd <= 60 && nd >= -30) L.add({'d': ce, 'l': '${str(u['name'])} – تجديد عقد الشركة', '_t': 'cren', '_u': u});
+      final ls = objs(u['leases']);
+      for (var k = 0; k < ls.length; k++) {
+        final x = ls[k]; if (truthy(x['exit'])) continue;
+        final le = Engine.lend(x); final ld = le.difference(t).inDays;
+        if (ld <= 45 && ld >= -15) L.add({'d': le, 'l': '${str(u['name'])} – انتهاء عقد ${str(x['tenant']).isEmpty ? 'مستأجر' : str(x['tenant'])}', '_t': 'lend', '_u': u, '_L': x});
+      }
+    }
+    L.sort((a, b) => (a['d'] as DateTime).compareTo(b['d'] as DateTime));
+    return L;
+  }
+
+  Widget _pill(String t, Color bg, Color fg) => Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(99)), child: Text(t, style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: fg)));
+
+  Widget _row(BuildContext context, Map<String, dynamic> x) {
+    final t = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final d = x['d'] as DateTime; final nd = DateTime(d.year, d.month, d.day).difference(t).inDays;
+    final ty = x['_t']; final a = x['a'] as num?;
+    final info = ty == 'cren' || ty == 'lend';
+    final c = info ? (ty == 'cren' ? const Color(0xFF7C3AED) : const Color(0xFFD97706)) : (a! >= 0 ? const Color(0xFF15803D) : const Color(0xFFB91C1C));
+    final ic = ty == 'cren' ? Icons.autorenew_rounded : ty == 'lend' ? Icons.event_busy_rounded : (a! >= 0 ? Icons.south_west : Icons.north_east);
+    final (String dl, Color dbg, Color dfg) = nd < 0 ? ('فات ${-nd} يوم', const Color(0xFFFEE2E2), const Color(0xFFB91C1C)) : nd == 0 ? ('النهارده', const Color(0xFFFEE2E2), const Color(0xFFB91C1C)) : nd <= 7 ? ('باقي $nd يوم', const Color(0xFFFFEDD5), const Color(0xFFC2410C)) : ('باقي $nd يوم', const Color(0xFFDCFCE7), const Color(0xFF15803D));
+    return InkWell(
+      onTap: () {
+        if (ty == 'cren') { Shell.go(1); return; }
+        if (ty == 'lend') { Navigator.of(context).push(MaterialPageRoute(builder: (_) => LeaseEdit(x['_u'] as Obj, null, renew: x['_L'] as Obj))); return; }
+        recordEv(context, x);
+      },
+      child: Padding(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), child: Row(children: [
+        Container(width: 34, height: 34, decoration: BoxDecoration(color: c.withOpacity(.12), borderRadius: BorderRadius.circular(10)), child: Icon(ic, size: 18, color: c)),
+        const SizedBox(width: 10),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(Priv.on ? '••••' : str(x['l']), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+          const SizedBox(height: 3),
+          Row(children: [_pill(iso(d), const Color(0xFFEEF2FF), const Color(0xFF3730A3)), const SizedBox(width: 6), _pill(dl, dbg, dfg)]),
+        ])),
+        const SizedBox(width: 6),
+        info ? Text(ty == 'cren' ? 'جدّد' : 'جدّد/خروج', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: c))
+            : Text('${a! >= 0 ? '+' : '-'}${_m(a.abs())}', style: TextStyle(fontWeight: FontWeight.w900, color: c)),
+      ])),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final L = _list(); const first = 4;
+    final shown = all ? L : L.take(first).toList();
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      const Padding(padding: EdgeInsets.only(bottom: 6, right: 4, left: 4), child: Row(children: [Text('الحركات الجاية', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5)), Spacer(), Text('دوس على الحركة تسجّلها', style: TextStyle(color: kMuted, fontSize: 11.5))])),
+      Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: kBd)), child: Column(children: [
+        for (var i = 0; i < shown.length; i++) ...[if (i > 0) const Divider(height: 1, indent: 54), _row(context, shown[i])],
+        if (L.isEmpty) const Padding(padding: EdgeInsets.all(14), child: Text('مفيش حركات جاية', style: TextStyle(color: kMuted))),
+        if (L.length > first) InkWell(onTap: () => setState(() => all = !all), child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10), decoration: const BoxDecoration(border: Border(top: BorderSide(color: kBd))),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text(all ? 'اخفي الباقي' : 'شوف باقي الحركات (${L.length - first})', style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF1E3A8A))), Icon(all ? Icons.expand_less : Icons.expand_more, color: const Color(0xFF1E3A8A))]),
+        )),
+      ])),
+    ]);
+  }
 }
