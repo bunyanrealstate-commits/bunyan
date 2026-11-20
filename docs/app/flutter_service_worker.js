@@ -5,7 +5,7 @@ const CACHE_NAME = 'flutter-app-cache';
 
 const RESOURCES = {"index.html": "dcba966f13a6fd406ab30ac76e3085fa",
 "/": "dcba966f13a6fd406ab30ac76e3085fa",
-"flutter_bootstrap.js": "459ab06b523fba9896aeb11b3d6dc5bd",
+"flutter_bootstrap.js": "eb9d189b0d36151846426522abc4057e",
 "canvaskit/skwasm.worker.js": "89990e8c92bcb123999aa81f7e203b1c",
 "canvaskit/chromium/canvaskit.js": "671c6b4f8fcc199dcc551c7bb125f239",
 "canvaskit/chromium/canvaskit.wasm": "b1ac05b29c127d86df4bcfbf50dd902a",
@@ -19,10 +19,10 @@ const RESOURCES = {"index.html": "dcba966f13a6fd406ab30ac76e3085fa",
 "favicon.png": "5dcef449791fa27946b3d35ad8803796",
 "assets/FontManifest.json": "b149f420962da8b8be73d1968a24c0fa",
 "assets/shaders/ink_sparkle.frag": "ecc85a2e95f5e9f53123dcaf8cb9b6ce",
-"assets/fonts/MaterialIcons-Regular.otf": "c2fa8fda69a823d88f365f58995a373d",
-"assets/fonts/PlexArabic-700.ttf": "e09411876a0f6d818e26620072a25498",
-"assets/fonts/PlexArabic-500.ttf": "598ac5b532c1b899762d9afad4e3e3d3",
-"assets/fonts/PlexArabic-600.ttf": "c06d0808180cea8b3adb60aa9f7b301c",
+"assets/fonts/MaterialIcons-Regular.otf": "6d6816d6796d5602b4ea81f84c0d6d9f",
+"assets/fonts/PlexArabic-700.ttf": "c11233b353a6dd7ac745d62602271e84",
+"assets/fonts/PlexArabic-500.ttf": "287775f9133e1ca6540275904cdcb9c9",
+"assets/fonts/PlexArabic-600.ttf": "deb3aa0289c9927b4515eddd85b922a7",
 "assets/NOTICES": "1719348ecf422dc1ad8d2271c3b42bb9",
 "assets/assets/logo.svg": "d097bb68694db47ebd328a0a19203408",
 "assets/assets/hq.json": "81130e4b5b7f9f0ee29568f0f84bcac2",
@@ -36,7 +36,7 @@ const RESOURCES = {"index.html": "dcba966f13a6fd406ab30ac76e3085fa",
 "icons/Icon-maskable-192.png": "c457ef57daa1d16f64b27b786ec2ea3c",
 "manifest.json": "6b800cd95f66d4ee385b41e36a1fb6b3",
 "version.json": "8ab04d1db306b15af4ee02e68d70733c",
-"main.dart.js": "2053ad02012867e8a03cefe2ce6d18b7"};
+"main.dart.js": "be413f1a5d522d3fde06bf1d16ec9464"};
 // The application shell files that are downloaded before a service worker can
 // start.
 const CORE = ["main.dart.js",
