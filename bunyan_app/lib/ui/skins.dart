@@ -57,14 +57,14 @@ Future<void> skinPicker(BuildContext context) => showModalBottomSheet(context: c
 class SkinNav extends StatelessWidget {
   final int tab; final ValueChanged<int> go;
   const SkinNav(this.tab, this.go, {super.key});
-  static const items = [[0, Icons.home_rounded, 'الرئيسية'], [1, Icons.apartment_rounded, 'الاستديوهات'], [2, Icons.bar_chart_rounded, 'الحسابات'], [3, Icons.receipt_long_rounded, 'المصاريف'], [5, Icons.menu_rounded, 'المزيد']];
+  static const items = [[0, Icons.home_rounded, 'الرئيسية'], [1, Icons.apartment_rounded, 'الاستديوهات'], [2, Icons.bar_chart_rounded, 'الحسابات'], [3, Icons.receipt_long_rounded, 'المصاريف'], [7, Icons.campaign_rounded, 'الأبديت'], [5, Icons.menu_rounded, 'المزيد']];
   @override
   Widget build(BuildContext context) {
     final ps = Skin.dark, a = Skin.acc;
     Widget it(List x) {
       final on = tab == x[0];
       return Expanded(child: InkWell(onTap: () => go(x[0] as int), child: Padding(padding: const EdgeInsets.symmetric(vertical: 7), child: Column(mainAxisSize: MainAxisSize.min, children: [
-        AnimatedContainer(duration: const Duration(milliseconds: 200), padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3), decoration: BoxDecoration(color: on && Skin.id != 'bnb' ? a.withOpacity(ps ? .22 : .12) : Colors.transparent, borderRadius: BorderRadius.circular(99)),
+        AnimatedContainer(duration: const Duration(milliseconds: 200), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3), decoration: BoxDecoration(color: on && Skin.id != 'bnb' ? a.withOpacity(ps ? .22 : .12) : Colors.transparent, borderRadius: BorderRadius.circular(99)),
           child: Icon(x[1] as IconData, size: 23, color: on ? (ps ? const Color(0xFF5EEAD4) : a) : (ps ? const Color(0xFF64748B) : const Color(0xFF8A94A6)))),
         const SizedBox(height: 2),
         Text(Tr.t(x[2] as String), style: TextStyle(fontSize: 10.5, fontWeight: on ? FontWeight.w800 : FontWeight.w600, color: on ? (ps ? Colors.white : a) : (ps ? const Color(0xFF64748B) : const Color(0xFF8A94A6)))),

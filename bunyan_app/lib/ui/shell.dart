@@ -15,6 +15,7 @@ import 'home.dart';
 import 'units.dart';
 import 'link.dart';
 import 'more.dart';
+import 'upd.dart';
 import 'ai.dart';
 import 'skins.dart';
 import 'expenses.dart';
@@ -79,7 +80,7 @@ class _ShellState extends State<Shell> {
     // مش const: لازم الصفحة تتبني من جديد لما المجموعة أو البيانات تتغير
     final tabs = [
       [Icons.home_outlined, Tr.t('الداشبورد')], [Icons.apartment_outlined, Tr.t('الاستديوهات')], [Icons.bar_chart, Tr.t('الحسابات')],
-      [Icons.receipt_long_outlined, Tr.t('المصاريف')], [Icons.groups_outlined, Tr.t('المجموعات')], [Icons.menu, Tr.t('المزيد')], [Icons.description_outlined, Tr.t('عقد العميل')],
+      [Icons.receipt_long_outlined, Tr.t('المصاريف')], [Icons.groups_outlined, Tr.t('المجموعات')], [Icons.menu, Tr.t('المزيد')], [Icons.description_outlined, Tr.t('عقد العميل')], [Icons.campaign_outlined, Tr.t('الأبديت')],
     ];
     return Directionality(
       textDirection: Tr.dir,
@@ -129,7 +130,7 @@ class _ShellState extends State<Shell> {
         ),
         body: RefreshIndicator(onRefresh: () async { await st.sync(); }, child: ListenableBuilder(listenable: Listenable.merge([Store.I, Ws.I]), builder: (_, __) {
           final w = Ws.I.resolve();
-          final page = [const HomePage(), const UnitsPage(), const AccountsPage(inTab: true), const ExpensesPage(), const GroupsPage(inTab: true), const MorePage(), const ContractPage(inTab: true)][tab];
+          final page = [const HomePage(), const UnitsPage(), const AccountsPage(inTab: true), const ExpensesPage(), const GroupsPage(inTab: true), const MorePage(), const ContractPage(inTab: true), const UpdPage(inTab: true)][tab];
           return Column(children: [
             const _UpdBar(),
             Expanded(child: KeyedSubtree(key: ValueKey('$tab|$w|${Tr.lang}|${Priv.on}|${Skin.id}'), child: page)),
