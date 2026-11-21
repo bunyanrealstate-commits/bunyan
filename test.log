@@ -1,0 +1,15 @@
+
+✅ /home/runner/work/bunyan/bunyan/bunyan_app/test/ct_pdf_test.dart: contract pdf renders
+✅ /home/runner/work/bunyan/bunyan/bunyan_app/test/ct_tpl_test.dart: contract templates → PDF
+lib/core/ai.dart:33:65: Error: A value of type 'List<dynamic>' can't be returned from an async function with return type 'Future<List<String>>'.
+ - 'List' is from 'dart:core'.
+ - 'Future' is from 'dart:async'.
+    return (lite ? [...lt, ...full] : [...full, ...lt]).take(6).toList();
+                                                                ^
+::group::❌ loading /home/runner/work/bunyan/bunyan/bunyan_app/test/pages_test.dart (failed)
+Failed to load "/home/runner/work/bunyan/bunyan/bunyan_app/test/pages_test.dart": Compilation failed for testPath=/home/runner/work/bunyan/bunyan/bunyan_app/test/pages_test.dart
+
+::endgroup::
+✅ /home/runner/work/bunyan/bunyan/bunyan_app/test/sig_test.dart: توقيع من صورة: بيشيل الورقة ويقصّ
+
+::error::3 tests passed, 1 failed.
