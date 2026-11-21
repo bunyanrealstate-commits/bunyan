@@ -28,7 +28,7 @@ class Ai {
         }
       } catch (_) {}
     }
-    final all = [...(_ml ?? const []), ...fall.where((m) => !(_ml ?? const []).contains(m))];
+    final all = <String>[...(_ml ?? const <String>[]), ...fall.where((m) => !(_ml ?? const <String>[]).contains(m))];
     final full = all.where((m) => !m.contains('lite')).toList(), lt = all.where((m) => m.contains('lite')).toList();
     return (lite ? [...lt, ...full] : [...full, ...lt]).take(6).toList();
   }
