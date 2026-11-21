@@ -113,7 +113,7 @@ class _ShellState extends State<Shell> {
           bottom: !Skin.classic ? null : PreferredSize(preferredSize: const Size.fromHeight(50), child: Container(
             height: 50, decoration: const BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: kBd))),
             child: SingleChildScrollView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.fromLTRB(8, 6, 8, 8), child: Row(children: [
-              for (final i in const [0, 1, 2, 3, 4, 6, 5]) Padding(padding: const EdgeInsetsDirectional.only(end: 6), child: InkWell(
+              for (final i in const [0, 1, 2, 3, 4, 6, 7, 5]) Padding(padding: const EdgeInsetsDirectional.only(end: 6), child: InkWell(
                 borderRadius: BorderRadius.circular(99), onTap: () => setState(() => tab = i),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180), padding: const EdgeInsets.symmetric(horizontal: 13),
