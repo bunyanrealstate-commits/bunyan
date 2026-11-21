@@ -92,7 +92,7 @@ class _UnitCard extends StatelessWidget {
           Text('${s.soon ? '⏳ ' : ''}${Tr.t('عقد الشركة لحد')} ${iso(s.e)}${s.late ? ' • ${s.od} ${Tr.t('متأخر')}' : ''}', style: TextStyle(color: s.late ? kRed : (s.soon ? kTerra : kMuted), fontSize: 11.5)),
           if (L == null) Text(Tr.t('فاضية — مفيش مستأجر'), style: const TextStyle(color: kTerra, fontSize: 12, fontWeight: FontWeight.w700)),
         ])),
-        if (L != null) Text(money(n0(L['rent'])), style: const TextStyle(color: kGreen, fontWeight: FontWeight.w800, fontSize: 16)),
+        if (L != null) ptxt(moneyRaw(n0(L['rent'])), style: const TextStyle(color: kGreen, fontWeight: FontWeight.w800, fontSize: 16)),
       ])),
     );
   }
@@ -154,7 +154,7 @@ class _UnitDetailState extends State<UnitDetail> {
           for (var k = 0; k < insts.length; k++) InkWell(
             onTap: () => _inst(k),
             child: Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: Row(children: [
-              Expanded(child: Text(str(insts[k]['d']))), Text(money(n0(insts[k]['a']))), const SizedBox(width: 8),
+              Expanded(child: Text(str(insts[k]['d']))), ptxt(moneyRaw(n0(insts[k]['a']))), const SizedBox(width: 8),
               _pill(truthy(insts[k]['p']) ? Tr.t('✅ مدفوعة') : (pd(insts[k]['d']).isAfter(t) ? Tr.t('⏳ لسه') : Tr.t('⚠️ مستحقة')), truthy(insts[k]['p']) ? kGreen : kTerra),
             ])),
           ),
@@ -200,7 +200,7 @@ class _UnitDetailState extends State<UnitDetail> {
           Text(got ? '✅' : (d.isAfter(t) ? '⏳' : '⚠️')),
           const SizedBox(width: 8),
           Expanded(child: Text('${iso(d)}  •  دفعة ${i + 1}')),
-          Text(money(Engine.rv(L, i) + Engine.ppA(L, i)), style: TextStyle(fontWeight: FontWeight.bold, color: got ? kGreen : kInk)),
+          ptxt(moneyRaw(Engine.rv(L, i) + Engine.ppA(L, i)), style: TextStyle(fontWeight: FontWeight.bold, color: got ? kGreen : kInk)),
         ])));
       }),
     ])));

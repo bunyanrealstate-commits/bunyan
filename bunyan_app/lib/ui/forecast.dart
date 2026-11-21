@@ -34,14 +34,14 @@ class ForecastPage extends StatelessWidget {
           const Divider(),
           for (final r in rows) Padding(padding: const EdgeInsets.symmetric(vertical: 5), child: Row(children: [
             Expanded(flex: 3, child: Text('${_mn[(r['d'] as DateTime).month - 1]} ${(r['d'] as DateTime).year % 100}')),
-            Expanded(flex: 3, child: Text(money(r['i'] as double), style: const TextStyle(color: kGreen))),
-            Expanded(flex: 3, child: Text(money(r['o'] as double), style: const TextStyle(color: kRed))),
-            Expanded(flex: 3, child: Text(money(r['end'] as double), style: TextStyle(fontWeight: FontWeight.bold, color: sign(r['end'] as double)))),
+            Expanded(flex: 3, child: ptxt(moneyRaw(r['i'] as double), style: const TextStyle(color: kGreen))),
+            Expanded(flex: 3, child: ptxt(moneyRaw(r['o'] as double), style: const TextStyle(color: kRed))),
+            Expanded(flex: 3, child: ptxt(moneyRaw(r['end'] as double), style: TextStyle(fontWeight: FontWeight.bold, color: sign(r['end'] as double)))),
           ])),
         ]))),
         const SizedBox(height: 8),
         Text(Tr.t('📋 الحركات'), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
-        for (final x in ev.take(80)) ListTile(dense: true, title: Text(str(x['l'])), subtitle: Text(iso(x['d'] as DateTime)), trailing: Text(money(x['a'] as double), style: TextStyle(color: sign(x['a'] as double), fontWeight: FontWeight.bold))),
+        for (final x in ev.take(80)) ListTile(dense: true, title: Text(str(x['l'])), subtitle: Text(iso(x['d'] as DateTime)), trailing: ptxt(moneyRaw(x['a'] as double), style: TextStyle(color: sign(x['a'] as double), fontWeight: FontWeight.bold))),
       ]),
     ));
   }

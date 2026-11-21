@@ -18,12 +18,12 @@ class ExpensesPage extends StatelessWidget {
     final total = l.fold(0.0, (s, x) => s + n0(x['a']) * (truthy(x['n']) ? n(x['n']) : 1));
     return Stack(children: [
       ListView(padding: const EdgeInsets.fromLTRB(10, 10, 14, 90), children: [
-        Card(child: ListTile(title: Text(Tr.t('إجمالي المصاريف')), trailing: Text(money(total), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: kRed)))),
+        Card(child: ListTile(title: Text(Tr.t('إجمالي المصاريف')), trailing: ptxt(moneyRaw(total), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: kRed)))),
         if (l.isEmpty) Padding(padding: EdgeInsets.all(30), child: Text(Tr.t('مفيش مصاريف'), textAlign: TextAlign.center)),
         for (final x in l) Card(child: ListTile(
           title: Text(str(x['w']).isEmpty ? Tr.t('مصروف') : str(x['w']), style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text('${str(x['d'])}${truthy(x['u']) ? '  •  ${Priv.un(e.U(x['u'])?['name'])}' : ''}${n0(x['n']) > 1 ? '  •  يتكرر ${str(x['n'])} شهور' : ''}'),
-          trailing: Text(money(n0(x['a'])), style: const TextStyle(fontWeight: FontWeight.bold)),
+          trailing: ptxt(moneyRaw(n0(x['a'])), style: const TextStyle(fontWeight: FontWeight.bold)),
           onTap: () => edit(context, x),
           onLongPress: () async {
             if (!await lockOk(context, [str(x['d'])]) || !context.mounted) return;

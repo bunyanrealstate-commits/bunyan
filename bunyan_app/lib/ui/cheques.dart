@@ -62,18 +62,18 @@ class ChequesPage extends StatelessWidget {
         body: ListView(padding: const EdgeInsets.all(12), children: [
           Text(Tr.t('للعلم فقط: الشيك ضمان لالتزام المستأجر بالدفع، ومش بيغيّر الحسابات. دوس على الشيك تعدّله، ودوس مطوّل تمسحه.'), style: TextStyle(color: kMuted)),
           const SizedBox(height: 8),
-          Card(child: ListTile(title: Text('شيكات الإيجار: ${R.length}'), subtitle: Text(money(R.fold<double>(0, (s, x) => s + n0((x['c'] as Map)['a'])))))),
-          if (sc.isNotEmpty) Card(child: ListTile(title: Text('شيكات التأمين: ${sc.length}'), subtitle: Text(money(sc.fold<double>(0, (s, x) => s + n0(x['a'])))))),
+          Card(child: ListTile(title: Text('شيكات الإيجار: ${R.length}'), subtitle: ptxt(moneyRaw(R.fold<double>(0, (s, x) => s + n0((x['c'] as Map)['a'])))))),
+          if (sc.isNotEmpty) Card(child: ListTile(title: Text('شيكات التأمين: ${sc.length}'), subtitle: ptxt(moneyRaw(sc.fold<double>(0, (s, x) => s + n0(x['a'])))))),
           for (final x in R.take(200)) Card(child: ListTile(
             dense: true,
             leading: Text(str((x['c'] as Map)['d']).compareTo(td) <= 0 ? '🟢' : '📑'),
             title: Text('${str((x['L'] as Obj)['tenant']).isEmpty ? 'مستأجر' : str((x['L'] as Obj)['tenant'])} • ${Priv.un((x['u'] as Obj)['name'])}'),
             subtitle: Text('${str((x['c'] as Map)['no']).isEmpty ? '' : 'رقم ${(x['c'] as Map)['no']} • '}${(x['c'] as Map)['d']}'),
-            trailing: Text(money(n0((x['c'] as Map)['a'])), style: const TextStyle(fontWeight: FontWeight.bold)),
+            trailing: ptxt(moneyRaw(n0((x['c'] as Map)['a'])), style: const TextStyle(fontWeight: FontWeight.bold)),
             onTap: () => Chq.edit(context, x['L'] as Obj, x['q'] as int),
             onLongPress: () => Chq.del(context, x['L'] as Obj, x['q'] as int),
           )),
-          for (final d in sc) Card(child: ListTile(dense: true, leading: const Text('🔐'), title: Text('شيك ضمان — ${str(d['w'])}'), subtitle: Text(str(d['no'])), trailing: Text(money(n0(d['a']))))),
+          for (final d in sc) Card(child: ListTile(dense: true, leading: const Text('🔐'), title: Text('شيك ضمان — ${str(d['w'])}'), subtitle: Text(str(d['no'])), trailing: ptxt(moneyRaw(n0(d['a']))))),
         ]),
       ));
     });

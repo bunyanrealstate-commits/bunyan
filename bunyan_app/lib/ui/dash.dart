@@ -213,14 +213,14 @@ class PerUnitCard extends StatelessWidget {
             TextSpan(text: ' • ${L == null ? Tr.t('شاغر') : str(L['tenant'])}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: kMuted)),
           ]), overflow: TextOverflow.ellipsis)),
           SizedBox(width: 70, child: Text(L == null ? '—' : money(r * e.sh(u)), style: const TextStyle(color: Color(0xFF4A5060), fontWeight: FontWeight.w700))),
-          SizedBox(width: 70, child: Text(money(pr), textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.w900, color: sign(pr)))),
+          SizedBox(width: 70, child: ptxt(moneyRaw(pr), textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.w900, color: sign(pr)))),
         ]),
       ));
     }
     Widget kv(String l, double v, Color c) => Expanded(child: Container(
           padding: const EdgeInsets.fromLTRB(12, 9, 12, 10),
           decoration: BoxDecoration(color: const Color(0xFFF3FAF7), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFCFE6DE))),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(l, style: const TextStyle(fontSize: 12.5, color: Color(0xFF4A5060), fontWeight: FontWeight.w600)), Text(money(v), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: c))]),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(l, style: const TextStyle(fontSize: 12.5, color: Color(0xFF4A5060), fontWeight: FontWeight.w600)), ptxt(moneyRaw(v), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: c))]),
         ));
     return BCard(c: kTerra, title: '🏠 ${Tr.t('الإيجارات وصافي ربح كل استديو')}', trailing: Text(Tr.t('(شهري)'), style: const TextStyle(color: kMuted, fontWeight: FontWeight.w700, fontSize: 12.5)), child: Column(children: [
       Row(children: [kv(Tr.t('إجمالي الإيجارات'), R, kInk), const SizedBox(width: 10), kv(Tr.t('صافي الربح'), P, sign(P))]),

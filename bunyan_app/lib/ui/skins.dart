@@ -86,7 +86,7 @@ void quickAdd(BuildContext context) => showModalBottomSheet(context: context, bu
         ListTile(leading: Icon(o[0] as IconData, color: kAc), title: Text(o[1] as String, style: const TextStyle(fontWeight: FontWeight.w800)), onTap: () { Navigator.pop(ctx); final i = o[2] as int; if (i < 0) { Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AiPage())); } else { Shell.go(i); } }),
     ])))));
 
-String _m(num v) => Priv.on ? '•••' : v.round().toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
+String _m(num v) => v.round().toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
 
 /* ───────── أول الداشبورد حسب الشكل ───────── */
 class SkinHero extends StatelessWidget {
@@ -123,9 +123,9 @@ class SkinHero extends StatelessWidget {
           ])),
           Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: const Color(0xFF0F766E), borderRadius: BorderRadius.circular(18)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Text('الرصيد النقدي', style: TextStyle(color: Color(0xFFCCFBF1), fontSize: 12.5)),
-            Text('${_m(cash)} درهم', style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900)),
+            ptxt('${_m(cash)} درهم', style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900)),
             const SizedBox(height: 6),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text('ربح ${_m(rp['profit']!)}', style: const TextStyle(color: Color(0xFFCCFBF1), fontSize: 12)), Text('تقدر تسحب ${_m(wd)}', style: const TextStyle(color: Color(0xFFCCFBF1), fontSize: 12))]),
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [ptxt('ربح ${_m(rp['profit']!)}', style: const TextStyle(color: Color(0xFFCCFBF1), fontSize: 12)), ptxt('تقدر تسحب ${_m(wd)}', style: const TextStyle(color: Color(0xFFCCFBF1), fontSize: 12))]),
           ])),
           const SizedBox(height: 10),
           _quick(context, const Color(0xFF0F766E)),
@@ -140,22 +140,22 @@ class SkinHero extends StatelessWidget {
           const SizedBox(height: 10),
           Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: const Color(0xFF111C2E), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFF1E3A4C))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Text('الرصيد النقدي', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12.5)),
-            Row(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(_m(cash), style: const TextStyle(color: Color(0xFFF8FAFC), fontSize: 30, fontWeight: FontWeight.w900)), const SizedBox(width: 6), const Padding(padding: EdgeInsets.only(bottom: 6), child: Text('AED', style: TextStyle(color: Color(0xFF5EEAD4), fontWeight: FontWeight.w800)))]),
+            Row(crossAxisAlignment: CrossAxisAlignment.end, children: [ptxt(_m(cash), style: const TextStyle(color: Color(0xFFF8FAFC), fontSize: 30, fontWeight: FontWeight.w900)), const SizedBox(width: 6), const Padding(padding: EdgeInsets.only(bottom: 6), child: Text('AED', style: TextStyle(color: Color(0xFF5EEAD4), fontWeight: FontWeight.w800)))]),
             const SizedBox(height: 8),
             SizedBox(height: 40, child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [for (var i = 0; i < bars.length; i++) Expanded(child: Container(margin: const EdgeInsets.symmetric(horizontal: 2), height: 40 * bars[i], decoration: BoxDecoration(color: Color.lerp(const Color(0xFF134E4A), const Color(0xFF14B8A6), i / 5), borderRadius: BorderRadius.circular(4))))])),
           ])),
           const SizedBox(height: 8),
           Row(children: [
             for (final x in [['ربح حتى اليوم', rp['profit']!, const Color(0xFF5EEAD4)], ['تقدر تسحب', wd, const Color(0xFFFBBF24)]]) Expanded(child: Container(margin: const EdgeInsets.symmetric(horizontal: 3), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: const Color(0xFF111C2E), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFF1E293B))),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(x[0] as String, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12)), Text(_m(x[1] as num), style: TextStyle(color: x[2] as Color, fontSize: 20, fontWeight: FontWeight.w900))]))),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(x[0] as String, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12)), ptxt(_m(x[1] as num), style: TextStyle(color: x[2] as Color, fontSize: 20, fontWeight: FontWeight.w900))]))),
           ]),
         ]);
       case 'bank':
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Container(padding: const EdgeInsets.fromLTRB(16, 16, 16, 44), decoration: BoxDecoration(color: const Color(0xFF1E3A8A), borderRadius: BorderRadius.circular(20)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('الرصيد المتاح • ${Priv.on ? '••' : str(gs.where((g) => g['id'] == cur).firstOrNull?['name'])}', style: const TextStyle(color: Color(0xFFBFDBFE), fontSize: 12.5)),
-            Text('AED ${_m(cash)}', style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w900)),
-            Text('ربح ${_m(rp['profit']!)} • تقدر تسحب ${_m(wd)}', style: const TextStyle(color: Color(0xFFBFDBFE), fontSize: 12)),
+            ptxt('AED ${_m(cash)}', style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w900)),
+            ptxt('ربح ${_m(rp['profit']!)} • تقدر تسحب ${_m(wd)}', style: const TextStyle(color: Color(0xFFBFDBFE), fontSize: 12)),
           ])),
           Transform.translate(offset: const Offset(0, -30), child: Container(margin: const EdgeInsets.symmetric(horizontal: 10), padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: kBd), boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 14, offset: Offset(0, 4))]), child: _quick(context, const Color(0xFF1E3A8A)))),
           Transform.translate(offset: const Offset(0, -18), child: BankMoves(e)),
@@ -166,7 +166,7 @@ class SkinHero extends StatelessWidget {
           InkWell(borderRadius: BorderRadius.circular(99), onTap: () => Shell.go(1), child: Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(99), border: Border.all(color: kBd), boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 10, offset: Offset(0, 3))]),
             child: const Row(children: [Icon(Icons.search, size: 20), SizedBox(width: 8), Text('دوّر على استديو أو مستأجر', style: TextStyle(color: kMuted))]))),
           const SizedBox(height: 12),
-          Row(children: [Text('💵 ${_m(cash)}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)), const Spacer(), Text('ربح ${_m(rp['profit']!)} • سحب ${_m(wd)}', style: const TextStyle(color: kMuted, fontSize: 12))]),
+          Row(children: [ptxt('💵 ${_m(cash)}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)), const Spacer(), ptxt('ربح ${_m(rp['profit']!)} • سحب ${_m(wd)}', style: const TextStyle(color: kMuted, fontSize: 12))]),
           const SizedBox(height: 10),
           for (final u in us) _bnbCard(context, u),
         ]);
@@ -183,8 +183,8 @@ class SkinHero extends StatelessWidget {
                 if (i == n - 1) ...[
                   const Spacer(),
                   const Text('الرصيد', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                  Text(_m(cash), style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900)),
-                  Text('ربح ${_m(rp['profit']!)} • سحب ${_m(wd)}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                  ptxt(_m(cash), style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900)),
+                  ptxt('ربح ${_m(rp['profit']!)} • سحب ${_m(wd)}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
                 ],
               ])),
           )),
@@ -205,7 +205,7 @@ class SkinHero extends StatelessWidget {
       const SizedBox(height: 6),
       Text(Priv.un(u['name']), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
       Text(L == null ? 'مستني مستأجر' : (Priv.on ? '••••' : str(L['tenant'])), style: const TextStyle(color: kMuted, fontSize: 12.5)),
-      if (L != null) Text.rich(TextSpan(children: [TextSpan(text: _m(n0(L['rent'])), style: const TextStyle(fontWeight: FontWeight.w900)), const TextSpan(text: ' درهم / شهر')]), style: const TextStyle(fontSize: 13.5)),
+      if (L != null) pv(Text.rich(TextSpan(children: [TextSpan(text: _m(n0(L['rent'])), style: const TextStyle(fontWeight: FontWeight.w900)), const TextSpan(text: ' درهم / شهر')]), style: const TextStyle(fontSize: 13.5))),
     ])));
   }
 }
@@ -310,7 +310,7 @@ class _BankMovesState extends State<BankMoves> {
         ])),
         const SizedBox(width: 6),
         info ? Text(ty == 'cren' ? 'جدّد' : 'جدّد/خروج', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: c))
-            : Text('${a! >= 0 ? '+' : '-'}${_m(a.abs())}', style: TextStyle(fontWeight: FontWeight.w900, color: c)),
+            : ptxt('${a! >= 0 ? '+' : '-'}${_m(a.abs())}', style: TextStyle(fontWeight: FontWeight.w900, color: c)),
       ])),
     );
   }

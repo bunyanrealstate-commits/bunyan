@@ -87,7 +87,7 @@ class _AccState extends State<AccountsPage> {
             _h(Tr.t('💸 حركات النقدي (سحب / تمويل / دفعات)')),
             for (final a in ad.take(60)) ListTile(dense: true, title: Text(str(a['w']), maxLines: 2, overflow: TextOverflow.ellipsis),
               subtitle: Text(iso(DateTime.fromMillisecondsSinceEpoch(n0(a['at']).toInt()))),
-              trailing: Text(money(n0(a['a'])), style: TextStyle(fontWeight: FontWeight.bold, color: n0(a['a']) < 0 ? kRed : kGreen)),
+              trailing: ptxt(moneyRaw(n0(a['a'])), style: TextStyle(fontWeight: FontWeight.bold, color: n0(a['a']) < 0 ? kRed : kGreen)),
               onLongPress: a['k'] == 'draw' ? () => _delAdj(a) : null),
           ]);
         }),
@@ -116,7 +116,7 @@ class _AccState extends State<AccountsPage> {
           leading: Text(cl[x['c']] ?? '•', style: const TextStyle(fontSize: 18)),
           title: Text(str(x['w']), maxLines: 2, overflow: TextOverflow.ellipsis),
           subtitle: Text('${x['d']}${str(x['u']).isEmpty ? '' : ' • ${x['u']}'}'),
-          trailing: Text(money(x['a'] as double), style: TextStyle(fontWeight: FontWeight.bold, color: (x['a'] as double) < 0 ? kRed : kGreen)),
+          trailing: ptxt(moneyRaw(x['a'] as double), style: TextStyle(fontWeight: FontWeight.bold, color: (x['a'] as double) < 0 ? kRed : kGreen)),
         ),
       ]),
     ));

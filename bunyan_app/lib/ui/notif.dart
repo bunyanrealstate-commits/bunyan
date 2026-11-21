@@ -108,7 +108,7 @@ Widget notifRow(BuildContext context, Map<String, dynamic> x, {bool bell = false
         const SizedBox(width: 8),
         Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
           dayBadge(n),
-          if (a != 0) Padding(padding: const EdgeInsets.only(top: 6), child: Text(money(a), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15.5, color: _nin.contains(ty) ? kGreen : kRed))),
+          if (a != 0) Padding(padding: const EdgeInsets.only(top: 6), child: ptxt(moneyRaw(a), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15.5, color: _nin.contains(ty) ? kGreen : kRed))),
         ]),
       ]),
       if (ty == 'rent') Padding(padding: const EdgeInsets.only(top: 8), child: Row(children: [_waBtn(context, x), const SizedBox(width: 8), _payBtn(context, x)])),

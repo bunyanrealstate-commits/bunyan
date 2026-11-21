@@ -151,7 +151,7 @@ class HomePage extends StatelessWidget {
 
   Widget _row(String l, double v, {bool bold = false}) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 3),
-        child: Row(children: [Expanded(child: Text(l, style: TextStyle(fontWeight: bold ? FontWeight.w900 : FontWeight.normal))), Text(money(v), style: TextStyle(fontWeight: FontWeight.bold, color: bold ? sign(v) : kInk))]),
+        child: Row(children: [Expanded(child: Text(l, style: TextStyle(fontWeight: bold ? FontWeight.w900 : FontWeight.normal))), ptxt(moneyRaw(v), style: TextStyle(fontWeight: FontWeight.bold, color: bold ? sign(v) : kInk))]),
       );
 }
 
@@ -193,7 +193,7 @@ class _Upcoming extends StatelessWidget {
             Text(Priv.txt(str(x['label'])), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
             Text('${str(x['d'])} • $when', style: TextStyle(color: d < 0 ? kRed : kMuted, fontSize: 12)),
           ])),
-          if ((x['amt'] as num) != 0) Text(money(x['amt'] as num), style: TextStyle(fontWeight: FontWeight.w900, color: x['ty'] == 'rent' || x['ty'] == 'recv' ? kGreen : kRed)),
+          if ((x['amt'] as num) != 0) ptxt(moneyRaw(x['amt'] as num), style: TextStyle(fontWeight: FontWeight.w900, color: x['ty'] == 'rent' || x['ty'] == 'recv' ? kGreen : kRed)),
         ])),
       );
     }

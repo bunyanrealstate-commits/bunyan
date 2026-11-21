@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../core/store.dart';
@@ -36,6 +37,12 @@ ThemeData bunyanTheme() => ThemeData(
 final _nf = NumberFormat('#,##0', 'en');
 /// زي $() في بنيان: رقم بالدرهم
 String money(num v) { if (Priv.on) return '•••••'; final r = v.isNaN ? 0 : v.round(); return '${r < 0 ? '-' : ''}${_nf.format(r.abs())}'; }
+
+/// 👁 رقم متغبّش: لما العين شغالة الأرقام بتبان ضبابة (الأرقام الحقيقية مش موجودة تحتها — مايتقريش حتى لو اتصوّر)
+Widget pv(Widget w) => Priv.on ? ImageFiltered(imageFilter: ui.ImageFilter.blur(sigmaX: 5.5, sigmaY: 5.5, tileMode: TileMode.decal), child: w) : w;
+Widget ptxt(String s, {TextStyle? style, int? maxLines, TextOverflow? overflow, TextAlign? textAlign}) =>
+    Priv.on ? pv(Text(s.replaceAll(RegExp(r'\d'), '8'), style: style, maxLines: maxLines, overflow: overflow, textAlign: textAlign)) : Text(s, style: style, maxLines: maxLines, overflow: overflow, textAlign: textAlign);
+String moneyRaw(num v) { final r = v.isNaN ? 0 : v.round(); return '${r < 0 ? '-' : ''}${_nf.format(r.abs())}'; }
 
 /// 👁 العين: إخفاء الأرقام وأسماء الاستديوهات (زي القديم)
 class Priv {
@@ -94,7 +101,7 @@ class BStat extends StatelessWidget {
           Expanded(child: Padding(padding: const EdgeInsets.fromLTRB(10, 8, 10, 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(l, style: const TextStyle(color: kMuted, fontSize: 12, fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
-            Text(text != null ? (Priv.on ? '•••' : text!) : money(v), style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: Color.alphaBlend(Colors.black.withOpacity(.08), col))),
+            ptxt(text ?? moneyRaw(v), style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: Color.alphaBlend(Colors.black.withOpacity(.08), col))),
             if (sub != null) Text(sub!, style: const TextStyle(color: kMuted, fontSize: 11)),
             if (onTap != null) const Align(alignment: AlignmentDirectional.centerEnd, child: Text('🧮', style: TextStyle(fontSize: 15))),
           ]))),

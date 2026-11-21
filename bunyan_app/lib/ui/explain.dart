@@ -252,7 +252,7 @@ void compareSheet(BuildContext context, Engine e) {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('${i == 0 && rows.length > 1 ? '🥇 ' : ''}${Priv.un((x['u'] as Obj)['name'])}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15.5)),
           const Divider(),
-          Row(children: [kv('الربح', Text(money(pr), style: TextStyle(fontWeight: FontWeight.w900, color: sign(pr)))), kv('الإشغال', Row(children: [
+          Row(children: [kv('الربح', ptxt(moneyRaw(pr), style: TextStyle(fontWeight: FontWeight.w900, color: sign(pr)))), kv('الإشغال', Row(children: [
             Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(9), child: LinearProgressIndicator(value: oc / 100, minHeight: 7, backgroundColor: const Color(0xFFE3E8EE), color: kTeal))),
             const SizedBox(width: 6), Text('${oc.round()}%', style: const TextStyle(fontWeight: FontWeight.w800)),
           ]))]),
@@ -277,7 +277,7 @@ Widget kvTable(List<List<dynamic>> rows) => Container(
           child: Row(children: [
             Expanded(child: Text(r[0] as String, style: TextStyle(fontWeight: r.length > 2 && r[2] == true ? FontWeight.w900 : FontWeight.w600, fontSize: 13.5))),
             const SizedBox(width: 10),
-            Text(money(r[1] as num), style: TextStyle(fontWeight: FontWeight.w900, color: r.length > 2 && r[2] == true ? sign(r[1] as num) : kInk)),
+            ptxt(moneyRaw(r[1] as num), style: TextStyle(fontWeight: FontWeight.w900, color: r.length > 2 && r[2] == true ? sign(r[1] as num) : kInk)),
           ]),
         ),
       ])),
@@ -331,7 +331,7 @@ void receiptsSheet(BuildContext context, Engine e) {
         padding: const EdgeInsets.symmetric(vertical: 10), decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFE6E8EE)))),
         child: Row(children: [
           Expanded(child: Text('$tn • ${Priv.un(u['name'])}  ${x['d']}', style: const TextStyle(fontWeight: FontWeight.w800))),
-          Text(money(x['a'] as double), style: const TextStyle(fontWeight: FontWeight.w900, color: kGreen)),
+          ptxt(moneyRaw(x['a'] as double), style: const TextStyle(fontWeight: FontWeight.w900, color: kGreen)),
           const SizedBox(width: 8),
           InkWell(borderRadius: BorderRadius.circular(99), onTap: () => Share.share('🧾 سند قبض\nاستلمنا من: $tn\nالمبلغ: ${money(x['a'] as double)} درهم\nإيجار ${str(u['name'])} — دفعة ${(x['i'] as int) + 1}\nبتاريخ: ${x['d']}\nBunyan Furnished'),
             child: Container(width: 38, height: 38, alignment: Alignment.center, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: kBd)), child: const Text('🧾'))),
@@ -362,8 +362,8 @@ void coverageSheet(BuildContext context, Engine e) {
       margin: const EdgeInsets.only(top: 8), padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(color: const Color(0xFFF2F8F5), borderRadius: BorderRadius.circular(14)),
       child: Row(children: [
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('هتستلم', style: TextStyle(color: kMuted, fontWeight: FontWeight.w700)), Text(money(inc), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: kGreen))])),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('هتدفع', style: TextStyle(color: kMuted, fontWeight: FontWeight.w700)), Text(money(out), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: kRed))])),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('هتستلم', style: TextStyle(color: kMuted, fontWeight: FontWeight.w700)), ptxt(moneyRaw(inc), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: kGreen))])),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('هتدفع', style: TextStyle(color: kMuted, fontWeight: FontWeight.w700)), ptxt(moneyRaw(out), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: kRed))])),
       ]),
     ),
     const Padding(padding: EdgeInsets.only(top: 16, bottom: 4), child: Text('🧾 كل دفعة هتتغطى منين', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16))),
@@ -394,7 +394,7 @@ void coverageSheet(BuildContext context, Engine e) {
   if (pays.isEmpty) rows.add(eqMu('✅ مفيش دفعات شركة جاية.'));
   eqSheet(context, 'الدفعات القادمة (${fut.length})', icon: '📅', rows);
 }
-Widget _cv(String l, double v, Color c) => Padding(padding: const EdgeInsets.symmetric(vertical: 2), child: Row(children: [Expanded(child: Text(l, style: const TextStyle(fontWeight: FontWeight.w600))), Text(money(v), style: TextStyle(fontWeight: FontWeight.w900, color: c))]));
+Widget _cv(String l, double v, Color c) => Padding(padding: const EdgeInsets.symmetric(vertical: 2), child: Row(children: [Expanded(child: Text(l, style: const TextStyle(fontWeight: FontWeight.w600))), ptxt(moneyRaw(v), style: TextStyle(fontWeight: FontWeight.w900, color: c))]));
 
 /// 🕘 آخر التعديلات
 void lastEditsSheet(BuildContext context) {
