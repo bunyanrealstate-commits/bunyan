@@ -7,6 +7,32 @@ import 'store.dart';
 
 class Ai {
   static const fall = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-lite-latest', 'gemini-2.5-flash-lite', 'gemini-2.0-flash-lite'];
+  /// الموديلات المتاحة فعلاً على المفتاح (جوجل بتغيّر الأسامي وبتلغي القديم) — بنسألها وبنختار الأحدث
+  static List<String>? _ml; static DateTime? _mt;
+  static Future<List<String>> models({bool lite = false}) async {
+    if (_ml == null || _mt == null || DateTime.now().difference(_mt!).inHours > 6) {
+      try {
+        final r = await http.get(Uri.parse('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=${key()}')).timeout(const Duration(seconds: 10));
+        if (r.statusCode == 200) {
+          final L = <String>[];
+          for (final m in ((jsonDecode(r.body) as Map)['models'] as List? ?? [])) {
+            final n = str(m['name']).replaceFirst('models/', ''); final g = (m['supportedGenerationMethods'] as List?)?.contains('generateContent') == true;
+            if (!g || !n.startsWith('gemini') || !n.contains('flash')) continue;
+            if (RegExp('image|tts|audio|live|embedding|thinking|computer|robotics|native').hasMatch(n)) continue;
+            L.add(n);
+          }
+          double ver(String n) => double.tryParse(RegExp(r'gemini-(\d+(\.\d+)?)').firstMatch(n)?.group(1) ?? '') ?? (n.contains('latest') ? 99 : 0);
+          int rank(String n) => (n.contains('preview') || n.contains('exp') ? 1 : 0) + (RegExp(r'-\d{3}$|\d{2}-\d{2}').hasMatch(n) ? 1 : 0);
+          L.sort((a, b) { final v = ver(b).compareTo(ver(a)); return v != 0 ? v : rank(a).compareTo(rank(b)); });
+          if (L.isNotEmpty) { _ml = L; _mt = DateTime.now(); }
+        }
+      } catch (_) {}
+    }
+    final all = [...(_ml ?? const []), ...fall.where((m) => !(_ml ?? const []).contains(m))];
+    final full = all.where((m) => !m.contains('lite')).toList(), lt = all.where((m) => m.contains('lite')).toList();
+    return (lite ? [...lt, ...full] : [...full, ...lt]).take(6).toList();
+  }
+
   static String key() {
     final g = Store.I.cfg['g'];
     if (g is Map) return str(g['key']);
@@ -46,7 +72,7 @@ class Ai {
     final contents = [for (final h in hist.take(10)) {'role': h['r'] == 'u' ? 'user' : 'model', 'parts': [{'text': h['t']}]}, {'role': 'user', 'parts': [{'text': q}]}];
     final body = jsonEncode({'systemInstruction': {'parts': [{'text': sys}]}, 'contents': contents, 'generationConfig': {'temperature': 0.3}});
     String err = '';
-    for (final m in fall) {
+    for (final m in await models()) {
       try {
         final r = await http.post(Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$k'), headers: {'Content-Type': 'application/json'}, body: body).timeout(const Duration(seconds: 40));
         if (r.statusCode == 200) { final o = jsonDecode(utf8.decode(r.bodyBytes)); final t = (((o['candidates'] as List?)?.firstOrNull?['content']?['parts'] as List?) ?? []).map((p) => str(p['text'])).join(); if (t.trim().isNotEmpty) return t.trim(); }

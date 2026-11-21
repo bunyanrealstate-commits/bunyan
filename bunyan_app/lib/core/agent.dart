@@ -24,7 +24,6 @@ class AgentOut {
 }
 
 class Agent {
-  static const models = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.0-flash', 'gemini-2.5-flash-lite'];
   static Map<String, dynamic> get S => Store.I.S;
 
   /* ───── اللي اتعلمه (تصحيحاتك وقواعدك) ───── */
@@ -84,10 +83,11 @@ ${Ai.context(ws)}''';
     final contents = [for (final h in hist.where((h) => (h['t'] ?? '').isNotEmpty).toList().reversed.take(12).toList().reversed) {'role': h['r'] == 'u' ? 'user' : 'model', 'parts': [{'text': h['t']}]}, {'role': 'user', 'parts': [{'text': q}]}];
     final body = jsonEncode({'systemInstruction': {'parts': [{'text': _sys(ws)}]}, 'contents': contents, 'tools': [{'functionDeclarations': _tools}], 'generationConfig': {'temperature': 0.3}});
     String err = '';
-    for (final m in models) {
+    final ms = await Ai.models();
+    for (final m in ms) {
       try {
         final r = await http.post(Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$k'), headers: {'Content-Type': 'application/json'}, body: body).timeout(const Duration(seconds: 40));
-        if (r.statusCode != 200) { err = 'HTTP ${r.statusCode}'; if (r.statusCode == 400 || r.statusCode == 403) { if (m == models.last) break; } continue; }
+        if (r.statusCode != 200) { err = '$m: HTTP ${r.statusCode}'; continue; }
         final o = jsonDecode(utf8.decode(r.bodyBytes));
         final parts = ((o['candidates'] as List?)?.firstOrNull?['content']?['parts'] as List?) ?? [];
         final text = StringBuffer(); final acts = <AgentAct>[]; final wa = <Map<String, String>>[];

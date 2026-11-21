@@ -128,11 +128,10 @@ class _CtState extends State<ContractPage> {
   }
 
   /// 📷 Gemini للصور — موديلات سريعة بس ومن غير «تفكير»، وأقصى انتظار 15 ثانية للموديل
-  static const _fastImg = ['gemini-2.5-flash-lite', 'gemini-2.0-flash', 'gemini-flash-lite-latest', 'gemini-2.0-flash-lite'];
   Future<Map?> _gem(Uint8List img, String prompt) async {
     final k = Ai.key(); if (k.isEmpty) throw 'محتاج مفتاح Gemini (بيتنقل من بنيان القديم مع الربط)';
     final t0 = DateTime.now();
-    for (final m in _fastImg) {
+    for (final m in await Ai.models(lite: true)) {
       if (DateTime.now().difference(t0).inSeconds > 25) break;
       try {
         final r = await http.post(Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$k'), headers: {'Content-Type': 'application/json'},
@@ -230,7 +229,7 @@ class _CtState extends State<ContractPage> {
     final prompt = toEn
         ? 'Translate this Arabic tenancy-contract text to clear, formal English (UAE rental contract style). Return ONLY the translation, no quotes, no notes.\n\n$text'
         : 'ترجم النص ده من عقد إيجار للعربي الفصحى الرسمي البسيط (أسلوب عقود الإيجار في الإمارات). رجّع الترجمة بس من غير علامات تنصيص ولا ملاحظات.\n\n$text';
-    for (final m in _fastImg) {
+    for (final m in await Ai.models(lite: true)) {
       try {
         final r = await http.post(Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$k'), headers: {'Content-Type': 'application/json'},
             body: jsonEncode({'contents': [{'parts': [{'text': prompt}]}], 'generationConfig': {'temperature': 0.1, if (m.contains('2.5')) 'thinkingConfig': {'thinkingBudget': 0}}})).timeout(const Duration(seconds: 12));
