@@ -23,6 +23,9 @@ jobs:
           grep -q 'android.permission.INTERNET' $M || sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET" />\n    <application#' $M
           sed -i 's#android:label="bunyan"#android:label="بنيان"#' $M
           cp android_overrides/MainActivity.kt android/app/src/main/kotlin/com/bunyan/bunyan/MainActivity.kt
+          # 🏠 أيقونة بنيان (بدل أيقونة فلاتر)
+          cp -r android_overrides/res/. android/app/src/main/res/
+          cp android_overrides/web/Icon-*.png web/icons/ && cp android_overrides/web/favicon.png web/favicon.png
           # ML Kit (قراية الهوية): بنستخدم الحروف اللاتيني بس — باقي اللغات مش موجودة
           printf '%s\n' '-dontwarn com.google.mlkit.vision.text.chinese.**' '-dontwarn com.google.mlkit.vision.text.devanagari.**' '-dontwarn com.google.mlkit.vision.text.japanese.**' '-dontwarn com.google.mlkit.vision.text.korean.**' >> android/app/proguard-rules.pro
           python3 - <<'PY'
