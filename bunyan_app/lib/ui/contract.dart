@@ -16,6 +16,8 @@ import '../core/ct_pdf.dart';
 import '../core/js.dart';
 import '../core/ai.dart';
 import '../core/idocr.dart';
+import '../core/ctarc.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../core/native.dart';
 import 'theme.dart';
@@ -62,7 +64,7 @@ class _CtState extends State<ContractPage> {
 
   bool _off(String k) => obj(c['clr'])?[k] == true;
   Timer? _deb;
-  Future<void> _save([String? log]) async { await Store.I.save(log: log); if (mounted) setState(() => v++); }
+  Future<void> _save([String? log]) async { CtArc.upsert(S, c); await Store.I.save(log: log); if (mounted) setState(() => v++); }
 
   /// ctUpd: تغيير خانة + الحسابات التلقائية (النهاية، الشيكات، الإجمالي، التأمين)
   Future<void> _set(String k, String val) async {
@@ -177,6 +179,8 @@ class _CtState extends State<ContractPage> {
 
   Future<void> _readId(bool landlord) async {
     final x = await _pick(); if (x == null || !mounted) return;
+    // 🪪 الصورة نفسها بتتحفظ مع العقد (تقدر ترجعلها بعدين من «العقود المحفوظة»)
+    try { final b = await x.readAsBytes(); final im = (c['img'] is Map<String, dynamic>) ? c['img'] as Map<String, dynamic> : (c['img'] = <String, dynamic>{}); im[landlord ? 'll' : 'tn'] = await CtArc.putImg('${CtArc.aid(c)}_${landlord ? 'll' : 'tn'}', b); } catch (_) {}
     toast(context, landlord ? '⏳ بقرأ هوية المؤجر…' : '⏳ بقرأ هوية المستأجر…'); setState(() => busy = true);
     Future<String> fill(Map o, {bool quiet = false}) async {
       final en = Ct.en(S); final alt = (c['alt'] is Map<String, dynamic>) ? c['alt'] as Map<String, dynamic> : (c['alt'] = <String, dynamic>{});
@@ -534,6 +538,28 @@ class _CtState extends State<ContractPage> {
         if (onDel != null) Positioned(top: -8, left: -8, child: InkWell(onTap: onDel, child: Container(width: 30, height: 30, decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: const Color(0xFFE5A0A0))), child: const Icon(Icons.close, color: kRed, size: 18)))),
       ]);
 
+  /* ───── 🪪 صور الهويات + 📁 العقود المحفوظة ───── */
+  static List<List<String>> idsOf(Map c) => [
+        for (final k in ['tn', 'll']) if (truthy(obj(c['img'])?[k])) [k == 'tn' ? 'هوية المستأجر' : 'هوية المؤجر', 'f:${obj(c['img'])![k]}'],
+        if (!truthy(obj(c['img'])?['tn']) && truthy(obj(obj(c['ids'])?['tn'])?['img'])) ['هوية المستأجر', 'b:${obj(obj(c['ids'])!['tn'])!['img']}'],
+      ];
+  static Future<Uint8List?> idBytes(String r) async {
+    if (r.startsWith('b:')) { final d = r.substring(2); try { return base64Decode(d.substring(d.indexOf(',') + 1)); } catch (_) { return null; } }
+    return CtArc.img(r.substring(2));
+  }
+  Widget _idThumbs() {
+    final L = idsOf(c); if (L.isEmpty) return const SizedBox();
+    return Padding(padding: const EdgeInsets.only(top: 10), child: Row(children: [
+      const Text('🪪 المحفوظ: ', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5, color: Color(0xFF3D5568))),
+      for (final x in L) Padding(padding: const EdgeInsetsDirectional.only(end: 8), child: IdThumb(x[1], x[0], key: ValueKey(x[1]))),
+    ]));
+  }
+
+  Future<void> _arcPage() async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CtArcPage()));
+    tc.clear(); if (mounted) setState(() => v++);
+  }
+
   Widget _b64(String d, {double h = 52}) { try { return Image.memory(base64Decode(d.substring(d.indexOf(',') + 1)), height: h, fit: BoxFit.contain); } catch (_) { return const SizedBox(); } }
 
   @override
@@ -558,8 +584,11 @@ class _CtState extends State<ContractPage> {
             const SizedBox(height: 8),
             Row(children: [_chip('🪪 هوية المؤجر', const Color(0xFF2563EB), () => _readId(true)), const SizedBox(width: 6), _chip('🪪 هوية المستأجر', kGreen, () => _readId(false)), const SizedBox(width: 6), _chip('📱 موبايل المستأجر', kTerra, _readPhone)]),
             if (busy) const Padding(padding: EdgeInsets.only(top: 8), child: LinearProgressIndicator()),
+            _idThumbs(),
           ]),
         ),
+        const SizedBox(height: 8),
+        FilledButton.tonalIcon(onPressed: _arcPage, icon: const Icon(Icons.folder_open), label: Text('📁 العقود المحفوظة (${CtArc.all(S).length})', style: const TextStyle(fontWeight: FontWeight.w800)), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(42))),
         const SizedBox(height: 10),
         OutlinedButton.icon(onPressed: _fill, icon: const Icon(Icons.person_search), label: const Text('— تعبئة من عقد مستأجر قائم (اختياري) —'), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(40))),
         const SizedBox(height: 8),
@@ -661,7 +690,7 @@ class _CtState extends State<ContractPage> {
       ]),
       const SizedBox(height: 10),
       Row(children: [
-        Expanded(child: OutlinedButton(onPressed: () async { if (!await confirmDlg(context, 'تبدأ عقد جديد؟ بيانات العميل هتتمسح (المؤجر والتوقيع هيفضلوا).', ok: '➕ عقد جديد')) return; Ct.newContract(S); tc.clear(); await _save('📝 عقد جديد'); }, style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(42)), child: const Text('➕ عقد جديد'))),
+        Expanded(child: OutlinedButton(onPressed: () async { if (!await confirmDlg(context, 'تبدأ عقد جديد؟ بيانات العميل هتتمسح (المؤجر والتوقيع هيفضلوا).', ok: '➕ عقد جديد')) return; CtArc.upsert(S, c); Ct.newContract(S); tc.clear(); await _save('📝 عقد جديد'); if (mounted) toast(context, '📁 العقد اللي فات اتحفظ في «العقود المحفوظة»'); }, style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(42)), child: const Text('➕ عقد جديد'))),
         const SizedBox(width: 10),
         Expanded(child: OutlinedButton(onPressed: () async { if (!await confirmDlg(context, 'ترجّع نص العقد الأصلي؟ أي تعديل كتبته بإيدك على ورقة العقد هيتمسح (البيانات اللي في الفورم مش هتتمسح).', ok: '↺ رجّعه')) return; c['html'] = ''; await _save(); }, style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(42)), child: const Text('↺ النموذج الأصلي'))),
       ]),
@@ -819,4 +848,80 @@ class _CtPaperState extends State<CtPaper> {
           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(99), border: Border.all(color: kBd), boxShadow: const [BoxShadow(color: Color(0x1214213D), blurRadius: 8, offset: Offset(0, 3))]),
           child: Text(t, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: kInk))),
       );
+}
+
+
+/// صورة هوية صغيرة — دوسة تفتحها كبيرة (وتقدر تبعتها)
+class IdThumb extends StatelessWidget {
+  final String r, label; final double h;
+  const IdThumb(this.r, this.label, {super.key, this.h = 54});
+  @override
+  Widget build(BuildContext context) => FutureBuilder<Uint8List?>(future: _CtState.idBytes(r), builder: (ctx, s) {
+        final b = s.data;
+        return InkWell(borderRadius: BorderRadius.circular(10), onTap: b == null ? null : () => showIdImg(context, b, label), child: Container(
+          height: h, width: h * 1.5, clipBehavior: Clip.antiAlias, decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), border: Border.all(color: kBd), color: const Color(0xFFF1F5F9)),
+          child: b == null ? Center(child: s.connectionState == ConnectionState.done ? const Text('—') : const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))) : Image.memory(b, fit: BoxFit.cover),
+        ));
+      });
+}
+
+Future<void> showIdImg(BuildContext context, Uint8List b, String label) => Navigator.of(context).push(MaterialPageRoute(builder: (_) => Directionality(textDirection: Tr.dir, child: Scaffold(
+      backgroundColor: Colors.black, appBar: AppBar(backgroundColor: Colors.black, foregroundColor: Colors.white, title: Text('🪪 $label'), actions: [
+        IconButton(tooltip: 'ابعت / احفظ', icon: const Icon(Icons.share), onPressed: () => Share.shareXFiles([XFile.fromData(b, mimeType: 'image/jpeg', name: 'id.jpg')])),
+      ]),
+      body: InteractiveViewer(maxScale: 6, child: Center(child: Image.memory(b))),
+    ))));
+
+/// 📁 العقود المحفوظة — كل عقد عملته (بياناته وصورة الهوية) تقدر تفتحه تاني
+class CtArcPage extends StatefulWidget {
+  const CtArcPage({super.key});
+  @override
+  State<CtArcPage> createState() => _CtArcState();
+}
+
+class _CtArcState extends State<CtArcPage> {
+  String q = '';
+  Obj get S => Store.I.S;
+  @override
+  Widget build(BuildContext context) {
+    final curId = str(obj(S['ct'])?['aid']);
+    final all = CtArc.all(S).whereType<Map>().toList()..sort((a, b) => n0(b['at']).compareTo(n0(a['at'])));
+    final L = q.isEmpty ? all : all.where((e) => '${e['tn']} ${e['sub']} ${e['subU']} ${e['ph']} ${e['tid']}'.toLowerCase().contains(q.toLowerCase())).toList();
+    String dt(dynamic ms) { final d = DateTime.fromMillisecondsSinceEpoch(n0(ms).toInt()); return '${d.day}/${d.month}/${d.year}'; }
+    return Directionality(textDirection: Tr.dir, child: Scaffold(
+      appBar: AppBar(title: Text('📁 العقود المحفوظة (${all.length})')),
+      body: ListView(padding: const EdgeInsets.fromLTRB(10, 10, 10, 40), children: [
+        TextField(decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'دوّر باسم المستأجر، الاستديو، الرقم…', border: OutlineInputBorder(), isDense: true), onChanged: (x) => setState(() => q = x.trim())),
+        const SizedBox(height: 10),
+        if (all.isEmpty) const Padding(padding: EdgeInsets.all(24), child: Text('لسه مفيش عقود محفوظة.\nأي عقد بتعمله من دلوقتي بيتحفظ هنا لوحده مع صورة الهوية.', textAlign: TextAlign.center, style: TextStyle(color: kMuted, height: 1.7))),
+        for (final e in L) Builder(builder: (_) {
+          final ct = obj(e['ct']) ?? {}; final ids = _CtState.idsOf(ct); final isCur = e['id'] == curId;
+          return Card(child: Padding(padding: const EdgeInsets.all(10), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Row(children: [
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(str(e['tn']).isEmpty ? '(من غير اسم)' : str(e['tn']), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
+                if (str(e['subU']).isNotEmpty) Text('🏠 ${e['subU']}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+                if (str(e['sub']).isNotEmpty) Text(str(e['sub']), maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, color: kMuted)),
+                Text([if (str(e['st']).isNotEmpty) '📅 ${Ct.dm(str(e['st']))} ← ${Ct.dm(str(e['en']))}', if (str(e['ph']).isNotEmpty) '📱 ${e['ph']}', '💾 ${dt(e['at'])}'].join('  •  '), style: const TextStyle(fontSize: 11.5, color: kMuted)),
+              ])),
+              if (isCur) Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFDCFCE7), borderRadius: BorderRadius.circular(99)), child: const Text('مفتوح دلوقتي', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF15803D)))),
+            ]),
+            if (ids.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: Row(children: [for (final x in ids) Padding(padding: const EdgeInsetsDirectional.only(end: 8), child: IdThumb(x[1], x[0], h: 60))])),
+            const SizedBox(height: 8),
+            Row(children: [
+              Expanded(child: FilledButton(onPressed: isCur ? () => Navigator.pop(context) : () async {
+                CtArc.upsert(S, Ct.ct(S)); CtArc.open(S, e); await Store.I.save(log: '📁 فتح عقد ${e['tn']}');
+                if (context.mounted) { Navigator.pop(context); toast(context, '📄 فتحت عقد ${e['tn']} — عدّل وابعته زي ما انت عايز'); }
+              }, child: Text(isCur ? '↩ ارجع له' : '📄 افتح العقد'))),
+              const SizedBox(width: 8),
+              IconButton(tooltip: 'امسح', icon: const Icon(Icons.delete_outline, color: kRed), onPressed: () async {
+                if (!await confirmDlg(context, 'تمسح عقد «${e['tn']}» من المحفوظ؟', ok: '🗑 امسح')) return;
+                CtArc.del(S, str(e['id'])); await Store.I.save(); if (mounted) setState(() {});
+              }),
+            ]),
+          ])));
+        }),
+      ]),
+    ));
+  }
 }
