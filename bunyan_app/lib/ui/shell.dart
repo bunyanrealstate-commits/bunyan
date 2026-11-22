@@ -96,7 +96,7 @@ class _ShellState extends State<Shell> {
           titleSpacing: 10,
           // الهيدر زي القديم: اللوجو • العين • المجموعة • الساعة • الجرس • المزامنة
           title: Row(children: [
-            Column(mainAxisSize: MainAxisSize.min, children: [(Skin.id == 'ps' || Skin.id == 'bank') ? Text('بنيان', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 21, color: Skin.id == 'ps' ? const Color(0xFF5EEAD4) : Colors.white)) : SvgPicture.asset('assets/logo.svg', height: 21), kHakim ? Container(margin: const EdgeInsets.only(top: 2), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1), decoration: BoxDecoration(color: const Color(0xFF2A9D5C), borderRadius: BorderRadius.circular(99)), child: const Text('حكيم', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: Colors.white, height: 1.3))) : const Text('Furnished', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF1D4B66), letterSpacing: 1.4, height: 1.2))]),
+            Column(mainAxisSize: MainAxisSize.min, children: [(Skin.id == 'ps' || Skin.id == 'bank') ? Text('بنيان', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 21, color: Skin.id == 'ps' ? const Color(0xFF5EEAD4) : Colors.white)) : SvgPicture.asset('assets/logo.svg', height: 21), kHakim ? Container(margin: const EdgeInsets.only(top: 2), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1), decoration: BoxDecoration(color: const Color(0xFF2A9D5C), borderRadius: BorderRadius.circular(99)), child: const Text('حكيم', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: Colors.white, height: 1.3))) : Text('Furnished', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Skin.dark || Skin.id == 'bank' ? const Color(0xFFB8C4D2) : const Color(0xFF1D4B66), letterSpacing: 1.4, height: 1.2))]),
             EyeBtn(key: ValueKey('eye${Priv.on}')),
             const SizedBox(width: 8),
             const SizedBox(width: 118, child: GroupPill()),
@@ -106,7 +106,7 @@ class _ShellState extends State<Shell> {
             SizedBox(width: 36, child: IconButton(
               padding: EdgeInsets.zero, tooltip: Tr.t('مزامنة'),
               onPressed: st.syncing ? null : () async { final m = await st.sync(); if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m))); },
-              icon: st.syncing ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(Icons.sync, color: st.cfg['dirty'] == true ? kTerra : kAc),
+              icon: st.syncing ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(Icons.sync, color: st.cfg['dirty'] == true ? kTerra : (Skin.id == 'bank' || Skin.dark ? const Color(0xFF5EEAD4) : kAc)),
             )),
           ]),
           // التبويبات: كبسولات — المختار كحلي وكلامه أبيض

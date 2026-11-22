@@ -323,11 +323,11 @@ class GroupPill extends StatelessWidget {
         height: 32, padding: const EdgeInsets.symmetric(horizontal: 9),
         decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF0D8A74), Color(0xFF14B8A6)]), borderRadius: BorderRadius.circular(99), boxShadow: const [BoxShadow(color: Color(0x4014B8A6), blurRadius: 12, offset: Offset(0, 4))]),
         child: Row(children: [
-          Container(width: 7, height: 7, decoration: BoxDecoration(color: const Color(0xFFBFFFE9), shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.white.withOpacity(.7), blurRadius: 4)])),
+          const PulseDot(),
           const SizedBox(width: 6),
           // الاسم بيصغر لوحده لو المكان ضيق (بدل ما يتقطع)
           Expanded(child: Ticker(Priv.on ? '••••' : name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12.5))),
-          const SizedBox(width: 2), const Icon(Icons.expand_more, color: Colors.white, size: 16),
+          const SizedBox(width: 4),
         ]),
       ),
     );
@@ -416,4 +416,26 @@ class _TickerState extends State<Ticker> with SingleTickerProviderStateMixin {
           return Stack(clipBehavior: Clip.hardEdge, children: [Positioned(left: x, top: 0, bottom: 0, child: Center(child: Text(widget.text, maxLines: 1, softWrap: false, style: widget.style)))]);
         }));
       });
+}
+
+
+/// النقطة اللي في المجموعة — بتنبض (زي «أونلاين»)
+class PulseDot extends StatefulWidget {
+  const PulseDot({super.key});
+  @override
+  State<PulseDot> createState() => _PulseDotState();
+}
+
+class _PulseDotState extends State<PulseDot> with SingleTickerProviderStateMixin {
+  late final AnimationController a = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..repeat();
+  @override
+  void dispose() { a.dispose(); super.dispose(); }
+  @override
+  Widget build(BuildContext context) => SizedBox(width: 16, height: 16, child: AnimatedBuilder(animation: a, builder: (_, __) {
+        final t = Curves.easeOut.transform(a.value);
+        return Stack(alignment: Alignment.center, children: [
+          Container(width: 7 + 9 * t, height: 7 + 9 * t, decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0xFFBFFFE9).withOpacity(.75 * (1 - t)))),
+          Container(width: 7, height: 7, decoration: BoxDecoration(color: const Color(0xFFE6FFF6), shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.white.withOpacity(.8), blurRadius: 4)])),
+        ]);
+      }));
 }

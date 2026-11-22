@@ -18,7 +18,7 @@ class Skin {
     ['classic', '🏠 الحالي', 'تبويبات فوق وصورة المدينة'],
     ['fb', '📘 زي فيسبوك', 'فاتح، شريط تحت، المجموعات دواير'],
     ['ps', '🌙 داكن فخم', 'زي فوتوشوب: داكن وزرار ➕ في النص'],
-    ['bank', '🏦 زي البنوك', 'الرصيد في هيدر كحلي وآخر الحركات'],
+    ['bank', '🏦 زي البنوك', 'الرصيد في هيدر غامق وآخر الحركات'],
     ['bnb', '🏡 زي Airbnb', 'كل استديو كارت كبير وبحث فوق'],
     ['wallet', '💳 زي محفظة آيفون', 'كل مجموعة كارت ملوّن فوق بعض'],
   ];
@@ -27,9 +27,9 @@ class Skin {
   static bool get dark => id == 'ps';
   static Future<void> set(String v) async { Store.I.cfg['skin'] = v; await Store.I.saveCfg(); Store.I.notifyListeners(); }
   static Color get bg => switch (id) { 'ps' => const Color(0xFF0B1220), 'fb' => const Color(0xFFF0F2F5), 'wallet' => const Color(0xFFF2F2F7), 'bnb' => Colors.white, _ => kBg };
-  static Color get bar => switch (id) { 'ps' => const Color(0xFF0B1220), 'bank' => const Color(0xFF1E3A8A), _ => Colors.white };
+  static Color get bar => switch (id) { 'ps' => const Color(0xFF0B1220), 'bank' => const Color(0xFF1C2533), _ => Colors.white };
   static Color get barFg => (id == 'ps' || id == 'bank') ? Colors.white : kNavy;
-  static Color get acc => switch (id) { 'ps' => const Color(0xFF14B8A6), 'bank' => const Color(0xFF1E3A8A), 'fb' => const Color(0xFF0F766E), 'bnb' => const Color(0xFFE11D48), _ => kAc };
+  static Color get acc => switch (id) { 'ps' => const Color(0xFF14B8A6), 'bank' => kAc, 'fb' => const Color(0xFF0F766E), 'bnb' => const Color(0xFFE11D48), _ => kAc };
 }
 
 /// اختيار الشكل
@@ -152,10 +152,10 @@ class SkinHero extends StatelessWidget {
         ]);
       case 'bank':
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Container(padding: const EdgeInsets.fromLTRB(16, 16, 16, 44), decoration: BoxDecoration(color: const Color(0xFF1E3A8A), borderRadius: BorderRadius.circular(20)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('الرصيد المتاح • ${Priv.on ? '••' : str(gs.where((g) => g['id'] == cur).firstOrNull?['name'])}', style: const TextStyle(color: Color(0xFFBFDBFE), fontSize: 12.5)),
+          Container(padding: const EdgeInsets.fromLTRB(16, 16, 16, 44), decoration: BoxDecoration(gradient: const LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: [Color(0xFF1C2533), Color(0xFF243447)]), borderRadius: BorderRadius.circular(20)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('الرصيد المتاح • ${Priv.on ? '••' : str(gs.where((g) => g['id'] == cur).firstOrNull?['name'])}', style: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 12.5)),
             ptxt('AED ${_m(cash)}', style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w900)),
-            ptxt('ربح ${_m(rp['profit']!)} • تقدر تسحب ${_m(wd)}', style: const TextStyle(color: Color(0xFFBFDBFE), fontSize: 12)),
+            ptxt('ربح ${_m(rp['profit']!)} • تقدر تسحب ${_m(wd)}', style: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 12)),
           ])),
           Transform.translate(offset: const Offset(0, -30), child: Container(margin: const EdgeInsets.symmetric(horizontal: 10), padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: kBd), boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 14, offset: Offset(0, 4))]), child: _quick(context, const Color(0xFF1E3A8A)))),
           Transform.translate(offset: const Offset(0, -18), child: BankMoves(e)),
