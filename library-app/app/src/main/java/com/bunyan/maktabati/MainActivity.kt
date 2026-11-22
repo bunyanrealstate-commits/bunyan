@@ -186,6 +186,8 @@ fun App(incoming: MutableState<Intent?>) {
     LaunchedEffect(Unit) {
         if (Lib.link != null) Lib.msg = Lib.sync(); Lib.comeback()?.let { toast(it) }
         // 📗 طلب أسامه: ضيف كتب الإمام البخاري (مرة واحدة)
+        // 🔔 طلب أسامه: إشعار القراية كل يوم 9:30 بالليل (مرة واحدة)
+        if (!Lib.cfg.optBoolean("rem2130")) { Lib.cfg.put("eve", true).put("eveT", "21:30").put("rem2130", true); Lib.save(); try { Notify.schedule(ctx) } catch (_: Exception) {}; toast("🔔 إشعار القراية بقى كل يوم 9:30 بالليل") }
         if (!Lib.cfg.optBoolean("addBukhari")) { val n = Ready.addAll(Ready.bukhari); Lib.cfg.put("addBukhari", true); Lib.save(); if (n > 0) toast("📗 اتضاف $n كتاب للإمام البخاري في «عايز أقراه»") }
     }
     // تحديث التطبيق لوحده + ربط تلقائي لو كود الربط متنسخ (زرار بنيان بينسخه)
