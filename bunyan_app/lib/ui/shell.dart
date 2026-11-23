@@ -74,10 +74,10 @@ class _ShellState extends State<Shell> {
   void dispose() { Store.I.removeListener(_r); Ws.I.removeListener(_r); Shell.tabN.removeListener(_r); WidgetsBinding.instance.removeObserver(_life); _hkT?.cancel(); super.dispose(); }
 
   double _dir = 0;
+  Offset? _p0; DateTime _t0 = DateTime(2000); bool _hs = false;
   /// ترتيب التبويبات زي ما هي ظاهرة (الكلاسيك فوق، والأشكال التانية في الشريط اللي تحت)
   List<int> get _order => Skin.classic ? const [0, 1, 2, 3, 4, 6, 7, 5] : [for (final x in SkinNav.items) x[0] as int];
   void _swipe(double v) {
-    if (v.abs() < 350) return;
     final o = _order; var i = o.indexOf(tab); if (i < 0) i = 0;
     // في العربي (يمين لشمال): السحب لليمين = التبويب اللي بعده
     final rtl = Tr.dir == TextDirection.rtl;
@@ -150,15 +150,23 @@ class _ShellState extends State<Shell> {
           return Column(children: [
             const _UpdBar(),
             // 👆 اسحب يمين/شمال تتنقل بين التبويبات
-            Expanded(child: GestureDetector(
+            // (Listener خام بدل GestureDetector عشان الصفحات اللي فيها قوايم ماتاكلش الحركة)
+            Expanded(child: NotificationListener<ScrollUpdateNotification>(
+              onNotification: (n) { if (n.metrics.axis == Axis.horizontal) _hs = true; return false; },
+              child: Listener(
               behavior: HitTestBehavior.translucent,
-              onHorizontalDragEnd: (d) => _swipe(d.primaryVelocity ?? 0),
+              onPointerDown: (e) { _p0 = e.position; _t0 = DateTime.now(); _hs = false; },
+              onPointerUp: (e) {
+                final p0 = _p0; _p0 = null; if (p0 == null || _hs) return;
+                final d = e.position - p0; final ms = DateTime.now().difference(_t0).inMilliseconds;
+                if (d.dx.abs() > 70 && d.dx.abs() > d.dy.abs() * 2 && ms < 700) _swipe(d.dx);
+              },
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 220),
                 transitionBuilder: (c, a) => FadeTransition(opacity: a, child: SlideTransition(position: Tween<Offset>(begin: Offset(.12 * _dir, 0), end: Offset.zero).animate(a), child: c)),
                 child: KeyedSubtree(key: ValueKey('$tab|$w|${Tr.lang}|${Priv.on}|${Skin.id}'), child: page),
               ),
-            )),
+            ))),
           ]);
         })),
       ), const HadithOverlay()]),
