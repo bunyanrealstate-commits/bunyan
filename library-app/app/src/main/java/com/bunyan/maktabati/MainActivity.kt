@@ -205,6 +205,7 @@ fun App(incoming: MutableState<Intent?>) {
                     if (t.contains("BNYLINK-") && linkWith(t)) { toast("✅ اتربط بحساب بنيان — بنزّل مكتبتك…"); Lib.msg = Lib.sync(); toast(Lib.msg) }
                 } catch (_: Exception) {}
                 Updater.check(ctx)?.let { toast(it) }
+                Updater.yawmi(ctx)
             }
         }
         life.lifecycle.addObserver(ob); onDispose { life.lifecycle.removeObserver(ob) }

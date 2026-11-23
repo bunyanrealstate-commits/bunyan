@@ -104,6 +104,7 @@ fun ReaderScreen(b: JSONObject, onClose: (Int, Int, Int) -> Unit) {
     var panX by remember { mutableFloatStateOf(0f) }
     var sess by remember { mutableIntStateOf(0) }
     val t0 = remember { System.currentTimeMillis() }
+    DisposableEffect(Unit) { onDispose { Lib.addTime(b, (System.currentTimeMillis() - t0) / 1000) } }
     var secs by remember { mutableLongStateOf(0L) }
     LaunchedEffect(Unit) { while (true) { delay(1000); secs = (System.currentTimeMillis() - t0) / 1000 } }
 

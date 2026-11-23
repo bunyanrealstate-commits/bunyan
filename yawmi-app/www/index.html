@@ -207,6 +207,10 @@ textarea{width:100%;min-height:140px;border:0;border-radius:16px;background:var(
       <div class="sec-h"><span>وِرد النهارده</span></div>
       <div class="card" id="wirdList"></div>
     </section>
+    <section class="sec" id="libSec" hidden>
+      <div class="sec-h"><span>📚 قرايتك النهارده</span><button class="mini" id="libOpen" type="button">افتح مكتبتي</button></div>
+      <div class="card" id="libList"></div>
+    </section>
     <section class="sec">
       <div class="sec-h"><span>جدول اليوم</span><button class="mini" id="prayToggle" type="button">بالصلوات</button></div>
       <div class="card" id="taskList"></div>
@@ -220,11 +224,15 @@ textarea{width:100%;min-height:140px;border:0;border-radius:16px;background:var(
   </main>
 
   <main class="view" id="v-goals" hidden>
+    <section class="sec" id="libGoals" hidden>
+      <div class="sec-h"><span>📚 من مكتبتي</span><button class="mini" id="libHide" type="button"></button></div>
+      <div class="card" id="libStats" style="padding:14px;display:flex;flex-direction:column;gap:12px"></div>
+    </section>
     <section class="sec">
       <div class="sec-h"><span>أهداف سنة <span id="ygYear"></span></span><button class="mini" id="ygNext" type="button"></button></div>
       <div class="card" id="ygList"></div>
       <div class="field" id="ygAdd"><input type="text" id="ygIn" placeholder="هدف كبير للسنة" maxlength="80"><input type="number" id="ygNum" min="1" placeholder="رقم؟" style="max-width:74px" aria-label="الرقم المستهدف (اختياري)"><button type="button" class="push" id="ygBtn">أضف</button></div>
-      <div class="note" style="padding-inline:4px">لو الهدف ليه رقم (زي ١٢ كتاب)، اكتبه والتطبيق يقسمه على الشهور لوحده. وكل شهر تقدر تبعته لخطة الشهر.</div>
+      <div class="note" style="padding-inline:4px">لو الهدف ليه رقم (زي ١٢ كتاب) — ولو فيه كلمة «كتاب» الشهور بتتعلّم لوحدها من مكتبتي —، اكتبه والتطبيق يقسمه على الشهور لوحده. وكل شهر تقدر تبعته لخطة الشهر.</div>
     </section>
     <section class="sec">
       <div class="sec-h"><span>أهدافي الكبيرة</span></div>
@@ -437,13 +445,13 @@ function addM(m){const d=today0();d.setMonth(d.getMonth()+m);return d}
 function dur(m){if(m<1)return "أقل من شهر";const y=Math.floor(m/12),r=m%12,a=[];if(y)a.push(y===1?"سنة":y===2?"سنتين":y+" سنين");if(r)a.push(r===1?"شهر":r===2?"شهرين":r+" شهور");return "بعد "+a.join(" و")}
 function per(P){if(P.daily)return P.daily;const dn=(P.log[todayK()]||{}).n||0;return Math.max(1,Math.ceil((P.total-P.done+dn)/Math.max(1,countDays(P.days,today0(),pkey(P.end)))))}
 function wird(P){const L=P.log[todayK()]||{},dn=L.n||0,a=P.done-dn,o={};
-  if(a<P.total&&P.days.includes(new Date().getDay()))o.hifz={a,b:Math.min(P.total,a+per(P)),done:dn>0};
+  if(a<P.total&&P.days.includes(new Date().getDay()))o.hifz={a,b:Math.min(P.total,a+per(P)),done:isLib(P)?dn>=per(P):dn>0,dn};
   if(P.kind==="quran"&&P.rv>0){const mp=Math.floor((a-(P.from||0))/2);if(mp>0){const rp=L.rv?L.rp0:(P.rp||0)%mp;o.rev={rp,mp,n:Math.min(P.rv,mp),done:!!L.rv}}}
   return o}
 function hLabel(P,w){if(P.kind==="quran")return "حفظ جديد "+amt(w.b-w.a)+": "+qRange(qPage(P,w.a),qPage(P,w.b-1));
   const n=w.b-w.a;return N(n)+" "+P.unit+" · رقم "+N(w.a+1)+(n>1?"–"+N(w.b):"")+" من "+N(P.total)}
 function rLabel(P,w){const F=P.from||0;return "مراجعة "+amt(w.n*2)+": "+qRange(qPage(P,F+w.rp*2),qPage(P,F+((w.rp+w.n-1)%w.mp)*2))}
-function wrow(P,k,w){return `<div class="row ${w.done?"done":""}"><input type="checkbox" class="chk" ${k==="hifz"?"data-wh":"data-wr"}="${P.id}" ${w.done?"checked":""} aria-label="تم"><span class="t">${esc(P.name)}<span class="d2">${k==="hifz"?hLabel(P,w):rLabel(P,w)}</span></span></div>`}
+function wrow(P,k,w){if(k==="hifz"&&isLib(P))return `<div class="row ${w.done?"done":""}"><input type="checkbox" class="chk" disabled ${w.done?"checked":""} aria-label="من مكتبتي"><span class="t">${esc(P.name)}<span class="d2">📚 من مكتبتي: قريت ${N(w.dn)} من ${N(w.b-w.a)} صفحة النهارده${w.done?" — عاش!":""}</span></span></div>`;return `<div class="row ${w.done?"done":""}"><input type="checkbox" class="chk" ${k==="hifz"?"data-wh":"data-wr"}="${P.id}" ${w.done?"checked":""} aria-label="تم"><span class="t">${esc(P.name)}<span class="d2">${k==="hifz"?hLabel(P,w):rLabel(P,w)}</span></span></div>`}
 function wirdAll(){let html="",n=0,d=0;for(const P of (S.programs||[])){const w=wird(P);for(const k of ["hifz","rev"])if(w[k]){html+=wrow(P,k,w[k]);n++;if(w[k].done)d++}}return{html,n,d}}
 function toggleW(id,kind,on){const P=S.programs.find(p=>p.id===id),t=todayK(),L=P.log[t]||(P.log[t]={}),w=wird(P);
   if(kind==="hifz"){if(on&&w.hifz&&!L.n){L.n=w.hifz.b-w.hifz.a;P.done=w.hifz.b}else if(!on&&L.n){P.done-=L.n;delete L.n}}
@@ -564,7 +572,7 @@ document.addEventListener("click",e=>{
   const gd=e.target.closest("[data-gdist]");if(gd){const G=S.goals.find(g=>g.id==gd.dataset.gdist);openProg("sr",null,G.id);
     const ix=SN.map((n,i)=>n.length>2&&G.t.includes(n.length>3?n.slice(0,-1):n)?i:-1).filter(i=>i>=0);if(ix.length){$("pSa").value=Math.min(...ix);$("pSb").value=Math.max(...ix);pPaint()}return}
   const pa=e.target.closest("[data-padj]");
-  if(pa){const P=S.programs.find(p=>p.id===pa.dataset.padj),st=P.kind==="quran"?2:1;P.done=Math.max(P.from||0,Math.min(P.total,P.done+st*Number(pa.dataset.d)));syncLink(P);save();render();return}
+  if(pa){const P=S.programs.find(p=>p.id===pa.dataset.padj),st=P.kind==="quran"?2:1;if(isLib(P)){P.adj=(P.adj||0)+st*Number(pa.dataset.d);libApply();render();return}P.done=Math.max(P.from||0,Math.min(P.total,P.done+st*Number(pa.dataset.d)));syncLink(P);save();render();return}
   const pd=e.target.closest("[data-pdel]");
   if(pd){if(pd.dataset.arm){S.programs=S.programs.filter(p=>p.id!==pd.dataset.pdel);save();render()}
     else{pd.dataset.arm=1;pd.textContent="امسح؟";pd.style.cssText="width:auto;padding:0 10px;font-size:13px;opacity:1;color:var(--danger)";setTimeout(()=>{if(pd.isConnected)render()},3000)}return}
@@ -681,10 +689,10 @@ document.addEventListener("click",e=>{
 const MN=["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
 let ygOpen=null,ygY=new Date().getFullYear();
 function yg(){S.yg=S.yg||{};return S.yg[ygY]||(S.yg[ygY]=[])}
-function renderYG(){const L=yg(),ny=new Date().getFullYear(),nm=ny===ygY?new Date().getMonth():-1;
+function renderYG(){const fy=LIB?LIB.books.filter(b=>b.sh==="done"&&(b.fd||"").startsWith(ygY+"-")).length:0;const L=yg(),ny=new Date().getFullYear(),nm=ny===ygY?new Date().getMonth():-1;
   $("ygYear").textContent=ygY;$("ygNext").textContent=ygY===ny?"خطّط "+(ny+1)+" ←":"→ رجوع لـ "+ny;$("ygAdd").hidden=L.length>=3;
   $("ygList").innerHTML=L.length?L.map(g=>{const ok=g.m.filter(x=>x.done).length;
-    return `<div class="prog"><div class="goal-top"><button class="t" style="text-align:start" data-ygo="${g.id}">${esc(g.t)}<span class="d2">${ok} من 12 شهر · ${ygOpen===g.id?"دوس عشان تقفل":"دوس عشان تفتح الشهور"}</span></button><button class="x" data-ygdel="${g.id}" aria-label="حذف">×</button></div>
+    return `<div class="prog"><div class="goal-top"><button class="t" style="text-align:start" data-ygo="${g.id}">${esc(g.t)}<span class="d2">${LIB&&/كتاب|كتب/.test(g.t)?"📚 خلصت "+fy+" كتاب السنة دي · ":""}${ok} من 12 شهر · ${ygOpen===g.id?"دوس عشان تقفل":"دوس عشان تفتح الشهور"}</span></button><button class="x" data-ygdel="${g.id}" aria-label="حذف">×</button></div>
     <div class="mcells">${g.m.map((x,i)=>`<i class="${x.done?"ok":x.t?"has":""} ${i===nm?"now":""}">${i+1}</i>`).join("")}</div>
     ${ygOpen===g.id?g.m.map((x,i)=>`<div class="ym"><b>${MN[i]}</b><input type="text" value="${esc(x.t)}" data-ygt="${g.id}:${i}" placeholder="هتعمل إيه الشهر ده؟"><input type="checkbox" class="nmv" data-ygc="${g.id}:${i}" ${x.done?"checked":""} aria-label="تم"><button class="push" data-ygp="${g.id}:${i}" ${x.t?"":"disabled"}>↓ للشهر</button></div>`).join(""):""}</div>`}).join(""):'<div class="empty">اكتب لحد ٣ أهداف كبيرة للسنة، والتطبيق يقسمها على ١٢ شهر.</div>'}
 $("ygNext").onclick=()=>{const ny=new Date().getFullYear();ygY=ygY===ny?ny+1:ny;ygOpen=null;render()};
@@ -749,6 +757,7 @@ function renderExtras(){const D=day(),now=new Date(),td=isToday();
   $("focusMin").textContent=fm;$("focusMin").hidden=!fm;
   $("prayToggle").textContent=S.prayView?"بالساعة":"بالصلوات";
   if(view==="today"&&td)$("dateLabel").textContent+=" · "+nextPrayer();
+  renderLib();
   if(view==="goals")renderYG();
   if(view==="notes")renderJournal();
   if(view==="money"){const r=renderMoney(),p=r.al>0?Math.min(100,Math.round(r.sp/r.al*100)):0;
@@ -762,12 +771,49 @@ const TPL={quran:{kind:"quran",name:"حفظ القرآن الكريم",days:[6,0
   arbaeen:{kind:"custom",name:"حفظ الأربعين النووية",total:42,unit:"حديث",dur:3,days:[6,0,1,2,3]},
   khatma:{kind:"custom",name:"ختمة تلاوة",total:604,unit:"صفحة",dur:1,days:[0,1,2,3,4,5,6]},
   english:{kind:"custom",name:"تعلّم الإنجليزي في سنة",total:300,unit:"درس",dur:12,days:[6,0,1,2,3,4]},
-  books:{kind:"custom",name:"اقرأ ١٢ كتاب في السنة",total:3000,unit:"صفحة",dur:12,days:[0,1,2,3,4,5,6]},
+  books:{kind:"custom",lib:true,name:"اقرأ ١٢ كتاب في السنة",total:3000,unit:"صفحة",dur:12,days:[0,1,2,3,4,5,6]},
   custom:{kind:"custom",name:"",total:100,unit:"درس",dur:3,days:[6,0,1,2,3]}};
 let pT="quran",pD=[],pDir="fwd";
 const WD=[6,0,1,2,3,4,5],WDN=["سبت","حد","اتنين","تلات","أربع","خميس","جمعة"];
 $("pJuz").innerHTML=Array.from({length:30},(_,i)=>{const k=i+1;return `<option value="${k}"${k===30?" selected":""}>الجزء ${k} · من ${SN[surahFirst(juzStart(k))]}</option>`}).join("");
 $("pSa").innerHTML=$("pSb").innerHTML=SN.map((n,i)=>`<option value="${i}">${i+1}. ${n}</option>`).join("");$("pSa").value=1;$("pSb").value=5;$("pSe").value=defEnd();
+// ===== link with مكتبتي (books only) =====
+let LIB=null;try{LIB=JSON.parse(localStorage.getItem("yawmi-lib")||"null")}catch(e){}
+const MKP=()=>window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Maktabati;
+const isLib=P=>!!LIB&&P.kind==="custom"&&(P.lib||(P.unit==="صفحة"&&/كتاب|كتب|[اأإ]قر|قراء/.test(P.name)));
+const RDX=/[اأإ]قر|قراء|قرا[يى]|كتاب|كتب/;
+async function libPull(){const P=MKP();if(!P||!P.read)return;try{const r=await P.read();if(r&&r.ok&&r.json){LIB=JSON.parse(r.json);try{localStorage.setItem("yawmi-lib",r.json)}catch(e){}libApply();render()}}catch(e){}}
+function libDay(k){const o={p:0,m:0,list:[]};if(!LIB)return o;for(const b of LIB.books){const lp=(b.log||[]).find(x=>x.d===k),tm=(b.tm||[]).find(x=>x.d===k),p=lp?lp.p:0,m=tm?tm.s/60:0,fin=b.sh==="done"&&b.fd===k;
+  if(p||m>=1||fin){o.p+=p;o.m+=m;o.list.push({b,p,m,fin})}}return o}
+function libStreak(){let n=0;const d=today0();if(!libDay(key(d)).p)d.setDate(d.getDate()-1);for(let i=0;i<1000&&libDay(key(d)).p;i++){n++;d.setDate(d.getDate()-1)}return n}
+const bt=b=>S.libHide?"كتاب من مكتبتي":"«"+b.t+"»";
+const mins=m=>{m=Math.round(m);return m>=60?Math.floor(m/60)+" ساعة"+(m%60?" و"+m%60+" دقيقة":""):m+" دقيقة"};
+function libApply(){if(!LIB)return;
+  for(const P of (S.programs||[])){if(!isLib(P))continue;const byD={};let sum=0;
+    for(const b of LIB.books)for(const l of (b.log||[]))if(l.d>=P.start){byD[l.d]=(byD[l.d]||0)+l.p;sum+=l.p}
+    P.log=P.log||{};for(const d of Object.keys(P.log)){delete P.log[d].n;if(!P.log[d].rv)delete P.log[d]}
+    for(const d in byD)(P.log[d]=P.log[d]||{}).n=byD[d];
+    P.done=Math.max(0,Math.min(P.total,sum+(P.adj||0)))}
+  for(const y in (S.yg||{}))for(const g of S.yg[y]){if(!/كتاب|كتب/.test(g.t))continue;
+    g.m.forEach((x,i)=>{const mk=y+"-"+String(i+1).padStart(2,"0"),f=LIB.books.filter(b=>b.sh==="done"&&(b.fd||"").startsWith(mk)).length,need=parseInt(x.t)||0;if(need>0&&f>=need)x.done=true})}
+  const T=S.days[todayK()];if(T&&libDay(todayK()).p)for(const it of [...T.focus,...T.tasks])if(!it.done&&!it.ex&&RDX.test(it.t)){it.done=true;it.auto=1}
+  save()}
+function renderLib(){const inApp=!!window.Capacitor;
+  if(view==="today"){const L=libDay(key(cur));$("libSec").hidden=!(LIB&&(L.list.length||isToday()));
+    if(LIB)$("libList").innerHTML=L.list.length?`<div class="pgh">${isToday()?"النهارده":"اليوم ده"}: ${N(L.p)} صفحة${L.m>=1?" · "+mins(L.m):""}<span>🔥 ${libStreak()} يوم قراية ورا بعض</span></div>`+L.list.map(x=>{const pc=x.b.pg?Math.min(100,Math.round(x.b.cur/x.b.pg*100)):0;
+      return `<div class="row"><span class="t">${x.fin?"🎉 خلصت ":""}${esc(bt(x.b))}<span class="d2">${[x.p?N(x.p)+" صفحة":"",x.m>=1?mins(x.m):"",x.b.pg&&!x.fin?"وصلت ص "+x.b.cur+" من "+x.b.pg+" ("+pc+"%)":""].filter(Boolean).join(" · ")}</span></span></div>`}).join(""):'<div class="empty">لسه ما قريتش النهارده. ١٠ صفحات بس؟ دوس «افتح مكتبتي».</div>'}
+  if(view==="goals"){const sec=$("libGoals");$("libHide").textContent=S.libHide?"أظهر الأسماء":"اخفي الأسماء";
+    if(!LIB){sec.hidden=!inApp;$("libHide").hidden=true;$("libStats").innerHTML='<div class="note">الربط مع مكتبتي محتاج تحديث صغير لتطبيق يومي. افتح «مكتبتي» وهيطلب منك «تحديث» يومي بدوسة واحدة، وبعدها قرايتك هتظهر هنا لوحدها.</div>';return}
+    sec.hidden=false;$("libHide").hidden=false;const y=String(new Date().getFullYear()),mk=mkey(new Date());let pm=0,mm=0;
+    for(const b of LIB.books){for(const l of (b.log||[]))if(l.d.startsWith(mk))pm+=l.p;for(const t of (b.tm||[]))if(t.d.startsWith(mk))mm+=t.s/60}
+    const fy=LIB.books.filter(b=>b.sh==="done"&&(b.fd||"").startsWith(y)).length,now=LIB.books.filter(b=>b.sh==="now");
+    $("libStats").innerHTML=`<div class="mst"><div><b>${fy} / ${LIB.goal||10}</b><span>كتاب السنة دي</span></div><div><b>${N(pm)}</b><span>صفحة الشهر ده</span></div><div><b>${mm>=60?N(Math.round(mm/6)/10)+" س":Math.round(mm)+" د"}</b><span>قراية الشهر ده</span></div></div>`+
+      (now.length?now.map(b=>{const pc=b.pg?Math.min(100,Math.round(b.cur/b.pg*100)):0;return `<div class="sub" style="padding:0;border:0"><span class="t">${esc(bt(b))}<span class="d2">${b.pg?"ص "+b.cur+" من "+b.pg:"بتقراه دلوقتي"}</span></span><div class="track"><i style="width:${pc}%"></i></div><span class="num">${pc}%</span></div>`}).join(""):'<div class="note">مفيش كتاب بتقراه دلوقتي.</div>')+
+      `<div class="note">🔥 ${libStreak()} يوم قراية ورا بعض · آخر تحديث من مكتبتي ${new Date(LIB.at).toLocaleTimeString("ar-EG",{hour:"numeric",minute:"2-digit"})}</div>`}}
+$("libOpen").onclick=()=>{const P=MKP();if(P&&P.open)P.open()};
+$("libHide").onclick=()=>{S.libHide=!S.libHide;save();render()};
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")libPull()});
+setInterval(()=>{if(document.visibilityState==="visible")libPull()},120000);
 $("pDays").innerHTML=WD.map((d,i)=>`<button type="button" data-wd="${d}">${WDN[i]}</button>`).join("");
 function haveUnits(){const h=Math.max(0,Math.min(30,parseInt($("pHave").value)||0));return pDir==="back"?(605-juzStart(31-h))*2:(juzStart(h+1)-1)*2}
 function pPaint(){document.querySelectorAll("#tpl button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tpl===pT));
@@ -799,8 +845,8 @@ $("pSheet").addEventListener("submit",e=>{e.preventDefault();if(!pD.length)retur
   else if(c.juz){const k=+$("pJuz").value,F=(juzStart(k)-1)*2;if(P.name===c.name)P.name="حفظ الجزء "+k;
     Object.assign(P,{juz:k,total:(juzStart(k+1)-1)*2,from:F,done:F,unit:"صفحة",dir:"fwd",rv:+$("pRv").value,rp:0,end:key(addM(+$("pJDur").value))});P.base=per(P);if(pLink)P.link=pLink}
   else if(c.kind==="quran")Object.assign(P,{total:1208,unit:"صفحة",daily:+$("pDaily").value,dir:pDir,rv:+$("pRv").value,rp:0,done:Math.min(1208,haveUnits())});
-  else{Object.assign(P,{total:Math.max(1,parseInt($("pTotal").value)||1),unit:$("pUnit").value.trim()||"وحدة",end:key(addM(+$("pDur").value)),done:0});P.base=per(P)}
-  S.programs=S.programs||[];S.programs.push(P);save();closeSheet();planMode="prog";show("plan")});
+  else{Object.assign(P,{total:Math.max(1,parseInt($("pTotal").value)||1),unit:$("pUnit").value.trim()||"وحدة",end:key(addM(+$("pDur").value)),done:0});if(c.lib)P.lib=true;P.base=per(P)}
+  S.programs=S.programs||[];S.programs.push(P);libApply();save();closeSheet();planMode="prog";show("plan")});
 
 // dictation
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -837,12 +883,12 @@ $("micBtn").onclick=async()=>{const btn=$("micBtn");if(rec){rec.stop();return}
     rec.start();btn.classList.add("on");$("micLabel").textContent="جاري التسجيل… دوس للإيقاف"}
   catch(e){$("voiceIn").click()}};
 
-const BUILD="20261124014500";
+const BUILD="20261124014031";
 if("serviceWorker" in navigator&&location.protocol==="https:"&&location.hostname.endsWith("github.io")){navigator.serviceWorker.register("./sw.js").catch(()=>{});
   // auto-update: when the app comes back to the front, check for a newer build and reload quietly
   const chk=()=>{if(document.visibilityState!=="visible"||!$("sheet").hidden||!$("pSheet").hidden||!$("nSheet").hidden||rec||FO)return;
     fetch("./index.html?b="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(m&&m[1]!==BUILD)location.reload()}).catch(()=>{})};
   document.addEventListener("visibilitychange",chk);setInterval(chk,30*60*1000);setTimeout(chk,4000)}
-load();autoQ();carry();openDB().then(d=>{idb=d;render()});render();
+load();autoQ();carry();libApply();setTimeout(libPull,300);openDB().then(d=>{idb=d;render()});render();
 </script>
 </body></html>

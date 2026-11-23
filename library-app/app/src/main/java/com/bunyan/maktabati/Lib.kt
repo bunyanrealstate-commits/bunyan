@@ -96,6 +96,18 @@ object Lib {
         for (k in keys.toList() + "rd") if (b.has(k)) r.put(k, b.get(k))
     }
 
+    /** وقت القراية الفعلي في اليوم (بالثواني) — بيروح ليومي وأهدافي */
+    fun addTime(b: JSONObject, secs: Long) {
+        if (secs < 15) return
+        val s = secs.coerceAtMost(3 * 3600L); val d = today()
+        val tm = b.optJSONArray("tm") ?: JSONArray().also { b.put("tm", it) }
+        var hit = false
+        for (i in 0 until tm.length()) { val x = tm.getJSONObject(i); if (x.optString("d") == d) { x.put("s", x.optLong("s") + s); hit = true } }
+        if (!hit) tm.put(JSONObject().put("d", d).put("s", s))
+        while (tm.length() > 400) tm.remove(0)
+        save()
+    }
+
     fun setCur(b: JSONObject, p: Int) { b.put("cur", p); touch(b, "cur"); save() }
 
     /** صفحة اتقرت فعلاً (قعد عليها 20 ثانية أو اتسمعت) */

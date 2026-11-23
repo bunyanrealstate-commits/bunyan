@@ -23,7 +23,9 @@ jobs:
       - run: npx capacitor-assets generate --android --iconBackgroundColor '#2f6b4f' --iconBackgroundColorDark '#2f6b4f'
       - run: npx cap sync android
       - name: Microphone permission
-        run: sed -i 's#<application#<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n    <queries><intent><action android:name="android.speech.RecognitionService" /></intent></queries>\n    <application#' android/app/src/main/AndroidManifest.xml
+        run: sed -i 's#<application#<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n    <queries><package android:name="com.bunyan.maktabati" /><intent><action android:name="android.speech.RecognitionService" /></intent></queries>\n    <application#' android/app/src/main/AndroidManifest.xml
+      - name: Link with Maktabati (native plugin)
+        run: cp native/MaktabatiPlugin.java native/MainActivity.java android/app/src/main/java/com/bunyan/yawmi/
       - name: Increase versionCode on every build
         run: sed -i "s/versionCode [0-9]*/versionCode ${{ github.run_number }}/; s/versionName \"[^\"]*\"/versionName \"1.${{ github.run_number }}\"/" android/app/build.gradle
       - name: Lock portrait
@@ -39,6 +41,6 @@ jobs:
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
       - name: Publish APK to branch apk-yawmi
         run: |
-          mkdir /tmp/out && cp android/app/build/outputs/apk/debug/app-debug.apk /tmp/out/Yawmi.apk
+          mkdir /tmp/out && cp android/app/build/outputs/apk/debug/app-debug.apk /tmp/out/Yawmi.apk && echo "{\"code\":${{ github.run_number }}}" > /tmp/out/version.json
           cd /tmp/out && git init -q -b apk-yawmi && git config user.name github-actions && git config user.email actions@github.com
           git add . && git commit -q -m "Build APK" && git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git apk-yawmi

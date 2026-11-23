@@ -46,17 +46,36 @@ object Updater {
         } catch (e: Exception) { if (force) "⚠️ مقدرتش أشوف التحديث — اتأكد من النت" else null }
     }
 
-    private fun install(ctx: Context, f: File) {
+    /** تحديث تطبيق «يومي وأهدافي» (عشان يتربط بالكتب) — بيطلب موافقة بدوسة واحدة */
+    private const val YB = "https://raw.githubusercontent.com/bunyanrealstate-commits/bunyan/apk-yawmi/"
+    suspend fun yawmi(ctx: Context) = withContext(Dispatchers.IO) {
+        try {
+            val pi = try { ctx.packageManager.getPackageInfo("com.bunyan.yawmi", 0) } catch (_: Exception) { null } ?: return@withContext
+            val have = if (Build.VERSION.SDK_INT >= 28) pi.longVersionCode else @Suppress("DEPRECATION") pi.versionCode.toLong()
+            val sp = ctx.getSharedPreferences("upd", Context.MODE_PRIVATE)
+            if (System.currentTimeMillis() - sp.getLong("yAt", 0) < 6 * 3600 * 1000L) return@withContext
+            val code = JSONObject(get(YB + "version.json").inputStream.bufferedReader().readText()).optLong("code")
+            if (code <= have) return@withContext
+            sp.edit().putLong("yAt", System.currentTimeMillis()).apply()
+            val f = File(ctx.cacheDir, "yawmi.apk")
+            get(YB + "Yawmi.apk").inputStream.use { i -> f.outputStream().use { i.copyTo(it, 256 * 1024) } }
+            installPkg(ctx, f, "com.bunyan.yawmi", 78)
+        } catch (_: Exception) {}
+    }
+
+    private fun install(ctx: Context, f: File) = installPkg(ctx, f, ctx.packageName, 77)
+
+    private fun installPkg(ctx: Context, f: File, pkg: String, rc: Int) {
         val pi = ctx.packageManager.packageInstaller
         val p = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
-        p.setAppPackageName(ctx.packageName)
+        p.setAppPackageName(pkg)
         if (Build.VERSION.SDK_INT >= 31) p.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
         if (Build.VERSION.SDK_INT >= 34) try { p.setRequestUpdateOwnership(true) } catch (_: Throwable) {}
         val id = pi.createSession(p)
         pi.openSession(id).use { s ->
             s.openWrite("app.apk", 0, f.length()).use { out -> f.inputStream().use { it.copyTo(out) }; s.fsync(out) }
             val i = Intent(ctx, UpdRx::class.java)
-            val pend = PendingIntent.getBroadcast(ctx, 77, i, PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0))
+            val pend = PendingIntent.getBroadcast(ctx, rc, i, PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0))
             s.commit(pend.intentSender)
         }
     }
