@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'i18n.dart';
 import '../core/store.dart';
@@ -72,6 +73,21 @@ class _ShellState extends State<Shell> {
   @override
   void dispose() { Store.I.removeListener(_r); Ws.I.removeListener(_r); Shell.tabN.removeListener(_r); WidgetsBinding.instance.removeObserver(_life); _hkT?.cancel(); super.dispose(); }
 
+  double _dir = 0;
+  /// ترتيب التبويبات زي ما هي ظاهرة (الكلاسيك فوق، والأشكال التانية في الشريط اللي تحت)
+  List<int> get _order => Skin.classic ? const [0, 1, 2, 3, 4, 6, 7, 5] : [for (final x in SkinNav.items) x[0] as int];
+  void _swipe(double v) {
+    if (v.abs() < 350) return;
+    final o = _order; var i = o.indexOf(tab); if (i < 0) i = 0;
+    // في العربي (يمين لشمال): السحب لليمين = التبويب اللي بعده
+    final rtl = Tr.dir == TextDirection.rtl;
+    final next = (v > 0) == rtl;
+    final j = (i + (next ? 1 : -1)).clamp(0, o.length - 1);
+    if (j == i) return;
+    HapticFeedback.selectionClick();
+    setState(() { _dir = (next == rtl) ? -1 : 1; tab = o[j]; });
+  }
+
   @override
   Widget build(BuildContext context) {
     final st = Store.I;
@@ -87,7 +103,7 @@ class _ShellState extends State<Shell> {
       // 📖 كارت الحديث الأخضر بيطلع فوق كل حاجة (زي القديم)
       child: Stack(children: [Scaffold(
         backgroundColor: Skin.dark && tab == 0 ? Skin.bg : (Skin.classic ? null : (tab == 0 ? Skin.bg : kBg)),
-        bottomNavigationBar: Skin.classic ? null : SkinNav(tab, (i) => setState(() => tab = i)),
+        bottomNavigationBar: Skin.classic ? null : SkinNav(tab, (i) => setState(() { _dir = 0; tab = i; })),
         // 🤖 نموذج بنيان: زرار عائم في كل الصفحات
         floatingActionButton: kHakim || Skin.id == 'ps' ? null : FloatingActionButton.small(heroTag: 'ai', tooltip: 'نموذج بنيان', backgroundColor: kNavy, foregroundColor: Colors.white, onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AiPage())), child: const Text('🤖', style: TextStyle(fontSize: 18))),
         appBar: AppBar(
@@ -114,7 +130,7 @@ class _ShellState extends State<Shell> {
             height: 50, decoration: const BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: kBd))),
             child: SingleChildScrollView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.fromLTRB(8, 6, 8, 8), child: Row(children: [
               for (final i in const [0, 1, 2, 3, 4, 6, 7, 5]) Padding(padding: const EdgeInsetsDirectional.only(end: 6), child: InkWell(
-                borderRadius: BorderRadius.circular(99), onTap: () => setState(() => tab = i),
+                borderRadius: BorderRadius.circular(99), onTap: () => setState(() { _dir = 0; tab = i; }),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180), padding: const EdgeInsets.symmetric(horizontal: 13),
                   decoration: BoxDecoration(color: tab == i ? kNavy : const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(99)),
@@ -133,7 +149,16 @@ class _ShellState extends State<Shell> {
           final page = [const HomePage(), const UnitsPage(), const AccountsPage(inTab: true), const ExpensesPage(), const GroupsPage(inTab: true), const MorePage(), const ContractPage(inTab: true), const UpdPage(inTab: true)][tab];
           return Column(children: [
             const _UpdBar(),
-            Expanded(child: KeyedSubtree(key: ValueKey('$tab|$w|${Tr.lang}|${Priv.on}|${Skin.id}'), child: page)),
+            // 👆 اسحب يمين/شمال تتنقل بين التبويبات
+            Expanded(child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onHorizontalDragEnd: (d) => _swipe(d.primaryVelocity ?? 0),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                transitionBuilder: (c, a) => FadeTransition(opacity: a, child: SlideTransition(position: Tween<Offset>(begin: Offset(.12 * _dir, 0), end: Offset.zero).animate(a), child: c)),
+                child: KeyedSubtree(key: ValueKey('$tab|$w|${Tr.lang}|${Priv.on}|${Skin.id}'), child: page),
+              ),
+            )),
           ]);
         })),
       ), const HadithOverlay()]),
