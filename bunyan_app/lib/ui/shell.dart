@@ -152,7 +152,7 @@ class _ShellState extends State<Shell> {
             // 👆 اسحب يمين/شمال تتنقل بين التبويبات
             // (Listener خام بدل GestureDetector عشان الصفحات اللي فيها قوايم ماتاكلش الحركة)
             Expanded(child: NotificationListener<ScrollUpdateNotification>(
-              onNotification: (n) { if (n.metrics.axis == Axis.horizontal) _hs = true; return false; },
+              onNotification: (n) { if (n.metrics.axis == Axis.horizontal && n.dragDetails != null) _hs = true; return false; },
               child: Listener(
               behavior: HitTestBehavior.translucent,
               onPointerDown: (e) { _p0 = e.position; _t0 = DateTime.now(); _hs = false; },
