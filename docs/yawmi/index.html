@@ -318,6 +318,7 @@ textarea{width:100%;min-height:140px;border:0;border-radius:16px;background:var(
   <div class="sheet-in" style="max-height:82vh;overflow:auto">
     <h2>برنامج طويل جديد</h2>
     <div class="chips" id="tpl">
+      <button type="button" data-tpl="sr">سور لحد تاريخ</button>
       <button type="button" data-tpl="juz">جزء في شهر</button>
       <button type="button" data-tpl="quran">حفظ القرآن كله</button>
       <button type="button" data-tpl="arbaeen">الأربعين النووية</button>
@@ -331,6 +332,12 @@ textarea{width:100%;min-height:140px;border:0;border-radius:16px;background:var(
       <div class="label qj">أنهي جزء؟</div>
       <select class="sel qj" id="pJuz"></select>
       <div class="label qj">عايز تخلصه في قد إيه؟</div>
+      <div class="label qs">من سورة</div>
+      <select class="sel qs" id="pSa"></select>
+      <div class="label qs">لحد سورة</div>
+      <select class="sel qs" id="pSb"></select>
+      <div class="label qs">تخلص قبل</div>
+      <div class="field qs"><input type="date" id="pSe" aria-label="آخر ميعاد"></div>
       <select class="sel qj" id="pJDur"><option value="1" selected>شهر</option><option value="2">شهرين</option><option value="3">٣ شهور</option></select>
       <div class="label qf">تبدأ منين؟</div>
       <div class="seg qf" id="pDir" style="grid-template-columns:repeat(2,1fr)"><button type="button" data-dir="fwd">من الفاتحة والبقرة</button><button type="button" data-dir="back">من جزء عمّ (بالعكس)</button></div>
@@ -442,17 +449,25 @@ function toggleW(id,kind,on){const P=S.programs.find(p=>p.id===id),t=todayK(),L=
   if(kind==="hifz"){if(on&&w.hifz&&!L.n){L.n=w.hifz.b-w.hifz.a;P.done=w.hifz.b}else if(!on&&L.n){P.done-=L.n;delete L.n}}
   else{if(on&&w.rev&&!L.rv){L.rv=1;L.rp0=w.rev.rp;P.rp=(w.rev.rp+w.rev.n)%w.rev.mp}else if(!on&&L.rv){P.rp=L.rp0;delete L.rv;delete L.rp0}}
   if(!L.n&&!L.rv)delete P.log[t];syncLink(P);save();render()}
-function syncLink(P){if(!P.link)return;const M=(S.months||{})[P.link.m],it=M&&M.items.find(i=>i.id==P.link.id);if(it)it.done=P.done>=P.total}
+function sEnd(b){return b>=113?604:SP[b+1]>SP[b]?SP[b+1]-1:SP[b]}
+function srDone(P){let n=0;for(let i=P.sr[0];i<=P.sr[1];i++)if(sEnd(i)*2<=P.done)n++;return n}
+function defEnd(){return (new Date().getFullYear()+1)+"-12-31"}
+function gq(g){const P=(S.programs||[]).find(p=>p.goal==g.id);if(P){const F=P.from||0;return `<button class="push" data-goprog>📖 ${Math.min(100,Math.round((P.done-F)/(P.total-F)*100))}%</button>`}
+  return /قرآن|قران|سور|جزء|حفظ/.test(g.t)?`<button class="push" data-gdist="${g.id}">وزّعه على الأيام</button>`:""}
+function autoQ(){if(S.autoQ1)return;S.autoQ1=1;S.goals=S.goals||[];const G=S.goals.find(g=>/البقر/.test(g.t)&&/الأنعام|الانعام/.test(g.t));
+  if(G&&!(S.programs||[]).some(p=>p.goal==G.id)){const F=(SP[1]-1)*2,P={id:"p"+Date.now(),kind:"quran",name:"حفظ البقرة ← الأنعام",days:[6,0,1,2,3,4],log:{},start:todayK(),
+    sr:[1,5],total:sEnd(5)*2,from:F,done:F,unit:"صفحة",dir:"fwd",rv:4,rp:0,end:"2027-12-31",goal:G.id};P.base=per(P);S.programs=S.programs||[];S.programs.push(P)}save()}
+function syncLink(P){if(P.goal&&P.sr){const G=(S.goals||[]).find(g=>g.id==P.goal);if(G)G.cur=Math.min(G.target,srDone(P))}if(!P.link)return;const M=(S.months||{})[P.link.m],it=M&&M.items.find(i=>i.id==P.link.id);if(it)it.done=P.done>=P.total}
 function pstreak(P){let n=0;const d=today0(),has=k=>P.log[k]&&(P.log[k].n||P.log[k].rv);if(!has(key(d)))d.setDate(d.getDate()-1);
   for(let i=0;i<800;i++){const k=key(d);if(has(k))n++;else if(P.days.includes(d.getDay()))break;d.setDate(d.getDate()-1)}return n}
 function pstatus(P){if(P.done>=P.total)return "تم بحمد الله 🎉 مبروك";
-  if(P.juz){const p=per(P);return (p>P.base?"متأخر شوية — الورد زاد لـ ":p<P.base?"سابق الخطة — الورد بقى ":"ماشي في الميعاد · الورد ")+amt(p)+" · تخلص الجزء "+dm(pkey(P.end))}
+  if(P.juz||P.sr){const p=per(P);return (p>P.base?"متأخر شوية — الورد زاد لـ ":p<P.base?"سابق الخطة — الورد بقى ":"ماشي في الميعاد · الورد ")+amt(p)+(P.sr?" · تخلص قبل "+pkey(P.end).toLocaleDateString("ar-EG",{day:"numeric",month:"long",year:"numeric"}):" · تخلص الجزء "+dm(pkey(P.end)))}
   if(P.kind==="quran"){const n=Math.ceil((P.total-P.done)/P.daily),d=walk(P.days,n);return "بالمعدل ده هتختم إن شاء الله حوالي "+monthYear(d)}
   const p=per(P);return (p>P.base?"متأخر شوية — الورد زاد لـ ":p<P.base?"سابق الخطة — الورد بقى ":"ماشي في الميعاد · الورد ")+N(p)+" "+P.unit+" · تخلص "+monthYear(pkey(P.end))}
 function heat(P){const s=wstart(today0()),t=today0();s.setDate(s.getDate()-77);let h="";
   for(let i=0;i<84;i++){const d=new Date(s);d.setDate(s.getDate()+i);const L=P.log[key(d)];h+=`<i class="${d>t?"f":L&&L.n?"on":L&&L.rv?"half":""}"></i>`}return h}
 function pcard(P){const F=P.from||0,pc=Math.min(100,Math.round((P.done-F)/(P.total-F)*100)),st=pstreak(P);
-  const dt=P.juz?"حافظ "+N((P.done-F)/2)+" من "+N((P.total-F)/2)+" صفحة من الجزء "+P.juz:P.kind==="quran"?"حافظ "+N(P.done/2)+" من 604 صفحة · حوالي "+N(Math.round(P.done/40*10)/10)+" جزء":N(P.done)+" من "+N(P.total)+" "+P.unit;
+  const dt=P.sr?"حافظ "+N((P.done-F)/2)+" من "+N((P.total-F)/2)+" صفحة · خلصت "+srDone(P)+" من "+(P.sr[1]-P.sr[0]+1)+" سور":P.juz?"حافظ "+N((P.done-F)/2)+" من "+N((P.total-F)/2)+" صفحة من الجزء "+P.juz:P.kind==="quran"?"حافظ "+N(P.done/2)+" من 604 صفحة · حوالي "+N(Math.round(P.done/40*10)/10)+" جزء":N(P.done)+" من "+N(P.total)+" "+P.unit;
   return `<div class="prog"><div class="goal-top"><span class="t">${esc(P.name)}</span><button class="x" data-pdel="${P.id}" aria-label="حذف البرنامج">×</button></div>
   <div class="goal-ctl"><button class="step" data-padj="${P.id}" data-d="1" aria-label="زوّد">+</button><div class="track"><i style="width:${pc}%"></i></div><span class="num">${pc}%</span><button class="step" data-padj="${P.id}" data-d="-1" aria-label="قلّل">−</button></div>
   <div class="pmeta">${dt}${st>1?" · "+st+" يوم ورا بعض 🔥":""}</div><div class="pmeta">${pstatus(P)}</div><div class="heat" aria-hidden="true">${heat(P)}</div></div>`}
@@ -502,7 +517,7 @@ function render(){
   const st=streak();
   $("streak").textContent=all.length?(done+" من "+all.length+" خلصت")+(pct===100?" · يوم كامل، عاش!":"")+(st>1?" · "+st+" أيام كاملة ورا بعض":""):"لسه مفيش مهام لليوم ده";
   $("goalList").innerHTML=S.goals.length?S.goals.map(g=>{const p=Math.min(100,Math.round(g.cur/g.target*100));
-    return `<div class="goal"><div class="goal-top"><span class="t">${esc(g.t)}${exTag(g)}</span><button class="x" data-k="goals" data-id="${g.id}" aria-label="حذف">×</button></div>
+    return `<div class="goal"><div class="goal-top"><span class="t">${esc(g.t)}${exTag(g)}</span>${gq(g)}<button class="x" data-k="goals" data-id="${g.id}" aria-label="حذف">×</button></div>
     <div class="goal-ctl"><button class="step" data-g="${g.id}" data-d="1" aria-label="زوّد">+</button><div class="track"><i style="width:${p}%"></i></div>
     <span class="num">${g.cur} / ${g.target}</span><button class="step" data-g="${g.id}" data-d="-1" aria-label="قلّل">−</button></div></div>`}).join(""):'<div class="empty">مفيش أهداف. دوس + واختار «هدف».</div>';
   renderVoice(D);
@@ -545,7 +560,9 @@ document.addEventListener("click",e=>{
     save();pu.textContent="✓ اتضاف";pu.disabled=true;setTimeout(render,900);return}
   if(e.target.closest("[data-newprog]")){openProg();return}
   const di=e.target.closest("[data-dist]");if(di){openProg("juz",{m:mkey(cur),id:di.dataset.dist});return}
-  if(e.target.closest("[data-goprog]")){planMode="prog";window.scrollTo(0,0);render();return}
+  if(e.target.closest("[data-goprog]")){planMode="prog";show("plan");return}
+  const gd=e.target.closest("[data-gdist]");if(gd){const G=S.goals.find(g=>g.id==gd.dataset.gdist);openProg("sr",null,G.id);
+    const ix=SN.map((n,i)=>n.length>2&&G.t.includes(n.length>3?n.slice(0,-1):n)?i:-1).filter(i=>i>=0);if(ix.length){$("pSa").value=Math.min(...ix);$("pSb").value=Math.max(...ix);pPaint()}return}
   const pa=e.target.closest("[data-padj]");
   if(pa){const P=S.programs.find(p=>p.id===pa.dataset.padj),st=P.kind==="quran"?2:1;P.done=Math.max(P.from||0,Math.min(P.total,P.done+st*Number(pa.dataset.d)));syncLink(P);save();render();return}
   const pd=e.target.closest("[data-pdel]");
@@ -740,6 +757,7 @@ function renderExtras(){const D=day(),now=new Date(),td=isToday();
 
 // program sheet
 const TPL={quran:{kind:"quran",name:"حفظ القرآن الكريم",days:[6,0,1,2,3]},
+  sr:{kind:"quran",sr:true,name:"حفظ سور",days:[6,0,1,2,3,4]},
   juz:{kind:"quran",juz:true,name:"حفظ جزء في شهر",days:[6,0,1,2,3]},
   arbaeen:{kind:"custom",name:"حفظ الأربعين النووية",total:42,unit:"حديث",dur:3,days:[6,0,1,2,3]},
   khatma:{kind:"custom",name:"ختمة تلاوة",total:604,unit:"صفحة",dur:1,days:[0,1,2,3,4,5,6]},
@@ -749,14 +767,17 @@ const TPL={quran:{kind:"quran",name:"حفظ القرآن الكريم",days:[6,0
 let pT="quran",pD=[],pDir="fwd";
 const WD=[6,0,1,2,3,4,5],WDN=["سبت","حد","اتنين","تلات","أربع","خميس","جمعة"];
 $("pJuz").innerHTML=Array.from({length:30},(_,i)=>{const k=i+1;return `<option value="${k}"${k===30?" selected":""}>الجزء ${k} · من ${SN[surahFirst(juzStart(k))]}</option>`}).join("");
+$("pSa").innerHTML=$("pSb").innerHTML=SN.map((n,i)=>`<option value="${i}">${i+1}. ${n}</option>`).join("");$("pSa").value=1;$("pSb").value=5;$("pSe").value=defEnd();
 $("pDays").innerHTML=WD.map((d,i)=>`<button type="button" data-wd="${d}">${WDN[i]}</button>`).join("");
 function haveUnits(){const h=Math.max(0,Math.min(30,parseInt($("pHave").value)||0));return pDir==="back"?(605-juzStart(31-h))*2:(juzStart(h+1)-1)*2}
 function pPaint(){document.querySelectorAll("#tpl button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tpl===pT));
   document.querySelectorAll("#pDir button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.dir===pDir));
   document.querySelectorAll("#pDays button").forEach(b=>b.setAttribute("aria-pressed",pD.includes(+b.dataset.wd)));
   const q=TPL[pT].kind==="quran";$("qBox").hidden=!q;$("cBox").hidden=q;$("qBox").style.display=q?"flex":"none";$("cBox").style.display=q?"none":"flex";
-  const J=!!TPL[pT].juz;document.querySelectorAll(".qf").forEach(x=>x.hidden=J);document.querySelectorAll(".qj").forEach(x=>x.hidden=!J);
+  const J=!!TPL[pT].juz,R=!!TPL[pT].sr;document.querySelectorAll(".qf").forEach(x=>x.hidden=J||R);document.querySelectorAll(".qj").forEach(x=>x.hidden=!J);document.querySelectorAll(".qs").forEach(x=>x.hidden=!R);
   let t="";if(!pD.length)t="اختار يوم واحد على الأقل.";
+  else if(R){const a=+$("pSa").value,b=Math.max(a,+$("pSb").value),u=(sEnd(b)-SP[a]+1)*2,end=pkey($("pSe").value||defEnd()),n=Math.max(1,countDays(pD,today0(),end)),p=Math.ceil(u/n);
+    t=(a===b?"سورة "+SN[a]:SN[a]+" ← "+SN[b])+" = "+N(u/2)+" صفحة على "+n+" يوم حفظ ← حوالي "+amt(p)+" كل يوم، وتخلص قبل "+end.toLocaleDateString("ar-EG",{day:"numeric",month:"long",year:"numeric"})+" إن شاء الله. لو فوّت يوم، الباقي يتوزع لوحده."}
   else if(J){const k=+$("pJuz").value,u=(juzStart(k+1)-juzStart(k))*2,end=addM(+$("pJDur").value),n=Math.max(1,countDays(pD,today0(),end)),p=Math.ceil(u/n);
     t="الجزء "+k+" = "+N(u/2)+" صفحة على "+n+" يوم حفظ ← حوالي "+amt(p)+" كل يوم، وتخلص "+dm(end)+" إن شاء الله. لو فوّت يوم، الباقي يتوزع لوحده على الأيام الجاية."}
   else if(q){const rem=1208-haveUnits();if(rem<=0)t="ما شاء الله، كده إنت حافظ القرآن كله!";else{const n=Math.ceil(rem/+$("pDaily").value),d=walk(pD,n),m=Math.round((d-today0())/864e5/30.44);
@@ -766,14 +787,16 @@ function pPaint(){document.querySelectorAll("#tpl button").forEach(b=>b.setAttri
   $("pEta").textContent=t;$("pSave").disabled=!pD.length;$("pSave").style.opacity=pD.length?1:.5}
 function applyTpl(t){pT=t;const c=TPL[t];$("pName").value=c.name;$("pName").placeholder=c.name||"مثلاً: تعلّم التجويد";
   if(c.kind!=="quran"){$("pTotal").value=c.total;$("pUnit").value=c.unit;$("pDur").value=c.dur}pD=[...c.days];pPaint()}
-let pLink=null;function openProg(t,link){pLink=link||null;applyTpl(t||"quran");$("pSheet").hidden=$("scrim").hidden=false}
+let pLink=null,pGoal=null;function openProg(t,link,goal){pLink=link||null;pGoal=goal||null;applyTpl(t||"quran");$("pSheet").hidden=$("scrim").hidden=false}
 document.querySelectorAll("#tpl button").forEach(b=>b.onclick=()=>applyTpl(b.dataset.tpl));
 document.querySelectorAll("#pDir button").forEach(b=>b.onclick=()=>{pDir=b.dataset.dir;pPaint()});
 document.querySelectorAll("#pDays button").forEach(b=>b.onclick=()=>{const d=+b.dataset.wd;pD=pD.includes(d)?pD.filter(x=>x!==d):[...pD,d];pPaint()});
 $("pSheet").addEventListener("input",pPaint);$("pSheet").addEventListener("change",pPaint);
 $("pSheet").addEventListener("submit",e=>{e.preventDefault();if(!pD.length)return;const c=TPL[pT],
   P={id:"p"+Date.now(),kind:c.kind,name:$("pName").value.trim()||c.name||"برنامجي",days:[...pD],log:{},start:todayK()};
-  if(c.juz){const k=+$("pJuz").value,F=(juzStart(k)-1)*2;if(P.name===c.name)P.name="حفظ الجزء "+k;
+  if(c.sr){const a=+$("pSa").value,b=Math.max(a,+$("pSb").value),F=(SP[a]-1)*2;if(P.name===c.name)P.name="حفظ "+(a===b?"سورة "+SN[a]:SN[a]+" ← "+SN[b]);
+    Object.assign(P,{sr:[a,b],total:sEnd(b)*2,from:F,done:F,unit:"صفحة",dir:"fwd",rv:+$("pRv").value,rp:0,end:$("pSe").value||defEnd()});P.base=per(P);if(pLink)P.link=pLink;if(pGoal)P.goal=pGoal}
+  else if(c.juz){const k=+$("pJuz").value,F=(juzStart(k)-1)*2;if(P.name===c.name)P.name="حفظ الجزء "+k;
     Object.assign(P,{juz:k,total:(juzStart(k+1)-1)*2,from:F,done:F,unit:"صفحة",dir:"fwd",rv:+$("pRv").value,rp:0,end:key(addM(+$("pJDur").value))});P.base=per(P);if(pLink)P.link=pLink}
   else if(c.kind==="quran")Object.assign(P,{total:1208,unit:"صفحة",daily:+$("pDaily").value,dir:pDir,rv:+$("pRv").value,rp:0,done:Math.min(1208,haveUnits())});
   else{Object.assign(P,{total:Math.max(1,parseInt($("pTotal").value)||1),unit:$("pUnit").value.trim()||"وحدة",end:key(addM(+$("pDur").value)),done:0});P.base=per(P)}
@@ -814,12 +837,12 @@ $("micBtn").onclick=async()=>{const btn=$("micBtn");if(rec){rec.stop();return}
     rec.start();btn.classList.add("on");$("micLabel").textContent="جاري التسجيل… دوس للإيقاف"}
   catch(e){$("voiceIn").click()}};
 
-const BUILD="20261124012930";
+const BUILD="20261124014500";
 if("serviceWorker" in navigator&&location.protocol==="https:"&&location.hostname.endsWith("github.io")){navigator.serviceWorker.register("./sw.js").catch(()=>{});
   // auto-update: when the app comes back to the front, check for a newer build and reload quietly
   const chk=()=>{if(document.visibilityState!=="visible"||!$("sheet").hidden||!$("pSheet").hidden||!$("nSheet").hidden||rec||FO)return;
     fetch("./index.html?b="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(m&&m[1]!==BUILD)location.reload()}).catch(()=>{})};
   document.addEventListener("visibilitychange",chk);setInterval(chk,30*60*1000);setTimeout(chk,4000)}
-load();carry();openDB().then(d=>{idb=d;render()});render();
+load();autoQ();carry();openDB().then(d=>{idb=d;render()});render();
 </script>
 </body></html>
