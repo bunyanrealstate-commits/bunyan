@@ -3564,7 +3564,7 @@ var r0=render;render=function(){var o=r0.apply(this,arguments);try{if(!AUTH||S.t
 function cfg(){try{var m=JSON.parse(localStorage.getItem('bny_sync'))||null,h=JSON.parse(localStorage.getItem('bny_hk')||'null');if(h&&h.repo)return{repo:h.repo,token:h.token||(m&&m.token)};return m}catch(e){return null}}
 window.hkCfg=cfg;
 function enc(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
-function tgs(){return (S&&S.groups||[]).filter(function(g){return /عبد\s*الحكيم|حكيم/.test(g.name||'')})}
+function tgs(){return (S&&S.groups||[]).filter(function(g){return /عبد\s*الحكيم|حكيم/.test(g.name||'')&&!/عمرو/.test(g.name||'')})}
 window.hkGroups=tgs;
 function tg(){var a=tgs();return a.length?{id:a.map(function(g){return g.id}).join('+'),name:a.map(function(g){return g.name}).join(' + '),all:a}:null}
 function pack(G){var gs=G.all,gid={};gs.forEach(function(g){gid[g.id]=1});var U=(S.units||[]).filter(function(u){return gid[u.g]}),ids={};U.forEach(function(u){ids[u.id]=1});
@@ -3598,7 +3598,7 @@ function H(c){return{'Authorization':'Bearer '+c.token,'Accept':'application/vnd
 function url(c){return 'https://api.github.com/repos/'+c.repo+'/contents/hakim-req.json'}
 var ET='';async function poll(){var c=cfg();if(!c||!c.token||!AUTH||busy||document.hidden||navigator.onLine===false)return;busy=true;try{var hh=H(c);if(ET)hh['If-None-Match']=ET;var r=await fetch(url(c),{headers:hh,cache:'no-store'});if(r.status===304)return;if(r.ok){ET=r.headers.get('ETag')||'';var j=await r.json();SHA=j.sha;var L=[];try{L=dec(j.content)||[]}catch(e){}var old={};REQ.forEach(function(x){old[x.id]=1});var nw=L.filter(function(x){return !old[x.id]});var ch=JSON.stringify(L.map(function(x){return x.id}))!==JSON.stringify(REQ.map(function(x){return x.id}));REQ=L;if(ch)render();if(nw.length)setTimeout(function(){onNew(nw)},50)}else if(r.status===404){if(REQ.length){REQ=[];render()}SHA=''}}catch(e){}finally{busy=false}}
 async function setL(L){var c=cfg();if(!c)return false;var b={message:'req '+new Date().toISOString(),content:enc(L)};if(SHA)b.sha=SHA;var w=await fetch(url(c),{method:'PUT',headers:H(c),body:JSON.stringify(b)});if(w.ok){SHA=(await w.json()).content.sha;REQ=L;return true}await poll();return false}
-function tgs(){return (S.groups||[]).filter(function(g){return /عبد\s*الحكيم|حكيم/.test(g.name||'')})}
+function tgs(){return (S.groups||[]).filter(function(g){return /عبد\s*الحكيم|حكيم/.test(g.name||'')&&!/عمرو/.test(g.name||'')})}
 function tg(){var a=tgs();return a.length?{id:a[0].id,all:a}:null}
 function gName(id){var g=(S.groups||[]).filter(function(x){return x.id===id})[0];return g?g.name:''}
 function cnt(d,g){var U=(d.units||[]).filter(function(u){return !g||u.g===g}),L=0,R=0;U.forEach(function(u){(u.leases||[]).forEach(function(l){L++;R+=(l.rcv||[]).length})});return{u:U.length,l:L,r:R,e:(d.exp||[]).length}}
