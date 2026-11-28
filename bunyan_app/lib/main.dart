@@ -6,9 +6,12 @@ import 'ui/shell.dart';
 import 'ui/lock.dart';
 import 'ui/i18n.dart';
 
+final bnyMsg = GlobalKey<ScaffoldMessengerState>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Store.I.init();
+  Store.I.onMsg = (m) => bnyMsg.currentState?.showSnackBar(SnackBar(content: Text(m), duration: const Duration(seconds: 3)));
   runApp(const BunyanApp());
 }
 
@@ -17,6 +20,7 @@ class BunyanApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListenableBuilder(listenable: Store.I, builder: (_, __) => MaterialApp(
         title: 'بنيان',
+        scaffoldMessengerKey: bnyMsg,
         debugShowCheckedModeBanner: false,
         theme: bunyanTheme(),
         locale: Locale(Tr.lang),

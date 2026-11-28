@@ -33,6 +33,7 @@ class Store extends ChangeNotifier {
       else { final f = await _file(); if (await f.exists()) raw = await f.readAsString(); }
     } catch (_) {}
     if (raw != null && raw.isNotEmpty) { try { S = jsonDecode(raw); } catch (_) {} }
+    if (kHakim) noAmr(S);
     resetPrev();
     loaded = true; notifyListeners();
   }
@@ -74,7 +75,24 @@ class Store extends ChangeNotifier {
     cfg['dirty'] = true; await _saveCfg(); await _persist(); notifyListeners();
   }
 
+  /// رسالة سريعة للشاشة (main.dart بيربطها بالـ SnackBar)
+  void Function(String)? onMsg;
+  int _roT = 0;
+  /// نسخة حكيم: الحسابات للعرض بس — دول المفاتيح الممنوع تتغير (العقود والأبديت مسموحين)
+  static const _hkLocked = ['units', 'groups', 'exp', 'dep', 'gp', 'gc', 'adj', 'cash', 'debts', 'recv', 'tx', 'cos', 'res', 'tp', 'pmode', 'trash', 'locks', 'lockSnap'];
+
   Future<void> save({String? log}) async {
+    if (kHakim && _prev != null) {
+      final a = jsonDecode(_prev!) as Map<String, dynamic>;
+      final b = jsonDecode(_snap()) as Map<String, dynamic>;
+      final bad = _hkLocked.where((k) => jsonOut(a[k]) != jsonOut(b[k])).toList();
+      if (bad.isNotEmpty) {
+        for (final k in bad) { if (a.containsKey(k)) { S[k] = a[k]; } else { S.remove(k); } }
+        final now = DateTime.now().millisecondsSinceEpoch;
+        if (now - _roT > 3000) { _roT = now; onMsg?.call('👁 النسخة دي للعرض بس — التعديل مسموح في «العقود» و«الأبديت» بس'); }
+        if (_snap() == _prev) { notifyListeners(); return; }
+      }
+    }
     final cur = _snap();
     if (_prev != null && cur != _prev) {
       final ch = Hist.diff(jsonDecode(_prev!) as Map, jsonDecode(cur) as Map);
@@ -89,6 +107,7 @@ class Store extends ChangeNotifier {
     if (log != null) logEv(log);
     cfg['dirty'] = true; await _saveCfg();
     await _persist(); notifyListeners();
+    if (kHakim) pushHakimCt();
   }
 
   /// سجل النشاط — نفس شكل بنيان القديم
@@ -135,6 +154,7 @@ class Store extends ChangeNotifier {
     if (!linked) return 'مش مربوط';
     if (syncing) return '…';
     if (kHakim) return _pullHakim();
+    await pullHakimCt();
     syncing = true; notifyListeners();
     try {
       final r = await http.get(_u(get: true), headers: _h());
@@ -202,7 +222,11 @@ class Store extends ChangeNotifier {
         rem = jsonDecode(utf8.decode(rr.bodyBytes));
       } else { rem = jsonDecode(utf8.decode(base64.decode(str(j['content']).replaceAll(RegExp(r'\s'), '')))); }
       // اللي حكيم ضافه عنده (تذكيرات، إعدادات) يفضل — الأرقام بتيجي من أسامه
-      for (final k in ['rem', 'set', 'lang', 'flutLinked']) { if (S[k] != null && rem[k] == null) rem[k] = S[k]; }
+      for (final k in ['rem', 'set', 'lang', 'flutLinked', 'sigs']) { if (S[k] != null && rem[k] == null) rem[k] = S[k]; }
+      noAmr(rem);
+      // العقود: عقد حكيم الحالي يفضل عنده، والأرشيف بيتدمج (الأحدث يكسب)
+      if (S['ct'] != null) rem['ct'] = S['ct'];
+      rem['ctArc'] = mergeArc(S['ctArc'], rem['ctArc']);
       await _adopt(rem, sha);
       return syncMsg = '✓ نزلت آخر أرقام من أسامه ${_now()}';
     } catch (_) { return syncMsg = '✗ مفيش نت؟'; }
@@ -210,10 +234,67 @@ class Store extends ChangeNotifier {
   }
 
   static final _hk = RegExp(r'عبد\s*الحكيم|حكيم');
+  static final _amr = RegExp(r'عمرو');
+
+  /// مجموعة عمرو مش بتظهر في نسخة حكيم (بحساباتها كلها)
+  static void noAmr(Map<String, dynamic> o) {
+    final bad = {for (final g in objs(o['groups'])) if (_amr.hasMatch(str(g['name']))) str(g['id'])};
+    if (bad.isEmpty) return;
+    final bu = {for (final u in objs(o['units'])) if (bad.contains(str(u['g']))) str(u['id'])};
+    o['groups'] = [for (final g in objs(o['groups'])) if (!bad.contains(str(g['id']))) g];
+    o['units'] = [for (final u in objs(o['units'])) if (!bad.contains(str(u['g']))) u];
+    o['exp'] = [for (final x in objs(o['exp'])) if (!(truthy(x['u']) ? bu.contains(str(x['u'])) : bad.contains(str(x['g'])))) x];
+    o['dep'] = [for (final x in objs(o['dep'])) if (!bu.contains(str(x['uid']))) x];
+    o['adj'] = [for (final x in objs(o['adj'])) if (!bad.contains(str(x['g']))) x];
+    for (final k in ['gp', 'gc']) { final m = obj(o[k]); if (m != null) { final c = Map<String, dynamic>.from(m); c.removeWhere((id, _) => bad.contains(id)); o[k] = c; } }
+  }
+
+  /// دمج أرشيف العقود من جهتين: نفس العقد ⇒ الأحدث (at) يكسب
+  static List<dynamic> mergeArc(dynamic a, dynamic b) {
+    final m = <String, Map>{};
+    for (final x in [...objs(a), ...objs(b)]) { final id = str(x['id']); if (id.isEmpty) continue; final o = m[id]; if (o == null || n0(x['at']) > n0(o['at'])) m[id] = x; }
+    final L = m.values.toList()..sort((x, y) => n0(y['c0'] ?? y['at']).compareTo(n0(x['c0'] ?? x['at'])));
+    return L;
+  }
+
+  /* ───── عقود حكيم ⇄ برنامج أسامه (hakim-ct.json) ───── */
+  Uri get _hkCtU => Uri.parse('https://api.github.com/repos/${cfg['repo']}/contents/hakim-ct.json');
+  bool _hcBusy = false; String _hcLast = '';
+  /// نسخة حكيم: بترفع العقود اللي عملها (العقود بس — مفيش حسابات)
+  Future<void> pushHakimCt() async {
+    if (!kHakim || !linked || _hcBusy) return;
+    final arc = S['ctArc'] ?? [];
+    final k = jsonOut(arc); if (k == _hcLast) return;
+    _hcBusy = true;
+    try {
+      await Future.delayed(const Duration(seconds: 2));
+      final r = await http.get(Uri.parse('$_hkCtU?t=${DateTime.now().millisecondsSinceEpoch}'), headers: _h());
+      var sha = '';
+      if (r.statusCode == 200) sha = str((jsonDecode(r.body) as Map)['sha']);
+      final b = {'message': 'hakim contracts ${DateTime.now().toUtc().toIso8601String()}', 'content': base64.encode(utf8.encode(jsonOut({'ctArc': arc, 'at': DateTime.now().millisecondsSinceEpoch, 'by': 'hakim'})))};
+      if (sha.isNotEmpty) b['sha'] = sha;
+      final w = await http.put(_hkCtU, headers: {..._h(), 'Content-Type': 'application/json'}, body: jsonEncode(b));
+      if (w.statusCode == 200 || w.statusCode == 201) _hcLast = k;
+    } catch (_) {} finally { _hcBusy = false; }
+  }
+  String _hcSha = '';
+  /// برنامج أسامه: بيسحب عقود حكيم ويضيفها لأرشيفه
+  Future<void> pullHakimCt() async {
+    if (kHakim || !linked) return;
+    try {
+      final r = await http.get(Uri.parse('$_hkCtU?t=${DateTime.now().millisecondsSinceEpoch}'), headers: _h());
+      if (r.statusCode != 200) return;
+      final j = jsonDecode(r.body) as Map; final sha = str(j['sha']);
+      if (sha == _hcSha) return; _hcSha = sha;
+      final o = jsonDecode(utf8.decode(base64.decode(str(j['content']).replaceAll(RegExp(r'\s'), '')))) as Map;
+      final m = mergeArc(S['ctArc'], o['ctArc']);
+      if (jsonOut(m) != jsonOut(S['ctArc'] ?? [])) { S['ctArc'] = m; await save(log: '📁 عقود من حكيم'); }
+    } catch (_) {}
+  }
   /// برنامج أسامه: بيبعت مجموعة حكيم بس لنسخة حكيم (hakim.json) — نفس اللي بنيان القديم بيعمله
   Future<void> exportHakim() async {
     if (kHakim || !linked || _hkBusy) return;
-    final gs = [for (final g in objs(S['groups'])) if (_hk.hasMatch(str(g['name']))) g];
+    final gs = [for (final g in objs(S['groups'])) if (_hk.hasMatch(str(g['name'])) && !_amr.hasMatch(str(g['name']))) g];
     if (gs.isEmpty) return;
     _hkBusy = true;
     try {
@@ -228,9 +309,9 @@ class Store extends ChangeNotifier {
         'dep': [for (final x in objs(S['dep'])) if (ids.contains(str(x['uid']))) x],
         'gp': gp, 'gc': gc, 'cos': S['cos'] ?? [], 'cash': 0, 'res': S['res'] ?? 0, 'tp': S['tp'], 'pmode': S['pmode'], 'debts': [], 'recv': [], 'tx': [],
         'adj': [for (final a in objs(S['adj'])) if (gid.contains(str(a['g']))) a],
-        'ct': S['ct'],
+        'ct': S['ct'], 'ctArc': S['ctArc'] ?? [],
       };
-      final key = jsonOut([o['units'], o['gp'], o['exp'], o['dep'], o['adj'], [for (final g in gs) [g['id'], g['name'], g['n'], g['share']]], o['gc'], o['cos'], o['ct']]);
+      final key = jsonOut([o['units'], o['gp'], o['exp'], o['dep'], o['adj'], [for (final g in gs) [g['id'], g['name'], g['n'], g['share']]], o['gc'], o['cos'], o['ct'], o['ctArc']]);
       final kh = '${key.length}:${key.hashCode}';
       if (_p.getString('bny_hkexp_k') == kh) return;
       final u = Uri.parse('https://api.github.com/repos/${cfg['repo']}/contents/hakim.json');
