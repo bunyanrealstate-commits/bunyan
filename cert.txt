@@ -1,0 +1,9 @@
+V2 Signer: certificate DN: CN=Bunyan Furnished, O=Bunyan, C=AE
+V2 Signer: certificate SHA-256 digest: d8d954524110e1f2e8a9e1b9dcfa1c64c37416dd4642809e3f11047ee4297b8e
+V2 Signer: certificate SHA-1 digest: 33c50415a211ff1ca7351a5444012c2b193d8bc0
+V2 Signer: certificate MD5 digest: 316054ef6016e757da2b5f88f25275d0
+WARNING: META-INF/com/android/build/gradle/app-metadata.properties not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+package: name='com.bunyan.bunyan' versionCode='110' versionName='1.0.0' platformBuildVersionName='14' platformBuildVersionCode='34' compileSdkVersion='34' compileSdkVersionCodename='14'
+sdkVersion:'21'
+package: name='com.bunyan.hakim' versionCode='110' versionName='1.0.0' platformBuildVersionName='14' platformBuildVersionCode='34' compileSdkVersion='34' compileSdkVersionCodename='14'
+sdkVersion:'21'

@@ -1,0 +1,9 @@
+
+✅ /home/runner/work/bunyan/bunyan/bunyan_app/test/ct_pdf_test.dart: contract pdf renders
+✅ /home/runner/work/bunyan/bunyan/bunyan_app/test/ct_tpl_test.dart: contract templates → PDF
+✅ /home/runner/work/bunyan/bunyan/bunyan_app/test/sig_test.dart: توقيع من صورة: بيشيل الورقة ويقصّ
+✅ /home/runner/work/bunyan/bunyan/bunyan_app/test/pages_test.dart: كل الصفحات تفتح (ar)
+✅ /home/runner/work/bunyan/bunyan/bunyan_app/test/pages_test.dart: كل الصفحات تفتح (en)
+✅ /home/runner/work/bunyan/bunyan/bunyan_app/test/pages_test.dart: كل الصفحات تفتح (ar + العين)
+
+🎉 6 tests passed.
